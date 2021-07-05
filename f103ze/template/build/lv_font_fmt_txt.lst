@@ -1,0 +1,2061 @@
+ARM GAS  /tmp/ccaPM4I2.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"lv_font_fmt_txt.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.kern_pair_8_compare,"ax",%progbits
+  16              		.align	1
+  17              		.arch armv7-m
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	kern_pair_8_compare:
+  24              	.LVL0:
+  25              	.LFB30:
+  26              		.file 1 "Middlewares/lvgl/src/font/lv_font_fmt_txt.c"
+   1:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**
+   2:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @file lv_font_fmt_txt.c
+   3:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *
+   4:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  */
+   5:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+   6:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /*********************
+   7:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *      INCLUDES
+   8:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *********************/
+   9:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #include "lv_font.h"
+  10:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #include "lv_font_fmt_txt.h"
+  11:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #include "../misc/lv_assert.h"
+  12:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #include "../misc/lv_types.h"
+  13:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #include "../misc/lv_gc.h"
+  14:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #include "../misc/lv_log.h"
+  15:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #include "../misc/lv_utils.h"
+  16:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #include "../misc/lv_mem.h"
+  17:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+  18:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /*********************
+  19:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *      DEFINES
+  20:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *********************/
+  21:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+  22:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**********************
+  23:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *      TYPEDEFS
+  24:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  **********************/
+  25:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** typedef enum {
+  26:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     RLE_STATE_SINGLE = 0,
+  27:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     RLE_STATE_REPEATE,
+  28:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     RLE_STATE_COUNTER,
+  29:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** } rle_state_t;
+  30:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+  31:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**********************
+  32:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *  STATIC PROTOTYPES
+ARM GAS  /tmp/ccaPM4I2.s 			page 2
+
+
+  33:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  **********************/
+  34:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static uint32_t get_glyph_dsc_id(const lv_font_t * font, uint32_t letter);
+  35:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static int8_t get_kern_value(const lv_font_t * font, uint32_t gid_left, uint32_t gid_right);
+  36:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static int32_t unicode_list_compare(const void * ref, const void * element);
+  37:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static int32_t kern_pair_8_compare(const void * ref, const void * element);
+  38:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static int32_t kern_pair_16_compare(const void * ref, const void * element);
+  39:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+  40:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #if LV_USE_FONT_COMPRESSED
+  41:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     static void decompress(const uint8_t * in, uint8_t * out, lv_coord_t w, lv_coord_t h, uint8_t b
+  42:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     static inline void decompress_line(uint8_t * out, lv_coord_t w);
+  43:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     static inline uint8_t get_bits(const uint8_t * in, uint32_t bit_pos, uint8_t len);
+  44:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     static inline void bits_write(uint8_t * out, uint32_t bit_pos, uint8_t val, uint8_t len);
+  45:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     static inline void rle_init(const uint8_t * in,  uint8_t bpp);
+  46:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     static inline uint8_t rle_next(void);
+  47:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #endif /*LV_USE_FONT_COMPRESSED*/
+  48:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+  49:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**********************
+  50:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *  STATIC VARIABLES
+  51:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  **********************/
+  52:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #if LV_USE_FONT_COMPRESSED
+  53:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     static uint32_t rle_rdp;
+  54:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     static const uint8_t * rle_in;
+  55:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     static uint8_t rle_bpp;
+  56:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     static uint8_t rle_prev_v;
+  57:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     static uint8_t rle_cnt;
+  58:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     static rle_state_t rle_state;
+  59:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #endif /*LV_USE_FONT_COMPRESSED*/
+  60:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+  61:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**********************
+  62:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * GLOBAL PROTOTYPES
+  63:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  **********************/
+  64:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+  65:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**********************
+  66:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *      MACROS
+  67:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  **********************/
+  68:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+  69:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**********************
+  70:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *   GLOBAL FUNCTIONS
+  71:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  **********************/
+  72:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+  73:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**
+  74:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * Used as `get_glyph_bitmap` callback in LittelvGL's native font format if the font is uncompresse
+  75:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param font pointer to font
+  76:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param unicode_letter an unicode letter which bitmap should be get
+  77:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @return pointer to the bitmap or NULL if not found
+  78:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  */
+  79:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** const uint8_t * lv_font_get_bitmap_fmt_txt(const lv_font_t * font, uint32_t unicode_letter)
+  80:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** {
+  81:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(unicode_letter == '\t') unicode_letter = ' ';
+  82:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+  83:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     lv_font_fmt_txt_dsc_t * fdsc = (lv_font_fmt_txt_dsc_t *)font->dsc;
+  84:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint32_t gid = get_glyph_dsc_id(font, unicode_letter);
+  85:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(!gid) return NULL;
+  86:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+  87:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     const lv_font_fmt_txt_glyph_dsc_t * gdsc = &fdsc->glyph_dsc[gid];
+  88:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+  89:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(fdsc->bitmap_format == LV_FONT_FMT_TXT_PLAIN) {
+ARM GAS  /tmp/ccaPM4I2.s 			page 3
+
+
+  90:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         return &fdsc->glyph_bitmap[gdsc->bitmap_index];
+  91:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+  92:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     /*Handle compressed bitmap*/
+  93:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     else {
+  94:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #if LV_USE_FONT_COMPRESSED
+  95:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         static size_t last_buf_size = 0;
+  96:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(LV_GC_ROOT(_lv_font_decompr_buf) == NULL) last_buf_size = 0;
+  97:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+  98:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint32_t gsize = gdsc->box_w * gdsc->box_h;
+  99:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(gsize == 0) return NULL;
+ 100:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 101:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint32_t buf_size = gsize;
+ 102:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         /*Compute memory size needed to hold decompressed glyph, rounding up*/
+ 103:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         switch(fdsc->bpp) {
+ 104:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             case 1:
+ 105:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 buf_size = (gsize + 7) >> 3;
+ 106:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 break;
+ 107:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             case 2:
+ 108:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 buf_size = (gsize + 3) >> 2;
+ 109:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 break;
+ 110:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             case 3:
+ 111:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 buf_size = (gsize + 1) >> 1;
+ 112:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 break;
+ 113:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             case 4:
+ 114:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 buf_size = (gsize + 1) >> 1;
+ 115:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 break;
+ 116:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 117:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 118:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(last_buf_size < buf_size) {
+ 119:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint8_t * tmp = lv_mem_realloc(LV_GC_ROOT(_lv_font_decompr_buf), buf_size);
+ 120:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             LV_ASSERT_MALLOC(tmp);
+ 121:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             if(tmp == NULL) return NULL;
+ 122:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             LV_GC_ROOT(_lv_font_decompr_buf) = tmp;
+ 123:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             last_buf_size = buf_size;
+ 124:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 125:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 126:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         bool prefilter = fdsc->bitmap_format == LV_FONT_FMT_TXT_COMPRESSED ? true : false;
+ 127:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         decompress(&fdsc->glyph_bitmap[gdsc->bitmap_index], LV_GC_ROOT(_lv_font_decompr_buf), gdsc-
+ 128:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                    (uint8_t)fdsc->bpp, prefilter);
+ 129:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         return LV_GC_ROOT(_lv_font_decompr_buf);
+ 130:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #else /*!LV_USE_FONT_COMPRESSED*/
+ 131:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** //        LV_LOG_WARN("Compressed fonts is used but LV_USE_FONT_COMPRESSED is not enabled in lv_con
+ 132:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         return NULL;
+ 133:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #endif
+ 134:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 135:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 136:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     /*If not returned earlier then the letter is not found in this font*/
+ 137:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     return NULL;
+ 138:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 139:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 140:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**
+ 141:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * Used as `get_glyph_dsc` callback in LittelvGL's native font format if the font is uncompressed.
+ 142:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param font_p pointer to font
+ 143:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param dsc_out store the result descriptor here
+ 144:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param letter an UNICODE letter code
+ 145:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @return true: descriptor is successfully loaded into `dsc_out`.
+ 146:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *         false: the letter was not found, no data is loaded to `dsc_out`
+ARM GAS  /tmp/ccaPM4I2.s 			page 4
+
+
+ 147:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  */
+ 148:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** bool lv_font_get_glyph_dsc_fmt_txt(const lv_font_t * font, lv_font_glyph_dsc_t * dsc_out, uint32_t 
+ 149:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                                    uint32_t unicode_letter_next)
+ 150:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** {
+ 151:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     bool is_tab = false;
+ 152:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(unicode_letter == '\t') {
+ 153:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         unicode_letter = ' ';
+ 154:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         is_tab = true;
+ 155:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 156:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     lv_font_fmt_txt_dsc_t * fdsc = (lv_font_fmt_txt_dsc_t *)font->dsc;
+ 157:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint32_t gid = get_glyph_dsc_id(font, unicode_letter);
+ 158:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(!gid) return false;
+ 159:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 160:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     int8_t kvalue = 0;
+ 161:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(fdsc->kern_dsc) {
+ 162:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint32_t gid_next = get_glyph_dsc_id(font, unicode_letter_next);
+ 163:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(gid_next) {
+ 164:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             kvalue = get_kern_value(font, gid, gid_next);
+ 165:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 166:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 167:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 168:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     /*Put together a glyph dsc*/
+ 169:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     const lv_font_fmt_txt_glyph_dsc_t * gdsc = &fdsc->glyph_dsc[gid];
+ 170:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 171:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     int32_t kv = ((int32_t)((int32_t)kvalue * fdsc->kern_scale) >> 4);
+ 172:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 173:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint32_t adv_w = gdsc->adv_w;
+ 174:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(is_tab) adv_w *= 2;
+ 175:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 176:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     adv_w += kv;
+ 177:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     adv_w  = (adv_w + (1 << 3)) >> 4;
+ 178:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 179:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->adv_w = adv_w;
+ 180:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->box_h = gdsc->box_h;
+ 181:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->box_w = gdsc->box_w;
+ 182:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->ofs_x = gdsc->ofs_x;
+ 183:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->ofs_y = gdsc->ofs_y;
+ 184:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->bpp   = (uint8_t)fdsc->bpp;
+ 185:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 186:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(is_tab) dsc_out->box_w = dsc_out->box_w * 2;
+ 187:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 188:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     return true;
+ 189:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 190:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 191:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**
+ 192:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * Free the allocated memories.
+ 193:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  */
+ 194:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** void _lv_font_clean_up_fmt_txt(void)
+ 195:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** {
+ 196:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #if LV_USE_FONT_COMPRESSED
+ 197:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(LV_GC_ROOT(_lv_font_decompr_buf)) {
+ 198:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         lv_mem_free(LV_GC_ROOT(_lv_font_decompr_buf));
+ 199:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         LV_GC_ROOT(_lv_font_decompr_buf) = NULL;
+ 200:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 201:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #endif
+ 202:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 203:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ARM GAS  /tmp/ccaPM4I2.s 			page 5
+
+
+ 204:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**********************
+ 205:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *   STATIC FUNCTIONS
+ 206:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  **********************/
+ 207:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 208:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static uint32_t get_glyph_dsc_id(const lv_font_t * font, uint32_t letter)
+ 209:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** {
+ 210:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(letter == '\0') return 0;
+ 211:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 212:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     lv_font_fmt_txt_dsc_t * fdsc = (lv_font_fmt_txt_dsc_t *)font->dsc;
+ 213:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 214:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     /*Check the cache first*/
+ 215:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(fdsc->cache && letter == fdsc->cache->last_letter) return fdsc->cache->last_glyph_id;
+ 216:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 217:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint16_t i;
+ 218:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     for(i = 0; i < fdsc->cmap_num; i++) {
+ 219:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 220:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         /*Relative code point*/
+ 221:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint32_t rcp = letter - fdsc->cmaps[i].range_start;
+ 222:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(rcp > fdsc->cmaps[i].range_length) continue;
+ 223:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint32_t glyph_id = 0;
+ 224:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_FORMAT0_TINY) {
+ 225:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             glyph_id = fdsc->cmaps[i].glyph_id_start + rcp;
+ 226:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 227:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         else if(fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_FORMAT0_FULL) {
+ 228:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             const uint8_t * gid_ofs_8 = fdsc->cmaps[i].glyph_id_ofs_list;
+ 229:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             glyph_id = fdsc->cmaps[i].glyph_id_start + gid_ofs_8[rcp];
+ 230:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 231:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         else if(fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_SPARSE_TINY) {
+ 232:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t key = rcp;
+ 233:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t * p = _lv_utils_bsearch(&key, fdsc->cmaps[i].unicode_list, fdsc->cmaps[i].list
+ 234:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                                              sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_c
+ 235:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 236:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             if(p) {
+ 237:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 lv_uintptr_t ofs = p - fdsc->cmaps[i].unicode_list;
+ 238:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 glyph_id = fdsc->cmaps[i].glyph_id_start + ofs;
+ 239:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 240:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 241:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         else if(fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_SPARSE_FULL) {
+ 242:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t key = rcp;
+ 243:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t * p = _lv_utils_bsearch(&key, fdsc->cmaps[i].unicode_list, fdsc->cmaps[i].list
+ 244:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                                              sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_c
+ 245:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 246:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             if(p) {
+ 247:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 lv_uintptr_t ofs = p - fdsc->cmaps[i].unicode_list;
+ 248:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 const uint16_t * gid_ofs_16 = fdsc->cmaps[i].glyph_id_ofs_list;
+ 249:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 glyph_id = fdsc->cmaps[i].glyph_id_start + gid_ofs_16[ofs];
+ 250:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 251:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 252:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 253:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         /*Update the cache*/
+ 254:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(fdsc->cache) {
+ 255:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             fdsc->cache->last_letter = letter;
+ 256:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             fdsc->cache->last_glyph_id = glyph_id;
+ 257:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 258:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         return glyph_id;
+ 259:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 260:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ARM GAS  /tmp/ccaPM4I2.s 			page 6
+
+
+ 261:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(fdsc->cache) {
+ 262:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         fdsc->cache->last_letter = letter;
+ 263:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         fdsc->cache->last_glyph_id = 0;
+ 264:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 265:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     return 0;
+ 266:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 267:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 268:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 269:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static int8_t get_kern_value(const lv_font_t * font, uint32_t gid_left, uint32_t gid_right)
+ 270:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** {
+ 271:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     lv_font_fmt_txt_dsc_t * fdsc = (lv_font_fmt_txt_dsc_t *)font->dsc;
+ 272:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 273:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     int8_t value = 0;
+ 274:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 275:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(fdsc->kern_classes == 0) {
+ 276:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         /*Kern pairs*/
+ 277:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         const lv_font_fmt_txt_kern_pair_t * kdsc = fdsc->kern_dsc;
+ 278:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(kdsc->glyph_ids_size == 0) {
+ 279:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             /*Use binary search to find the kern value.
+ 280:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****              *The pairs are ordered left_id first, then right_id secondly.*/
+ 281:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             const uint16_t * g_ids = kdsc->glyph_ids;
+ 282:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t g_id_both = (gid_right << 8) + gid_left; /*Create one number from the ids*/
+ 283:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t * kid_p = _lv_utils_bsearch(&g_id_both, g_ids, kdsc->pair_cnt, 2, kern_pair_8_
+ 284:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 285:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             /*If the `g_id_both` were found get its index from the pointer*/
+ 286:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             if(kid_p) {
+ 287:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 lv_uintptr_t ofs = kid_p - g_ids;
+ 288:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 value = kdsc->values[ofs];
+ 289:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 290:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 291:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         else if(kdsc->glyph_ids_size == 1) {
+ 292:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             /*Use binary search to find the kern value.
+ 293:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****              *The pairs are ordered left_id first, then right_id secondly.*/
+ 294:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             const uint32_t * g_ids = kdsc->glyph_ids;
+ 295:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint32_t g_id_both = (gid_right << 16) + gid_left; /*Create one number from the ids*/
+ 296:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint32_t * kid_p = _lv_utils_bsearch(&g_id_both, g_ids, kdsc->pair_cnt, 4, kern_pair_16
+ 297:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 298:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             /*If the `g_id_both` were found get its index from the pointer*/
+ 299:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             if(kid_p) {
+ 300:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 lv_uintptr_t ofs = kid_p - g_ids;
+ 301:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 value = kdsc->values[ofs];
+ 302:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 303:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 304:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 305:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         else {
+ 306:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             /*Invalid value*/
+ 307:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 308:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 309:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     else {
+ 310:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         /*Kern classes*/
+ 311:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         const lv_font_fmt_txt_kern_classes_t * kdsc = fdsc->kern_dsc;
+ 312:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint8_t left_class = kdsc->left_class_mapping[gid_left];
+ 313:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint8_t right_class = kdsc->right_class_mapping[gid_right];
+ 314:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 315:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         /*If class = 0, kerning not exist for that glyph
+ 316:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****          *else got the value form `class_pair_values` 2D array*/
+ 317:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(left_class > 0 && right_class > 0) {
+ARM GAS  /tmp/ccaPM4I2.s 			page 7
+
+
+ 318:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             value = kdsc->class_pair_values[(left_class - 1) * kdsc->right_class_cnt + (right_class
+ 319:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 320:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 321:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 322:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     return value;
+ 323:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 324:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 325:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static int32_t kern_pair_8_compare(const void * ref, const void * element)
+ 326:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** {
+  27              		.loc 1 326 1 view -0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+ 327:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     const uint8_t * ref8_p = ref;
+  32              		.loc 1 327 5 view .LVU1
+ 328:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     const uint8_t * element8_p = element;
+  33              		.loc 1 328 5 view .LVU2
+ 329:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 330:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     /*If the MSB is different it will matter. If not return the diff. of the LSB*/
+ 331:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(ref8_p[0] != element8_p[0]) return (int32_t)ref8_p[0] - element8_p[0];
+  34              		.loc 1 331 5 view .LVU3
+  35              		.loc 1 331 14 is_stmt 0 view .LVU4
+  36 0000 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+  37              		.loc 1 331 31 view .LVU5
+  38 0002 0A78     		ldrb	r2, [r1]	@ zero_extendqisi2
+  39              		.loc 1 331 7 view .LVU6
+  40 0004 9342     		cmp	r3, r2
+  41 0006 01D0     		beq	.L2
+  42              		.loc 1 331 36 is_stmt 1 discriminator 1 view .LVU7
+  43              		.loc 1 331 62 is_stmt 0 discriminator 1 view .LVU8
+  44 0008 981A     		subs	r0, r3, r2
+  45              	.LVL1:
+  46              		.loc 1 331 62 discriminator 1 view .LVU9
+  47 000a 7047     		bx	lr
+  48              	.LVL2:
+  49              	.L2:
+ 332:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     else return (int32_t) ref8_p[1] - element8_p[1];
+  50              		.loc 1 332 10 is_stmt 1 view .LVU10
+  51              		.loc 1 332 33 is_stmt 0 view .LVU11
+  52 000c 4078     		ldrb	r0, [r0, #1]	@ zero_extendqisi2
+  53              	.LVL3:
+  54              		.loc 1 332 49 view .LVU12
+  55 000e 4B78     		ldrb	r3, [r1, #1]	@ zero_extendqisi2
+  56              		.loc 1 332 37 view .LVU13
+  57 0010 C01A     		subs	r0, r0, r3
+ 333:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 334:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+  58              		.loc 1 334 1 view .LVU14
+  59 0012 7047     		bx	lr
+  60              		.cfi_endproc
+  61              	.LFE30:
+  63              		.section	.text.kern_pair_16_compare,"ax",%progbits
+  64              		.align	1
+  65              		.syntax unified
+  66              		.thumb
+  67              		.thumb_func
+ARM GAS  /tmp/ccaPM4I2.s 			page 8
+
+
+  68              		.fpu softvfp
+  70              	kern_pair_16_compare:
+  71              	.LVL4:
+  72              	.LFB31:
+ 335:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 336:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static int32_t kern_pair_16_compare(const void * ref, const void * element)
+ 337:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** {
+  73              		.loc 1 337 1 is_stmt 1 view -0
+  74              		.cfi_startproc
+  75              		@ args = 0, pretend = 0, frame = 0
+  76              		@ frame_needed = 0, uses_anonymous_args = 0
+  77              		@ link register save eliminated.
+ 338:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     const uint16_t * ref16_p = ref;
+  78              		.loc 1 338 5 view .LVU16
+ 339:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     const uint16_t * element16_p = element;
+  79              		.loc 1 339 5 view .LVU17
+ 340:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 341:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     /*If the MSB is different it will matter. If not return the diff. of the LSB*/
+ 342:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(ref16_p[0] != element16_p[0]) return (int32_t)ref16_p[0] - element16_p[0];
+  80              		.loc 1 342 5 view .LVU18
+  81              		.loc 1 342 15 is_stmt 0 view .LVU19
+  82 0000 0388     		ldrh	r3, [r0]
+  83              		.loc 1 342 33 view .LVU20
+  84 0002 0A88     		ldrh	r2, [r1]
+  85              		.loc 1 342 7 view .LVU21
+  86 0004 9342     		cmp	r3, r2
+  87 0006 01D0     		beq	.L5
+  88              		.loc 1 342 38 is_stmt 1 discriminator 1 view .LVU22
+  89              		.loc 1 342 65 is_stmt 0 discriminator 1 view .LVU23
+  90 0008 981A     		subs	r0, r3, r2
+  91              	.LVL5:
+  92              		.loc 1 342 65 discriminator 1 view .LVU24
+  93 000a 7047     		bx	lr
+  94              	.LVL6:
+  95              	.L5:
+ 343:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     else return (int32_t) ref16_p[1] - element16_p[1];
+  96              		.loc 1 343 10 is_stmt 1 view .LVU25
+  97              		.loc 1 343 34 is_stmt 0 view .LVU26
+  98 000c 4088     		ldrh	r0, [r0, #2]
+  99              	.LVL7:
+ 100              		.loc 1 343 51 view .LVU27
+ 101 000e 4B88     		ldrh	r3, [r1, #2]
+ 102              		.loc 1 343 38 view .LVU28
+ 103 0010 C01A     		subs	r0, r0, r3
+ 344:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 104              		.loc 1 344 1 view .LVU29
+ 105 0012 7047     		bx	lr
+ 106              		.cfi_endproc
+ 107              	.LFE31:
+ 109              		.section	.text.unicode_list_compare,"ax",%progbits
+ 110              		.align	1
+ 111              		.syntax unified
+ 112              		.thumb
+ 113              		.thumb_func
+ 114              		.fpu softvfp
+ 116              	unicode_list_compare:
+ 117              	.LVL8:
+ARM GAS  /tmp/ccaPM4I2.s 			page 9
+
+
+ 118              	.LFB32:
+ 345:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 346:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #if LV_USE_FONT_COMPRESSED
+ 347:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**
+ 348:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * The compress a glyph's bitmap
+ 349:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param in the compressed bitmap
+ 350:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param out buffer to store the result
+ 351:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param px_num number of pixels in the glyph (width * height)
+ 352:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param bpp bit per pixel (bpp = 3 will be converted to bpp = 4)
+ 353:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param prefilter true: the lines are XORed
+ 354:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  */
+ 355:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static void decompress(const uint8_t * in, uint8_t * out, lv_coord_t w, lv_coord_t h, uint8_t bpp, 
+ 356:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** {
+ 357:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint32_t wrp = 0;
+ 358:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint8_t wr_size = bpp;
+ 359:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(bpp == 3) wr_size = 4;
+ 360:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 361:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     rle_init(in, bpp);
+ 362:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 363:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint8_t * line_buf1 = lv_mem_buf_get(w);
+ 364:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 365:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint8_t * line_buf2 = NULL;
+ 366:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 367:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(prefilter) {
+ 368:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         line_buf2 = lv_mem_buf_get(w);
+ 369:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 370:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 371:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     decompress_line(line_buf1, w);
+ 372:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 373:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     lv_coord_t y;
+ 374:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     lv_coord_t x;
+ 375:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 376:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     for(x = 0; x < w; x++) {
+ 377:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         bits_write(out, wrp, line_buf1[x], bpp);
+ 378:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         wrp += wr_size;
+ 379:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 380:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 381:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     for(y = 1; y < h; y++) {
+ 382:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(prefilter) {
+ 383:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             decompress_line(line_buf2, w);
+ 384:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 385:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             for(x = 0; x < w; x++) {
+ 386:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 line_buf1[x] = line_buf2[x] ^ line_buf1[x];
+ 387:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 bits_write(out, wrp, line_buf1[x], bpp);
+ 388:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 wrp += wr_size;
+ 389:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 390:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 391:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         else {
+ 392:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             decompress_line(line_buf1, w);
+ 393:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 394:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             for(x = 0; x < w; x++) {
+ 395:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 bits_write(out, wrp, line_buf1[x], bpp);
+ 396:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 wrp += wr_size;
+ 397:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 398:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 399:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 400:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ARM GAS  /tmp/ccaPM4I2.s 			page 10
+
+
+ 401:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     lv_mem_buf_release(line_buf1);
+ 402:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     lv_mem_buf_release(line_buf2);
+ 403:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 404:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 405:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**
+ 406:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * Decompress one line. Store one pixel per byte
+ 407:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param out output buffer
+ 408:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param w width of the line in pixel count
+ 409:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  */
+ 410:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static inline void decompress_line(uint8_t * out, lv_coord_t w)
+ 411:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** {
+ 412:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     lv_coord_t i;
+ 413:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     for(i = 0; i < w; i++) {
+ 414:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         out[i] = rle_next();
+ 415:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 416:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 417:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 418:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**
+ 419:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * Read bits from an input buffer. The read can cross byte boundary.
+ 420:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param in the input buffer to read from.
+ 421:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param bit_pos index of the first bit to read.
+ 422:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param len number of bits to read (must be <= 8).
+ 423:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @return the read bits
+ 424:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  */
+ 425:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static inline uint8_t get_bits(const uint8_t * in, uint32_t bit_pos, uint8_t len)
+ 426:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** {
+ 427:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint8_t bit_mask;
+ 428:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     switch(len) {
+ 429:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         case 1:
+ 430:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             bit_mask = 0x1;
+ 431:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             break;
+ 432:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         case 2:
+ 433:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             bit_mask = 0x3;
+ 434:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             break;
+ 435:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         case 3:
+ 436:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             bit_mask = 0x7;
+ 437:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             break;
+ 438:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         case 4:
+ 439:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             bit_mask = 0xF;
+ 440:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             break;
+ 441:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         case 8:
+ 442:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             bit_mask = 0xFF;
+ 443:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             break;
+ 444:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         default:
+ 445:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             bit_mask = (uint16_t)((uint16_t) 1 << len) - 1;
+ 446:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 447:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 448:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint32_t byte_pos = bit_pos >> 3;
+ 449:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     bit_pos = bit_pos & 0x7;
+ 450:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 451:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(bit_pos + len >= 8) {
+ 452:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint16_t in16 = (in[byte_pos] << 8) + in[byte_pos + 1];
+ 453:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         return (in16 >> (16 - bit_pos - len)) & bit_mask;
+ 454:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 455:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     else {
+ 456:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         return (in[byte_pos] >> (8 - bit_pos - len)) & bit_mask;
+ 457:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ARM GAS  /tmp/ccaPM4I2.s 			page 11
+
+
+ 458:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 459:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 460:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /**
+ 461:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * Write `val` data to `bit_pos` position of `out`. The write can NOT cross byte boundary.
+ 462:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param out buffer where to write
+ 463:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param bit_pos bit index to write
+ 464:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param val value to write
+ 465:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @param len length of bits to write from `val`. (Counted from the LSB).
+ 466:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  * @note `len == 3` will be converted to `len = 4` and `val` will be upscaled too
+ 467:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  */
+ 468:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static inline void bits_write(uint8_t * out, uint32_t bit_pos, uint8_t val, uint8_t len)
+ 469:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** {
+ 470:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(len == 3) {
+ 471:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         len = 4;
+ 472:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         switch(val) {
+ 473:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             case 0:
+ 474:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 val = 0;
+ 475:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 break;
+ 476:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             case 1:
+ 477:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 val = 2;
+ 478:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 break;
+ 479:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             case 2:
+ 480:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 val = 4;
+ 481:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 break;
+ 482:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             case 3:
+ 483:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 val = 6;
+ 484:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 break;
+ 485:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             case 4:
+ 486:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 val = 9;
+ 487:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 break;
+ 488:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             case 5:
+ 489:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 val = 11;
+ 490:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 break;
+ 491:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             case 6:
+ 492:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 val = 13;
+ 493:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 break;
+ 494:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             case 7:
+ 495:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 val = 15;
+ 496:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 break;
+ 497:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 498:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 499:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 500:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint16_t byte_pos = bit_pos >> 3;
+ 501:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     bit_pos = bit_pos & 0x7;
+ 502:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     bit_pos = 8 - bit_pos - len;
+ 503:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 504:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint8_t bit_mask = (uint16_t)((uint16_t) 1 << len) - 1;
+ 505:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     out[byte_pos] &= ((~bit_mask) << bit_pos);
+ 506:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     out[byte_pos] |= (val << bit_pos);
+ 507:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 508:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 509:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static inline void rle_init(const uint8_t * in,  uint8_t bpp)
+ 510:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** {
+ 511:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     rle_in = in;
+ 512:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     rle_bpp = bpp;
+ 513:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     rle_state = RLE_STATE_SINGLE;
+ 514:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     rle_rdp = 0;
+ARM GAS  /tmp/ccaPM4I2.s 			page 12
+
+
+ 515:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     rle_prev_v = 0;
+ 516:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     rle_cnt = 0;
+ 517:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 518:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 519:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static inline uint8_t rle_next(void)
+ 520:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** {
+ 521:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint8_t v = 0;
+ 522:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint8_t ret = 0;
+ 523:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 524:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(rle_state == RLE_STATE_SINGLE) {
+ 525:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         ret = get_bits(rle_in, rle_rdp, rle_bpp);
+ 526:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(rle_rdp != 0 && rle_prev_v == ret) {
+ 527:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             rle_cnt = 0;
+ 528:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             rle_state = RLE_STATE_REPEATE;
+ 529:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 530:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 531:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         rle_prev_v = ret;
+ 532:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         rle_rdp += rle_bpp;
+ 533:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 534:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     else if(rle_state == RLE_STATE_REPEATE) {
+ 535:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         v = get_bits(rle_in, rle_rdp, 1);
+ 536:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         rle_cnt++;
+ 537:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         rle_rdp += 1;
+ 538:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(v == 1) {
+ 539:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             ret = rle_prev_v;
+ 540:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             if(rle_cnt == 11) {
+ 541:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 rle_cnt = get_bits(rle_in, rle_rdp, 6);
+ 542:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 rle_rdp += 6;
+ 543:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 if(rle_cnt != 0) {
+ 544:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                     rle_state = RLE_STATE_COUNTER;
+ 545:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 }
+ 546:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 else {
+ 547:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                     ret = get_bits(rle_in, rle_rdp, rle_bpp);
+ 548:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                     rle_prev_v = ret;
+ 549:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                     rle_rdp += rle_bpp;
+ 550:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                     rle_state = RLE_STATE_SINGLE;
+ 551:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 }
+ 552:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 553:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 554:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         else {
+ 555:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             ret = get_bits(rle_in, rle_rdp, rle_bpp);
+ 556:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             rle_prev_v = ret;
+ 557:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             rle_rdp += rle_bpp;
+ 558:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             rle_state = RLE_STATE_SINGLE;
+ 559:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 560:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 561:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 562:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     else if(rle_state == RLE_STATE_COUNTER) {
+ 563:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         ret = rle_prev_v;
+ 564:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         rle_cnt--;
+ 565:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(rle_cnt == 0) {
+ 566:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             ret = get_bits(rle_in, rle_rdp, rle_bpp);
+ 567:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             rle_prev_v = ret;
+ 568:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             rle_rdp += rle_bpp;
+ 569:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             rle_state = RLE_STATE_SINGLE;
+ 570:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 571:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ARM GAS  /tmp/ccaPM4I2.s 			page 13
+
+
+ 572:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 573:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     return ret;
+ 574:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 575:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #endif /*LV_USE_FONT_COMPRESSED*/
+ 576:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 577:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** /** Code Comparator.
+ 578:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *
+ 579:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *  Compares the value of both input arguments.
+ 580:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *
+ 581:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *  @param[in]  pRef        Pointer to the reference.
+ 582:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *  @param[in]  pElement    Pointer to the element to compare.
+ 583:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *
+ 584:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *  @return Result of comparison.
+ 585:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *  @retval < 0   Reference is less than element.
+ 586:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *  @retval = 0   Reference is equal to element.
+ 587:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *  @retval > 0   Reference is greater than element.
+ 588:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  *
+ 589:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****  */
+ 590:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** static int32_t unicode_list_compare(const void * ref, const void * element)
+ 591:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** {
+ 119              		.loc 1 591 1 is_stmt 1 view -0
+ 120              		.cfi_startproc
+ 121              		@ args = 0, pretend = 0, frame = 0
+ 122              		@ frame_needed = 0, uses_anonymous_args = 0
+ 123              		@ link register save eliminated.
+ 592:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     return ((int32_t)(*(uint16_t *)ref)) - ((int32_t)(*(uint16_t *)element));
+ 124              		.loc 1 592 5 view .LVU31
+ 125              		.loc 1 592 23 is_stmt 0 view .LVU32
+ 126 0000 0088     		ldrh	r0, [r0]
+ 127              	.LVL9:
+ 128              		.loc 1 592 55 view .LVU33
+ 129 0002 0B88     		ldrh	r3, [r1]
+ 593:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 130              		.loc 1 593 1 view .LVU34
+ 131 0004 C01A     		subs	r0, r0, r3
+ 132 0006 7047     		bx	lr
+ 133              		.cfi_endproc
+ 134              	.LFE32:
+ 136              		.section	.text.get_glyph_dsc_id,"ax",%progbits
+ 137              		.align	1
+ 138              		.syntax unified
+ 139              		.thumb
+ 140              		.thumb_func
+ 141              		.fpu softvfp
+ 143              	get_glyph_dsc_id:
+ 144              	.LVL10:
+ 145              	.LFB28:
+ 209:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(letter == '\0') return 0;
+ 146              		.loc 1 209 1 is_stmt 1 view -0
+ 147              		.cfi_startproc
+ 148              		@ args = 0, pretend = 0, frame = 8
+ 149              		@ frame_needed = 0, uses_anonymous_args = 0
+ 209:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(letter == '\0') return 0;
+ 150              		.loc 1 209 1 is_stmt 0 view .LVU36
+ 151 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 152              	.LCFI0:
+ 153              		.cfi_def_cfa_offset 20
+ARM GAS  /tmp/ccaPM4I2.s 			page 14
+
+
+ 154              		.cfi_offset 4, -20
+ 155              		.cfi_offset 5, -16
+ 156              		.cfi_offset 6, -12
+ 157              		.cfi_offset 7, -8
+ 158              		.cfi_offset 14, -4
+ 159 0002 85B0     		sub	sp, sp, #20
+ 160              	.LCFI1:
+ 161              		.cfi_def_cfa_offset 40
+ 210:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 162              		.loc 1 210 5 is_stmt 1 view .LVU37
+ 210:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 163              		.loc 1 210 7 is_stmt 0 view .LVU38
+ 164 0004 0D46     		mov	r5, r1
+ 165 0006 0029     		cmp	r1, #0
+ 166 0008 6AD0     		beq	.L20
+ 212:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 167              		.loc 1 212 5 is_stmt 1 view .LVU39
+ 212:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 168              		.loc 1 212 29 is_stmt 0 view .LVU40
+ 169 000a 0469     		ldr	r4, [r0, #16]
+ 170              	.LVL11:
+ 215:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 171              		.loc 1 215 5 is_stmt 1 view .LVU41
+ 215:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 172              		.loc 1 215 12 is_stmt 0 view .LVU42
+ 173 000c 6769     		ldr	r7, [r4, #20]
+ 215:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 174              		.loc 1 215 7 view .LVU43
+ 175 000e 002F     		cmp	r7, #0
+ 176 0010 5ED0     		beq	.L21
+ 215:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 177              		.loc 1 215 44 discriminator 1 view .LVU44
+ 178 0012 3B68     		ldr	r3, [r7]
+ 215:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 179              		.loc 1 215 20 discriminator 1 view .LVU45
+ 180 0014 8B42     		cmp	r3, r1
+ 181 0016 19D0     		beq	.L28
+ 182 0018 0022     		movs	r2, #0
+ 183              	.LVL12:
+ 184              	.L12:
+ 218:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 185              		.loc 1 218 16 is_stmt 1 discriminator 1 view .LVU46
+ 218:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 186              		.loc 1 218 24 is_stmt 0 discriminator 1 view .LVU47
+ 187 001a 638A     		ldrh	r3, [r4, #18]
+ 188 001c C3F30803 		ubfx	r3, r3, #0, #9
+ 218:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 189              		.loc 1 218 5 discriminator 1 view .LVU48
+ 190 0020 9342     		cmp	r3, r2
+ 191 0022 57D9     		bls	.L29
+ 192              	.LBB2:
+ 221:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(rcp > fdsc->cmaps[i].range_length) continue;
+ 193              		.loc 1 221 9 is_stmt 1 view .LVU49
+ 221:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(rcp > fdsc->cmaps[i].range_length) continue;
+ 194              		.loc 1 221 37 is_stmt 0 view .LVU50
+ 195 0024 A168     		ldr	r1, [r4, #8]
+ 221:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(rcp > fdsc->cmaps[i].range_length) continue;
+ARM GAS  /tmp/ccaPM4I2.s 			page 15
+
+
+ 196              		.loc 1 221 44 view .LVU51
+ 197 0026 02EB8203 		add	r3, r2, r2, lsl #2
+ 198 002a 9E00     		lsls	r6, r3, #2
+ 199 002c 01EB8303 		add	r3, r1, r3, lsl #2
+ 221:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(rcp > fdsc->cmaps[i].range_length) continue;
+ 200              		.loc 1 221 47 view .LVU52
+ 201 0030 8859     		ldr	r0, [r1, r6]
+ 221:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(rcp > fdsc->cmaps[i].range_length) continue;
+ 202              		.loc 1 221 18 view .LVU53
+ 203 0032 281A     		subs	r0, r5, r0
+ 204              	.LVL13:
+ 222:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint32_t glyph_id = 0;
+ 205              		.loc 1 222 9 is_stmt 1 view .LVU54
+ 222:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint32_t glyph_id = 0;
+ 206              		.loc 1 222 32 is_stmt 0 view .LVU55
+ 207 0034 9988     		ldrh	r1, [r3, #4]
+ 222:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint32_t glyph_id = 0;
+ 208              		.loc 1 222 11 view .LVU56
+ 209 0036 8142     		cmp	r1, r0
+ 210 0038 0AD3     		bcc	.L30
+ 223:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_FORMAT0_TINY) {
+ 211              		.loc 1 223 9 is_stmt 1 view .LVU57
+ 212              	.LVL14:
+ 224:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             glyph_id = fdsc->cmaps[i].glyph_id_start + rcp;
+ 213              		.loc 1 224 9 view .LVU58
+ 224:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             glyph_id = fdsc->cmaps[i].glyph_id_start + rcp;
+ 214              		.loc 1 224 26 is_stmt 0 view .LVU59
+ 215 003a 9A7C     		ldrb	r2, [r3, #18]	@ zero_extendqisi2
+ 216              	.LVL15:
+ 224:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             glyph_id = fdsc->cmaps[i].glyph_id_start + rcp;
+ 217              		.loc 1 224 11 view .LVU60
+ 218 003c 022A     		cmp	r2, #2
+ 219 003e 0AD0     		beq	.L31
+ 227:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             const uint8_t * gid_ofs_8 = fdsc->cmaps[i].glyph_id_ofs_list;
+ 220              		.loc 1 227 14 is_stmt 1 view .LVU61
+ 227:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             const uint8_t * gid_ofs_8 = fdsc->cmaps[i].glyph_id_ofs_list;
+ 221              		.loc 1 227 16 is_stmt 0 view .LVU62
+ 222 0040 92B9     		cbnz	r2, .L15
+ 223              	.LBB3:
+ 228:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             glyph_id = fdsc->cmaps[i].glyph_id_start + gid_ofs_8[rcp];
+ 224              		.loc 1 228 13 is_stmt 1 view .LVU63
+ 228:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             glyph_id = fdsc->cmaps[i].glyph_id_start + gid_ofs_8[rcp];
+ 225              		.loc 1 228 29 is_stmt 0 view .LVU64
+ 226 0042 DA68     		ldr	r2, [r3, #12]
+ 227              	.LVL16:
+ 229:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 228              		.loc 1 229 13 is_stmt 1 view .LVU65
+ 229:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 229              		.loc 1 229 38 is_stmt 0 view .LVU66
+ 230 0044 DB88     		ldrh	r3, [r3, #6]
+ 229:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 231              		.loc 1 229 65 view .LVU67
+ 232 0046 105C     		ldrb	r0, [r2, r0]	@ zero_extendqisi2
+ 233              	.LVL17:
+ 229:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 234              		.loc 1 229 54 view .LVU68
+ 235 0048 1844     		add	r0, r0, r3
+ARM GAS  /tmp/ccaPM4I2.s 			page 16
+
+
+ 236              	.LVL18:
+ 229:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 237              		.loc 1 229 54 view .LVU69
+ 238              	.LBE3:
+ 239 004a 06E0     		b	.L14
+ 240              	.LVL19:
+ 241              	.L28:
+ 229:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 242              		.loc 1 229 54 view .LVU70
+ 243              	.LBE2:
+ 215:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 244              		.loc 1 215 59 is_stmt 1 discriminator 2 view .LVU71
+ 215:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 245              		.loc 1 215 77 is_stmt 0 discriminator 2 view .LVU72
+ 246 004c 7868     		ldr	r0, [r7, #4]
+ 247              	.LVL20:
+ 215:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 248              		.loc 1 215 77 discriminator 2 view .LVU73
+ 249 004e 09E0     		b	.L8
+ 250              	.LVL21:
+ 251              	.L30:
+ 252              	.LBB8:
+ 222:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint32_t glyph_id = 0;
+ 253              		.loc 1 222 47 is_stmt 1 discriminator 1 view .LVU74
+ 254              	.LBE8:
+ 218:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 255              		.loc 1 218 36 discriminator 1 view .LVU75
+ 218:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 256              		.loc 1 218 37 is_stmt 0 discriminator 1 view .LVU76
+ 257 0050 0132     		adds	r2, r2, #1
+ 258              	.LVL22:
+ 218:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 259              		.loc 1 218 37 discriminator 1 view .LVU77
+ 260 0052 92B2     		uxth	r2, r2
+ 261              	.LVL23:
+ 218:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 262              		.loc 1 218 37 discriminator 1 view .LVU78
+ 263 0054 E1E7     		b	.L12
+ 264              	.LVL24:
+ 265              	.L31:
+ 266              	.LBB9:
+ 225:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 267              		.loc 1 225 13 is_stmt 1 view .LVU79
+ 225:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 268              		.loc 1 225 38 is_stmt 0 view .LVU80
+ 269 0056 DB88     		ldrh	r3, [r3, #6]
+ 225:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 270              		.loc 1 225 22 view .LVU81
+ 271 0058 1844     		add	r0, r0, r3
+ 272              	.LVL25:
+ 273              	.L14:
+ 254:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             fdsc->cache->last_letter = letter;
+ 274              		.loc 1 254 9 is_stmt 1 view .LVU82
+ 254:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             fdsc->cache->last_letter = letter;
+ 275              		.loc 1 254 16 is_stmt 0 view .LVU83
+ 276 005a 6369     		ldr	r3, [r4, #20]
+ 254:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             fdsc->cache->last_letter = letter;
+ARM GAS  /tmp/ccaPM4I2.s 			page 17
+
+
+ 277              		.loc 1 254 11 view .LVU84
+ 278 005c 13B1     		cbz	r3, .L8
+ 255:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             fdsc->cache->last_glyph_id = glyph_id;
+ 279              		.loc 1 255 13 is_stmt 1 view .LVU85
+ 255:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             fdsc->cache->last_glyph_id = glyph_id;
+ 280              		.loc 1 255 38 is_stmt 0 view .LVU86
+ 281 005e 1D60     		str	r5, [r3]
+ 256:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 282              		.loc 1 256 13 is_stmt 1 view .LVU87
+ 256:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 283              		.loc 1 256 17 is_stmt 0 view .LVU88
+ 284 0060 6369     		ldr	r3, [r4, #20]
+ 256:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 285              		.loc 1 256 40 view .LVU89
+ 286 0062 5860     		str	r0, [r3, #4]
+ 287              	.LVL26:
+ 288              	.L8:
+ 256:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 289              		.loc 1 256 40 view .LVU90
+ 290              	.LBE9:
+ 267:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 291              		.loc 1 267 1 view .LVU91
+ 292 0064 05B0     		add	sp, sp, #20
+ 293              	.LCFI2:
+ 294              		.cfi_remember_state
+ 295              		.cfi_def_cfa_offset 20
+ 296              		@ sp needed
+ 297 0066 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 298              	.LVL27:
+ 299              	.L15:
+ 300              	.LCFI3:
+ 301              		.cfi_restore_state
+ 302              	.LBB10:
+ 231:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t key = rcp;
+ 303              		.loc 1 231 14 is_stmt 1 view .LVU92
+ 231:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t key = rcp;
+ 304              		.loc 1 231 16 is_stmt 0 view .LVU93
+ 305 0068 032A     		cmp	r2, #3
+ 306 006a 03D0     		beq	.L32
+ 241:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t key = rcp;
+ 307              		.loc 1 241 14 is_stmt 1 view .LVU94
+ 241:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t key = rcp;
+ 308              		.loc 1 241 16 is_stmt 0 view .LVU95
+ 309 006c 012A     		cmp	r2, #1
+ 310 006e 18D0     		beq	.L33
+ 223:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_FORMAT0_TINY) {
+ 311              		.loc 1 223 18 view .LVU96
+ 312 0070 0020     		movs	r0, #0
+ 313              	.LVL28:
+ 223:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_FORMAT0_TINY) {
+ 314              		.loc 1 223 18 view .LVU97
+ 315 0072 F2E7     		b	.L14
+ 316              	.LVL29:
+ 317              	.L32:
+ 318              	.LBB4:
+ 232:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t * p = _lv_utils_bsearch(&key, fdsc->cmaps[i].unicode_list, fdsc->cmaps[i].list
+ 319              		.loc 1 232 13 is_stmt 1 view .LVU98
+ARM GAS  /tmp/ccaPM4I2.s 			page 18
+
+
+ 232:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t * p = _lv_utils_bsearch(&key, fdsc->cmaps[i].unicode_list, fdsc->cmaps[i].list
+ 320              		.loc 1 232 22 is_stmt 0 view .LVU99
+ 321 0074 ADF80E00 		strh	r0, [sp, #14]	@ movhi
+ 233:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                                              sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_c
+ 322              		.loc 1 233 13 is_stmt 1 view .LVU100
+ 233:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                                              sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_c
+ 323              		.loc 1 233 66 is_stmt 0 view .LVU101
+ 324 0078 9968     		ldr	r1, [r3, #8]
+ 233:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                                              sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_c
+ 325              		.loc 1 233 95 view .LVU102
+ 326 007a 1A8A     		ldrh	r2, [r3, #16]
+ 233:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                                              sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_c
+ 327              		.loc 1 233 28 view .LVU103
+ 328 007c 1A4B     		ldr	r3, .L34
+ 329 007e 0093     		str	r3, [sp]
+ 330 0080 0223     		movs	r3, #2
+ 331 0082 0DF10E00 		add	r0, sp, #14
+ 332              	.LVL30:
+ 233:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                                              sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_c
+ 333              		.loc 1 233 28 view .LVU104
+ 334 0086 FFF7FEFF 		bl	_lv_utils_bsearch
+ 335              	.LVL31:
+ 236:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 lv_uintptr_t ofs = p - fdsc->cmaps[i].unicode_list;
+ 336              		.loc 1 236 13 is_stmt 1 view .LVU105
+ 236:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 lv_uintptr_t ofs = p - fdsc->cmaps[i].unicode_list;
+ 337              		.loc 1 236 15 is_stmt 0 view .LVU106
+ 338 008a 0246     		mov	r2, r0
+ 339 008c 38B1     		cbz	r0, .L23
+ 340              	.LBB5:
+ 237:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 glyph_id = fdsc->cmaps[i].glyph_id_start + ofs;
+ 341              		.loc 1 237 17 is_stmt 1 view .LVU107
+ 237:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 glyph_id = fdsc->cmaps[i].glyph_id_start + ofs;
+ 342              		.loc 1 237 44 is_stmt 0 view .LVU108
+ 343 008e A368     		ldr	r3, [r4, #8]
+ 237:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 glyph_id = fdsc->cmaps[i].glyph_id_start + ofs;
+ 344              		.loc 1 237 51 view .LVU109
+ 345 0090 1E44     		add	r6, r6, r3
+ 237:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 glyph_id = fdsc->cmaps[i].glyph_id_start + ofs;
+ 346              		.loc 1 237 54 view .LVU110
+ 347 0092 B068     		ldr	r0, [r6, #8]
+ 348              	.LVL32:
+ 237:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 glyph_id = fdsc->cmaps[i].glyph_id_start + ofs;
+ 349              		.loc 1 237 38 view .LVU111
+ 350 0094 121A     		subs	r2, r2, r0
+ 351              	.LVL33:
+ 238:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 352              		.loc 1 238 17 is_stmt 1 view .LVU112
+ 238:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 353              		.loc 1 238 42 is_stmt 0 view .LVU113
+ 354 0096 F088     		ldrh	r0, [r6, #6]
+ 238:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 355              		.loc 1 238 26 view .LVU114
+ 356 0098 00EB6200 		add	r0, r0, r2, asr #1
+ 357              	.LVL34:
+ 238:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 358              		.loc 1 238 26 view .LVU115
+ 359 009c DDE7     		b	.L14
+ARM GAS  /tmp/ccaPM4I2.s 			page 19
+
+
+ 360              	.LVL35:
+ 361              	.L23:
+ 238:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 362              		.loc 1 238 26 view .LVU116
+ 363              	.LBE5:
+ 364              	.LBE4:
+ 223:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_FORMAT0_TINY) {
+ 365              		.loc 1 223 18 view .LVU117
+ 366 009e 0020     		movs	r0, #0
+ 367              	.LVL36:
+ 223:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_FORMAT0_TINY) {
+ 368              		.loc 1 223 18 view .LVU118
+ 369 00a0 DBE7     		b	.L14
+ 370              	.LVL37:
+ 371              	.L33:
+ 372              	.LBB6:
+ 242:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t * p = _lv_utils_bsearch(&key, fdsc->cmaps[i].unicode_list, fdsc->cmaps[i].list
+ 373              		.loc 1 242 13 is_stmt 1 view .LVU119
+ 242:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t * p = _lv_utils_bsearch(&key, fdsc->cmaps[i].unicode_list, fdsc->cmaps[i].list
+ 374              		.loc 1 242 22 is_stmt 0 view .LVU120
+ 375 00a2 ADF80E00 		strh	r0, [sp, #14]	@ movhi
+ 243:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                                              sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_c
+ 376              		.loc 1 243 13 is_stmt 1 view .LVU121
+ 243:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                                              sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_c
+ 377              		.loc 1 243 66 is_stmt 0 view .LVU122
+ 378 00a6 9968     		ldr	r1, [r3, #8]
+ 243:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                                              sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_c
+ 379              		.loc 1 243 95 view .LVU123
+ 380 00a8 1A8A     		ldrh	r2, [r3, #16]
+ 243:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                                              sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_c
+ 381              		.loc 1 243 28 view .LVU124
+ 382 00aa 0F4B     		ldr	r3, .L34
+ 383 00ac 0093     		str	r3, [sp]
+ 384 00ae 0223     		movs	r3, #2
+ 385 00b0 0DF10E00 		add	r0, sp, #14
+ 386              	.LVL38:
+ 243:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                                              sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_c
+ 387              		.loc 1 243 28 view .LVU125
+ 388 00b4 FFF7FEFF 		bl	_lv_utils_bsearch
+ 389              	.LVL39:
+ 246:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 lv_uintptr_t ofs = p - fdsc->cmaps[i].unicode_list;
+ 390              		.loc 1 246 13 is_stmt 1 view .LVU126
+ 246:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 lv_uintptr_t ofs = p - fdsc->cmaps[i].unicode_list;
+ 391              		.loc 1 246 15 is_stmt 0 view .LVU127
+ 392 00b8 40B1     		cbz	r0, .L25
+ 393              	.LBB7:
+ 247:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 const uint16_t * gid_ofs_16 = fdsc->cmaps[i].glyph_id_ofs_list;
+ 394              		.loc 1 247 17 is_stmt 1 view .LVU128
+ 247:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 const uint16_t * gid_ofs_16 = fdsc->cmaps[i].glyph_id_ofs_list;
+ 395              		.loc 1 247 44 is_stmt 0 view .LVU129
+ 396 00ba A368     		ldr	r3, [r4, #8]
+ 247:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 const uint16_t * gid_ofs_16 = fdsc->cmaps[i].glyph_id_ofs_list;
+ 397              		.loc 1 247 51 view .LVU130
+ 398 00bc 1E44     		add	r6, r6, r3
+ 247:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 const uint16_t * gid_ofs_16 = fdsc->cmaps[i].glyph_id_ofs_list;
+ 399              		.loc 1 247 54 view .LVU131
+ 400 00be B368     		ldr	r3, [r6, #8]
+ARM GAS  /tmp/ccaPM4I2.s 			page 20
+
+
+ 247:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 const uint16_t * gid_ofs_16 = fdsc->cmaps[i].glyph_id_ofs_list;
+ 401              		.loc 1 247 38 view .LVU132
+ 402 00c0 C21A     		subs	r2, r0, r3
+ 403              	.LVL40:
+ 248:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 glyph_id = fdsc->cmaps[i].glyph_id_start + gid_ofs_16[ofs];
+ 404              		.loc 1 248 17 is_stmt 1 view .LVU133
+ 248:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 glyph_id = fdsc->cmaps[i].glyph_id_start + gid_ofs_16[ofs];
+ 405              		.loc 1 248 34 is_stmt 0 view .LVU134
+ 406 00c2 F368     		ldr	r3, [r6, #12]
+ 407              	.LVL41:
+ 249:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 408              		.loc 1 249 17 is_stmt 1 view .LVU135
+ 249:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 409              		.loc 1 249 42 is_stmt 0 view .LVU136
+ 410 00c4 F088     		ldrh	r0, [r6, #6]
+ 411              	.LVL42:
+ 249:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 412              		.loc 1 249 70 view .LVU137
+ 413 00c6 9B5A     		ldrh	r3, [r3, r2]
+ 414              	.LVL43:
+ 249:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 415              		.loc 1 249 58 view .LVU138
+ 416 00c8 1844     		add	r0, r0, r3
+ 417              	.LVL44:
+ 249:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 418              		.loc 1 249 58 view .LVU139
+ 419 00ca C6E7     		b	.L14
+ 420              	.LVL45:
+ 421              	.L25:
+ 249:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 422              		.loc 1 249 58 view .LVU140
+ 423              	.LBE7:
+ 424              	.LBE6:
+ 223:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_FORMAT0_TINY) {
+ 425              		.loc 1 223 18 view .LVU141
+ 426 00cc 0020     		movs	r0, #0
+ 427              	.LVL46:
+ 223:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_FORMAT0_TINY) {
+ 428              		.loc 1 223 18 view .LVU142
+ 429 00ce C4E7     		b	.L14
+ 430              	.LVL47:
+ 431              	.L21:
+ 223:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_FORMAT0_TINY) {
+ 432              		.loc 1 223 18 view .LVU143
+ 433              	.LBE10:
+ 434 00d0 0022     		movs	r2, #0
+ 435 00d2 A2E7     		b	.L12
+ 436              	.LVL48:
+ 437              	.L29:
+ 261:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         fdsc->cache->last_letter = letter;
+ 438              		.loc 1 261 5 is_stmt 1 view .LVU144
+ 261:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         fdsc->cache->last_letter = letter;
+ 439              		.loc 1 261 7 is_stmt 0 view .LVU145
+ 440 00d4 37B1     		cbz	r7, .L26
+ 262:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         fdsc->cache->last_glyph_id = 0;
+ 441              		.loc 1 262 9 is_stmt 1 view .LVU146
+ 262:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         fdsc->cache->last_glyph_id = 0;
+ARM GAS  /tmp/ccaPM4I2.s 			page 21
+
+
+ 442              		.loc 1 262 34 is_stmt 0 view .LVU147
+ 443 00d6 3D60     		str	r5, [r7]
+ 263:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 444              		.loc 1 263 9 is_stmt 1 view .LVU148
+ 263:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 445              		.loc 1 263 13 is_stmt 0 view .LVU149
+ 446 00d8 6369     		ldr	r3, [r4, #20]
+ 263:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 447              		.loc 1 263 36 view .LVU150
+ 448 00da 0020     		movs	r0, #0
+ 449 00dc 5860     		str	r0, [r3, #4]
+ 450 00de C1E7     		b	.L8
+ 451              	.LVL49:
+ 452              	.L20:
+ 210:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 453              		.loc 1 210 31 view .LVU151
+ 454 00e0 0846     		mov	r0, r1
+ 455              	.LVL50:
+ 210:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 456              		.loc 1 210 31 view .LVU152
+ 457 00e2 BFE7     		b	.L8
+ 458              	.LVL51:
+ 459              	.L26:
+ 265:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 460              		.loc 1 265 12 view .LVU153
+ 461 00e4 0020     		movs	r0, #0
+ 462 00e6 BDE7     		b	.L8
+ 463              	.L35:
+ 464              		.align	2
+ 465              	.L34:
+ 466 00e8 00000000 		.word	unicode_list_compare
+ 467              		.cfi_endproc
+ 468              	.LFE28:
+ 470              		.section	.text.get_kern_value,"ax",%progbits
+ 471              		.align	1
+ 472              		.syntax unified
+ 473              		.thumb
+ 474              		.thumb_func
+ 475              		.fpu softvfp
+ 477              	get_kern_value:
+ 478              	.LVL52:
+ 479              	.LFB29:
+ 270:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     lv_font_fmt_txt_dsc_t * fdsc = (lv_font_fmt_txt_dsc_t *)font->dsc;
+ 480              		.loc 1 270 1 is_stmt 1 view -0
+ 481              		.cfi_startproc
+ 482              		@ args = 0, pretend = 0, frame = 8
+ 483              		@ frame_needed = 0, uses_anonymous_args = 0
+ 271:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 484              		.loc 1 271 5 view .LVU155
+ 271:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 485              		.loc 1 271 29 is_stmt 0 view .LVU156
+ 486 0000 0369     		ldr	r3, [r0, #16]
+ 487              	.LVL53:
+ 273:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 488              		.loc 1 273 5 is_stmt 1 view .LVU157
+ 275:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         /*Kern pairs*/
+ 489              		.loc 1 275 5 view .LVU158
+ARM GAS  /tmp/ccaPM4I2.s 			page 22
+
+
+ 275:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         /*Kern pairs*/
+ 490              		.loc 1 275 27 is_stmt 0 view .LVU159
+ 491 0002 D87C     		ldrb	r0, [r3, #19]	@ zero_extendqisi2
+ 492              	.LVL54:
+ 275:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         /*Kern pairs*/
+ 493              		.loc 1 275 7 view .LVU160
+ 494 0004 10F0200F 		tst	r0, #32
+ 495 0008 39D1     		bne	.L37
+ 270:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     lv_font_fmt_txt_dsc_t * fdsc = (lv_font_fmt_txt_dsc_t *)font->dsc;
+ 496              		.loc 1 270 1 view .LVU161
+ 497 000a 30B5     		push	{r4, r5, lr}
+ 498              	.LCFI4:
+ 499              		.cfi_def_cfa_offset 12
+ 500              		.cfi_offset 4, -12
+ 501              		.cfi_offset 5, -8
+ 502              		.cfi_offset 14, -4
+ 503 000c 85B0     		sub	sp, sp, #20
+ 504              	.LCFI5:
+ 505              		.cfi_def_cfa_offset 32
+ 506              	.LBB11:
+ 277:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(kdsc->glyph_ids_size == 0) {
+ 507              		.loc 1 277 9 is_stmt 1 view .LVU162
+ 277:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(kdsc->glyph_ids_size == 0) {
+ 508              		.loc 1 277 45 is_stmt 0 view .LVU163
+ 509 000e DC68     		ldr	r4, [r3, #12]
+ 510              	.LVL55:
+ 278:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             /*Use binary search to find the kern value.
+ 511              		.loc 1 278 9 is_stmt 1 view .LVU164
+ 278:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             /*Use binary search to find the kern value.
+ 512              		.loc 1 278 33 is_stmt 0 view .LVU165
+ 513 0010 E37A     		ldrb	r3, [r4, #11]	@ zero_extendqisi2
+ 514              	.LVL56:
+ 278:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             /*Use binary search to find the kern value.
+ 515              		.loc 1 278 11 view .LVU166
+ 516 0012 13F0C003 		ands	r3, r3, #192
+ 517 0016 04D0     		beq	.L51
+ 291:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             /*Use binary search to find the kern value.
+ 518              		.loc 1 291 14 is_stmt 1 view .LVU167
+ 291:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             /*Use binary search to find the kern value.
+ 519              		.loc 1 291 16 is_stmt 0 view .LVU168
+ 520 0018 402B     		cmp	r3, #64
+ 521 001a 1AD0     		beq	.L52
+ 522              	.LBE11:
+ 273:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 523              		.loc 1 273 12 view .LVU169
+ 524 001c 0020     		movs	r0, #0
+ 525              	.LVL57:
+ 526              	.L40:
+ 322:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 527              		.loc 1 322 5 is_stmt 1 view .LVU170
+ 323:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 528              		.loc 1 323 1 is_stmt 0 view .LVU171
+ 529 001e 05B0     		add	sp, sp, #20
+ 530              	.LCFI6:
+ 531              		.cfi_remember_state
+ 532              		.cfi_def_cfa_offset 12
+ 533              		@ sp needed
+ARM GAS  /tmp/ccaPM4I2.s 			page 23
+
+
+ 534 0020 30BD     		pop	{r4, r5, pc}
+ 535              	.LVL58:
+ 536              	.L51:
+ 537              	.LCFI7:
+ 538              		.cfi_restore_state
+ 539              	.LBB16:
+ 540              	.LBB12:
+ 281:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t g_id_both = (gid_right << 8) + gid_left; /*Create one number from the ids*/
+ 541              		.loc 1 281 13 is_stmt 1 view .LVU172
+ 281:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t g_id_both = (gid_right << 8) + gid_left; /*Create one number from the ids*/
+ 542              		.loc 1 281 30 is_stmt 0 view .LVU173
+ 543 0022 2568     		ldr	r5, [r4]
+ 544              	.LVL59:
+ 282:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t * kid_p = _lv_utils_bsearch(&g_id_both, g_ids, kdsc->pair_cnt, 2, kern_pair_8_
+ 545              		.loc 1 282 13 is_stmt 1 view .LVU174
+ 282:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t * kid_p = _lv_utils_bsearch(&g_id_both, g_ids, kdsc->pair_cnt, 2, kern_pair_8_
+ 546              		.loc 1 282 45 is_stmt 0 view .LVU175
+ 547 0024 1202     		lsls	r2, r2, #8
+ 548              	.LVL60:
+ 282:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t * kid_p = _lv_utils_bsearch(&g_id_both, g_ids, kdsc->pair_cnt, 2, kern_pair_8_
+ 549              		.loc 1 282 45 view .LVU176
+ 550 0026 93B2     		uxth	r3, r2
+ 282:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t * kid_p = _lv_utils_bsearch(&g_id_both, g_ids, kdsc->pair_cnt, 2, kern_pair_8_
+ 551              		.loc 1 282 51 view .LVU177
+ 552 0028 5A18     		adds	r2, r3, r1
+ 282:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint16_t * kid_p = _lv_utils_bsearch(&g_id_both, g_ids, kdsc->pair_cnt, 2, kern_pair_8_
+ 553              		.loc 1 282 22 view .LVU178
+ 554 002a ADF80C20 		strh	r2, [sp, #12]	@ movhi
+ 555              	.LVL61:
+ 283:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 556              		.loc 1 283 13 is_stmt 1 view .LVU179
+ 283:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 557              		.loc 1 283 73 is_stmt 0 view .LVU180
+ 558 002e A268     		ldr	r2, [r4, #8]
+ 283:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 559              		.loc 1 283 32 view .LVU181
+ 560 0030 1C4B     		ldr	r3, .L53
+ 561 0032 0093     		str	r3, [sp]
+ 562 0034 0223     		movs	r3, #2
+ 563 0036 22F04042 		bic	r2, r2, #-1073741824
+ 564 003a 2946     		mov	r1, r5
+ 565              	.LVL62:
+ 283:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 566              		.loc 1 283 32 view .LVU182
+ 567 003c 03A8     		add	r0, sp, #12
+ 568 003e FFF7FEFF 		bl	_lv_utils_bsearch
+ 569              	.LVL63:
+ 286:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 lv_uintptr_t ofs = kid_p - g_ids;
+ 570              		.loc 1 286 13 is_stmt 1 view .LVU183
+ 286:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 lv_uintptr_t ofs = kid_p - g_ids;
+ 571              		.loc 1 286 15 is_stmt 0 view .LVU184
+ 572 0042 20B1     		cbz	r0, .L42
+ 573              	.LBB13:
+ 287:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 value = kdsc->values[ofs];
+ 574              		.loc 1 287 17 is_stmt 1 view .LVU185
+ 287:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 value = kdsc->values[ofs];
+ 575              		.loc 1 287 42 is_stmt 0 view .LVU186
+ARM GAS  /tmp/ccaPM4I2.s 			page 24
+
+
+ 576 0044 431B     		subs	r3, r0, r5
+ 577 0046 5B10     		asrs	r3, r3, #1
+ 578              	.LVL64:
+ 288:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 579              		.loc 1 288 17 is_stmt 1 view .LVU187
+ 288:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 580              		.loc 1 288 29 is_stmt 0 view .LVU188
+ 581 0048 6268     		ldr	r2, [r4, #4]
+ 288:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 582              		.loc 1 288 23 view .LVU189
+ 583 004a D056     		ldrsb	r0, [r2, r3]
+ 584              	.LVL65:
+ 288:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 585              		.loc 1 288 23 view .LVU190
+ 586 004c E7E7     		b	.L40
+ 587              	.LVL66:
+ 588              	.L42:
+ 288:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 589              		.loc 1 288 23 view .LVU191
+ 590              	.LBE13:
+ 591              	.LBE12:
+ 592              	.LBE16:
+ 273:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 593              		.loc 1 273 12 view .LVU192
+ 594 004e 0020     		movs	r0, #0
+ 595              	.LVL67:
+ 273:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 596              		.loc 1 273 12 view .LVU193
+ 597 0050 E5E7     		b	.L40
+ 598              	.LVL68:
+ 599              	.L52:
+ 600              	.LBB17:
+ 601              	.LBB14:
+ 294:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint32_t g_id_both = (gid_right << 16) + gid_left; /*Create one number from the ids*/
+ 602              		.loc 1 294 13 is_stmt 1 view .LVU194
+ 294:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint32_t g_id_both = (gid_right << 16) + gid_left; /*Create one number from the ids*/
+ 603              		.loc 1 294 30 is_stmt 0 view .LVU195
+ 604 0052 2568     		ldr	r5, [r4]
+ 605              	.LVL69:
+ 295:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint32_t * kid_p = _lv_utils_bsearch(&g_id_both, g_ids, kdsc->pair_cnt, 4, kern_pair_16
+ 606              		.loc 1 295 13 is_stmt 1 view .LVU196
+ 295:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint32_t * kid_p = _lv_utils_bsearch(&g_id_both, g_ids, kdsc->pair_cnt, 4, kern_pair_16
+ 607              		.loc 1 295 52 is_stmt 0 view .LVU197
+ 608 0054 01EB0242 		add	r2, r1, r2, lsl #16
+ 609              	.LVL70:
+ 295:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             uint32_t * kid_p = _lv_utils_bsearch(&g_id_both, g_ids, kdsc->pair_cnt, 4, kern_pair_16
+ 610              		.loc 1 295 22 view .LVU198
+ 611 0058 0392     		str	r2, [sp, #12]
+ 612              	.LVL71:
+ 296:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 613              		.loc 1 296 13 is_stmt 1 view .LVU199
+ 296:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 614              		.loc 1 296 73 is_stmt 0 view .LVU200
+ 615 005a A268     		ldr	r2, [r4, #8]
+ 296:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 616              		.loc 1 296 32 view .LVU201
+ 617 005c 124B     		ldr	r3, .L53+4
+ARM GAS  /tmp/ccaPM4I2.s 			page 25
+
+
+ 618 005e 0093     		str	r3, [sp]
+ 619 0060 0423     		movs	r3, #4
+ 620 0062 22F04042 		bic	r2, r2, #-1073741824
+ 621 0066 2946     		mov	r1, r5
+ 622              	.LVL72:
+ 296:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 623              		.loc 1 296 32 view .LVU202
+ 624 0068 03A8     		add	r0, sp, #12
+ 625 006a FFF7FEFF 		bl	_lv_utils_bsearch
+ 626              	.LVL73:
+ 299:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 lv_uintptr_t ofs = kid_p - g_ids;
+ 627              		.loc 1 299 13 is_stmt 1 view .LVU203
+ 299:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 lv_uintptr_t ofs = kid_p - g_ids;
+ 628              		.loc 1 299 15 is_stmt 0 view .LVU204
+ 629 006e 20B1     		cbz	r0, .L44
+ 630              	.LBB15:
+ 300:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 value = kdsc->values[ofs];
+ 631              		.loc 1 300 17 is_stmt 1 view .LVU205
+ 300:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****                 value = kdsc->values[ofs];
+ 632              		.loc 1 300 42 is_stmt 0 view .LVU206
+ 633 0070 431B     		subs	r3, r0, r5
+ 634 0072 9B10     		asrs	r3, r3, #2
+ 635              	.LVL74:
+ 301:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 636              		.loc 1 301 17 is_stmt 1 view .LVU207
+ 301:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 637              		.loc 1 301 29 is_stmt 0 view .LVU208
+ 638 0074 6268     		ldr	r2, [r4, #4]
+ 301:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 639              		.loc 1 301 23 view .LVU209
+ 640 0076 D056     		ldrsb	r0, [r2, r3]
+ 641              	.LVL75:
+ 301:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 642              		.loc 1 301 23 view .LVU210
+ 643 0078 D1E7     		b	.L40
+ 644              	.LVL76:
+ 645              	.L44:
+ 301:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             }
+ 646              		.loc 1 301 23 view .LVU211
+ 647              	.LBE15:
+ 648              	.LBE14:
+ 649              	.LBE17:
+ 273:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 650              		.loc 1 273 12 view .LVU212
+ 651 007a 0020     		movs	r0, #0
+ 652              	.LVL77:
+ 273:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 653              		.loc 1 273 12 view .LVU213
+ 654 007c CFE7     		b	.L40
+ 655              	.LVL78:
+ 656              	.L37:
+ 657              	.LCFI8:
+ 658              		.cfi_def_cfa_offset 0
+ 659              		.cfi_restore 4
+ 660              		.cfi_restore 5
+ 661              		.cfi_restore 14
+ 662              	.LBB18:
+ARM GAS  /tmp/ccaPM4I2.s 			page 26
+
+
+ 311:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint8_t left_class = kdsc->left_class_mapping[gid_left];
+ 663              		.loc 1 311 9 is_stmt 1 view .LVU214
+ 311:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint8_t left_class = kdsc->left_class_mapping[gid_left];
+ 664              		.loc 1 311 48 is_stmt 0 view .LVU215
+ 665 007e DB68     		ldr	r3, [r3, #12]
+ 666              	.LVL79:
+ 312:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint8_t right_class = kdsc->right_class_mapping[gid_right];
+ 667              		.loc 1 312 9 is_stmt 1 view .LVU216
+ 312:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint8_t right_class = kdsc->right_class_mapping[gid_right];
+ 668              		.loc 1 312 34 is_stmt 0 view .LVU217
+ 669 0080 5868     		ldr	r0, [r3, #4]
+ 312:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint8_t right_class = kdsc->right_class_mapping[gid_right];
+ 670              		.loc 1 312 17 view .LVU218
+ 671 0082 415C     		ldrb	r1, [r0, r1]	@ zero_extendqisi2
+ 672              	.LVL80:
+ 313:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 673              		.loc 1 313 9 is_stmt 1 view .LVU219
+ 313:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 674              		.loc 1 313 35 is_stmt 0 view .LVU220
+ 675 0084 9868     		ldr	r0, [r3, #8]
+ 313:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 676              		.loc 1 313 17 view .LVU221
+ 677 0086 825C     		ldrb	r2, [r0, r2]	@ zero_extendqisi2
+ 678              	.LVL81:
+ 317:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             value = kdsc->class_pair_values[(left_class - 1) * kdsc->right_class_cnt + (right_class
+ 679              		.loc 1 317 9 is_stmt 1 view .LVU222
+ 317:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             value = kdsc->class_pair_values[(left_class - 1) * kdsc->right_class_cnt + (right_class
+ 680              		.loc 1 317 11 is_stmt 0 view .LVU223
+ 681 0088 41B1     		cbz	r1, .L45
+ 317:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             value = kdsc->class_pair_values[(left_class - 1) * kdsc->right_class_cnt + (right_class
+ 682              		.loc 1 317 27 discriminator 1 view .LVU224
+ 683 008a 4AB1     		cbz	r2, .L46
+ 318:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 684              		.loc 1 318 13 is_stmt 1 view .LVU225
+ 318:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 685              		.loc 1 318 25 is_stmt 0 view .LVU226
+ 686 008c 1868     		ldr	r0, [r3]
+ 318:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 687              		.loc 1 318 57 view .LVU227
+ 688 008e 0139     		subs	r1, r1, #1
+ 689              	.LVL82:
+ 318:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 690              		.loc 1 318 68 view .LVU228
+ 691 0090 5B7B     		ldrb	r3, [r3, #13]	@ zero_extendqisi2
+ 692              	.LVL83:
+ 318:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 693              		.loc 1 318 101 view .LVU229
+ 694 0092 013A     		subs	r2, r2, #1
+ 695              	.LVL84:
+ 318:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 696              		.loc 1 318 86 view .LVU230
+ 697 0094 03FB0122 		mla	r2, r3, r1, r2
+ 698              	.LVL85:
+ 318:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 699              		.loc 1 318 19 view .LVU231
+ 700 0098 8056     		ldrsb	r0, [r0, r2]
+ 701              	.LVL86:
+ARM GAS  /tmp/ccaPM4I2.s 			page 27
+
+
+ 318:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 702              		.loc 1 318 19 view .LVU232
+ 703 009a 7047     		bx	lr
+ 704              	.LVL87:
+ 705              	.L45:
+ 318:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 706              		.loc 1 318 19 view .LVU233
+ 707              	.LBE18:
+ 273:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 708              		.loc 1 273 12 view .LVU234
+ 709 009c 0020     		movs	r0, #0
+ 710 009e 7047     		bx	lr
+ 711              	.L46:
+ 712 00a0 0020     		movs	r0, #0
+ 713              	.LVL88:
+ 322:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 714              		.loc 1 322 5 is_stmt 1 view .LVU235
+ 323:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 715              		.loc 1 323 1 is_stmt 0 view .LVU236
+ 716 00a2 7047     		bx	lr
+ 717              	.L54:
+ 718              		.align	2
+ 719              	.L53:
+ 720 00a4 00000000 		.word	kern_pair_8_compare
+ 721 00a8 00000000 		.word	kern_pair_16_compare
+ 722              		.cfi_endproc
+ 723              	.LFE29:
+ 725              		.section	.text.lv_font_get_bitmap_fmt_txt,"ax",%progbits
+ 726              		.align	1
+ 727              		.global	lv_font_get_bitmap_fmt_txt
+ 728              		.syntax unified
+ 729              		.thumb
+ 730              		.thumb_func
+ 731              		.fpu softvfp
+ 733              	lv_font_get_bitmap_fmt_txt:
+ 734              	.LVL89:
+ 735              	.LFB25:
+  80:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(unicode_letter == '\t') unicode_letter = ' ';
+ 736              		.loc 1 80 1 is_stmt 1 view -0
+ 737              		.cfi_startproc
+ 738              		@ args = 0, pretend = 0, frame = 0
+ 739              		@ frame_needed = 0, uses_anonymous_args = 0
+  80:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(unicode_letter == '\t') unicode_letter = ' ';
+ 740              		.loc 1 80 1 is_stmt 0 view .LVU238
+ 741 0000 10B5     		push	{r4, lr}
+ 742              	.LCFI9:
+ 743              		.cfi_def_cfa_offset 8
+ 744              		.cfi_offset 4, -8
+ 745              		.cfi_offset 14, -4
+  81:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 746              		.loc 1 81 5 is_stmt 1 view .LVU239
+  81:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 747              		.loc 1 81 7 is_stmt 0 view .LVU240
+ 748 0002 0929     		cmp	r1, #9
+ 749 0004 10D0     		beq	.L62
+ 750              	.LVL90:
+ 751              	.L56:
+ARM GAS  /tmp/ccaPM4I2.s 			page 28
+
+
+  83:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint32_t gid = get_glyph_dsc_id(font, unicode_letter);
+ 752              		.loc 1 83 5 is_stmt 1 view .LVU241
+  83:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint32_t gid = get_glyph_dsc_id(font, unicode_letter);
+ 753              		.loc 1 83 29 is_stmt 0 view .LVU242
+ 754 0006 0469     		ldr	r4, [r0, #16]
+ 755              	.LVL91:
+  84:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(!gid) return NULL;
+ 756              		.loc 1 84 5 is_stmt 1 view .LVU243
+  84:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(!gid) return NULL;
+ 757              		.loc 1 84 20 is_stmt 0 view .LVU244
+ 758 0008 FFF7FEFF 		bl	get_glyph_dsc_id
+ 759              	.LVL92:
+  85:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 760              		.loc 1 85 5 is_stmt 1 view .LVU245
+  85:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 761              		.loc 1 85 7 is_stmt 0 view .LVU246
+ 762 000c 0246     		mov	r2, r0
+ 763 000e 68B1     		cbz	r0, .L59
+  87:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 764              		.loc 1 87 5 is_stmt 1 view .LVU247
+  87:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 765              		.loc 1 87 53 is_stmt 0 view .LVU248
+ 766 0010 6168     		ldr	r1, [r4, #4]
+ 767              	.LVL93:
+  89:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         return &fdsc->glyph_bitmap[gdsc->bitmap_index];
+ 768              		.loc 1 89 5 is_stmt 1 view .LVU249
+  89:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         return &fdsc->glyph_bitmap[gdsc->bitmap_index];
+ 769              		.loc 1 89 28 is_stmt 0 view .LVU250
+ 770 0012 E37C     		ldrb	r3, [r4, #19]	@ zero_extendqisi2
+  89:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         return &fdsc->glyph_bitmap[gdsc->bitmap_index];
+ 771              		.loc 1 89 7 view .LVU251
+ 772 0014 13F0C00F 		tst	r3, #192
+ 773 0018 0AD1     		bne	.L60
+  90:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 774              		.loc 1 90 9 is_stmt 1 view .LVU252
+  90:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 775              		.loc 1 90 21 is_stmt 0 view .LVU253
+ 776 001a 2068     		ldr	r0, [r4]
+ 777              	.LVL94:
+  90:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 778              		.loc 1 90 40 view .LVU254
+ 779 001c 51F83230 		ldr	r3, [r1, r2, lsl #3]
+ 780 0020 C3F31303 		ubfx	r3, r3, #0, #20
+  90:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 781              		.loc 1 90 16 view .LVU255
+ 782 0024 1844     		add	r0, r0, r3
+ 783              	.LVL95:
+ 784              	.L55:
+ 138:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 785              		.loc 1 138 1 view .LVU256
+ 786 0026 10BD     		pop	{r4, pc}
+ 787              	.LVL96:
+ 788              	.L62:
+  81:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 789              		.loc 1 81 47 view .LVU257
+ 790 0028 2021     		movs	r1, #32
+ 791              	.LVL97:
+ARM GAS  /tmp/ccaPM4I2.s 			page 29
+
+
+  81:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 792              		.loc 1 81 47 view .LVU258
+ 793 002a ECE7     		b	.L56
+ 794              	.LVL98:
+ 795              	.L59:
+  85:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 796              		.loc 1 85 21 view .LVU259
+ 797 002c 0020     		movs	r0, #0
+ 798              	.LVL99:
+  85:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 799              		.loc 1 85 21 view .LVU260
+ 800 002e FAE7     		b	.L55
+ 801              	.LVL100:
+ 802              	.L60:
+ 132:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #endif
+ 803              		.loc 1 132 16 view .LVU261
+ 804 0030 0020     		movs	r0, #0
+ 805              	.LVL101:
+ 132:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #endif
+ 806              		.loc 1 132 16 view .LVU262
+ 807 0032 F8E7     		b	.L55
+ 808              		.cfi_endproc
+ 809              	.LFE25:
+ 811              		.section	.text.lv_font_get_glyph_dsc_fmt_txt,"ax",%progbits
+ 812              		.align	1
+ 813              		.global	lv_font_get_glyph_dsc_fmt_txt
+ 814              		.syntax unified
+ 815              		.thumb
+ 816              		.thumb_func
+ 817              		.fpu softvfp
+ 819              	lv_font_get_glyph_dsc_fmt_txt:
+ 820              	.LVL102:
+ 821              	.LFB26:
+ 150:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     bool is_tab = false;
+ 822              		.loc 1 150 1 is_stmt 1 view -0
+ 823              		.cfi_startproc
+ 824              		@ args = 0, pretend = 0, frame = 0
+ 825              		@ frame_needed = 0, uses_anonymous_args = 0
+ 150:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     bool is_tab = false;
+ 826              		.loc 1 150 1 is_stmt 0 view .LVU264
+ 827 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 828              	.LCFI10:
+ 829              		.cfi_def_cfa_offset 32
+ 830              		.cfi_offset 3, -32
+ 831              		.cfi_offset 4, -28
+ 832              		.cfi_offset 5, -24
+ 833              		.cfi_offset 6, -20
+ 834              		.cfi_offset 7, -16
+ 835              		.cfi_offset 8, -12
+ 836              		.cfi_offset 9, -8
+ 837              		.cfi_offset 14, -4
+ 838 0004 0746     		mov	r7, r0
+ 839 0006 0C46     		mov	r4, r1
+ 840 0008 9946     		mov	r9, r3
+ 151:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(unicode_letter == '\t') {
+ 841              		.loc 1 151 5 is_stmt 1 view .LVU265
+ 842              	.LVL103:
+ARM GAS  /tmp/ccaPM4I2.s 			page 30
+
+
+ 152:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         unicode_letter = ' ';
+ 843              		.loc 1 152 5 view .LVU266
+ 152:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         unicode_letter = ' ';
+ 844              		.loc 1 152 7 is_stmt 0 view .LVU267
+ 845 000a 092A     		cmp	r2, #9
+ 846 000c 12D0     		beq	.L68
+ 847 000e 1146     		mov	r1, r2
+ 848              	.LVL104:
+ 151:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(unicode_letter == '\t') {
+ 849              		.loc 1 151 10 view .LVU268
+ 850 0010 0025     		movs	r5, #0
+ 851              	.L64:
+ 852              	.LVL105:
+ 156:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint32_t gid = get_glyph_dsc_id(font, unicode_letter);
+ 853              		.loc 1 156 5 is_stmt 1 view .LVU269
+ 156:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     uint32_t gid = get_glyph_dsc_id(font, unicode_letter);
+ 854              		.loc 1 156 29 is_stmt 0 view .LVU270
+ 855 0012 3E69     		ldr	r6, [r7, #16]
+ 856              	.LVL106:
+ 157:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(!gid) return false;
+ 857              		.loc 1 157 5 is_stmt 1 view .LVU271
+ 157:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(!gid) return false;
+ 858              		.loc 1 157 20 is_stmt 0 view .LVU272
+ 859 0014 3846     		mov	r0, r7
+ 860              	.LVL107:
+ 157:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(!gid) return false;
+ 861              		.loc 1 157 20 view .LVU273
+ 862 0016 FFF7FEFF 		bl	get_glyph_dsc_id
+ 863              	.LVL108:
+ 158:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 864              		.loc 1 158 5 is_stmt 1 view .LVU274
+ 158:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 865              		.loc 1 158 7 is_stmt 0 view .LVU275
+ 866 001a 8046     		mov	r8, r0
+ 867 001c 0028     		cmp	r0, #0
+ 868 001e 35D0     		beq	.L69
+ 160:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(fdsc->kern_dsc) {
+ 869              		.loc 1 160 5 is_stmt 1 view .LVU276
+ 870              	.LVL109:
+ 161:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint32_t gid_next = get_glyph_dsc_id(font, unicode_letter_next);
+ 871              		.loc 1 161 5 view .LVU277
+ 161:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint32_t gid_next = get_glyph_dsc_id(font, unicode_letter_next);
+ 872              		.loc 1 161 12 is_stmt 0 view .LVU278
+ 873 0020 F368     		ldr	r3, [r6, #12]
+ 161:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         uint32_t gid_next = get_glyph_dsc_id(font, unicode_letter_next);
+ 874              		.loc 1 161 7 view .LVU279
+ 875 0022 83B1     		cbz	r3, .L70
+ 876              	.LBB19:
+ 162:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(gid_next) {
+ 877              		.loc 1 162 9 is_stmt 1 view .LVU280
+ 162:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(gid_next) {
+ 878              		.loc 1 162 29 is_stmt 0 view .LVU281
+ 879 0024 4946     		mov	r1, r9
+ 880 0026 3846     		mov	r0, r7
+ 881              	.LVL110:
+ 162:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         if(gid_next) {
+ 882              		.loc 1 162 29 view .LVU282
+ARM GAS  /tmp/ccaPM4I2.s 			page 31
+
+
+ 883 0028 FFF7FEFF 		bl	get_glyph_dsc_id
+ 884              	.LVL111:
+ 163:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             kvalue = get_kern_value(font, gid, gid_next);
+ 885              		.loc 1 163 9 is_stmt 1 view .LVU283
+ 163:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****             kvalue = get_kern_value(font, gid, gid_next);
+ 886              		.loc 1 163 11 is_stmt 0 view .LVU284
+ 887 002c 0246     		mov	r2, r0
+ 888 002e 20B9     		cbnz	r0, .L74
+ 889              	.LBE19:
+ 160:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(fdsc->kern_dsc) {
+ 890              		.loc 1 160 12 view .LVU285
+ 891 0030 0023     		movs	r3, #0
+ 892 0032 09E0     		b	.L66
+ 893              	.LVL112:
+ 894              	.L68:
+ 154:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     }
+ 895              		.loc 1 154 16 view .LVU286
+ 896 0034 0125     		movs	r5, #1
+ 153:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         is_tab = true;
+ 897              		.loc 1 153 24 view .LVU287
+ 898 0036 2021     		movs	r1, #32
+ 899              	.LVL113:
+ 153:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         is_tab = true;
+ 900              		.loc 1 153 24 view .LVU288
+ 901 0038 EBE7     		b	.L64
+ 902              	.LVL114:
+ 903              	.L74:
+ 904              	.LBB20:
+ 164:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 905              		.loc 1 164 13 is_stmt 1 view .LVU289
+ 164:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 906              		.loc 1 164 22 is_stmt 0 view .LVU290
+ 907 003a 4146     		mov	r1, r8
+ 908 003c 3846     		mov	r0, r7
+ 909              	.LVL115:
+ 164:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 910              		.loc 1 164 22 view .LVU291
+ 911 003e FFF7FEFF 		bl	get_kern_value
+ 912              	.LVL116:
+ 164:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 913              		.loc 1 164 22 view .LVU292
+ 914 0042 0346     		mov	r3, r0
+ 915              	.LVL117:
+ 164:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 916              		.loc 1 164 22 view .LVU293
+ 917 0044 00E0     		b	.L66
+ 918              	.LVL118:
+ 919              	.L70:
+ 164:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****         }
+ 920              		.loc 1 164 22 view .LVU294
+ 921              	.LBE20:
+ 160:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(fdsc->kern_dsc) {
+ 922              		.loc 1 160 12 view .LVU295
+ 923 0046 0023     		movs	r3, #0
+ 924              	.LVL119:
+ 925              	.L66:
+ 169:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ARM GAS  /tmp/ccaPM4I2.s 			page 32
+
+
+ 926              		.loc 1 169 5 is_stmt 1 view .LVU296
+ 169:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 927              		.loc 1 169 53 is_stmt 0 view .LVU297
+ 928 0048 7168     		ldr	r1, [r6, #4]
+ 169:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 929              		.loc 1 169 41 view .LVU298
+ 930 004a 01EBC801 		add	r1, r1, r8, lsl #3
+ 931              	.LVL120:
+ 171:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 932              		.loc 1 171 5 is_stmt 1 view .LVU299
+ 171:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 933              		.loc 1 171 51 is_stmt 0 view .LVU300
+ 934 004e 308A     		ldrh	r0, [r6, #16]
+ 171:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 935              		.loc 1 171 19 view .LVU301
+ 936 0050 00FB03F3 		mul	r3, r0, r3
+ 937              	.LVL121:
+ 171:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 938              		.loc 1 171 13 view .LVU302
+ 939 0054 1B11     		asrs	r3, r3, #4
+ 940              	.LVL122:
+ 173:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(is_tab) adv_w *= 2;
+ 941              		.loc 1 173 5 is_stmt 1 view .LVU303
+ 173:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     if(is_tab) adv_w *= 2;
+ 942              		.loc 1 173 26 is_stmt 0 view .LVU304
+ 943 0056 4A88     		ldrh	r2, [r1, #2]
+ 944 0058 C2F30B12 		ubfx	r2, r2, #4, #12
+ 945              	.LVL123:
+ 174:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 946              		.loc 1 174 5 is_stmt 1 view .LVU305
+ 174:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 947              		.loc 1 174 7 is_stmt 0 view .LVU306
+ 948 005c 05B1     		cbz	r5, .L67
+ 174:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 949              		.loc 1 174 16 is_stmt 1 discriminator 1 view .LVU307
+ 174:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 950              		.loc 1 174 22 is_stmt 0 discriminator 1 view .LVU308
+ 951 005e 5200     		lsls	r2, r2, #1
+ 952              	.LVL124:
+ 953              	.L67:
+ 176:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     adv_w  = (adv_w + (1 << 3)) >> 4;
+ 954              		.loc 1 176 5 is_stmt 1 view .LVU309
+ 176:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     adv_w  = (adv_w + (1 << 3)) >> 4;
+ 955              		.loc 1 176 11 is_stmt 0 view .LVU310
+ 956 0060 1344     		add	r3, r3, r2
+ 957              	.LVL125:
+ 177:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 958              		.loc 1 177 5 is_stmt 1 view .LVU311
+ 177:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 959              		.loc 1 177 21 is_stmt 0 view .LVU312
+ 960 0062 0833     		adds	r3, r3, #8
+ 961              	.LVL126:
+ 177:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 962              		.loc 1 177 12 view .LVU313
+ 963 0064 1B09     		lsrs	r3, r3, #4
+ 964              	.LVL127:
+ 179:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->box_h = gdsc->box_h;
+ARM GAS  /tmp/ccaPM4I2.s 			page 33
+
+
+ 965              		.loc 1 179 5 is_stmt 1 view .LVU314
+ 179:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->box_h = gdsc->box_h;
+ 966              		.loc 1 179 20 is_stmt 0 view .LVU315
+ 967 0066 2380     		strh	r3, [r4]	@ movhi
+ 180:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->box_w = gdsc->box_w;
+ 968              		.loc 1 180 5 is_stmt 1 view .LVU316
+ 180:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->box_w = gdsc->box_w;
+ 969              		.loc 1 180 26 is_stmt 0 view .LVU317
+ 970 0068 4B79     		ldrb	r3, [r1, #5]	@ zero_extendqisi2
+ 971              	.LVL128:
+ 180:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->box_w = gdsc->box_w;
+ 972              		.loc 1 180 20 view .LVU318
+ 973 006a A380     		strh	r3, [r4, #4]	@ movhi
+ 181:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->ofs_x = gdsc->ofs_x;
+ 974              		.loc 1 181 5 is_stmt 1 view .LVU319
+ 181:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->ofs_x = gdsc->ofs_x;
+ 975              		.loc 1 181 26 is_stmt 0 view .LVU320
+ 976 006c 0A79     		ldrb	r2, [r1, #4]	@ zero_extendqisi2
+ 181:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->ofs_x = gdsc->ofs_x;
+ 977              		.loc 1 181 20 view .LVU321
+ 978 006e 6280     		strh	r2, [r4, #2]	@ movhi
+ 182:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->ofs_y = gdsc->ofs_y;
+ 979              		.loc 1 182 5 is_stmt 1 view .LVU322
+ 182:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->ofs_y = gdsc->ofs_y;
+ 980              		.loc 1 182 26 is_stmt 0 view .LVU323
+ 981 0070 91F90630 		ldrsb	r3, [r1, #6]
+ 182:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->ofs_y = gdsc->ofs_y;
+ 982              		.loc 1 182 20 view .LVU324
+ 983 0074 E380     		strh	r3, [r4, #6]	@ movhi
+ 183:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->bpp   = (uint8_t)fdsc->bpp;
+ 984              		.loc 1 183 5 is_stmt 1 view .LVU325
+ 183:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->bpp   = (uint8_t)fdsc->bpp;
+ 985              		.loc 1 183 26 is_stmt 0 view .LVU326
+ 986 0076 91F90730 		ldrsb	r3, [r1, #7]
+ 183:Middlewares/lvgl/src/font/lv_font_fmt_txt.c ****     dsc_out->bpp   = (uint8_t)fdsc->bpp;
+ 987              		.loc 1 183 20 view .LVU327
+ 988 007a 2381     		strh	r3, [r4, #8]	@ movhi
+ 184:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 989              		.loc 1 184 5 is_stmt 1 view .LVU328
+ 184:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 990              		.loc 1 184 35 is_stmt 0 view .LVU329
+ 991 007c F37C     		ldrb	r3, [r6, #19]	@ zero_extendqisi2
+ 992 007e C3F34303 		ubfx	r3, r3, #1, #4
+ 184:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 993              		.loc 1 184 20 view .LVU330
+ 994 0082 A372     		strb	r3, [r4, #10]
+ 186:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 995              		.loc 1 186 5 is_stmt 1 view .LVU331
+ 186:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 996              		.loc 1 186 7 is_stmt 0 view .LVU332
+ 997 0084 35B1     		cbz	r5, .L72
+ 186:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 998              		.loc 1 186 16 is_stmt 1 discriminator 1 view .LVU333
+ 186:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 999              		.loc 1 186 31 is_stmt 0 discriminator 1 view .LVU334
+ 1000 0086 5200     		lsls	r2, r2, #1
+ 1001 0088 6280     		strh	r2, [r4, #2]	@ movhi
+ARM GAS  /tmp/ccaPM4I2.s 			page 34
+
+
+ 1002 008a 00E0     		b	.L65
+ 1003              	.LVL129:
+ 1004              	.L69:
+ 158:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 1005              		.loc 1 158 21 view .LVU335
+ 1006 008c 0025     		movs	r5, #0
+ 1007              	.LVL130:
+ 1008              	.L65:
+ 189:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 1009              		.loc 1 189 1 view .LVU336
+ 1010 008e 2846     		mov	r0, r5
+ 1011 0090 BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 1012              	.LVL131:
+ 1013              	.L72:
+ 188:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 1014              		.loc 1 188 12 view .LVU337
+ 1015 0094 0125     		movs	r5, #1
+ 1016              	.LVL132:
+ 188:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** }
+ 1017              		.loc 1 188 12 view .LVU338
+ 1018 0096 FAE7     		b	.L65
+ 1019              		.cfi_endproc
+ 1020              	.LFE26:
+ 1022              		.section	.text._lv_font_clean_up_fmt_txt,"ax",%progbits
+ 1023              		.align	1
+ 1024              		.global	_lv_font_clean_up_fmt_txt
+ 1025              		.syntax unified
+ 1026              		.thumb
+ 1027              		.thumb_func
+ 1028              		.fpu softvfp
+ 1030              	_lv_font_clean_up_fmt_txt:
+ 1031              	.LFB27:
+ 195:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** #if LV_USE_FONT_COMPRESSED
+ 1032              		.loc 1 195 1 is_stmt 1 view -0
+ 1033              		.cfi_startproc
+ 1034              		@ args = 0, pretend = 0, frame = 0
+ 1035              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1036              		@ link register save eliminated.
+ 202:Middlewares/lvgl/src/font/lv_font_fmt_txt.c **** 
+ 1037              		.loc 1 202 1 view .LVU340
+ 1038 0000 7047     		bx	lr
+ 1039              		.cfi_endproc
+ 1040              	.LFE27:
+ 1042              		.text
+ 1043              	.Letext0:
+ 1044              		.file 2 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 1045              		.file 3 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ 1046              		.file 4 "Middlewares/lvgl/src/font/../misc/lv_area.h"
+ 1047              		.file 5 "Middlewares/lvgl/src/font/lv_font.h"
+ 1048              		.file 6 "Middlewares/lvgl/src/font/lv_font_fmt_txt.h"
+ 1049              		.file 7 "Middlewares/lvgl/src/font/../misc/lv_types.h"
+ 1050              		.file 8 "Middlewares/lvgl/src/font/../misc/lv_utils.h"
+ARM GAS  /tmp/ccaPM4I2.s 			page 35
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 lv_font_fmt_txt.c
+     /tmp/ccaPM4I2.s:16     .text.kern_pair_8_compare:0000000000000000 $t
+     /tmp/ccaPM4I2.s:23     .text.kern_pair_8_compare:0000000000000000 kern_pair_8_compare
+     /tmp/ccaPM4I2.s:64     .text.kern_pair_16_compare:0000000000000000 $t
+     /tmp/ccaPM4I2.s:70     .text.kern_pair_16_compare:0000000000000000 kern_pair_16_compare
+     /tmp/ccaPM4I2.s:110    .text.unicode_list_compare:0000000000000000 $t
+     /tmp/ccaPM4I2.s:116    .text.unicode_list_compare:0000000000000000 unicode_list_compare
+     /tmp/ccaPM4I2.s:137    .text.get_glyph_dsc_id:0000000000000000 $t
+     /tmp/ccaPM4I2.s:143    .text.get_glyph_dsc_id:0000000000000000 get_glyph_dsc_id
+     /tmp/ccaPM4I2.s:466    .text.get_glyph_dsc_id:00000000000000e8 $d
+     /tmp/ccaPM4I2.s:471    .text.get_kern_value:0000000000000000 $t
+     /tmp/ccaPM4I2.s:477    .text.get_kern_value:0000000000000000 get_kern_value
+     /tmp/ccaPM4I2.s:720    .text.get_kern_value:00000000000000a4 $d
+     /tmp/ccaPM4I2.s:726    .text.lv_font_get_bitmap_fmt_txt:0000000000000000 $t
+     /tmp/ccaPM4I2.s:733    .text.lv_font_get_bitmap_fmt_txt:0000000000000000 lv_font_get_bitmap_fmt_txt
+     /tmp/ccaPM4I2.s:812    .text.lv_font_get_glyph_dsc_fmt_txt:0000000000000000 $t
+     /tmp/ccaPM4I2.s:819    .text.lv_font_get_glyph_dsc_fmt_txt:0000000000000000 lv_font_get_glyph_dsc_fmt_txt
+     /tmp/ccaPM4I2.s:1023   .text._lv_font_clean_up_fmt_txt:0000000000000000 $t
+     /tmp/ccaPM4I2.s:1030   .text._lv_font_clean_up_fmt_txt:0000000000000000 _lv_font_clean_up_fmt_txt
+
+UNDEFINED SYMBOLS
+_lv_utils_bsearch

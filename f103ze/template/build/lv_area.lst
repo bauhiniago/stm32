@@ -1,0 +1,4068 @@
+ARM GAS  /tmp/ccuYsjKa.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"lv_area.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.lv_point_within_circle,"ax",%progbits
+  16              		.align	1
+  17              		.arch armv7-m
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	lv_point_within_circle:
+  24              	.LVL0:
+  25              	.LFB18:
+  26              		.file 1 "Middlewares/lvgl/src/misc/lv_area.c"
+   1:Middlewares/lvgl/src/misc/lv_area.c **** /**
+   2:Middlewares/lvgl/src/misc/lv_area.c ****  * @file lv_area.c
+   3:Middlewares/lvgl/src/misc/lv_area.c ****  *
+   4:Middlewares/lvgl/src/misc/lv_area.c ****  */
+   5:Middlewares/lvgl/src/misc/lv_area.c **** 
+   6:Middlewares/lvgl/src/misc/lv_area.c **** /*********************
+   7:Middlewares/lvgl/src/misc/lv_area.c ****  *      INCLUDES
+   8:Middlewares/lvgl/src/misc/lv_area.c ****  *********************/
+   9:Middlewares/lvgl/src/misc/lv_area.c **** #include "../lv_conf_internal.h"
+  10:Middlewares/lvgl/src/misc/lv_area.c **** 
+  11:Middlewares/lvgl/src/misc/lv_area.c **** #include "lv_area.h"
+  12:Middlewares/lvgl/src/misc/lv_area.c **** #include "lv_math.h"
+  13:Middlewares/lvgl/src/misc/lv_area.c **** 
+  14:Middlewares/lvgl/src/misc/lv_area.c **** /*********************
+  15:Middlewares/lvgl/src/misc/lv_area.c ****  *      DEFINES
+  16:Middlewares/lvgl/src/misc/lv_area.c ****  *********************/
+  17:Middlewares/lvgl/src/misc/lv_area.c **** 
+  18:Middlewares/lvgl/src/misc/lv_area.c **** /**********************
+  19:Middlewares/lvgl/src/misc/lv_area.c ****  *      TYPEDEFS
+  20:Middlewares/lvgl/src/misc/lv_area.c ****  **********************/
+  21:Middlewares/lvgl/src/misc/lv_area.c **** 
+  22:Middlewares/lvgl/src/misc/lv_area.c **** /**********************
+  23:Middlewares/lvgl/src/misc/lv_area.c ****  *  STATIC PROTOTYPES
+  24:Middlewares/lvgl/src/misc/lv_area.c ****  **********************/
+  25:Middlewares/lvgl/src/misc/lv_area.c **** 
+  26:Middlewares/lvgl/src/misc/lv_area.c **** static bool lv_point_within_circle(const lv_area_t * area, const lv_point_t * p);
+  27:Middlewares/lvgl/src/misc/lv_area.c **** 
+  28:Middlewares/lvgl/src/misc/lv_area.c **** /**********************
+  29:Middlewares/lvgl/src/misc/lv_area.c ****  *  STATIC VARIABLES
+  30:Middlewares/lvgl/src/misc/lv_area.c ****  **********************/
+  31:Middlewares/lvgl/src/misc/lv_area.c **** 
+  32:Middlewares/lvgl/src/misc/lv_area.c **** /**********************
+ARM GAS  /tmp/ccuYsjKa.s 			page 2
+
+
+  33:Middlewares/lvgl/src/misc/lv_area.c ****  *      MACROS
+  34:Middlewares/lvgl/src/misc/lv_area.c ****  **********************/
+  35:Middlewares/lvgl/src/misc/lv_area.c **** 
+  36:Middlewares/lvgl/src/misc/lv_area.c **** /**********************
+  37:Middlewares/lvgl/src/misc/lv_area.c ****  *   GLOBAL FUNCTIONS
+  38:Middlewares/lvgl/src/misc/lv_area.c ****  **********************/
+  39:Middlewares/lvgl/src/misc/lv_area.c **** 
+  40:Middlewares/lvgl/src/misc/lv_area.c **** /**
+  41:Middlewares/lvgl/src/misc/lv_area.c ****  * Initialize an area
+  42:Middlewares/lvgl/src/misc/lv_area.c ****  * @param area_p pointer to an area
+  43:Middlewares/lvgl/src/misc/lv_area.c ****  * @param x1 left coordinate of the area
+  44:Middlewares/lvgl/src/misc/lv_area.c ****  * @param y1 top coordinate of the area
+  45:Middlewares/lvgl/src/misc/lv_area.c ****  * @param x2 right coordinate of the area
+  46:Middlewares/lvgl/src/misc/lv_area.c ****  * @param y2 bottom coordinate of the area
+  47:Middlewares/lvgl/src/misc/lv_area.c ****  */
+  48:Middlewares/lvgl/src/misc/lv_area.c **** void lv_area_set(lv_area_t * area_p, lv_coord_t x1, lv_coord_t y1, lv_coord_t x2, lv_coord_t y2)
+  49:Middlewares/lvgl/src/misc/lv_area.c **** {
+  50:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->x1 = x1;
+  51:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->y1 = y1;
+  52:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->x2 = x2;
+  53:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->y2 = y2;
+  54:Middlewares/lvgl/src/misc/lv_area.c **** }
+  55:Middlewares/lvgl/src/misc/lv_area.c **** 
+  56:Middlewares/lvgl/src/misc/lv_area.c **** /**
+  57:Middlewares/lvgl/src/misc/lv_area.c ****  * Set the width of an area
+  58:Middlewares/lvgl/src/misc/lv_area.c ****  * @param area_p pointer to an area
+  59:Middlewares/lvgl/src/misc/lv_area.c ****  * @param w the new width of the area (w == 1 makes x1 == x2)
+  60:Middlewares/lvgl/src/misc/lv_area.c ****  */
+  61:Middlewares/lvgl/src/misc/lv_area.c **** void lv_area_set_width(lv_area_t * area_p, lv_coord_t w)
+  62:Middlewares/lvgl/src/misc/lv_area.c **** {
+  63:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->x2 = area_p->x1 + w - 1;
+  64:Middlewares/lvgl/src/misc/lv_area.c **** }
+  65:Middlewares/lvgl/src/misc/lv_area.c **** 
+  66:Middlewares/lvgl/src/misc/lv_area.c **** /**
+  67:Middlewares/lvgl/src/misc/lv_area.c ****  * Set the height of an area
+  68:Middlewares/lvgl/src/misc/lv_area.c ****  * @param area_p pointer to an area
+  69:Middlewares/lvgl/src/misc/lv_area.c ****  * @param h the new height of the area (h == 1 makes y1 == y2)
+  70:Middlewares/lvgl/src/misc/lv_area.c ****  */
+  71:Middlewares/lvgl/src/misc/lv_area.c **** void lv_area_set_height(lv_area_t * area_p, lv_coord_t h)
+  72:Middlewares/lvgl/src/misc/lv_area.c **** {
+  73:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->y2 = area_p->y1 + h - 1;
+  74:Middlewares/lvgl/src/misc/lv_area.c **** }
+  75:Middlewares/lvgl/src/misc/lv_area.c **** 
+  76:Middlewares/lvgl/src/misc/lv_area.c **** /**
+  77:Middlewares/lvgl/src/misc/lv_area.c ****  * Set the position of an area (width and height will be kept)
+  78:Middlewares/lvgl/src/misc/lv_area.c ****  * @param area_p pointer to an area
+  79:Middlewares/lvgl/src/misc/lv_area.c ****  * @param x the new x coordinate of the area
+  80:Middlewares/lvgl/src/misc/lv_area.c ****  * @param y the new y coordinate of the area
+  81:Middlewares/lvgl/src/misc/lv_area.c ****  */
+  82:Middlewares/lvgl/src/misc/lv_area.c **** void _lv_area_set_pos(lv_area_t * area_p, lv_coord_t x, lv_coord_t y)
+  83:Middlewares/lvgl/src/misc/lv_area.c **** {
+  84:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t w = lv_area_get_width(area_p);
+  85:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t h = lv_area_get_height(area_p);
+  86:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->x1   = x;
+  87:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->y1   = y;
+  88:Middlewares/lvgl/src/misc/lv_area.c ****     lv_area_set_width(area_p, w);
+  89:Middlewares/lvgl/src/misc/lv_area.c ****     lv_area_set_height(area_p, h);
+ARM GAS  /tmp/ccuYsjKa.s 			page 3
+
+
+  90:Middlewares/lvgl/src/misc/lv_area.c **** }
+  91:Middlewares/lvgl/src/misc/lv_area.c **** 
+  92:Middlewares/lvgl/src/misc/lv_area.c **** /**
+  93:Middlewares/lvgl/src/misc/lv_area.c ****  * Return with area of an area (x * y)
+  94:Middlewares/lvgl/src/misc/lv_area.c ****  * @param area_p pointer to an area
+  95:Middlewares/lvgl/src/misc/lv_area.c ****  * @return size of area
+  96:Middlewares/lvgl/src/misc/lv_area.c ****  */
+  97:Middlewares/lvgl/src/misc/lv_area.c **** uint32_t lv_area_get_size(const lv_area_t * area_p)
+  98:Middlewares/lvgl/src/misc/lv_area.c **** {
+  99:Middlewares/lvgl/src/misc/lv_area.c ****     uint32_t size;
+ 100:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 101:Middlewares/lvgl/src/misc/lv_area.c ****     size = (uint32_t)(area_p->x2 - area_p->x1 + 1) * (area_p->y2 - area_p->y1 + 1);
+ 102:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 103:Middlewares/lvgl/src/misc/lv_area.c ****     return size;
+ 104:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 105:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 106:Middlewares/lvgl/src/misc/lv_area.c **** void lv_area_increase(lv_area_t * area, lv_coord_t w_extra, lv_coord_t h_extra)
+ 107:Middlewares/lvgl/src/misc/lv_area.c **** {
+ 108:Middlewares/lvgl/src/misc/lv_area.c ****     area->x1 -= w_extra;
+ 109:Middlewares/lvgl/src/misc/lv_area.c ****     area->x2 += w_extra;
+ 110:Middlewares/lvgl/src/misc/lv_area.c ****     area->y1 -= h_extra;
+ 111:Middlewares/lvgl/src/misc/lv_area.c ****     area->y2 += h_extra;
+ 112:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 113:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 114:Middlewares/lvgl/src/misc/lv_area.c **** void lv_area_move(lv_area_t * area, lv_coord_t x_ofs, lv_coord_t y_ofs)
+ 115:Middlewares/lvgl/src/misc/lv_area.c **** {
+ 116:Middlewares/lvgl/src/misc/lv_area.c ****     area->x1 += x_ofs;
+ 117:Middlewares/lvgl/src/misc/lv_area.c ****     area->x2 += x_ofs;
+ 118:Middlewares/lvgl/src/misc/lv_area.c ****     area->y1 += y_ofs;
+ 119:Middlewares/lvgl/src/misc/lv_area.c ****     area->y2 += y_ofs;
+ 120:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 121:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 122:Middlewares/lvgl/src/misc/lv_area.c **** /**
+ 123:Middlewares/lvgl/src/misc/lv_area.c ****  * Get the common parts of two areas
+ 124:Middlewares/lvgl/src/misc/lv_area.c ****  * @param res_p pointer to an area, the result will be stored here
+ 125:Middlewares/lvgl/src/misc/lv_area.c ****  * @param a1_p pointer to the first area
+ 126:Middlewares/lvgl/src/misc/lv_area.c ****  * @param a2_p pointer to the second area
+ 127:Middlewares/lvgl/src/misc/lv_area.c ****  * @return false: the two area has NO common parts, res_p is invalid
+ 128:Middlewares/lvgl/src/misc/lv_area.c ****  */
+ 129:Middlewares/lvgl/src/misc/lv_area.c **** bool _lv_area_intersect(lv_area_t * res_p, const lv_area_t * a1_p, const lv_area_t * a2_p)
+ 130:Middlewares/lvgl/src/misc/lv_area.c **** {
+ 131:Middlewares/lvgl/src/misc/lv_area.c ****     /*Get the smaller area from 'a1_p' and 'a2_p'*/
+ 132:Middlewares/lvgl/src/misc/lv_area.c ****     res_p->x1 = LV_MAX(a1_p->x1, a2_p->x1);
+ 133:Middlewares/lvgl/src/misc/lv_area.c ****     res_p->y1 = LV_MAX(a1_p->y1, a2_p->y1);
+ 134:Middlewares/lvgl/src/misc/lv_area.c ****     res_p->x2 = LV_MIN(a1_p->x2, a2_p->x2);
+ 135:Middlewares/lvgl/src/misc/lv_area.c ****     res_p->y2 = LV_MIN(a1_p->y2, a2_p->y2);
+ 136:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 137:Middlewares/lvgl/src/misc/lv_area.c ****     /*If x1 or y1 greater then x2 or y2 then the areas union is empty*/
+ 138:Middlewares/lvgl/src/misc/lv_area.c ****     bool union_ok = true;
+ 139:Middlewares/lvgl/src/misc/lv_area.c ****     if((res_p->x1 > res_p->x2) || (res_p->y1 > res_p->y2)) {
+ 140:Middlewares/lvgl/src/misc/lv_area.c ****         union_ok = false;
+ 141:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 142:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 143:Middlewares/lvgl/src/misc/lv_area.c ****     return union_ok;
+ 144:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 145:Middlewares/lvgl/src/misc/lv_area.c **** /**
+ 146:Middlewares/lvgl/src/misc/lv_area.c ****  * Join two areas into a third which involves the other two
+ARM GAS  /tmp/ccuYsjKa.s 			page 4
+
+
+ 147:Middlewares/lvgl/src/misc/lv_area.c ****  * @param res_p pointer to an area, the result will be stored here
+ 148:Middlewares/lvgl/src/misc/lv_area.c ****  * @param a1_p pointer to the first area
+ 149:Middlewares/lvgl/src/misc/lv_area.c ****  * @param a2_p pointer to the second area
+ 150:Middlewares/lvgl/src/misc/lv_area.c ****  */
+ 151:Middlewares/lvgl/src/misc/lv_area.c **** void _lv_area_join(lv_area_t * a_res_p, const lv_area_t * a1_p, const lv_area_t * a2_p)
+ 152:Middlewares/lvgl/src/misc/lv_area.c **** {
+ 153:Middlewares/lvgl/src/misc/lv_area.c ****     a_res_p->x1 = LV_MIN(a1_p->x1, a2_p->x1);
+ 154:Middlewares/lvgl/src/misc/lv_area.c ****     a_res_p->y1 = LV_MIN(a1_p->y1, a2_p->y1);
+ 155:Middlewares/lvgl/src/misc/lv_area.c ****     a_res_p->x2 = LV_MAX(a1_p->x2, a2_p->x2);
+ 156:Middlewares/lvgl/src/misc/lv_area.c ****     a_res_p->y2 = LV_MAX(a1_p->y2, a2_p->y2);
+ 157:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 158:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 159:Middlewares/lvgl/src/misc/lv_area.c **** /**
+ 160:Middlewares/lvgl/src/misc/lv_area.c ****  * Check if a point is on an area
+ 161:Middlewares/lvgl/src/misc/lv_area.c ****  * @param a_p pointer to an area
+ 162:Middlewares/lvgl/src/misc/lv_area.c ****  * @param p_p pointer to a point
+ 163:Middlewares/lvgl/src/misc/lv_area.c ****  * @param radius radius of area (e.g. for rounded rectangle)
+ 164:Middlewares/lvgl/src/misc/lv_area.c ****  * @return false:the point is out of the area
+ 165:Middlewares/lvgl/src/misc/lv_area.c ****  */
+ 166:Middlewares/lvgl/src/misc/lv_area.c **** bool _lv_area_is_point_on(const lv_area_t * a_p, const lv_point_t * p_p, lv_coord_t radius)
+ 167:Middlewares/lvgl/src/misc/lv_area.c **** {
+ 168:Middlewares/lvgl/src/misc/lv_area.c ****     /*First check the basic area*/
+ 169:Middlewares/lvgl/src/misc/lv_area.c ****     bool is_on_rect = false;
+ 170:Middlewares/lvgl/src/misc/lv_area.c ****     if((p_p->x >= a_p->x1 && p_p->x <= a_p->x2) && ((p_p->y >= a_p->y1 && p_p->y <= a_p->y2))) {
+ 171:Middlewares/lvgl/src/misc/lv_area.c ****         is_on_rect = true;
+ 172:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 173:Middlewares/lvgl/src/misc/lv_area.c ****     if(!is_on_rect)
+ 174:Middlewares/lvgl/src/misc/lv_area.c ****         return false;
+ 175:Middlewares/lvgl/src/misc/lv_area.c ****     /*Now handle potential rounded rectangles*/
+ 176:Middlewares/lvgl/src/misc/lv_area.c ****     if(radius <= 0) {
+ 177:Middlewares/lvgl/src/misc/lv_area.c ****         /*No radius, it is within the rectangle*/
+ 178:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 179:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 180:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t w = lv_area_get_width(a_p) / 2;
+ 181:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t h = lv_area_get_height(a_p) / 2;
+ 182:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t max_radius = LV_MIN(w, h);
+ 183:Middlewares/lvgl/src/misc/lv_area.c ****     if(radius > max_radius)
+ 184:Middlewares/lvgl/src/misc/lv_area.c ****         radius = max_radius;
+ 185:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 186:Middlewares/lvgl/src/misc/lv_area.c ****     /*Check if it's in one of the corners*/
+ 187:Middlewares/lvgl/src/misc/lv_area.c ****     lv_area_t corner_area;
+ 188:Middlewares/lvgl/src/misc/lv_area.c ****     /*Top left*/
+ 189:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.x1 = a_p->x1;
+ 190:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.x2 = a_p->x1 + radius;
+ 191:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y1 = a_p->y1;
+ 192:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y2 = a_p->y1 + radius;
+ 193:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 194:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x2 += radius;
+ 195:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.y2 += radius;
+ 196:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 197:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 198:Middlewares/lvgl/src/misc/lv_area.c ****     /*Bottom left*/
+ 199:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y1 = a_p->y2 - radius;
+ 200:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y2 = a_p->y2;
+ 201:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 202:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x2 += radius;
+ 203:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.y1 -= radius;
+ARM GAS  /tmp/ccuYsjKa.s 			page 5
+
+
+ 204:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 205:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 206:Middlewares/lvgl/src/misc/lv_area.c ****     /*Bottom right*/
+ 207:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.x1 = a_p->x2 - radius;
+ 208:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.x2 = a_p->x2;
+ 209:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 210:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x1 -= radius;
+ 211:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.y1 -= radius;
+ 212:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 213:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 214:Middlewares/lvgl/src/misc/lv_area.c ****     /*Top right*/
+ 215:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y1 = a_p->y1;
+ 216:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y2 = a_p->y1 + radius;
+ 217:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 218:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x1 -= radius;
+ 219:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.y2 += radius;
+ 220:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 221:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 222:Middlewares/lvgl/src/misc/lv_area.c ****     /*Not within corners*/
+ 223:Middlewares/lvgl/src/misc/lv_area.c ****     return true;
+ 224:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 225:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 226:Middlewares/lvgl/src/misc/lv_area.c **** /**
+ 227:Middlewares/lvgl/src/misc/lv_area.c ****  * Check if two area has common parts
+ 228:Middlewares/lvgl/src/misc/lv_area.c ****  * @param a1_p pointer to an area.
+ 229:Middlewares/lvgl/src/misc/lv_area.c ****  * @param a2_p pointer to an other area
+ 230:Middlewares/lvgl/src/misc/lv_area.c ****  * @return false: a1_p and a2_p has no common parts
+ 231:Middlewares/lvgl/src/misc/lv_area.c ****  */
+ 232:Middlewares/lvgl/src/misc/lv_area.c **** bool _lv_area_is_on(const lv_area_t * a1_p, const lv_area_t * a2_p)
+ 233:Middlewares/lvgl/src/misc/lv_area.c **** {
+ 234:Middlewares/lvgl/src/misc/lv_area.c ****     if((a1_p->x1 <= a2_p->x2) && (a1_p->x2 >= a2_p->x1) && (a1_p->y1 <= a2_p->y2) && (a1_p->y2 >= a
+ 235:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 236:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 237:Middlewares/lvgl/src/misc/lv_area.c ****     else {
+ 238:Middlewares/lvgl/src/misc/lv_area.c ****         return false;
+ 239:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 240:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 241:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 242:Middlewares/lvgl/src/misc/lv_area.c **** /**
+ 243:Middlewares/lvgl/src/misc/lv_area.c ****  * Check if an area is fully on an other
+ 244:Middlewares/lvgl/src/misc/lv_area.c ****  * @param ain_p pointer to an area which could be in 'aholder_p'
+ 245:Middlewares/lvgl/src/misc/lv_area.c ****  * @param aholder_p pointer to an area which could involve 'ain_p'
+ 246:Middlewares/lvgl/src/misc/lv_area.c ****  * @param radius radius of `aholder_p` (e.g. for rounded rectangle)
+ 247:Middlewares/lvgl/src/misc/lv_area.c ****  * @return true: `ain_p` is fully inside `aholder_p`
+ 248:Middlewares/lvgl/src/misc/lv_area.c ****  */
+ 249:Middlewares/lvgl/src/misc/lv_area.c **** bool _lv_area_is_in(const lv_area_t * ain_p, const lv_area_t * aholder_p, lv_coord_t radius)
+ 250:Middlewares/lvgl/src/misc/lv_area.c **** {
+ 251:Middlewares/lvgl/src/misc/lv_area.c ****     bool is_in = false;
+ 252:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 253:Middlewares/lvgl/src/misc/lv_area.c ****     if(ain_p->x1 >= aholder_p->x1 && ain_p->y1 >= aholder_p->y1 && ain_p->x2 <= aholder_p->x2 &&
+ 254:Middlewares/lvgl/src/misc/lv_area.c ****        ain_p->y2 <= aholder_p->y2) {
+ 255:Middlewares/lvgl/src/misc/lv_area.c ****         is_in = true;
+ 256:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 257:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 258:Middlewares/lvgl/src/misc/lv_area.c ****     if(!is_in) return false;
+ 259:Middlewares/lvgl/src/misc/lv_area.c ****     if(radius == 0) return true;
+ 260:Middlewares/lvgl/src/misc/lv_area.c **** 
+ARM GAS  /tmp/ccuYsjKa.s 			page 6
+
+
+ 261:Middlewares/lvgl/src/misc/lv_area.c ****     /*Check if the corner points are inside the radius or not*/
+ 262:Middlewares/lvgl/src/misc/lv_area.c ****     lv_point_t p;
+ 263:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 264:Middlewares/lvgl/src/misc/lv_area.c ****     p.x = ain_p->x1;
+ 265:Middlewares/lvgl/src/misc/lv_area.c ****     p.y = ain_p->y1;
+ 266:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(aholder_p, &p, radius) == false) return false;
+ 267:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 268:Middlewares/lvgl/src/misc/lv_area.c ****     p.x = ain_p->x2;
+ 269:Middlewares/lvgl/src/misc/lv_area.c ****     p.y = ain_p->y1;
+ 270:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(aholder_p, &p, radius) == false) return false;
+ 271:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 272:Middlewares/lvgl/src/misc/lv_area.c ****     p.x = ain_p->x1;
+ 273:Middlewares/lvgl/src/misc/lv_area.c ****     p.y = ain_p->y2;
+ 274:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(aholder_p, &p, radius) == false) return false;
+ 275:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 276:Middlewares/lvgl/src/misc/lv_area.c ****     p.x = ain_p->x2;
+ 277:Middlewares/lvgl/src/misc/lv_area.c ****     p.y = ain_p->y2;
+ 278:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(aholder_p, &p, radius) == false) return false;
+ 279:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 280:Middlewares/lvgl/src/misc/lv_area.c ****     return true;
+ 281:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 282:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 283:Middlewares/lvgl/src/misc/lv_area.c **** /**
+ 284:Middlewares/lvgl/src/misc/lv_area.c ****  * Align an area to an other
+ 285:Middlewares/lvgl/src/misc/lv_area.c ****  * @param base an are where the other will be aligned
+ 286:Middlewares/lvgl/src/misc/lv_area.c ****  * @param to_align the area to align
+ 287:Middlewares/lvgl/src/misc/lv_area.c ****  * @param align `LV_ALIGN_...`
+ 288:Middlewares/lvgl/src/misc/lv_area.c ****  * @param res x/y coordinates where `to_align` align area should be placed
+ 289:Middlewares/lvgl/src/misc/lv_area.c ****  */
+ 290:Middlewares/lvgl/src/misc/lv_area.c **** void lv_area_align(const lv_area_t * base, lv_area_t * to_align, lv_align_t align, lv_coord_t ofs_x
+ 291:Middlewares/lvgl/src/misc/lv_area.c **** {
+ 292:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 293:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t x;
+ 294:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t y;
+ 295:Middlewares/lvgl/src/misc/lv_area.c ****     switch(align) {
+ 296:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_CENTER:
+ 297:Middlewares/lvgl/src/misc/lv_area.c ****             x = lv_area_get_width(base) / 2 - lv_area_get_width(to_align) / 2;
+ 298:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 299:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 300:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 301:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_TOP_LEFT:
+ 302:Middlewares/lvgl/src/misc/lv_area.c ****             x = 0;
+ 303:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 304:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 305:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_TOP_MID:
+ 306:Middlewares/lvgl/src/misc/lv_area.c ****             x = lv_area_get_width(base) / 2 - lv_area_get_width(to_align) / 2;
+ 307:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 308:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 309:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 310:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_TOP_RIGHT:
+ 311:Middlewares/lvgl/src/misc/lv_area.c ****             x = lv_area_get_width(base) - lv_area_get_width(to_align);
+ 312:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 313:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 314:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 315:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_BOTTOM_LEFT:
+ 316:Middlewares/lvgl/src/misc/lv_area.c ****             x = 0;
+ 317:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ARM GAS  /tmp/ccuYsjKa.s 			page 7
+
+
+ 318:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 319:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_BOTTOM_MID:
+ 320:Middlewares/lvgl/src/misc/lv_area.c ****             x = lv_area_get_width(base) / 2 - lv_area_get_width(to_align) / 2;
+ 321:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 322:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 323:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 324:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_BOTTOM_RIGHT:
+ 325:Middlewares/lvgl/src/misc/lv_area.c ****             x = lv_area_get_width(base) - lv_area_get_width(to_align);
+ 326:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 327:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 328:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 329:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_LEFT_MID:
+ 330:Middlewares/lvgl/src/misc/lv_area.c ****             x = 0;
+ 331:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 332:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 333:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 334:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_RIGHT_MID:
+ 335:Middlewares/lvgl/src/misc/lv_area.c ****             x = lv_area_get_width(base) - lv_area_get_width(to_align);
+ 336:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 337:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 338:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 339:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_OUT_TOP_LEFT:
+ 340:Middlewares/lvgl/src/misc/lv_area.c ****             x = 0;
+ 341:Middlewares/lvgl/src/misc/lv_area.c ****             y = -lv_area_get_height(to_align);
+ 342:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 343:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 344:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_OUT_TOP_MID:
+ 345:Middlewares/lvgl/src/misc/lv_area.c ****             x = lv_area_get_width(base) / 2 - lv_area_get_width(to_align) / 2;
+ 346:Middlewares/lvgl/src/misc/lv_area.c ****             y = -lv_area_get_height(to_align);
+ 347:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 348:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 349:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_OUT_TOP_RIGHT:
+ 350:Middlewares/lvgl/src/misc/lv_area.c ****             x = lv_area_get_width(base) - lv_area_get_width(to_align);
+ 351:Middlewares/lvgl/src/misc/lv_area.c ****             y = -lv_area_get_height(to_align);
+ 352:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 353:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 354:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_OUT_BOTTOM_LEFT:
+ 355:Middlewares/lvgl/src/misc/lv_area.c ****             x = 0;
+ 356:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base);
+ 357:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 358:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 359:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_OUT_BOTTOM_MID:
+ 360:Middlewares/lvgl/src/misc/lv_area.c ****             x = lv_area_get_width(base) / 2 - lv_area_get_width(to_align) / 2;
+ 361:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base);
+ 362:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 363:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 364:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_OUT_BOTTOM_RIGHT:
+ 365:Middlewares/lvgl/src/misc/lv_area.c ****             x = lv_area_get_width(base) - lv_area_get_width(to_align);
+ 366:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base);
+ 367:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 368:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 369:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_OUT_LEFT_TOP:
+ 370:Middlewares/lvgl/src/misc/lv_area.c ****             x = -lv_area_get_width(to_align);
+ 371:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 372:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 373:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 374:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_OUT_LEFT_MID:
+ARM GAS  /tmp/ccuYsjKa.s 			page 8
+
+
+ 375:Middlewares/lvgl/src/misc/lv_area.c ****             x = -lv_area_get_width(to_align);
+ 376:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 377:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 378:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 379:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_OUT_LEFT_BOTTOM:
+ 380:Middlewares/lvgl/src/misc/lv_area.c ****             x = -lv_area_get_width(to_align);
+ 381:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 382:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 383:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 384:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_OUT_RIGHT_TOP:
+ 385:Middlewares/lvgl/src/misc/lv_area.c ****             x = lv_area_get_width(base);
+ 386:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 387:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 388:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 389:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_OUT_RIGHT_MID:
+ 390:Middlewares/lvgl/src/misc/lv_area.c ****             x = lv_area_get_width(base);
+ 391:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 392:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 393:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 394:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_OUT_RIGHT_BOTTOM:
+ 395:Middlewares/lvgl/src/misc/lv_area.c ****             x = lv_area_get_width(base);
+ 396:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 397:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 398:Middlewares/lvgl/src/misc/lv_area.c ****         default:
+ 399:Middlewares/lvgl/src/misc/lv_area.c ****             x = 0;
+ 400:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 401:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 402:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 403:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 404:Middlewares/lvgl/src/misc/lv_area.c ****     x += base->x1;
+ 405:Middlewares/lvgl/src/misc/lv_area.c ****     y += base->y1;
+ 406:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 407:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t w = lv_area_get_width(to_align);
+ 408:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t h = lv_area_get_height(to_align);
+ 409:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->x1 = x + ofs_x;
+ 410:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->y1 = y + ofs_y;
+ 411:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->x2 = to_align->x1 + w - 1;
+ 412:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->y2 = to_align->y1 + h - 1;
+ 413:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 414:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 415:Middlewares/lvgl/src/misc/lv_area.c **** /**********************
+ 416:Middlewares/lvgl/src/misc/lv_area.c ****  *   STATIC FUNCTIONS
+ 417:Middlewares/lvgl/src/misc/lv_area.c ****  **********************/
+ 418:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 419:Middlewares/lvgl/src/misc/lv_area.c **** static bool lv_point_within_circle(const lv_area_t * area, const lv_point_t * p)
+ 420:Middlewares/lvgl/src/misc/lv_area.c **** {
+  27              		.loc 1 420 1 view -0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		.loc 1 420 1 is_stmt 0 view .LVU1
+  32 0000 00B5     		push	{lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 4
+  35              		.cfi_offset 14, -4
+ 421:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t r = (area->x2 - area->x1) / 2;
+  36              		.loc 1 421 5 is_stmt 1 view .LVU2
+ARM GAS  /tmp/ccuYsjKa.s 			page 9
+
+
+  37              		.loc 1 421 25 is_stmt 0 view .LVU3
+  38 0002 B0F90430 		ldrsh	r3, [r0, #4]
+  39              		.loc 1 421 36 view .LVU4
+  40 0006 B0F90020 		ldrsh	r2, [r0]
+  41              		.loc 1 421 30 view .LVU5
+  42 000a 9B1A     		subs	r3, r3, r2
+  43              		.loc 1 421 42 view .LVU6
+  44 000c 03EBD373 		add	r3, r3, r3, lsr #31
+  45              		.loc 1 421 16 view .LVU7
+  46 0010 43F34F0E 		sbfx	lr, r3, #1, #16
+  47              	.LVL1:
+ 422:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 423:Middlewares/lvgl/src/misc/lv_area.c ****     /*Circle center*/
+ 424:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t cx = area->x1 + r;
+  48              		.loc 1 424 5 is_stmt 1 view .LVU8
+  49              		.loc 1 424 25 is_stmt 0 view .LVU9
+  50 0014 92B2     		uxth	r2, r2
+  51              		.loc 1 424 30 view .LVU10
+  52 0016 C3F34F03 		ubfx	r3, r3, #1, #16
+  53 001a 1A44     		add	r2, r2, r3
+  54 001c 1FFA82FC 		uxth	ip, r2
+  55              	.LVL2:
+ 425:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t cy = area->y1 + r;
+  56              		.loc 1 425 5 is_stmt 1 view .LVU11
+  57              		.loc 1 425 25 is_stmt 0 view .LVU12
+  58 0020 4288     		ldrh	r2, [r0, #2]
+  59              		.loc 1 425 30 view .LVU13
+  60 0022 1344     		add	r3, r3, r2
+  61 0024 9BB2     		uxth	r3, r3
+  62              	.LVL3:
+ 426:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 427:Middlewares/lvgl/src/misc/lv_area.c ****     /*Simplify the code by moving everything to (0, 0)*/
+ 428:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t px = p->x - cx;
+  63              		.loc 1 428 5 is_stmt 1 view .LVU14
+  64              		.loc 1 428 22 is_stmt 0 view .LVU15
+  65 0026 0A88     		ldrh	r2, [r1]
+  66              		.loc 1 428 26 view .LVU16
+  67 0028 A2EB0C02 		sub	r2, r2, ip
+  68              		.loc 1 428 16 view .LVU17
+  69 002c 12B2     		sxth	r2, r2
+  70              	.LVL4:
+ 429:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t py = p->y - cy;
+  71              		.loc 1 429 5 is_stmt 1 view .LVU18
+  72              		.loc 1 429 22 is_stmt 0 view .LVU19
+  73 002e 4988     		ldrh	r1, [r1, #2]
+  74              	.LVL5:
+  75              		.loc 1 429 26 view .LVU20
+  76 0030 CB1A     		subs	r3, r1, r3
+  77              	.LVL6:
+  78              		.loc 1 429 16 view .LVU21
+  79 0032 1BB2     		sxth	r3, r3
+  80              	.LVL7:
+ 430:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 431:Middlewares/lvgl/src/misc/lv_area.c ****     uint32_t r_sqrd = r * r;
+  81              		.loc 1 431 5 is_stmt 1 view .LVU22
+  82              		.loc 1 431 25 is_stmt 0 view .LVU23
+  83 0034 0EFB0EFE 		mul	lr, lr, lr
+ARM GAS  /tmp/ccuYsjKa.s 			page 10
+
+
+  84              	.LVL8:
+ 432:Middlewares/lvgl/src/misc/lv_area.c ****     uint32_t dist = (px * px) + (py * py);
+  85              		.loc 1 432 5 is_stmt 1 view .LVU24
+  86              		.loc 1 432 37 is_stmt 0 view .LVU25
+  87 0038 03FB03F3 		mul	r3, r3, r3
+  88              	.LVL9:
+  89              		.loc 1 432 31 view .LVU26
+  90 003c 02FB0232 		mla	r2, r2, r2, r3
+  91              	.LVL10:
+ 433:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 434:Middlewares/lvgl/src/misc/lv_area.c ****     if(dist <= r_sqrd)
+  92              		.loc 1 434 5 is_stmt 1 view .LVU27
+  93              		.loc 1 434 7 is_stmt 0 view .LVU28
+  94 0040 9645     		cmp	lr, r2
+  95 0042 02D3     		bcc	.L3
+ 435:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+  96              		.loc 1 435 16 view .LVU29
+  97 0044 0120     		movs	r0, #1
+  98              	.LVL11:
+  99              	.L2:
+ 436:Middlewares/lvgl/src/misc/lv_area.c ****     else
+ 437:Middlewares/lvgl/src/misc/lv_area.c ****         return false;
+ 438:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 100              		.loc 1 438 1 view .LVU30
+ 101 0046 5DF804FB 		ldr	pc, [sp], #4
+ 102              	.LVL12:
+ 103              	.L3:
+ 437:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 104              		.loc 1 437 16 view .LVU31
+ 105 004a 0020     		movs	r0, #0
+ 106              	.LVL13:
+ 437:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 107              		.loc 1 437 16 view .LVU32
+ 108 004c FBE7     		b	.L2
+ 109              		.cfi_endproc
+ 110              	.LFE18:
+ 112              		.section	.text.lv_area_set,"ax",%progbits
+ 113              		.align	1
+ 114              		.global	lv_area_set
+ 115              		.syntax unified
+ 116              		.thumb
+ 117              		.thumb_func
+ 118              		.fpu softvfp
+ 120              	lv_area_set:
+ 121              	.LVL14:
+ 122              	.LFB5:
+  49:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->x1 = x1;
+ 123              		.loc 1 49 1 is_stmt 1 view -0
+ 124              		.cfi_startproc
+ 125              		@ args = 4, pretend = 0, frame = 0
+ 126              		@ frame_needed = 0, uses_anonymous_args = 0
+ 127              		@ link register save eliminated.
+  50:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->y1 = y1;
+ 128              		.loc 1 50 5 view .LVU34
+  50:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->y1 = y1;
+ 129              		.loc 1 50 16 is_stmt 0 view .LVU35
+ 130 0000 0180     		strh	r1, [r0]	@ movhi
+ARM GAS  /tmp/ccuYsjKa.s 			page 11
+
+
+  51:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->x2 = x2;
+ 131              		.loc 1 51 5 is_stmt 1 view .LVU36
+  51:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->x2 = x2;
+ 132              		.loc 1 51 16 is_stmt 0 view .LVU37
+ 133 0002 4280     		strh	r2, [r0, #2]	@ movhi
+  52:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->y2 = y2;
+ 134              		.loc 1 52 5 is_stmt 1 view .LVU38
+  52:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->y2 = y2;
+ 135              		.loc 1 52 16 is_stmt 0 view .LVU39
+ 136 0004 8380     		strh	r3, [r0, #4]	@ movhi
+  53:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 137              		.loc 1 53 5 is_stmt 1 view .LVU40
+  53:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 138              		.loc 1 53 16 is_stmt 0 view .LVU41
+ 139 0006 BDF90030 		ldrsh	r3, [sp]
+ 140              	.LVL15:
+  53:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 141              		.loc 1 53 16 view .LVU42
+ 142 000a C380     		strh	r3, [r0, #6]	@ movhi
+  54:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 143              		.loc 1 54 1 view .LVU43
+ 144 000c 7047     		bx	lr
+ 145              		.cfi_endproc
+ 146              	.LFE5:
+ 148              		.section	.text.lv_area_set_width,"ax",%progbits
+ 149              		.align	1
+ 150              		.global	lv_area_set_width
+ 151              		.syntax unified
+ 152              		.thumb
+ 153              		.thumb_func
+ 154              		.fpu softvfp
+ 156              	lv_area_set_width:
+ 157              	.LVL16:
+ 158              	.LFB6:
+  62:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->x2 = area_p->x1 + w - 1;
+ 159              		.loc 1 62 1 is_stmt 1 view -0
+ 160              		.cfi_startproc
+ 161              		@ args = 0, pretend = 0, frame = 0
+ 162              		@ frame_needed = 0, uses_anonymous_args = 0
+ 163              		@ link register save eliminated.
+  63:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 164              		.loc 1 63 5 view .LVU45
+  63:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 165              		.loc 1 63 24 is_stmt 0 view .LVU46
+ 166 0000 0388     		ldrh	r3, [r0]
+  63:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 167              		.loc 1 63 29 view .LVU47
+ 168 0002 0B44     		add	r3, r3, r1
+ 169 0004 9BB2     		uxth	r3, r3
+  63:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 170              		.loc 1 63 33 view .LVU48
+ 171 0006 013B     		subs	r3, r3, #1
+  63:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 172              		.loc 1 63 16 view .LVU49
+ 173 0008 8380     		strh	r3, [r0, #4]	@ movhi
+  64:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 174              		.loc 1 64 1 view .LVU50
+ARM GAS  /tmp/ccuYsjKa.s 			page 12
+
+
+ 175 000a 7047     		bx	lr
+ 176              		.cfi_endproc
+ 177              	.LFE6:
+ 179              		.section	.text.lv_area_set_height,"ax",%progbits
+ 180              		.align	1
+ 181              		.global	lv_area_set_height
+ 182              		.syntax unified
+ 183              		.thumb
+ 184              		.thumb_func
+ 185              		.fpu softvfp
+ 187              	lv_area_set_height:
+ 188              	.LVL17:
+ 189              	.LFB7:
+  72:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->y2 = area_p->y1 + h - 1;
+ 190              		.loc 1 72 1 is_stmt 1 view -0
+ 191              		.cfi_startproc
+ 192              		@ args = 0, pretend = 0, frame = 0
+ 193              		@ frame_needed = 0, uses_anonymous_args = 0
+ 194              		@ link register save eliminated.
+  73:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 195              		.loc 1 73 5 view .LVU52
+  73:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 196              		.loc 1 73 24 is_stmt 0 view .LVU53
+ 197 0000 4388     		ldrh	r3, [r0, #2]
+  73:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 198              		.loc 1 73 29 view .LVU54
+ 199 0002 0B44     		add	r3, r3, r1
+ 200 0004 9BB2     		uxth	r3, r3
+  73:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 201              		.loc 1 73 33 view .LVU55
+ 202 0006 013B     		subs	r3, r3, #1
+  73:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 203              		.loc 1 73 16 view .LVU56
+ 204 0008 C380     		strh	r3, [r0, #6]	@ movhi
+  74:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 205              		.loc 1 74 1 view .LVU57
+ 206 000a 7047     		bx	lr
+ 207              		.cfi_endproc
+ 208              	.LFE7:
+ 210              		.section	.text._lv_area_set_pos,"ax",%progbits
+ 211              		.align	1
+ 212              		.global	_lv_area_set_pos
+ 213              		.syntax unified
+ 214              		.thumb
+ 215              		.thumb_func
+ 216              		.fpu softvfp
+ 218              	_lv_area_set_pos:
+ 219              	.LVL18:
+ 220              	.LFB8:
+  83:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t w = lv_area_get_width(area_p);
+ 221              		.loc 1 83 1 is_stmt 1 view -0
+ 222              		.cfi_startproc
+ 223              		@ args = 0, pretend = 0, frame = 0
+ 224              		@ frame_needed = 0, uses_anonymous_args = 0
+  83:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t w = lv_area_get_width(area_p);
+ 225              		.loc 1 83 1 is_stmt 0 view .LVU59
+ 226 0000 38B5     		push	{r3, r4, r5, lr}
+ARM GAS  /tmp/ccuYsjKa.s 			page 13
+
+
+ 227              	.LCFI1:
+ 228              		.cfi_def_cfa_offset 16
+ 229              		.cfi_offset 3, -16
+ 230              		.cfi_offset 4, -12
+ 231              		.cfi_offset 5, -8
+ 232              		.cfi_offset 14, -4
+ 233 0002 0446     		mov	r4, r0
+  84:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t h = lv_area_get_height(area_p);
+ 234              		.loc 1 84 5 is_stmt 1 view .LVU60
+ 235              	.LVL19:
+ 236              	.LBB118:
+ 237              	.LBI118:
+ 238              		.file 2 "Middlewares/lvgl/src/misc/lv_area.h"
+   1:Middlewares/lvgl/src/misc/lv_area.h **** /**
+   2:Middlewares/lvgl/src/misc/lv_area.h ****  * @file lv_area.h
+   3:Middlewares/lvgl/src/misc/lv_area.h ****  *
+   4:Middlewares/lvgl/src/misc/lv_area.h ****  */
+   5:Middlewares/lvgl/src/misc/lv_area.h **** 
+   6:Middlewares/lvgl/src/misc/lv_area.h **** #ifndef LV_AREA_H
+   7:Middlewares/lvgl/src/misc/lv_area.h **** #define LV_AREA_H
+   8:Middlewares/lvgl/src/misc/lv_area.h **** 
+   9:Middlewares/lvgl/src/misc/lv_area.h **** #ifdef __cplusplus
+  10:Middlewares/lvgl/src/misc/lv_area.h **** extern "C" {
+  11:Middlewares/lvgl/src/misc/lv_area.h **** #endif
+  12:Middlewares/lvgl/src/misc/lv_area.h **** 
+  13:Middlewares/lvgl/src/misc/lv_area.h **** /*********************
+  14:Middlewares/lvgl/src/misc/lv_area.h ****  *      INCLUDES
+  15:Middlewares/lvgl/src/misc/lv_area.h ****  *********************/
+  16:Middlewares/lvgl/src/misc/lv_area.h **** #include "../lv_conf_internal.h"
+  17:Middlewares/lvgl/src/misc/lv_area.h **** #include <string.h>
+  18:Middlewares/lvgl/src/misc/lv_area.h **** #include <stdbool.h>
+  19:Middlewares/lvgl/src/misc/lv_area.h **** #include <stdint.h>
+  20:Middlewares/lvgl/src/misc/lv_area.h **** 
+  21:Middlewares/lvgl/src/misc/lv_area.h **** /*********************
+  22:Middlewares/lvgl/src/misc/lv_area.h ****  *      DEFINES
+  23:Middlewares/lvgl/src/misc/lv_area.h ****  *********************/
+  24:Middlewares/lvgl/src/misc/lv_area.h **** 
+  25:Middlewares/lvgl/src/misc/lv_area.h **** #define _LV_COORD_MAX_REDUCE    8192
+  26:Middlewares/lvgl/src/misc/lv_area.h **** 
+  27:Middlewares/lvgl/src/misc/lv_area.h **** #if LV_USE_LARGE_COORD
+  28:Middlewares/lvgl/src/misc/lv_area.h **** typedef int32_t lv_coord_t;
+  29:Middlewares/lvgl/src/misc/lv_area.h **** #else
+  30:Middlewares/lvgl/src/misc/lv_area.h **** typedef int16_t lv_coord_t;
+  31:Middlewares/lvgl/src/misc/lv_area.h **** #endif
+  32:Middlewares/lvgl/src/misc/lv_area.h **** 
+  33:Middlewares/lvgl/src/misc/lv_area.h **** /*To allow some special values in the end reduce the max value*/
+  34:Middlewares/lvgl/src/misc/lv_area.h **** #define LV_COORD_MAX ((lv_coord_t)((uint32_t)((uint32_t)1 << (8 * sizeof(lv_coord_t) - 1)) - _LV_CO
+  35:Middlewares/lvgl/src/misc/lv_area.h **** #define LV_COORD_MIN (-LV_COORD_MAX)
+  36:Middlewares/lvgl/src/misc/lv_area.h **** 
+  37:Middlewares/lvgl/src/misc/lv_area.h **** LV_EXPORT_CONST_INT(LV_COORD_MAX);
+  38:Middlewares/lvgl/src/misc/lv_area.h **** LV_EXPORT_CONST_INT(LV_COORD_MIN);
+  39:Middlewares/lvgl/src/misc/lv_area.h **** 
+  40:Middlewares/lvgl/src/misc/lv_area.h **** /**********************
+  41:Middlewares/lvgl/src/misc/lv_area.h ****  *      TYPEDEFS
+  42:Middlewares/lvgl/src/misc/lv_area.h ****  **********************/
+  43:Middlewares/lvgl/src/misc/lv_area.h **** 
+  44:Middlewares/lvgl/src/misc/lv_area.h **** /**
+ARM GAS  /tmp/ccuYsjKa.s 			page 14
+
+
+  45:Middlewares/lvgl/src/misc/lv_area.h ****  * Represents a point on the screen.
+  46:Middlewares/lvgl/src/misc/lv_area.h ****  */
+  47:Middlewares/lvgl/src/misc/lv_area.h **** typedef struct {
+  48:Middlewares/lvgl/src/misc/lv_area.h ****     lv_coord_t x;
+  49:Middlewares/lvgl/src/misc/lv_area.h ****     lv_coord_t y;
+  50:Middlewares/lvgl/src/misc/lv_area.h **** } lv_point_t;
+  51:Middlewares/lvgl/src/misc/lv_area.h **** 
+  52:Middlewares/lvgl/src/misc/lv_area.h **** /** Represents an area of the screen.*/
+  53:Middlewares/lvgl/src/misc/lv_area.h **** typedef struct {
+  54:Middlewares/lvgl/src/misc/lv_area.h ****     lv_coord_t x1;
+  55:Middlewares/lvgl/src/misc/lv_area.h ****     lv_coord_t y1;
+  56:Middlewares/lvgl/src/misc/lv_area.h ****     lv_coord_t x2;
+  57:Middlewares/lvgl/src/misc/lv_area.h ****     lv_coord_t y2;
+  58:Middlewares/lvgl/src/misc/lv_area.h **** } lv_area_t;
+  59:Middlewares/lvgl/src/misc/lv_area.h **** 
+  60:Middlewares/lvgl/src/misc/lv_area.h **** /** Alignments*/
+  61:Middlewares/lvgl/src/misc/lv_area.h **** enum {
+  62:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_DEFAULT = 0,
+  63:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_TOP_LEFT,
+  64:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_TOP_MID,
+  65:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_TOP_RIGHT,
+  66:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_BOTTOM_LEFT,
+  67:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_BOTTOM_MID,
+  68:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_BOTTOM_RIGHT,
+  69:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_LEFT_MID,
+  70:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_RIGHT_MID,
+  71:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_CENTER,
+  72:Middlewares/lvgl/src/misc/lv_area.h **** 
+  73:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_OUT_TOP_LEFT,
+  74:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_OUT_TOP_MID,
+  75:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_OUT_TOP_RIGHT,
+  76:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_OUT_BOTTOM_LEFT,
+  77:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_OUT_BOTTOM_MID,
+  78:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_OUT_BOTTOM_RIGHT,
+  79:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_OUT_LEFT_TOP,
+  80:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_OUT_LEFT_MID,
+  81:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_OUT_LEFT_BOTTOM,
+  82:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_OUT_RIGHT_TOP,
+  83:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_OUT_RIGHT_MID,
+  84:Middlewares/lvgl/src/misc/lv_area.h ****     LV_ALIGN_OUT_RIGHT_BOTTOM,
+  85:Middlewares/lvgl/src/misc/lv_area.h **** };
+  86:Middlewares/lvgl/src/misc/lv_area.h **** typedef uint8_t lv_align_t;
+  87:Middlewares/lvgl/src/misc/lv_area.h **** 
+  88:Middlewares/lvgl/src/misc/lv_area.h **** enum {
+  89:Middlewares/lvgl/src/misc/lv_area.h ****     LV_DIR_NONE     = 0x00,
+  90:Middlewares/lvgl/src/misc/lv_area.h ****     LV_DIR_LEFT     = (1 << 0),
+  91:Middlewares/lvgl/src/misc/lv_area.h ****     LV_DIR_RIGHT    = (1 << 1),
+  92:Middlewares/lvgl/src/misc/lv_area.h ****     LV_DIR_TOP      = (1 << 2),
+  93:Middlewares/lvgl/src/misc/lv_area.h ****     LV_DIR_BOTTOM   = (1 << 3),
+  94:Middlewares/lvgl/src/misc/lv_area.h ****     LV_DIR_HOR      = LV_DIR_LEFT | LV_DIR_RIGHT,
+  95:Middlewares/lvgl/src/misc/lv_area.h ****     LV_DIR_VER      = LV_DIR_TOP | LV_DIR_BOTTOM,
+  96:Middlewares/lvgl/src/misc/lv_area.h ****     LV_DIR_ALL      = LV_DIR_HOR | LV_DIR_VER,
+  97:Middlewares/lvgl/src/misc/lv_area.h **** };
+  98:Middlewares/lvgl/src/misc/lv_area.h **** 
+  99:Middlewares/lvgl/src/misc/lv_area.h **** typedef uint8_t lv_dir_t;
+ 100:Middlewares/lvgl/src/misc/lv_area.h **** 
+ 101:Middlewares/lvgl/src/misc/lv_area.h **** /**********************
+ARM GAS  /tmp/ccuYsjKa.s 			page 15
+
+
+ 102:Middlewares/lvgl/src/misc/lv_area.h ****  * GLOBAL PROTOTYPES
+ 103:Middlewares/lvgl/src/misc/lv_area.h ****  **********************/
+ 104:Middlewares/lvgl/src/misc/lv_area.h **** 
+ 105:Middlewares/lvgl/src/misc/lv_area.h **** /**
+ 106:Middlewares/lvgl/src/misc/lv_area.h ****  * Initialize an area
+ 107:Middlewares/lvgl/src/misc/lv_area.h ****  * @param area_p pointer to an area
+ 108:Middlewares/lvgl/src/misc/lv_area.h ****  * @param x1 left coordinate of the area
+ 109:Middlewares/lvgl/src/misc/lv_area.h ****  * @param y1 top coordinate of the area
+ 110:Middlewares/lvgl/src/misc/lv_area.h ****  * @param x2 right coordinate of the area
+ 111:Middlewares/lvgl/src/misc/lv_area.h ****  * @param y2 bottom coordinate of the area
+ 112:Middlewares/lvgl/src/misc/lv_area.h ****  */
+ 113:Middlewares/lvgl/src/misc/lv_area.h **** void lv_area_set(lv_area_t * area_p, lv_coord_t x1, lv_coord_t y1, lv_coord_t x2, lv_coord_t y2);
+ 114:Middlewares/lvgl/src/misc/lv_area.h **** 
+ 115:Middlewares/lvgl/src/misc/lv_area.h **** /**
+ 116:Middlewares/lvgl/src/misc/lv_area.h ****  * Copy an area
+ 117:Middlewares/lvgl/src/misc/lv_area.h ****  * @param dest pointer to the destination area
+ 118:Middlewares/lvgl/src/misc/lv_area.h ****  * @param src pointer to the source area
+ 119:Middlewares/lvgl/src/misc/lv_area.h ****  */
+ 120:Middlewares/lvgl/src/misc/lv_area.h **** inline static void lv_area_copy(lv_area_t * dest, const lv_area_t * src)
+ 121:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 122:Middlewares/lvgl/src/misc/lv_area.h ****     dest->x1 = src->x1;
+ 123:Middlewares/lvgl/src/misc/lv_area.h ****     dest->y1 = src->y1;
+ 124:Middlewares/lvgl/src/misc/lv_area.h ****     dest->x2 = src->x2;
+ 125:Middlewares/lvgl/src/misc/lv_area.h ****     dest->y2 = src->y2;
+ 126:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 127:Middlewares/lvgl/src/misc/lv_area.h **** 
+ 128:Middlewares/lvgl/src/misc/lv_area.h **** /**
+ 129:Middlewares/lvgl/src/misc/lv_area.h ****  * Get the width of an area
+ 130:Middlewares/lvgl/src/misc/lv_area.h ****  * @param area_p pointer to an area
+ 131:Middlewares/lvgl/src/misc/lv_area.h ****  * @return the width of the area (if x1 == x2 -> width = 1)
+ 132:Middlewares/lvgl/src/misc/lv_area.h ****  */
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** static inline lv_coord_t lv_area_get_width(const lv_area_t * area_p)
+ 239              		.loc 2 133 26 view .LVU61
+ 240              	.LBB119:
+ 134:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 135:Middlewares/lvgl/src/misc/lv_area.h ****     return (lv_coord_t)(area_p->x2 - area_p->x1 + 1);
+ 241              		.loc 2 135 5 view .LVU62
+ 242              		.loc 2 135 31 is_stmt 0 view .LVU63
+ 243 0004 8388     		ldrh	r3, [r0, #4]
+ 244              		.loc 2 135 44 view .LVU64
+ 245 0006 0588     		ldrh	r5, [r0]
+ 246              		.loc 2 135 36 view .LVU65
+ 247 0008 5B1B     		subs	r3, r3, r5
+ 248 000a 9BB2     		uxth	r3, r3
+ 249              		.loc 2 135 49 view .LVU66
+ 250 000c 0133     		adds	r3, r3, #1
+ 251              	.LVL20:
+ 252              		.loc 2 135 49 view .LVU67
+ 253              	.LBE119:
+ 254              	.LBE118:
+  85:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->x1   = x;
+ 255              		.loc 1 85 5 is_stmt 1 view .LVU68
+ 256              	.LBB120:
+ 257              	.LBI120:
+ 136:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 137:Middlewares/lvgl/src/misc/lv_area.h **** 
+ 138:Middlewares/lvgl/src/misc/lv_area.h **** /**
+ARM GAS  /tmp/ccuYsjKa.s 			page 16
+
+
+ 139:Middlewares/lvgl/src/misc/lv_area.h ****  * Get the height of an area
+ 140:Middlewares/lvgl/src/misc/lv_area.h ****  * @param area_p pointer to an area
+ 141:Middlewares/lvgl/src/misc/lv_area.h ****  * @return the height of the area (if y1 == y2 -> height = 1)
+ 142:Middlewares/lvgl/src/misc/lv_area.h ****  */
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** static inline lv_coord_t lv_area_get_height(const lv_area_t * area_p)
+ 258              		.loc 2 143 26 view .LVU69
+ 259              	.LBB121:
+ 144:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 145:Middlewares/lvgl/src/misc/lv_area.h ****     return (lv_coord_t)(area_p->y2 - area_p->y1 + 1);
+ 260              		.loc 2 145 5 view .LVU70
+ 261              		.loc 2 145 31 is_stmt 0 view .LVU71
+ 262 000e C588     		ldrh	r5, [r0, #6]
+ 263              		.loc 2 145 44 view .LVU72
+ 264 0010 B0F802C0 		ldrh	ip, [r0, #2]
+ 265              		.loc 2 145 36 view .LVU73
+ 266 0014 A5EB0C05 		sub	r5, r5, ip
+ 267 0018 ADB2     		uxth	r5, r5
+ 268              		.loc 2 145 49 view .LVU74
+ 269 001a 0135     		adds	r5, r5, #1
+ 270              		.loc 2 145 12 view .LVU75
+ 271 001c 2DB2     		sxth	r5, r5
+ 272              	.LVL21:
+ 273              		.loc 2 145 12 view .LVU76
+ 274              	.LBE121:
+ 275              	.LBE120:
+  86:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->y1   = y;
+ 276              		.loc 1 86 5 is_stmt 1 view .LVU77
+  86:Middlewares/lvgl/src/misc/lv_area.c ****     area_p->y1   = y;
+ 277              		.loc 1 86 18 is_stmt 0 view .LVU78
+ 278 001e 0180     		strh	r1, [r0]	@ movhi
+  87:Middlewares/lvgl/src/misc/lv_area.c ****     lv_area_set_width(area_p, w);
+ 279              		.loc 1 87 5 is_stmt 1 view .LVU79
+  87:Middlewares/lvgl/src/misc/lv_area.c ****     lv_area_set_width(area_p, w);
+ 280              		.loc 1 87 18 is_stmt 0 view .LVU80
+ 281 0020 4280     		strh	r2, [r0, #2]	@ movhi
+  88:Middlewares/lvgl/src/misc/lv_area.c ****     lv_area_set_height(area_p, h);
+ 282              		.loc 1 88 5 is_stmt 1 view .LVU81
+ 283 0022 19B2     		sxth	r1, r3
+ 284              	.LVL22:
+  88:Middlewares/lvgl/src/misc/lv_area.c ****     lv_area_set_height(area_p, h);
+ 285              		.loc 1 88 5 is_stmt 0 view .LVU82
+ 286 0024 FFF7FEFF 		bl	lv_area_set_width
+ 287              	.LVL23:
+  89:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 288              		.loc 1 89 5 is_stmt 1 view .LVU83
+ 289 0028 2946     		mov	r1, r5
+ 290 002a 2046     		mov	r0, r4
+ 291 002c FFF7FEFF 		bl	lv_area_set_height
+ 292              	.LVL24:
+  90:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 293              		.loc 1 90 1 is_stmt 0 view .LVU84
+ 294 0030 38BD     		pop	{r3, r4, r5, pc}
+  90:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 295              		.loc 1 90 1 view .LVU85
+ 296              		.cfi_endproc
+ 297              	.LFE8:
+ 299              		.section	.text.lv_area_get_size,"ax",%progbits
+ARM GAS  /tmp/ccuYsjKa.s 			page 17
+
+
+ 300              		.align	1
+ 301              		.global	lv_area_get_size
+ 302              		.syntax unified
+ 303              		.thumb
+ 304              		.thumb_func
+ 305              		.fpu softvfp
+ 307              	lv_area_get_size:
+ 308              	.LVL25:
+ 309              	.LFB9:
+  98:Middlewares/lvgl/src/misc/lv_area.c ****     uint32_t size;
+ 310              		.loc 1 98 1 is_stmt 1 view -0
+ 311              		.cfi_startproc
+ 312              		@ args = 0, pretend = 0, frame = 0
+ 313              		@ frame_needed = 0, uses_anonymous_args = 0
+ 314              		@ link register save eliminated.
+  99:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 315              		.loc 1 99 5 view .LVU87
+ 101:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 316              		.loc 1 101 5 view .LVU88
+ 101:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 317              		.loc 1 101 29 is_stmt 0 view .LVU89
+ 318 0000 B0F90420 		ldrsh	r2, [r0, #4]
+ 101:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 319              		.loc 1 101 42 view .LVU90
+ 320 0004 B0F90030 		ldrsh	r3, [r0]
+ 101:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 321              		.loc 1 101 34 view .LVU91
+ 322 0008 D21A     		subs	r2, r2, r3
+ 101:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 323              		.loc 1 101 61 view .LVU92
+ 324 000a B0F90630 		ldrsh	r3, [r0, #6]
+ 101:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 325              		.loc 1 101 74 view .LVU93
+ 326 000e B0F90200 		ldrsh	r0, [r0, #2]
+ 327              	.LVL26:
+ 101:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 328              		.loc 1 101 66 view .LVU94
+ 329 0012 181A     		subs	r0, r3, r0
+ 101:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 330              		.loc 1 101 79 view .LVU95
+ 331 0014 0130     		adds	r0, r0, #1
+ 332              	.LVL27:
+ 103:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 333              		.loc 1 103 5 is_stmt 1 view .LVU96
+ 104:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 334              		.loc 1 104 1 is_stmt 0 view .LVU97
+ 335 0016 02FB0000 		mla	r0, r2, r0, r0
+ 336              	.LVL28:
+ 104:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 337              		.loc 1 104 1 view .LVU98
+ 338 001a 7047     		bx	lr
+ 339              		.cfi_endproc
+ 340              	.LFE9:
+ 342              		.section	.text.lv_area_increase,"ax",%progbits
+ 343              		.align	1
+ 344              		.global	lv_area_increase
+ 345              		.syntax unified
+ARM GAS  /tmp/ccuYsjKa.s 			page 18
+
+
+ 346              		.thumb
+ 347              		.thumb_func
+ 348              		.fpu softvfp
+ 350              	lv_area_increase:
+ 351              	.LVL29:
+ 352              	.LFB10:
+ 107:Middlewares/lvgl/src/misc/lv_area.c ****     area->x1 -= w_extra;
+ 353              		.loc 1 107 1 is_stmt 1 view -0
+ 354              		.cfi_startproc
+ 355              		@ args = 0, pretend = 0, frame = 0
+ 356              		@ frame_needed = 0, uses_anonymous_args = 0
+ 357              		@ link register save eliminated.
+ 108:Middlewares/lvgl/src/misc/lv_area.c ****     area->x2 += w_extra;
+ 358              		.loc 1 108 5 view .LVU100
+ 108:Middlewares/lvgl/src/misc/lv_area.c ****     area->x2 += w_extra;
+ 359              		.loc 1 108 14 is_stmt 0 view .LVU101
+ 360 0000 89B2     		uxth	r1, r1
+ 108:Middlewares/lvgl/src/misc/lv_area.c ****     area->x2 += w_extra;
+ 361              		.loc 1 108 14 view .LVU102
+ 362 0002 0388     		ldrh	r3, [r0]
+ 363 0004 5B1A     		subs	r3, r3, r1
+ 364 0006 0380     		strh	r3, [r0]	@ movhi
+ 109:Middlewares/lvgl/src/misc/lv_area.c ****     area->y1 -= h_extra;
+ 365              		.loc 1 109 5 is_stmt 1 view .LVU103
+ 109:Middlewares/lvgl/src/misc/lv_area.c ****     area->y1 -= h_extra;
+ 366              		.loc 1 109 14 is_stmt 0 view .LVU104
+ 367 0008 8388     		ldrh	r3, [r0, #4]
+ 368 000a 1944     		add	r1, r1, r3
+ 369              	.LVL30:
+ 109:Middlewares/lvgl/src/misc/lv_area.c ****     area->y1 -= h_extra;
+ 370              		.loc 1 109 14 view .LVU105
+ 371 000c 8180     		strh	r1, [r0, #4]	@ movhi
+ 110:Middlewares/lvgl/src/misc/lv_area.c ****     area->y2 += h_extra;
+ 372              		.loc 1 110 5 is_stmt 1 view .LVU106
+ 110:Middlewares/lvgl/src/misc/lv_area.c ****     area->y2 += h_extra;
+ 373              		.loc 1 110 14 is_stmt 0 view .LVU107
+ 374 000e 92B2     		uxth	r2, r2
+ 110:Middlewares/lvgl/src/misc/lv_area.c ****     area->y2 += h_extra;
+ 375              		.loc 1 110 14 view .LVU108
+ 376 0010 4388     		ldrh	r3, [r0, #2]
+ 377 0012 9B1A     		subs	r3, r3, r2
+ 378 0014 4380     		strh	r3, [r0, #2]	@ movhi
+ 111:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 379              		.loc 1 111 5 is_stmt 1 view .LVU109
+ 111:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 380              		.loc 1 111 14 is_stmt 0 view .LVU110
+ 381 0016 C388     		ldrh	r3, [r0, #6]
+ 382 0018 1A44     		add	r2, r2, r3
+ 383              	.LVL31:
+ 111:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 384              		.loc 1 111 14 view .LVU111
+ 385 001a C280     		strh	r2, [r0, #6]	@ movhi
+ 112:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 386              		.loc 1 112 1 view .LVU112
+ 387 001c 7047     		bx	lr
+ 388              		.cfi_endproc
+ 389              	.LFE10:
+ARM GAS  /tmp/ccuYsjKa.s 			page 19
+
+
+ 391              		.section	.text.lv_area_move,"ax",%progbits
+ 392              		.align	1
+ 393              		.global	lv_area_move
+ 394              		.syntax unified
+ 395              		.thumb
+ 396              		.thumb_func
+ 397              		.fpu softvfp
+ 399              	lv_area_move:
+ 400              	.LVL32:
+ 401              	.LFB11:
+ 115:Middlewares/lvgl/src/misc/lv_area.c ****     area->x1 += x_ofs;
+ 402              		.loc 1 115 1 is_stmt 1 view -0
+ 403              		.cfi_startproc
+ 404              		@ args = 0, pretend = 0, frame = 0
+ 405              		@ frame_needed = 0, uses_anonymous_args = 0
+ 406              		@ link register save eliminated.
+ 116:Middlewares/lvgl/src/misc/lv_area.c ****     area->x2 += x_ofs;
+ 407              		.loc 1 116 5 view .LVU114
+ 116:Middlewares/lvgl/src/misc/lv_area.c ****     area->x2 += x_ofs;
+ 408              		.loc 1 116 14 is_stmt 0 view .LVU115
+ 409 0000 89B2     		uxth	r1, r1
+ 116:Middlewares/lvgl/src/misc/lv_area.c ****     area->x2 += x_ofs;
+ 410              		.loc 1 116 14 view .LVU116
+ 411 0002 0388     		ldrh	r3, [r0]
+ 412 0004 0B44     		add	r3, r3, r1
+ 413 0006 0380     		strh	r3, [r0]	@ movhi
+ 117:Middlewares/lvgl/src/misc/lv_area.c ****     area->y1 += y_ofs;
+ 414              		.loc 1 117 5 is_stmt 1 view .LVU117
+ 117:Middlewares/lvgl/src/misc/lv_area.c ****     area->y1 += y_ofs;
+ 415              		.loc 1 117 14 is_stmt 0 view .LVU118
+ 416 0008 8388     		ldrh	r3, [r0, #4]
+ 417 000a 1944     		add	r1, r1, r3
+ 418              	.LVL33:
+ 117:Middlewares/lvgl/src/misc/lv_area.c ****     area->y1 += y_ofs;
+ 419              		.loc 1 117 14 view .LVU119
+ 420 000c 8180     		strh	r1, [r0, #4]	@ movhi
+ 118:Middlewares/lvgl/src/misc/lv_area.c ****     area->y2 += y_ofs;
+ 421              		.loc 1 118 5 is_stmt 1 view .LVU120
+ 118:Middlewares/lvgl/src/misc/lv_area.c ****     area->y2 += y_ofs;
+ 422              		.loc 1 118 14 is_stmt 0 view .LVU121
+ 423 000e 92B2     		uxth	r2, r2
+ 118:Middlewares/lvgl/src/misc/lv_area.c ****     area->y2 += y_ofs;
+ 424              		.loc 1 118 14 view .LVU122
+ 425 0010 4388     		ldrh	r3, [r0, #2]
+ 426 0012 1344     		add	r3, r3, r2
+ 427 0014 4380     		strh	r3, [r0, #2]	@ movhi
+ 119:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 428              		.loc 1 119 5 is_stmt 1 view .LVU123
+ 119:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 429              		.loc 1 119 14 is_stmt 0 view .LVU124
+ 430 0016 C388     		ldrh	r3, [r0, #6]
+ 431 0018 1A44     		add	r2, r2, r3
+ 432              	.LVL34:
+ 119:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 433              		.loc 1 119 14 view .LVU125
+ 434 001a C280     		strh	r2, [r0, #6]	@ movhi
+ 120:Middlewares/lvgl/src/misc/lv_area.c **** 
+ARM GAS  /tmp/ccuYsjKa.s 			page 20
+
+
+ 435              		.loc 1 120 1 view .LVU126
+ 436 001c 7047     		bx	lr
+ 437              		.cfi_endproc
+ 438              	.LFE11:
+ 440              		.section	.text._lv_area_intersect,"ax",%progbits
+ 441              		.align	1
+ 442              		.global	_lv_area_intersect
+ 443              		.syntax unified
+ 444              		.thumb
+ 445              		.thumb_func
+ 446              		.fpu softvfp
+ 448              	_lv_area_intersect:
+ 449              	.LVL35:
+ 450              	.LFB12:
+ 130:Middlewares/lvgl/src/misc/lv_area.c ****     /*Get the smaller area from 'a1_p' and 'a2_p'*/
+ 451              		.loc 1 130 1 is_stmt 1 view -0
+ 452              		.cfi_startproc
+ 453              		@ args = 0, pretend = 0, frame = 0
+ 454              		@ frame_needed = 0, uses_anonymous_args = 0
+ 130:Middlewares/lvgl/src/misc/lv_area.c ****     /*Get the smaller area from 'a1_p' and 'a2_p'*/
+ 455              		.loc 1 130 1 is_stmt 0 view .LVU128
+ 456 0000 10B5     		push	{r4, lr}
+ 457              	.LCFI2:
+ 458              		.cfi_def_cfa_offset 8
+ 459              		.cfi_offset 4, -8
+ 460              		.cfi_offset 14, -4
+ 132:Middlewares/lvgl/src/misc/lv_area.c ****     res_p->y1 = LV_MAX(a1_p->y1, a2_p->y1);
+ 461              		.loc 1 132 5 is_stmt 1 view .LVU129
+ 132:Middlewares/lvgl/src/misc/lv_area.c ****     res_p->y1 = LV_MAX(a1_p->y1, a2_p->y1);
+ 462              		.loc 1 132 17 is_stmt 0 view .LVU130
+ 463 0002 B2F900C0 		ldrsh	ip, [r2]
+ 464 0006 B1F90030 		ldrsh	r3, [r1]
+ 465 000a 9C45     		cmp	ip, r3
+ 466 000c B8BF     		it	lt
+ 467 000e 9C46     		movlt	ip, r3
+ 132:Middlewares/lvgl/src/misc/lv_area.c ****     res_p->y1 = LV_MAX(a1_p->y1, a2_p->y1);
+ 468              		.loc 1 132 15 view .LVU131
+ 469 0010 A0F800C0 		strh	ip, [r0]	@ movhi
+ 133:Middlewares/lvgl/src/misc/lv_area.c ****     res_p->x2 = LV_MIN(a1_p->x2, a2_p->x2);
+ 470              		.loc 1 133 5 is_stmt 1 view .LVU132
+ 133:Middlewares/lvgl/src/misc/lv_area.c ****     res_p->x2 = LV_MIN(a1_p->x2, a2_p->x2);
+ 471              		.loc 1 133 17 is_stmt 0 view .LVU133
+ 472 0014 B2F902E0 		ldrsh	lr, [r2, #2]
+ 473 0018 B1F90230 		ldrsh	r3, [r1, #2]
+ 474 001c 9E45     		cmp	lr, r3
+ 475 001e B8BF     		it	lt
+ 476 0020 9E46     		movlt	lr, r3
+ 133:Middlewares/lvgl/src/misc/lv_area.c ****     res_p->x2 = LV_MIN(a1_p->x2, a2_p->x2);
+ 477              		.loc 1 133 15 view .LVU134
+ 478 0022 A0F802E0 		strh	lr, [r0, #2]	@ movhi
+ 134:Middlewares/lvgl/src/misc/lv_area.c ****     res_p->y2 = LV_MIN(a1_p->y2, a2_p->y2);
+ 479              		.loc 1 134 5 is_stmt 1 view .LVU135
+ 134:Middlewares/lvgl/src/misc/lv_area.c ****     res_p->y2 = LV_MIN(a1_p->y2, a2_p->y2);
+ 480              		.loc 1 134 17 is_stmt 0 view .LVU136
+ 481 0026 B2F90430 		ldrsh	r3, [r2, #4]
+ 482 002a B1F90440 		ldrsh	r4, [r1, #4]
+ 483 002e A342     		cmp	r3, r4
+ARM GAS  /tmp/ccuYsjKa.s 			page 21
+
+
+ 484 0030 A8BF     		it	ge
+ 485 0032 2346     		movge	r3, r4
+ 134:Middlewares/lvgl/src/misc/lv_area.c ****     res_p->y2 = LV_MIN(a1_p->y2, a2_p->y2);
+ 486              		.loc 1 134 15 view .LVU137
+ 487 0034 8380     		strh	r3, [r0, #4]	@ movhi
+ 135:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 488              		.loc 1 135 5 is_stmt 1 view .LVU138
+ 135:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 489              		.loc 1 135 17 is_stmt 0 view .LVU139
+ 490 0036 B2F90620 		ldrsh	r2, [r2, #6]
+ 491              	.LVL36:
+ 135:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 492              		.loc 1 135 17 view .LVU140
+ 493 003a B1F90610 		ldrsh	r1, [r1, #6]
+ 494              	.LVL37:
+ 135:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 495              		.loc 1 135 17 view .LVU141
+ 496 003e 8A42     		cmp	r2, r1
+ 497 0040 A8BF     		it	ge
+ 498 0042 0A46     		movge	r2, r1
+ 135:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 499              		.loc 1 135 15 view .LVU142
+ 500 0044 C280     		strh	r2, [r0, #6]	@ movhi
+ 138:Middlewares/lvgl/src/misc/lv_area.c ****     if((res_p->x1 > res_p->x2) || (res_p->y1 > res_p->y2)) {
+ 501              		.loc 1 138 5 is_stmt 1 view .LVU143
+ 502              	.LVL38:
+ 139:Middlewares/lvgl/src/misc/lv_area.c ****         union_ok = false;
+ 503              		.loc 1 139 5 view .LVU144
+ 139:Middlewares/lvgl/src/misc/lv_area.c ****         union_ok = false;
+ 504              		.loc 1 139 7 is_stmt 0 view .LVU145
+ 505 0046 9C45     		cmp	ip, r3
+ 506 0048 03DC     		bgt	.L15
+ 139:Middlewares/lvgl/src/misc/lv_area.c ****         union_ok = false;
+ 507              		.loc 1 139 32 discriminator 1 view .LVU146
+ 508 004a 9645     		cmp	lr, r2
+ 509 004c 03DC     		bgt	.L16
+ 138:Middlewares/lvgl/src/misc/lv_area.c ****     if((res_p->x1 > res_p->x2) || (res_p->y1 > res_p->y2)) {
+ 510              		.loc 1 138 10 view .LVU147
+ 511 004e 0120     		movs	r0, #1
+ 512              	.LVL39:
+ 138:Middlewares/lvgl/src/misc/lv_area.c ****     if((res_p->x1 > res_p->x2) || (res_p->y1 > res_p->y2)) {
+ 513              		.loc 1 138 10 view .LVU148
+ 514 0050 00E0     		b	.L14
+ 515              	.LVL40:
+ 516              	.L15:
+ 140:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 517              		.loc 1 140 18 view .LVU149
+ 518 0052 0020     		movs	r0, #0
+ 519              	.LVL41:
+ 520              	.L14:
+ 143:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 521              		.loc 1 143 5 is_stmt 1 view .LVU150
+ 144:Middlewares/lvgl/src/misc/lv_area.c **** /**
+ 522              		.loc 1 144 1 is_stmt 0 view .LVU151
+ 523 0054 10BD     		pop	{r4, pc}
+ 524              	.LVL42:
+ 525              	.L16:
+ARM GAS  /tmp/ccuYsjKa.s 			page 22
+
+
+ 140:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 526              		.loc 1 140 18 view .LVU152
+ 527 0056 0020     		movs	r0, #0
+ 528              	.LVL43:
+ 140:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 529              		.loc 1 140 18 view .LVU153
+ 530 0058 FCE7     		b	.L14
+ 531              		.cfi_endproc
+ 532              	.LFE12:
+ 534              		.section	.text._lv_area_join,"ax",%progbits
+ 535              		.align	1
+ 536              		.global	_lv_area_join
+ 537              		.syntax unified
+ 538              		.thumb
+ 539              		.thumb_func
+ 540              		.fpu softvfp
+ 542              	_lv_area_join:
+ 543              	.LVL44:
+ 544              	.LFB13:
+ 152:Middlewares/lvgl/src/misc/lv_area.c ****     a_res_p->x1 = LV_MIN(a1_p->x1, a2_p->x1);
+ 545              		.loc 1 152 1 is_stmt 1 view -0
+ 546              		.cfi_startproc
+ 547              		@ args = 0, pretend = 0, frame = 0
+ 548              		@ frame_needed = 0, uses_anonymous_args = 0
+ 549              		@ link register save eliminated.
+ 153:Middlewares/lvgl/src/misc/lv_area.c ****     a_res_p->y1 = LV_MIN(a1_p->y1, a2_p->y1);
+ 550              		.loc 1 153 5 view .LVU155
+ 153:Middlewares/lvgl/src/misc/lv_area.c ****     a_res_p->y1 = LV_MIN(a1_p->y1, a2_p->y1);
+ 551              		.loc 1 153 19 is_stmt 0 view .LVU156
+ 552 0000 B2F90030 		ldrsh	r3, [r2]
+ 553 0004 B1F900C0 		ldrsh	ip, [r1]
+ 554 0008 6345     		cmp	r3, ip
+ 555 000a A8BF     		it	ge
+ 556 000c 6346     		movge	r3, ip
+ 153:Middlewares/lvgl/src/misc/lv_area.c ****     a_res_p->y1 = LV_MIN(a1_p->y1, a2_p->y1);
+ 557              		.loc 1 153 17 view .LVU157
+ 558 000e 0380     		strh	r3, [r0]	@ movhi
+ 154:Middlewares/lvgl/src/misc/lv_area.c ****     a_res_p->x2 = LV_MAX(a1_p->x2, a2_p->x2);
+ 559              		.loc 1 154 5 is_stmt 1 view .LVU158
+ 154:Middlewares/lvgl/src/misc/lv_area.c ****     a_res_p->x2 = LV_MAX(a1_p->x2, a2_p->x2);
+ 560              		.loc 1 154 19 is_stmt 0 view .LVU159
+ 561 0010 B2F90230 		ldrsh	r3, [r2, #2]
+ 562 0014 B1F902C0 		ldrsh	ip, [r1, #2]
+ 563 0018 6345     		cmp	r3, ip
+ 564 001a A8BF     		it	ge
+ 565 001c 6346     		movge	r3, ip
+ 154:Middlewares/lvgl/src/misc/lv_area.c ****     a_res_p->x2 = LV_MAX(a1_p->x2, a2_p->x2);
+ 566              		.loc 1 154 17 view .LVU160
+ 567 001e 4380     		strh	r3, [r0, #2]	@ movhi
+ 155:Middlewares/lvgl/src/misc/lv_area.c ****     a_res_p->y2 = LV_MAX(a1_p->y2, a2_p->y2);
+ 568              		.loc 1 155 5 is_stmt 1 view .LVU161
+ 155:Middlewares/lvgl/src/misc/lv_area.c ****     a_res_p->y2 = LV_MAX(a1_p->y2, a2_p->y2);
+ 569              		.loc 1 155 19 is_stmt 0 view .LVU162
+ 570 0020 B2F90430 		ldrsh	r3, [r2, #4]
+ 571 0024 B1F904C0 		ldrsh	ip, [r1, #4]
+ 572 0028 6345     		cmp	r3, ip
+ 573 002a B8BF     		it	lt
+ARM GAS  /tmp/ccuYsjKa.s 			page 23
+
+
+ 574 002c 6346     		movlt	r3, ip
+ 155:Middlewares/lvgl/src/misc/lv_area.c ****     a_res_p->y2 = LV_MAX(a1_p->y2, a2_p->y2);
+ 575              		.loc 1 155 17 view .LVU163
+ 576 002e 8380     		strh	r3, [r0, #4]	@ movhi
+ 156:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 577              		.loc 1 156 5 is_stmt 1 view .LVU164
+ 156:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 578              		.loc 1 156 19 is_stmt 0 view .LVU165
+ 579 0030 B2F90630 		ldrsh	r3, [r2, #6]
+ 580 0034 B1F90620 		ldrsh	r2, [r1, #6]
+ 581              	.LVL45:
+ 156:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 582              		.loc 1 156 19 view .LVU166
+ 583 0038 9342     		cmp	r3, r2
+ 584 003a B8BF     		it	lt
+ 585 003c 1346     		movlt	r3, r2
+ 156:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 586              		.loc 1 156 17 view .LVU167
+ 587 003e C380     		strh	r3, [r0, #6]	@ movhi
+ 157:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 588              		.loc 1 157 1 view .LVU168
+ 589 0040 7047     		bx	lr
+ 590              		.cfi_endproc
+ 591              	.LFE13:
+ 593              		.section	.text._lv_area_is_point_on,"ax",%progbits
+ 594              		.align	1
+ 595              		.global	_lv_area_is_point_on
+ 596              		.syntax unified
+ 597              		.thumb
+ 598              		.thumb_func
+ 599              		.fpu softvfp
+ 601              	_lv_area_is_point_on:
+ 602              	.LVL46:
+ 603              	.LFB14:
+ 167:Middlewares/lvgl/src/misc/lv_area.c ****     /*First check the basic area*/
+ 604              		.loc 1 167 1 is_stmt 1 view -0
+ 605              		.cfi_startproc
+ 606              		@ args = 0, pretend = 0, frame = 8
+ 607              		@ frame_needed = 0, uses_anonymous_args = 0
+ 167:Middlewares/lvgl/src/misc/lv_area.c ****     /*First check the basic area*/
+ 608              		.loc 1 167 1 is_stmt 0 view .LVU170
+ 609 0000 70B5     		push	{r4, r5, r6, lr}
+ 610              	.LCFI3:
+ 611              		.cfi_def_cfa_offset 16
+ 612              		.cfi_offset 4, -16
+ 613              		.cfi_offset 5, -12
+ 614              		.cfi_offset 6, -8
+ 615              		.cfi_offset 14, -4
+ 616 0002 82B0     		sub	sp, sp, #8
+ 617              	.LCFI4:
+ 618              		.cfi_def_cfa_offset 24
+ 619 0004 0446     		mov	r4, r0
+ 620 0006 0D46     		mov	r5, r1
+ 169:Middlewares/lvgl/src/misc/lv_area.c ****     if((p_p->x >= a_p->x1 && p_p->x <= a_p->x2) && ((p_p->y >= a_p->y1 && p_p->y <= a_p->y2))) {
+ 621              		.loc 1 169 5 is_stmt 1 view .LVU171
+ 622              	.LVL47:
+ 170:Middlewares/lvgl/src/misc/lv_area.c ****         is_on_rect = true;
+ARM GAS  /tmp/ccuYsjKa.s 			page 24
+
+
+ 623              		.loc 1 170 5 view .LVU172
+ 170:Middlewares/lvgl/src/misc/lv_area.c ****         is_on_rect = true;
+ 624              		.loc 1 170 12 is_stmt 0 view .LVU173
+ 625 0008 B1F90010 		ldrsh	r1, [r1]
+ 626              	.LVL48:
+ 170:Middlewares/lvgl/src/misc/lv_area.c ****         is_on_rect = true;
+ 627              		.loc 1 170 22 view .LVU174
+ 628 000c B0F90000 		ldrsh	r0, [r0]
+ 629              	.LVL49:
+ 170:Middlewares/lvgl/src/misc/lv_area.c ****         is_on_rect = true;
+ 630              		.loc 1 170 7 view .LVU175
+ 631 0010 8142     		cmp	r1, r0
+ 632 0012 C0F2AE80 		blt	.L25
+ 170:Middlewares/lvgl/src/misc/lv_area.c ****         is_on_rect = true;
+ 633              		.loc 1 170 43 discriminator 1 view .LVU176
+ 634 0016 B4F90430 		ldrsh	r3, [r4, #4]
+ 170:Middlewares/lvgl/src/misc/lv_area.c ****         is_on_rect = true;
+ 635              		.loc 1 170 27 discriminator 1 view .LVU177
+ 636 001a 9942     		cmp	r1, r3
+ 637 001c 00F3AC80 		bgt	.L26
+ 170:Middlewares/lvgl/src/misc/lv_area.c ****         is_on_rect = true;
+ 638              		.loc 1 170 57 discriminator 2 view .LVU178
+ 639 0020 B5F90260 		ldrsh	r6, [r5, #2]
+ 170:Middlewares/lvgl/src/misc/lv_area.c ****         is_on_rect = true;
+ 640              		.loc 1 170 67 discriminator 2 view .LVU179
+ 641 0024 B4F902C0 		ldrsh	ip, [r4, #2]
+ 170:Middlewares/lvgl/src/misc/lv_area.c ****         is_on_rect = true;
+ 642              		.loc 1 170 49 discriminator 2 view .LVU180
+ 643 0028 6645     		cmp	r6, ip
+ 644 002a C0F2A780 		blt	.L27
+ 170:Middlewares/lvgl/src/misc/lv_area.c ****         is_on_rect = true;
+ 645              		.loc 1 170 88 discriminator 3 view .LVU181
+ 646 002e B4F90610 		ldrsh	r1, [r4, #6]
+ 170:Middlewares/lvgl/src/misc/lv_area.c ****         is_on_rect = true;
+ 647              		.loc 1 170 72 discriminator 3 view .LVU182
+ 648 0032 8E42     		cmp	r6, r1
+ 649 0034 00F3A480 		bgt	.L28
+ 171:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 650              		.loc 1 171 9 is_stmt 1 view .LVU183
+ 651              	.LVL50:
+ 173:Middlewares/lvgl/src/misc/lv_area.c ****         return false;
+ 652              		.loc 1 173 5 view .LVU184
+ 176:Middlewares/lvgl/src/misc/lv_area.c ****         /*No radius, it is within the rectangle*/
+ 653              		.loc 1 176 5 view .LVU185
+ 176:Middlewares/lvgl/src/misc/lv_area.c ****         /*No radius, it is within the rectangle*/
+ 654              		.loc 1 176 7 is_stmt 0 view .LVU186
+ 655 0038 002A     		cmp	r2, #0
+ 656 003a 40F3A380 		ble	.L29
+ 180:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t h = lv_area_get_height(a_p) / 2;
+ 657              		.loc 1 180 5 is_stmt 1 view .LVU187
+ 658              	.LVL51:
+ 659              	.LBB122:
+ 660              	.LBI122:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 661              		.loc 2 133 26 view .LVU188
+ 662              	.LBB123:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ARM GAS  /tmp/ccuYsjKa.s 			page 25
+
+
+ 663              		.loc 2 135 5 view .LVU189
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 664              		.loc 2 135 31 is_stmt 0 view .LVU190
+ 665 003e 9BB2     		uxth	r3, r3
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 666              		.loc 2 135 44 view .LVU191
+ 667 0040 1FFA80FE 		uxth	lr, r0
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 668              		.loc 2 135 36 view .LVU192
+ 669 0044 A3EB0E03 		sub	r3, r3, lr
+ 670 0048 9BB2     		uxth	r3, r3
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 671              		.loc 2 135 49 view .LVU193
+ 672 004a 0133     		adds	r3, r3, #1
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 673              		.loc 2 135 12 view .LVU194
+ 674 004c 1EB2     		sxth	r6, r3
+ 675              	.LVL52:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 676              		.loc 2 135 12 view .LVU195
+ 677              	.LBE123:
+ 678              	.LBE122:
+ 180:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t h = lv_area_get_height(a_p) / 2;
+ 679              		.loc 1 180 16 view .LVU196
+ 680 004e C3F3C033 		ubfx	r3, r3, #15, #1
+ 681 0052 3344     		add	r3, r3, r6
+ 682 0054 5B10     		asrs	r3, r3, #1
+ 683              	.LVL53:
+ 181:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t max_radius = LV_MIN(w, h);
+ 684              		.loc 1 181 5 is_stmt 1 view .LVU197
+ 685              	.LBB124:
+ 686              	.LBI124:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 687              		.loc 2 143 26 view .LVU198
+ 688              	.LBB125:
+ 689              		.loc 2 145 5 view .LVU199
+ 690              		.loc 2 145 31 is_stmt 0 view .LVU200
+ 691 0056 89B2     		uxth	r1, r1
+ 692              		.loc 2 145 44 view .LVU201
+ 693 0058 1FFA8CFC 		uxth	ip, ip
+ 694              		.loc 2 145 36 view .LVU202
+ 695 005c A1EB0C01 		sub	r1, r1, ip
+ 696 0060 89B2     		uxth	r1, r1
+ 697              		.loc 2 145 49 view .LVU203
+ 698 0062 0131     		adds	r1, r1, #1
+ 699              		.loc 2 145 12 view .LVU204
+ 700 0064 0EB2     		sxth	r6, r1
+ 701              	.LVL54:
+ 702              		.loc 2 145 12 view .LVU205
+ 703              	.LBE125:
+ 704              	.LBE124:
+ 181:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t max_radius = LV_MIN(w, h);
+ 705              		.loc 1 181 16 view .LVU206
+ 706 0066 C1F3C031 		ubfx	r1, r1, #15, #1
+ 707 006a 3144     		add	r1, r1, r6
+ 708 006c 4910     		asrs	r1, r1, #1
+ 709              	.LVL55:
+ARM GAS  /tmp/ccuYsjKa.s 			page 26
+
+
+ 182:Middlewares/lvgl/src/misc/lv_area.c ****     if(radius > max_radius)
+ 710              		.loc 1 182 5 is_stmt 1 view .LVU207
+ 182:Middlewares/lvgl/src/misc/lv_area.c ****     if(radius > max_radius)
+ 711              		.loc 1 182 16 is_stmt 0 view .LVU208
+ 712 006e 8B42     		cmp	r3, r1
+ 713 0070 A8BF     		it	ge
+ 714 0072 0B46     		movge	r3, r1
+ 715              	.LVL56:
+ 183:Middlewares/lvgl/src/misc/lv_area.c ****         radius = max_radius;
+ 716              		.loc 1 183 5 is_stmt 1 view .LVU209
+ 183:Middlewares/lvgl/src/misc/lv_area.c ****         radius = max_radius;
+ 717              		.loc 1 183 7 is_stmt 0 view .LVU210
+ 718 0074 9A42     		cmp	r2, r3
+ 719 0076 00DC     		bgt	.L21
+ 720 0078 1346     		mov	r3, r2
+ 721              	.LVL57:
+ 722              	.L21:
+ 187:Middlewares/lvgl/src/misc/lv_area.c ****     /*Top left*/
+ 723              		.loc 1 187 5 is_stmt 1 view .LVU211
+ 189:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.x2 = a_p->x1 + radius;
+ 724              		.loc 1 189 5 view .LVU212
+ 189:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.x2 = a_p->x1 + radius;
+ 725              		.loc 1 189 20 is_stmt 0 view .LVU213
+ 726 007a ADF80000 		strh	r0, [sp]	@ movhi
+ 190:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y1 = a_p->y1;
+ 727              		.loc 1 190 5 is_stmt 1 view .LVU214
+ 190:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y1 = a_p->y1;
+ 728              		.loc 1 190 30 is_stmt 0 view .LVU215
+ 729 007e 9EB2     		uxth	r6, r3
+ 730 0080 B644     		add	lr, lr, r6
+ 731              	.LVL58:
+ 190:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y1 = a_p->y1;
+ 732              		.loc 1 190 20 view .LVU216
+ 733 0082 ADF804E0 		strh	lr, [sp, #4]	@ movhi
+ 734              	.LVL59:
+ 191:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y2 = a_p->y1 + radius;
+ 735              		.loc 1 191 5 is_stmt 1 view .LVU217
+ 191:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y2 = a_p->y1 + radius;
+ 736              		.loc 1 191 25 is_stmt 0 view .LVU218
+ 737 0086 B4F90230 		ldrsh	r3, [r4, #2]
+ 738              	.LVL60:
+ 191:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y2 = a_p->y1 + radius;
+ 739              		.loc 1 191 20 view .LVU219
+ 740 008a ADF80230 		strh	r3, [sp, #2]	@ movhi
+ 192:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 741              		.loc 1 192 5 is_stmt 1 view .LVU220
+ 192:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 742              		.loc 1 192 25 is_stmt 0 view .LVU221
+ 743 008e 9BB2     		uxth	r3, r3
+ 192:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 744              		.loc 1 192 30 view .LVU222
+ 745 0090 3344     		add	r3, r3, r6
+ 192:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 746              		.loc 1 192 20 view .LVU223
+ 747 0092 ADF80630 		strh	r3, [sp, #6]	@ movhi
+ 193:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x2 += radius;
+ 748              		.loc 1 193 5 is_stmt 1 view .LVU224
+ARM GAS  /tmp/ccuYsjKa.s 			page 27
+
+
+ 193:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x2 += radius;
+ 749              		.loc 1 193 8 is_stmt 0 view .LVU225
+ 750 0096 0022     		movs	r2, #0
+ 751 0098 2946     		mov	r1, r5
+ 752              	.LVL61:
+ 193:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x2 += radius;
+ 753              		.loc 1 193 8 view .LVU226
+ 754 009a 6846     		mov	r0, sp
+ 755 009c FFF7FEFF 		bl	_lv_area_is_point_on
+ 756              	.LVL62:
+ 193:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x2 += radius;
+ 757              		.loc 1 193 7 view .LVU227
+ 758 00a0 70B1     		cbz	r0, .L22
+ 194:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.y2 += radius;
+ 759              		.loc 1 194 9 is_stmt 1 view .LVU228
+ 194:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.y2 += radius;
+ 760              		.loc 1 194 24 is_stmt 0 view .LVU229
+ 761 00a2 BDF80430 		ldrh	r3, [sp, #4]
+ 762 00a6 3344     		add	r3, r3, r6
+ 763 00a8 ADF80430 		strh	r3, [sp, #4]	@ movhi
+ 195:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 764              		.loc 1 195 9 is_stmt 1 view .LVU230
+ 195:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 765              		.loc 1 195 24 is_stmt 0 view .LVU231
+ 766 00ac BDF80630 		ldrh	r3, [sp, #6]
+ 767 00b0 1E44     		add	r6, r6, r3
+ 768              	.LVL63:
+ 195:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 769              		.loc 1 195 24 view .LVU232
+ 770 00b2 ADF80660 		strh	r6, [sp, #6]	@ movhi
+ 196:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 771              		.loc 1 196 9 is_stmt 1 view .LVU233
+ 196:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 772              		.loc 1 196 16 is_stmt 0 view .LVU234
+ 773 00b6 2946     		mov	r1, r5
+ 774 00b8 6846     		mov	r0, sp
+ 775 00ba FFF7FEFF 		bl	lv_point_within_circle
+ 776              	.LVL64:
+ 777 00be 59E0     		b	.L20
+ 778              	.LVL65:
+ 779              	.L22:
+ 199:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y2 = a_p->y2;
+ 780              		.loc 1 199 5 is_stmt 1 view .LVU235
+ 199:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y2 = a_p->y2;
+ 781              		.loc 1 199 25 is_stmt 0 view .LVU236
+ 782 00c0 B4F90620 		ldrsh	r2, [r4, #6]
+ 783 00c4 93B2     		uxth	r3, r2
+ 199:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y2 = a_p->y2;
+ 784              		.loc 1 199 30 view .LVU237
+ 785 00c6 9B1B     		subs	r3, r3, r6
+ 199:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y2 = a_p->y2;
+ 786              		.loc 1 199 20 view .LVU238
+ 787 00c8 ADF80230 		strh	r3, [sp, #2]	@ movhi
+ 200:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 788              		.loc 1 200 5 is_stmt 1 view .LVU239
+ 200:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 789              		.loc 1 200 20 is_stmt 0 view .LVU240
+ARM GAS  /tmp/ccuYsjKa.s 			page 28
+
+
+ 790 00cc ADF80620 		strh	r2, [sp, #6]	@ movhi
+ 201:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x2 += radius;
+ 791              		.loc 1 201 5 is_stmt 1 view .LVU241
+ 201:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x2 += radius;
+ 792              		.loc 1 201 8 is_stmt 0 view .LVU242
+ 793 00d0 0022     		movs	r2, #0
+ 794 00d2 2946     		mov	r1, r5
+ 795 00d4 6846     		mov	r0, sp
+ 796 00d6 FFF7FEFF 		bl	_lv_area_is_point_on
+ 797              	.LVL66:
+ 201:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x2 += radius;
+ 798              		.loc 1 201 7 view .LVU243
+ 799 00da 70B1     		cbz	r0, .L23
+ 202:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.y1 -= radius;
+ 800              		.loc 1 202 9 is_stmt 1 view .LVU244
+ 202:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.y1 -= radius;
+ 801              		.loc 1 202 24 is_stmt 0 view .LVU245
+ 802 00dc BDF80430 		ldrh	r3, [sp, #4]
+ 803 00e0 3344     		add	r3, r3, r6
+ 804 00e2 ADF80430 		strh	r3, [sp, #4]	@ movhi
+ 203:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 805              		.loc 1 203 9 is_stmt 1 view .LVU246
+ 203:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 806              		.loc 1 203 24 is_stmt 0 view .LVU247
+ 807 00e6 BDF80230 		ldrh	r3, [sp, #2]
+ 808 00ea 9E1B     		subs	r6, r3, r6
+ 809              	.LVL67:
+ 203:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 810              		.loc 1 203 24 view .LVU248
+ 811 00ec ADF80260 		strh	r6, [sp, #2]	@ movhi
+ 204:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 812              		.loc 1 204 9 is_stmt 1 view .LVU249
+ 204:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 813              		.loc 1 204 16 is_stmt 0 view .LVU250
+ 814 00f0 2946     		mov	r1, r5
+ 815 00f2 6846     		mov	r0, sp
+ 816 00f4 FFF7FEFF 		bl	lv_point_within_circle
+ 817              	.LVL68:
+ 818 00f8 3CE0     		b	.L20
+ 819              	.LVL69:
+ 820              	.L23:
+ 207:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.x2 = a_p->x2;
+ 821              		.loc 1 207 5 is_stmt 1 view .LVU251
+ 207:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.x2 = a_p->x2;
+ 822              		.loc 1 207 25 is_stmt 0 view .LVU252
+ 823 00fa B4F90420 		ldrsh	r2, [r4, #4]
+ 824 00fe 93B2     		uxth	r3, r2
+ 207:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.x2 = a_p->x2;
+ 825              		.loc 1 207 30 view .LVU253
+ 826 0100 9B1B     		subs	r3, r3, r6
+ 207:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.x2 = a_p->x2;
+ 827              		.loc 1 207 20 view .LVU254
+ 828 0102 ADF80030 		strh	r3, [sp]	@ movhi
+ 208:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 829              		.loc 1 208 5 is_stmt 1 view .LVU255
+ 208:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 830              		.loc 1 208 20 is_stmt 0 view .LVU256
+ARM GAS  /tmp/ccuYsjKa.s 			page 29
+
+
+ 831 0106 ADF80420 		strh	r2, [sp, #4]	@ movhi
+ 209:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x1 -= radius;
+ 832              		.loc 1 209 5 is_stmt 1 view .LVU257
+ 209:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x1 -= radius;
+ 833              		.loc 1 209 8 is_stmt 0 view .LVU258
+ 834 010a 0022     		movs	r2, #0
+ 835 010c 2946     		mov	r1, r5
+ 836 010e 6846     		mov	r0, sp
+ 837 0110 FFF7FEFF 		bl	_lv_area_is_point_on
+ 838              	.LVL70:
+ 209:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x1 -= radius;
+ 839              		.loc 1 209 7 view .LVU259
+ 840 0114 70B1     		cbz	r0, .L24
+ 210:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.y1 -= radius;
+ 841              		.loc 1 210 9 is_stmt 1 view .LVU260
+ 210:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.y1 -= radius;
+ 842              		.loc 1 210 24 is_stmt 0 view .LVU261
+ 843 0116 BDF80030 		ldrh	r3, [sp]
+ 844 011a 9B1B     		subs	r3, r3, r6
+ 845 011c ADF80030 		strh	r3, [sp]	@ movhi
+ 211:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 846              		.loc 1 211 9 is_stmt 1 view .LVU262
+ 211:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 847              		.loc 1 211 24 is_stmt 0 view .LVU263
+ 848 0120 BDF80230 		ldrh	r3, [sp, #2]
+ 849 0124 9E1B     		subs	r6, r3, r6
+ 850              	.LVL71:
+ 211:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 851              		.loc 1 211 24 view .LVU264
+ 852 0126 ADF80260 		strh	r6, [sp, #2]	@ movhi
+ 212:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 853              		.loc 1 212 9 is_stmt 1 view .LVU265
+ 212:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 854              		.loc 1 212 16 is_stmt 0 view .LVU266
+ 855 012a 2946     		mov	r1, r5
+ 856 012c 6846     		mov	r0, sp
+ 857 012e FFF7FEFF 		bl	lv_point_within_circle
+ 858              	.LVL72:
+ 859 0132 1FE0     		b	.L20
+ 860              	.LVL73:
+ 861              	.L24:
+ 215:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y2 = a_p->y1 + radius;
+ 862              		.loc 1 215 5 is_stmt 1 view .LVU267
+ 215:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y2 = a_p->y1 + radius;
+ 863              		.loc 1 215 25 is_stmt 0 view .LVU268
+ 864 0134 B4F90230 		ldrsh	r3, [r4, #2]
+ 215:Middlewares/lvgl/src/misc/lv_area.c ****     corner_area.y2 = a_p->y1 + radius;
+ 865              		.loc 1 215 20 view .LVU269
+ 866 0138 ADF80230 		strh	r3, [sp, #2]	@ movhi
+ 216:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 867              		.loc 1 216 5 is_stmt 1 view .LVU270
+ 216:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 868              		.loc 1 216 25 is_stmt 0 view .LVU271
+ 869 013c 9BB2     		uxth	r3, r3
+ 216:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 870              		.loc 1 216 30 view .LVU272
+ 871 013e 3344     		add	r3, r3, r6
+ARM GAS  /tmp/ccuYsjKa.s 			page 30
+
+
+ 216:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(&corner_area, p_p, 0)) {
+ 872              		.loc 1 216 20 view .LVU273
+ 873 0140 ADF80630 		strh	r3, [sp, #6]	@ movhi
+ 217:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x1 -= radius;
+ 874              		.loc 1 217 5 is_stmt 1 view .LVU274
+ 217:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x1 -= radius;
+ 875              		.loc 1 217 8 is_stmt 0 view .LVU275
+ 876 0144 0022     		movs	r2, #0
+ 877 0146 2946     		mov	r1, r5
+ 878 0148 6846     		mov	r0, sp
+ 879 014a FFF7FEFF 		bl	_lv_area_is_point_on
+ 880              	.LVL74:
+ 217:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.x1 -= radius;
+ 881              		.loc 1 217 7 view .LVU276
+ 882 014e 08B9     		cbnz	r0, .L32
+ 223:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 883              		.loc 1 223 12 view .LVU277
+ 884 0150 0120     		movs	r0, #1
+ 885 0152 0FE0     		b	.L20
+ 886              	.L32:
+ 218:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.y2 += radius;
+ 887              		.loc 1 218 9 is_stmt 1 view .LVU278
+ 218:Middlewares/lvgl/src/misc/lv_area.c ****         corner_area.y2 += radius;
+ 888              		.loc 1 218 24 is_stmt 0 view .LVU279
+ 889 0154 BDF80030 		ldrh	r3, [sp]
+ 890 0158 9B1B     		subs	r3, r3, r6
+ 891 015a ADF80030 		strh	r3, [sp]	@ movhi
+ 219:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 892              		.loc 1 219 9 is_stmt 1 view .LVU280
+ 219:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 893              		.loc 1 219 24 is_stmt 0 view .LVU281
+ 894 015e BDF80630 		ldrh	r3, [sp, #6]
+ 895 0162 1E44     		add	r6, r6, r3
+ 896              	.LVL75:
+ 219:Middlewares/lvgl/src/misc/lv_area.c ****         return lv_point_within_circle(&corner_area, p_p);
+ 897              		.loc 1 219 24 view .LVU282
+ 898 0164 ADF80660 		strh	r6, [sp, #6]	@ movhi
+ 220:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 899              		.loc 1 220 9 is_stmt 1 view .LVU283
+ 220:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 900              		.loc 1 220 16 is_stmt 0 view .LVU284
+ 901 0168 2946     		mov	r1, r5
+ 902 016a 6846     		mov	r0, sp
+ 903 016c FFF7FEFF 		bl	lv_point_within_circle
+ 904              	.LVL76:
+ 905 0170 00E0     		b	.L20
+ 906              	.LVL77:
+ 907              	.L25:
+ 174:Middlewares/lvgl/src/misc/lv_area.c ****     /*Now handle potential rounded rectangles*/
+ 908              		.loc 1 174 16 view .LVU285
+ 909 0172 0020     		movs	r0, #0
+ 910              	.LVL78:
+ 911              	.L20:
+ 224:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 912              		.loc 1 224 1 view .LVU286
+ 913 0174 02B0     		add	sp, sp, #8
+ 914              	.LCFI5:
+ARM GAS  /tmp/ccuYsjKa.s 			page 31
+
+
+ 915              		.cfi_remember_state
+ 916              		.cfi_def_cfa_offset 16
+ 917              		@ sp needed
+ 918 0176 70BD     		pop	{r4, r5, r6, pc}
+ 919              	.LVL79:
+ 920              	.L26:
+ 921              	.LCFI6:
+ 922              		.cfi_restore_state
+ 174:Middlewares/lvgl/src/misc/lv_area.c ****     /*Now handle potential rounded rectangles*/
+ 923              		.loc 1 174 16 view .LVU287
+ 924 0178 0020     		movs	r0, #0
+ 925 017a FBE7     		b	.L20
+ 926              	.L27:
+ 927 017c 0020     		movs	r0, #0
+ 928 017e F9E7     		b	.L20
+ 929              	.L28:
+ 930 0180 0020     		movs	r0, #0
+ 931 0182 F7E7     		b	.L20
+ 932              	.LVL80:
+ 933              	.L29:
+ 178:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 934              		.loc 1 178 16 view .LVU288
+ 935 0184 0120     		movs	r0, #1
+ 936 0186 F5E7     		b	.L20
+ 937              		.cfi_endproc
+ 938              	.LFE14:
+ 940              		.section	.text._lv_area_is_on,"ax",%progbits
+ 941              		.align	1
+ 942              		.global	_lv_area_is_on
+ 943              		.syntax unified
+ 944              		.thumb
+ 945              		.thumb_func
+ 946              		.fpu softvfp
+ 948              	_lv_area_is_on:
+ 949              	.LVL81:
+ 950              	.LFB15:
+ 233:Middlewares/lvgl/src/misc/lv_area.c ****     if((a1_p->x1 <= a2_p->x2) && (a1_p->x2 >= a2_p->x1) && (a1_p->y1 <= a2_p->y2) && (a1_p->y2 >= a
+ 951              		.loc 1 233 1 is_stmt 1 view -0
+ 952              		.cfi_startproc
+ 953              		@ args = 0, pretend = 0, frame = 0
+ 954              		@ frame_needed = 0, uses_anonymous_args = 0
+ 955              		@ link register save eliminated.
+ 234:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 956              		.loc 1 234 5 view .LVU290
+ 234:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 957              		.loc 1 234 13 is_stmt 0 view .LVU291
+ 958 0000 B0F90020 		ldrsh	r2, [r0]
+ 234:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 959              		.loc 1 234 25 view .LVU292
+ 960 0004 B1F90430 		ldrsh	r3, [r1, #4]
+ 234:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 961              		.loc 1 234 7 view .LVU293
+ 962 0008 9A42     		cmp	r2, r3
+ 963 000a 13DC     		bgt	.L35
+ 234:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 964              		.loc 1 234 39 discriminator 1 view .LVU294
+ 965 000c B0F90420 		ldrsh	r2, [r0, #4]
+ARM GAS  /tmp/ccuYsjKa.s 			page 32
+
+
+ 234:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 966              		.loc 1 234 51 discriminator 1 view .LVU295
+ 967 0010 B1F90030 		ldrsh	r3, [r1]
+ 234:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 968              		.loc 1 234 31 discriminator 1 view .LVU296
+ 969 0014 9A42     		cmp	r2, r3
+ 970 0016 0FDB     		blt	.L36
+ 234:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 971              		.loc 1 234 65 discriminator 2 view .LVU297
+ 972 0018 B0F90220 		ldrsh	r2, [r0, #2]
+ 234:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 973              		.loc 1 234 77 discriminator 2 view .LVU298
+ 974 001c B1F90630 		ldrsh	r3, [r1, #6]
+ 234:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 975              		.loc 1 234 57 discriminator 2 view .LVU299
+ 976 0020 9A42     		cmp	r2, r3
+ 977 0022 0BDC     		bgt	.L37
+ 234:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 978              		.loc 1 234 91 discriminator 3 view .LVU300
+ 979 0024 B0F90620 		ldrsh	r2, [r0, #6]
+ 234:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 980              		.loc 1 234 103 discriminator 3 view .LVU301
+ 981 0028 B1F90230 		ldrsh	r3, [r1, #2]
+ 234:Middlewares/lvgl/src/misc/lv_area.c ****         return true;
+ 982              		.loc 1 234 83 discriminator 3 view .LVU302
+ 983 002c 9A42     		cmp	r2, r3
+ 984 002e 07DA     		bge	.L38
+ 238:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 985              		.loc 1 238 16 view .LVU303
+ 986 0030 0020     		movs	r0, #0
+ 987              	.LVL82:
+ 238:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 988              		.loc 1 238 16 view .LVU304
+ 989 0032 7047     		bx	lr
+ 990              	.LVL83:
+ 991              	.L35:
+ 238:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 992              		.loc 1 238 16 view .LVU305
+ 993 0034 0020     		movs	r0, #0
+ 994              	.LVL84:
+ 238:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 995              		.loc 1 238 16 view .LVU306
+ 996 0036 7047     		bx	lr
+ 997              	.LVL85:
+ 998              	.L36:
+ 238:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 999              		.loc 1 238 16 view .LVU307
+ 1000 0038 0020     		movs	r0, #0
+ 1001              	.LVL86:
+ 238:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 1002              		.loc 1 238 16 view .LVU308
+ 1003 003a 7047     		bx	lr
+ 1004              	.LVL87:
+ 1005              	.L37:
+ 238:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 1006              		.loc 1 238 16 view .LVU309
+ 1007 003c 0020     		movs	r0, #0
+ARM GAS  /tmp/ccuYsjKa.s 			page 33
+
+
+ 1008              	.LVL88:
+ 238:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 1009              		.loc 1 238 16 view .LVU310
+ 1010 003e 7047     		bx	lr
+ 1011              	.LVL89:
+ 1012              	.L38:
+ 235:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 1013              		.loc 1 235 16 view .LVU311
+ 1014 0040 0120     		movs	r0, #1
+ 1015              	.LVL90:
+ 240:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1016              		.loc 1 240 1 view .LVU312
+ 1017 0042 7047     		bx	lr
+ 1018              		.cfi_endproc
+ 1019              	.LFE15:
+ 1021              		.section	.text._lv_area_is_in,"ax",%progbits
+ 1022              		.align	1
+ 1023              		.global	_lv_area_is_in
+ 1024              		.syntax unified
+ 1025              		.thumb
+ 1026              		.thumb_func
+ 1027              		.fpu softvfp
+ 1029              	_lv_area_is_in:
+ 1030              	.LVL91:
+ 1031              	.LFB16:
+ 250:Middlewares/lvgl/src/misc/lv_area.c ****     bool is_in = false;
+ 1032              		.loc 1 250 1 is_stmt 1 view -0
+ 1033              		.cfi_startproc
+ 1034              		@ args = 0, pretend = 0, frame = 8
+ 1035              		@ frame_needed = 0, uses_anonymous_args = 0
+ 250:Middlewares/lvgl/src/misc/lv_area.c ****     bool is_in = false;
+ 1036              		.loc 1 250 1 is_stmt 0 view .LVU314
+ 1037 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 1038              	.LCFI7:
+ 1039              		.cfi_def_cfa_offset 24
+ 1040              		.cfi_offset 4, -24
+ 1041              		.cfi_offset 5, -20
+ 1042              		.cfi_offset 6, -16
+ 1043              		.cfi_offset 7, -12
+ 1044              		.cfi_offset 8, -8
+ 1045              		.cfi_offset 14, -4
+ 1046 0004 82B0     		sub	sp, sp, #8
+ 1047              	.LCFI8:
+ 1048              		.cfi_def_cfa_offset 32
+ 1049 0006 0C46     		mov	r4, r1
+ 251:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1050              		.loc 1 251 5 is_stmt 1 view .LVU315
+ 1051              	.LVL92:
+ 253:Middlewares/lvgl/src/misc/lv_area.c ****        ain_p->y2 <= aholder_p->y2) {
+ 1052              		.loc 1 253 5 view .LVU316
+ 253:Middlewares/lvgl/src/misc/lv_area.c ****        ain_p->y2 <= aholder_p->y2) {
+ 1053              		.loc 1 253 13 is_stmt 0 view .LVU317
+ 1054 0008 B0F90030 		ldrsh	r3, [r0]
+ 253:Middlewares/lvgl/src/misc/lv_area.c ****        ain_p->y2 <= aholder_p->y2) {
+ 1055              		.loc 1 253 30 view .LVU318
+ 1056 000c B1F90010 		ldrsh	r1, [r1]
+ 1057              	.LVL93:
+ARM GAS  /tmp/ccuYsjKa.s 			page 34
+
+
+ 253:Middlewares/lvgl/src/misc/lv_area.c ****        ain_p->y2 <= aholder_p->y2) {
+ 1058              		.loc 1 253 7 view .LVU319
+ 1059 0010 8B42     		cmp	r3, r1
+ 1060 0012 40DB     		blt	.L41
+ 1061 0014 0646     		mov	r6, r0
+ 1062 0016 1546     		mov	r5, r2
+ 253:Middlewares/lvgl/src/misc/lv_area.c ****        ain_p->y2 <= aholder_p->y2) {
+ 1063              		.loc 1 253 43 discriminator 1 view .LVU320
+ 1064 0018 B0F90220 		ldrsh	r2, [r0, #2]
+ 1065              	.LVL94:
+ 253:Middlewares/lvgl/src/misc/lv_area.c ****        ain_p->y2 <= aholder_p->y2) {
+ 1066              		.loc 1 253 60 discriminator 1 view .LVU321
+ 1067 001c B4F90210 		ldrsh	r1, [r4, #2]
+ 253:Middlewares/lvgl/src/misc/lv_area.c ****        ain_p->y2 <= aholder_p->y2) {
+ 1068              		.loc 1 253 35 discriminator 1 view .LVU322
+ 1069 0020 8A42     		cmp	r2, r1
+ 1070 0022 3CDB     		blt	.L42
+ 253:Middlewares/lvgl/src/misc/lv_area.c ****        ain_p->y2 <= aholder_p->y2) {
+ 1071              		.loc 1 253 73 discriminator 2 view .LVU323
+ 1072 0024 B0F90470 		ldrsh	r7, [r0, #4]
+ 253:Middlewares/lvgl/src/misc/lv_area.c ****        ain_p->y2 <= aholder_p->y2) {
+ 1073              		.loc 1 253 90 discriminator 2 view .LVU324
+ 1074 0028 B4F90410 		ldrsh	r1, [r4, #4]
+ 253:Middlewares/lvgl/src/misc/lv_area.c ****        ain_p->y2 <= aholder_p->y2) {
+ 1075              		.loc 1 253 65 discriminator 2 view .LVU325
+ 1076 002c 8F42     		cmp	r7, r1
+ 1077 002e 38DC     		bgt	.L43
+ 254:Middlewares/lvgl/src/misc/lv_area.c ****         is_in = true;
+ 1078              		.loc 1 254 13 discriminator 3 view .LVU326
+ 1079 0030 B0F90680 		ldrsh	r8, [r0, #6]
+ 254:Middlewares/lvgl/src/misc/lv_area.c ****         is_in = true;
+ 1080              		.loc 1 254 30 discriminator 3 view .LVU327
+ 1081 0034 B4F90610 		ldrsh	r1, [r4, #6]
+ 253:Middlewares/lvgl/src/misc/lv_area.c ****        ain_p->y2 <= aholder_p->y2) {
+ 1082              		.loc 1 253 95 discriminator 3 view .LVU328
+ 1083 0038 8845     		cmp	r8, r1
+ 1084 003a 34DC     		bgt	.L44
+ 255:Middlewares/lvgl/src/misc/lv_area.c ****     }
+ 1085              		.loc 1 255 9 is_stmt 1 view .LVU329
+ 1086              	.LVL95:
+ 258:Middlewares/lvgl/src/misc/lv_area.c ****     if(radius == 0) return true;
+ 1087              		.loc 1 258 5 view .LVU330
+ 259:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1088              		.loc 1 259 5 view .LVU331
+ 259:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1089              		.loc 1 259 7 is_stmt 0 view .LVU332
+ 1090 003c 0DB9     		cbnz	r5, .L47
+ 259:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1091              		.loc 1 259 28 view .LVU333
+ 1092 003e 0120     		movs	r0, #1
+ 1093              	.LVL96:
+ 259:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1094              		.loc 1 259 28 view .LVU334
+ 1095 0040 2AE0     		b	.L40
+ 1096              	.LVL97:
+ 1097              	.L47:
+ 262:Middlewares/lvgl/src/misc/lv_area.c **** 
+ARM GAS  /tmp/ccuYsjKa.s 			page 35
+
+
+ 1098              		.loc 1 262 5 is_stmt 1 view .LVU335
+ 264:Middlewares/lvgl/src/misc/lv_area.c ****     p.y = ain_p->y1;
+ 1099              		.loc 1 264 5 view .LVU336
+ 264:Middlewares/lvgl/src/misc/lv_area.c ****     p.y = ain_p->y1;
+ 1100              		.loc 1 264 9 is_stmt 0 view .LVU337
+ 1101 0042 ADF80430 		strh	r3, [sp, #4]	@ movhi
+ 265:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(aholder_p, &p, radius) == false) return false;
+ 1102              		.loc 1 265 5 is_stmt 1 view .LVU338
+ 265:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(aholder_p, &p, radius) == false) return false;
+ 1103              		.loc 1 265 9 is_stmt 0 view .LVU339
+ 1104 0046 ADF80620 		strh	r2, [sp, #6]	@ movhi
+ 266:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1105              		.loc 1 266 5 is_stmt 1 view .LVU340
+ 266:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1106              		.loc 1 266 8 is_stmt 0 view .LVU341
+ 1107 004a 2A46     		mov	r2, r5
+ 1108 004c 01A9     		add	r1, sp, #4
+ 1109 004e 2046     		mov	r0, r4
+ 1110              	.LVL98:
+ 266:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1111              		.loc 1 266 8 view .LVU342
+ 1112 0050 FFF7FEFF 		bl	_lv_area_is_point_on
+ 1113              	.LVL99:
+ 266:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1114              		.loc 1 266 7 view .LVU343
+ 1115 0054 00B3     		cbz	r0, .L40
+ 268:Middlewares/lvgl/src/misc/lv_area.c ****     p.y = ain_p->y1;
+ 1116              		.loc 1 268 5 is_stmt 1 view .LVU344
+ 268:Middlewares/lvgl/src/misc/lv_area.c ****     p.y = ain_p->y1;
+ 1117              		.loc 1 268 9 is_stmt 0 view .LVU345
+ 1118 0056 ADF80470 		strh	r7, [sp, #4]	@ movhi
+ 269:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(aholder_p, &p, radius) == false) return false;
+ 1119              		.loc 1 269 5 is_stmt 1 view .LVU346
+ 269:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(aholder_p, &p, radius) == false) return false;
+ 1120              		.loc 1 269 16 is_stmt 0 view .LVU347
+ 1121 005a B6F90230 		ldrsh	r3, [r6, #2]
+ 269:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(aholder_p, &p, radius) == false) return false;
+ 1122              		.loc 1 269 9 view .LVU348
+ 1123 005e ADF80630 		strh	r3, [sp, #6]	@ movhi
+ 270:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1124              		.loc 1 270 5 is_stmt 1 view .LVU349
+ 270:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1125              		.loc 1 270 8 is_stmt 0 view .LVU350
+ 1126 0062 2A46     		mov	r2, r5
+ 1127 0064 01A9     		add	r1, sp, #4
+ 1128 0066 2046     		mov	r0, r4
+ 1129 0068 FFF7FEFF 		bl	_lv_area_is_point_on
+ 1130              	.LVL100:
+ 270:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1131              		.loc 1 270 7 view .LVU351
+ 1132 006c A0B1     		cbz	r0, .L40
+ 272:Middlewares/lvgl/src/misc/lv_area.c ****     p.y = ain_p->y2;
+ 1133              		.loc 1 272 5 is_stmt 1 view .LVU352
+ 272:Middlewares/lvgl/src/misc/lv_area.c ****     p.y = ain_p->y2;
+ 1134              		.loc 1 272 16 is_stmt 0 view .LVU353
+ 1135 006e B6F90030 		ldrsh	r3, [r6]
+ 272:Middlewares/lvgl/src/misc/lv_area.c ****     p.y = ain_p->y2;
+ARM GAS  /tmp/ccuYsjKa.s 			page 36
+
+
+ 1136              		.loc 1 272 9 view .LVU354
+ 1137 0072 ADF80430 		strh	r3, [sp, #4]	@ movhi
+ 273:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(aholder_p, &p, radius) == false) return false;
+ 1138              		.loc 1 273 5 is_stmt 1 view .LVU355
+ 273:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(aholder_p, &p, radius) == false) return false;
+ 1139              		.loc 1 273 9 is_stmt 0 view .LVU356
+ 1140 0076 ADF80680 		strh	r8, [sp, #6]	@ movhi
+ 274:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1141              		.loc 1 274 5 is_stmt 1 view .LVU357
+ 274:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1142              		.loc 1 274 8 is_stmt 0 view .LVU358
+ 1143 007a 2A46     		mov	r2, r5
+ 1144 007c 01A9     		add	r1, sp, #4
+ 1145 007e 2046     		mov	r0, r4
+ 1146 0080 FFF7FEFF 		bl	_lv_area_is_point_on
+ 1147              	.LVL101:
+ 274:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1148              		.loc 1 274 7 view .LVU359
+ 1149 0084 40B1     		cbz	r0, .L40
+ 276:Middlewares/lvgl/src/misc/lv_area.c ****     p.y = ain_p->y2;
+ 1150              		.loc 1 276 5 is_stmt 1 view .LVU360
+ 276:Middlewares/lvgl/src/misc/lv_area.c ****     p.y = ain_p->y2;
+ 1151              		.loc 1 276 9 is_stmt 0 view .LVU361
+ 1152 0086 ADF80470 		strh	r7, [sp, #4]	@ movhi
+ 277:Middlewares/lvgl/src/misc/lv_area.c ****     if(_lv_area_is_point_on(aholder_p, &p, radius) == false) return false;
+ 1153              		.loc 1 277 5 is_stmt 1 view .LVU362
+ 278:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1154              		.loc 1 278 5 view .LVU363
+ 278:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1155              		.loc 1 278 8 is_stmt 0 view .LVU364
+ 1156 008a 2A46     		mov	r2, r5
+ 1157 008c 01A9     		add	r1, sp, #4
+ 1158 008e 2046     		mov	r0, r4
+ 1159 0090 FFF7FEFF 		bl	_lv_area_is_point_on
+ 1160              	.LVL102:
+ 1161 0094 00E0     		b	.L40
+ 1162              	.LVL103:
+ 1163              	.L41:
+ 258:Middlewares/lvgl/src/misc/lv_area.c ****     if(radius == 0) return true;
+ 1164              		.loc 1 258 23 view .LVU365
+ 1165 0096 0020     		movs	r0, #0
+ 1166              	.LVL104:
+ 1167              	.L40:
+ 281:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1168              		.loc 1 281 1 view .LVU366
+ 1169 0098 02B0     		add	sp, sp, #8
+ 1170              	.LCFI9:
+ 1171              		.cfi_remember_state
+ 1172              		.cfi_def_cfa_offset 24
+ 1173              		@ sp needed
+ 1174 009a BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 1175              	.LVL105:
+ 1176              	.L42:
+ 1177              	.LCFI10:
+ 1178              		.cfi_restore_state
+ 258:Middlewares/lvgl/src/misc/lv_area.c ****     if(radius == 0) return true;
+ 1179              		.loc 1 258 23 view .LVU367
+ARM GAS  /tmp/ccuYsjKa.s 			page 37
+
+
+ 1180 009e 0020     		movs	r0, #0
+ 1181              	.LVL106:
+ 258:Middlewares/lvgl/src/misc/lv_area.c ****     if(radius == 0) return true;
+ 1182              		.loc 1 258 23 view .LVU368
+ 1183 00a0 FAE7     		b	.L40
+ 1184              	.LVL107:
+ 1185              	.L43:
+ 258:Middlewares/lvgl/src/misc/lv_area.c ****     if(radius == 0) return true;
+ 1186              		.loc 1 258 23 view .LVU369
+ 1187 00a2 0020     		movs	r0, #0
+ 1188              	.LVL108:
+ 258:Middlewares/lvgl/src/misc/lv_area.c ****     if(radius == 0) return true;
+ 1189              		.loc 1 258 23 view .LVU370
+ 1190 00a4 F8E7     		b	.L40
+ 1191              	.LVL109:
+ 1192              	.L44:
+ 258:Middlewares/lvgl/src/misc/lv_area.c ****     if(radius == 0) return true;
+ 1193              		.loc 1 258 23 view .LVU371
+ 1194 00a6 0020     		movs	r0, #0
+ 1195              	.LVL110:
+ 258:Middlewares/lvgl/src/misc/lv_area.c ****     if(radius == 0) return true;
+ 1196              		.loc 1 258 23 view .LVU372
+ 1197 00a8 F6E7     		b	.L40
+ 1198              		.cfi_endproc
+ 1199              	.LFE16:
+ 1201              		.section	.text.lv_area_align,"ax",%progbits
+ 1202              		.align	1
+ 1203              		.global	lv_area_align
+ 1204              		.syntax unified
+ 1205              		.thumb
+ 1206              		.thumb_func
+ 1207              		.fpu softvfp
+ 1209              	lv_area_align:
+ 1210              	.LVL111:
+ 1211              	.LFB17:
+ 291:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1212              		.loc 1 291 1 is_stmt 1 view -0
+ 1213              		.cfi_startproc
+ 1214              		@ args = 4, pretend = 0, frame = 0
+ 1215              		@ frame_needed = 0, uses_anonymous_args = 0
+ 291:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1216              		.loc 1 291 1 is_stmt 0 view .LVU374
+ 1217 0000 30B5     		push	{r4, r5, lr}
+ 1218              	.LCFI11:
+ 1219              		.cfi_def_cfa_offset 12
+ 1220              		.cfi_offset 4, -12
+ 1221              		.cfi_offset 5, -8
+ 1222              		.cfi_offset 14, -4
+ 293:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t y;
+ 1223              		.loc 1 293 5 is_stmt 1 view .LVU375
+ 294:Middlewares/lvgl/src/misc/lv_area.c ****     switch(align) {
+ 1224              		.loc 1 294 5 view .LVU376
+ 295:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_CENTER:
+ 1225              		.loc 1 295 5 view .LVU377
+ 1226 0002 023A     		subs	r2, r2, #2
+ 1227              	.LVL112:
+ 295:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_CENTER:
+ARM GAS  /tmp/ccuYsjKa.s 			page 38
+
+
+ 1228              		.loc 1 295 5 is_stmt 0 view .LVU378
+ 1229 0004 132A     		cmp	r2, #19
+ 1230 0006 00F21B82 		bhi	.L71
+ 1231 000a DFE812F0 		tbh	[pc, r2, lsl #1]
+ 1232              	.L51:
+ 1233 000e 6B00     		.2byte	(.L70-.L51)/2
+ 1234 0010 8600     		.2byte	(.L69-.L51)/2
+ 1235 0012 9500     		.2byte	(.L68-.L51)/2
+ 1236 0014 A100     		.2byte	(.L67-.L51)/2
+ 1237 0016 C400     		.2byte	(.L66-.L51)/2
+ 1238 0018 DB00     		.2byte	(.L65-.L51)/2
+ 1239 001a F500     		.2byte	(.L64-.L51)/2
+ 1240 001c 1400     		.2byte	(.L63-.L51)/2
+ 1241 001e 1A01     		.2byte	(.L62-.L51)/2
+ 1242 0020 2201     		.2byte	(.L61-.L51)/2
+ 1243 0022 4101     		.2byte	(.L60-.L51)/2
+ 1244 0024 5401     		.2byte	(.L59-.L51)/2
+ 1245 0026 5D01     		.2byte	(.L58-.L51)/2
+ 1246 0028 7D01     		.2byte	(.L57-.L51)/2
+ 1247 002a 9101     		.2byte	(.L56-.L51)/2
+ 1248 002c 9C01     		.2byte	(.L55-.L51)/2
+ 1249 002e BD01     		.2byte	(.L54-.L51)/2
+ 1250 0030 D001     		.2byte	(.L53-.L51)/2
+ 1251 0032 DD01     		.2byte	(.L52-.L51)/2
+ 1252 0034 0202     		.2byte	(.L50-.L51)/2
+ 1253              		.p2align 1
+ 1254              	.L63:
+ 297:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 1255              		.loc 1 297 13 is_stmt 1 view .LVU379
+ 1256              	.LVL113:
+ 1257              	.LBB126:
+ 1258              	.LBI126:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1259              		.loc 2 133 26 view .LVU380
+ 1260              	.LBB127:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1261              		.loc 2 135 5 view .LVU381
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1262              		.loc 2 135 31 is_stmt 0 view .LVU382
+ 1263 0036 8488     		ldrh	r4, [r0, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1264              		.loc 2 135 44 view .LVU383
+ 1265 0038 0288     		ldrh	r2, [r0]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1266              		.loc 2 135 36 view .LVU384
+ 1267 003a A41A     		subs	r4, r4, r2
+ 1268 003c A4B2     		uxth	r4, r4
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1269              		.loc 2 135 49 view .LVU385
+ 1270 003e 0134     		adds	r4, r4, #1
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1271              		.loc 2 135 12 view .LVU386
+ 1272 0040 0FFA84FC 		sxth	ip, r4
+ 1273              	.LVL114:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1274              		.loc 2 135 12 view .LVU387
+ 1275              	.LBE127:
+ARM GAS  /tmp/ccuYsjKa.s 			page 39
+
+
+ 1276              	.LBE126:
+ 1277              	.LBB128:
+ 1278              	.LBI128:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1279              		.loc 2 133 26 is_stmt 1 view .LVU388
+ 1280              	.LBB129:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1281              		.loc 2 135 5 view .LVU389
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1282              		.loc 2 135 31 is_stmt 0 view .LVU390
+ 1283 0044 8A88     		ldrh	r2, [r1, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1284              		.loc 2 135 44 view .LVU391
+ 1285 0046 0D88     		ldrh	r5, [r1]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1286              		.loc 2 135 36 view .LVU392
+ 1287 0048 521B     		subs	r2, r2, r5
+ 1288 004a 92B2     		uxth	r2, r2
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1289              		.loc 2 135 49 view .LVU393
+ 1290 004c 0132     		adds	r2, r2, #1
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1291              		.loc 2 135 12 view .LVU394
+ 1292 004e 15B2     		sxth	r5, r2
+ 1293              	.LVL115:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1294              		.loc 2 135 12 view .LVU395
+ 1295              	.LBE129:
+ 1296              	.LBE128:
+ 297:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 1297              		.loc 1 297 45 view .LVU396
+ 1298 0050 C4F3C034 		ubfx	r4, r4, #15, #1
+ 1299 0054 6444     		add	r4, r4, ip
+ 1300 0056 C2F3C03C 		ubfx	ip, r2, #15, #1
+ 1301 005a AC44     		add	ip, ip, r5
+ 1302 005c 4FEA6C0C 		asr	ip, ip, #1
+ 1303 0060 CCEB640C 		rsb	ip, ip, r4, asr #1
+ 297:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 1304              		.loc 1 297 15 view .LVU397
+ 1305 0064 0FFA8CFC 		sxth	ip, ip
+ 1306              	.LVL116:
+ 298:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1307              		.loc 1 298 13 is_stmt 1 view .LVU398
+ 1308              	.LBB130:
+ 1309              	.LBI130:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1310              		.loc 2 143 26 view .LVU399
+ 1311              	.LBB131:
+ 1312              		.loc 2 145 5 view .LVU400
+ 1313              		.loc 2 145 31 is_stmt 0 view .LVU401
+ 1314 0068 C488     		ldrh	r4, [r0, #6]
+ 1315              		.loc 2 145 44 view .LVU402
+ 1316 006a 4288     		ldrh	r2, [r0, #2]
+ 1317              		.loc 2 145 36 view .LVU403
+ 1318 006c A41A     		subs	r4, r4, r2
+ 1319 006e A4B2     		uxth	r4, r4
+ 1320              		.loc 2 145 49 view .LVU404
+ARM GAS  /tmp/ccuYsjKa.s 			page 40
+
+
+ 1321 0070 0134     		adds	r4, r4, #1
+ 1322              		.loc 2 145 12 view .LVU405
+ 1323 0072 0FFA84FE 		sxth	lr, r4
+ 1324              	.LVL117:
+ 1325              		.loc 2 145 12 view .LVU406
+ 1326              	.LBE131:
+ 1327              	.LBE130:
+ 1328              	.LBB132:
+ 1329              	.LBI132:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1330              		.loc 2 143 26 is_stmt 1 view .LVU407
+ 1331              	.LBB133:
+ 1332              		.loc 2 145 5 view .LVU408
+ 1333              		.loc 2 145 31 is_stmt 0 view .LVU409
+ 1334 0076 CA88     		ldrh	r2, [r1, #6]
+ 1335              		.loc 2 145 44 view .LVU410
+ 1336 0078 4D88     		ldrh	r5, [r1, #2]
+ 1337              		.loc 2 145 36 view .LVU411
+ 1338 007a 521B     		subs	r2, r2, r5
+ 1339 007c 92B2     		uxth	r2, r2
+ 1340              		.loc 2 145 49 view .LVU412
+ 1341 007e 0132     		adds	r2, r2, #1
+ 1342              		.loc 2 145 12 view .LVU413
+ 1343 0080 15B2     		sxth	r5, r2
+ 1344              	.LVL118:
+ 1345              		.loc 2 145 12 view .LVU414
+ 1346              	.LBE133:
+ 1347              	.LBE132:
+ 298:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1348              		.loc 1 298 46 view .LVU415
+ 1349 0082 C4F3C034 		ubfx	r4, r4, #15, #1
+ 1350 0086 7444     		add	r4, r4, lr
+ 1351 0088 C2F3C032 		ubfx	r2, r2, #15, #1
+ 1352 008c 2A44     		add	r2, r2, r5
+ 1353 008e 5210     		asrs	r2, r2, #1
+ 1354 0090 C2EB6402 		rsb	r2, r2, r4, asr #1
+ 298:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1355              		.loc 1 298 15 view .LVU416
+ 1356 0094 12B2     		sxth	r2, r2
+ 1357              	.LVL119:
+ 299:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1358              		.loc 1 299 13 is_stmt 1 view .LVU417
+ 1359              	.L49:
+ 404:Middlewares/lvgl/src/misc/lv_area.c ****     y += base->y1;
+ 1360              		.loc 1 404 5 view .LVU418
+ 404:Middlewares/lvgl/src/misc/lv_area.c ****     y += base->y1;
+ 1361              		.loc 1 404 14 is_stmt 0 view .LVU419
+ 1362 0096 0488     		ldrh	r4, [r0]
+ 404:Middlewares/lvgl/src/misc/lv_area.c ****     y += base->y1;
+ 1363              		.loc 1 404 7 view .LVU420
+ 1364 0098 A444     		add	ip, ip, r4
+ 1365              	.LVL120:
+ 404:Middlewares/lvgl/src/misc/lv_area.c ****     y += base->y1;
+ 1366              		.loc 1 404 7 view .LVU421
+ 1367 009a 1FFA8CFC 		uxth	ip, ip
+ 1368              	.LVL121:
+ 405:Middlewares/lvgl/src/misc/lv_area.c **** 
+ARM GAS  /tmp/ccuYsjKa.s 			page 41
+
+
+ 1369              		.loc 1 405 5 is_stmt 1 view .LVU422
+ 405:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1370              		.loc 1 405 14 is_stmt 0 view .LVU423
+ 1371 009e 4488     		ldrh	r4, [r0, #2]
+ 405:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1372              		.loc 1 405 7 view .LVU424
+ 1373 00a0 2244     		add	r2, r2, r4
+ 1374              	.LVL122:
+ 405:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1375              		.loc 1 405 7 view .LVU425
+ 1376 00a2 94B2     		uxth	r4, r2
+ 1377              	.LVL123:
+ 407:Middlewares/lvgl/src/misc/lv_area.c ****     lv_coord_t h = lv_area_get_height(to_align);
+ 1378              		.loc 1 407 5 is_stmt 1 view .LVU426
+ 1379              	.LBB134:
+ 1380              	.LBI134:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1381              		.loc 2 133 26 view .LVU427
+ 1382              	.LBB135:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1383              		.loc 2 135 5 view .LVU428
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1384              		.loc 2 135 31 is_stmt 0 view .LVU429
+ 1385 00a4 8888     		ldrh	r0, [r1, #4]
+ 1386              	.LVL124:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1387              		.loc 2 135 44 view .LVU430
+ 1388 00a6 0A88     		ldrh	r2, [r1]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1389              		.loc 2 135 36 view .LVU431
+ 1390 00a8 801A     		subs	r0, r0, r2
+ 1391 00aa 80B2     		uxth	r0, r0
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1392              		.loc 2 135 49 view .LVU432
+ 1393 00ac 0130     		adds	r0, r0, #1
+ 1394 00ae 80B2     		uxth	r0, r0
+ 1395              	.LVL125:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1396              		.loc 2 135 49 view .LVU433
+ 1397              	.LBE135:
+ 1398              	.LBE134:
+ 408:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->x1 = x + ofs_x;
+ 1399              		.loc 1 408 5 is_stmt 1 view .LVU434
+ 1400              	.LBB136:
+ 1401              	.LBI136:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1402              		.loc 2 143 26 view .LVU435
+ 1403              	.LBB137:
+ 1404              		.loc 2 145 5 view .LVU436
+ 1405              		.loc 2 145 31 is_stmt 0 view .LVU437
+ 1406 00b0 CA88     		ldrh	r2, [r1, #6]
+ 1407              		.loc 2 145 44 view .LVU438
+ 1408 00b2 B1F802E0 		ldrh	lr, [r1, #2]
+ 1409              		.loc 2 145 36 view .LVU439
+ 1410 00b6 A2EB0E02 		sub	r2, r2, lr
+ 1411 00ba 92B2     		uxth	r2, r2
+ 1412              		.loc 2 145 49 view .LVU440
+ARM GAS  /tmp/ccuYsjKa.s 			page 42
+
+
+ 1413 00bc 0132     		adds	r2, r2, #1
+ 1414 00be 92B2     		uxth	r2, r2
+ 1415              	.LVL126:
+ 1416              		.loc 2 145 49 view .LVU441
+ 1417              	.LBE137:
+ 1418              	.LBE136:
+ 409:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->y1 = y + ofs_y;
+ 1419              		.loc 1 409 5 is_stmt 1 view .LVU442
+ 409:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->y1 = y + ofs_y;
+ 1420              		.loc 1 409 22 is_stmt 0 view .LVU443
+ 1421 00c0 6344     		add	r3, r3, ip
+ 1422              	.LVL127:
+ 409:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->y1 = y + ofs_y;
+ 1423              		.loc 1 409 22 view .LVU444
+ 1424 00c2 1FFA83FE 		uxth	lr, r3
+ 409:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->y1 = y + ofs_y;
+ 1425              		.loc 1 409 18 view .LVU445
+ 1426 00c6 0B80     		strh	r3, [r1]	@ movhi
+ 410:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->x2 = to_align->x1 + w - 1;
+ 1427              		.loc 1 410 5 is_stmt 1 view .LVU446
+ 410:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->x2 = to_align->x1 + w - 1;
+ 1428              		.loc 1 410 22 is_stmt 0 view .LVU447
+ 1429 00c8 BDF90C30 		ldrsh	r3, [sp, #12]
+ 1430 00cc 1C44     		add	r4, r4, r3
+ 1431              	.LVL128:
+ 410:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->x2 = to_align->x1 + w - 1;
+ 1432              		.loc 1 410 22 view .LVU448
+ 1433 00ce A3B2     		uxth	r3, r4
+ 410:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->x2 = to_align->x1 + w - 1;
+ 1434              		.loc 1 410 18 view .LVU449
+ 1435 00d0 4C80     		strh	r4, [r1, #2]	@ movhi
+ 411:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->y2 = to_align->y1 + h - 1;
+ 1436              		.loc 1 411 5 is_stmt 1 view .LVU450
+ 411:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->y2 = to_align->y1 + h - 1;
+ 1437              		.loc 1 411 33 is_stmt 0 view .LVU451
+ 1438 00d2 7044     		add	r0, r0, lr
+ 1439              	.LVL129:
+ 411:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->y2 = to_align->y1 + h - 1;
+ 1440              		.loc 1 411 33 view .LVU452
+ 1441 00d4 80B2     		uxth	r0, r0
+ 411:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->y2 = to_align->y1 + h - 1;
+ 1442              		.loc 1 411 37 view .LVU453
+ 1443 00d6 0138     		subs	r0, r0, #1
+ 411:Middlewares/lvgl/src/misc/lv_area.c ****     to_align->y2 = to_align->y1 + h - 1;
+ 1444              		.loc 1 411 18 view .LVU454
+ 1445 00d8 8880     		strh	r0, [r1, #4]	@ movhi
+ 412:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 1446              		.loc 1 412 5 is_stmt 1 view .LVU455
+ 412:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 1447              		.loc 1 412 33 is_stmt 0 view .LVU456
+ 1448 00da 1A44     		add	r2, r2, r3
+ 1449              	.LVL130:
+ 412:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 1450              		.loc 1 412 33 view .LVU457
+ 1451 00dc 92B2     		uxth	r2, r2
+ 412:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 1452              		.loc 1 412 37 view .LVU458
+ARM GAS  /tmp/ccuYsjKa.s 			page 43
+
+
+ 1453 00de 013A     		subs	r2, r2, #1
+ 412:Middlewares/lvgl/src/misc/lv_area.c **** }
+ 1454              		.loc 1 412 18 view .LVU459
+ 1455 00e0 CA80     		strh	r2, [r1, #6]	@ movhi
+ 413:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1456              		.loc 1 413 1 view .LVU460
+ 1457 00e2 30BD     		pop	{r4, r5, pc}
+ 1458              	.LVL131:
+ 1459              	.L70:
+ 306:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 1460              		.loc 1 306 13 is_stmt 1 view .LVU461
+ 1461              	.LBB138:
+ 1462              	.LBI138:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1463              		.loc 2 133 26 view .LVU462
+ 1464              	.LBB139:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1465              		.loc 2 135 5 view .LVU463
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1466              		.loc 2 135 31 is_stmt 0 view .LVU464
+ 1467 00e4 8488     		ldrh	r4, [r0, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1468              		.loc 2 135 44 view .LVU465
+ 1469 00e6 0288     		ldrh	r2, [r0]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1470              		.loc 2 135 36 view .LVU466
+ 1471 00e8 A41A     		subs	r4, r4, r2
+ 1472 00ea A4B2     		uxth	r4, r4
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1473              		.loc 2 135 49 view .LVU467
+ 1474 00ec 0134     		adds	r4, r4, #1
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1475              		.loc 2 135 12 view .LVU468
+ 1476 00ee 0FFA84FC 		sxth	ip, r4
+ 1477              	.LVL132:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1478              		.loc 2 135 12 view .LVU469
+ 1479              	.LBE139:
+ 1480              	.LBE138:
+ 1481              	.LBB140:
+ 1482              	.LBI140:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1483              		.loc 2 133 26 is_stmt 1 view .LVU470
+ 1484              	.LBB141:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1485              		.loc 2 135 5 view .LVU471
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1486              		.loc 2 135 31 is_stmt 0 view .LVU472
+ 1487 00f2 8A88     		ldrh	r2, [r1, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1488              		.loc 2 135 44 view .LVU473
+ 1489 00f4 0D88     		ldrh	r5, [r1]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1490              		.loc 2 135 36 view .LVU474
+ 1491 00f6 521B     		subs	r2, r2, r5
+ 1492 00f8 92B2     		uxth	r2, r2
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ARM GAS  /tmp/ccuYsjKa.s 			page 44
+
+
+ 1493              		.loc 2 135 49 view .LVU475
+ 1494 00fa 0132     		adds	r2, r2, #1
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1495              		.loc 2 135 12 view .LVU476
+ 1496 00fc 15B2     		sxth	r5, r2
+ 1497              	.LVL133:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1498              		.loc 2 135 12 view .LVU477
+ 1499              	.LBE141:
+ 1500              	.LBE140:
+ 306:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 1501              		.loc 1 306 45 view .LVU478
+ 1502 00fe C4F3C034 		ubfx	r4, r4, #15, #1
+ 1503 0102 6444     		add	r4, r4, ip
+ 1504 0104 C2F3C03C 		ubfx	ip, r2, #15, #1
+ 1505 0108 AC44     		add	ip, ip, r5
+ 1506 010a 4FEA6C0C 		asr	ip, ip, #1
+ 1507 010e CCEB640C 		rsb	ip, ip, r4, asr #1
+ 306:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 1508              		.loc 1 306 15 view .LVU479
+ 1509 0112 0FFA8CFC 		sxth	ip, ip
+ 1510              	.LVL134:
+ 307:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1511              		.loc 1 307 13 is_stmt 1 view .LVU480
+ 308:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1512              		.loc 1 308 13 view .LVU481
+ 307:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1513              		.loc 1 307 15 is_stmt 0 view .LVU482
+ 1514 0116 0022     		movs	r2, #0
+ 308:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1515              		.loc 1 308 13 view .LVU483
+ 1516 0118 BDE7     		b	.L49
+ 1517              	.LVL135:
+ 1518              	.L69:
+ 311:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 1519              		.loc 1 311 13 is_stmt 1 view .LVU484
+ 1520              	.LBB142:
+ 1521              	.LBI142:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1522              		.loc 2 133 26 view .LVU485
+ 1523              	.LBB143:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1524              		.loc 2 135 5 view .LVU486
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1525              		.loc 2 135 31 is_stmt 0 view .LVU487
+ 1526 011a B0F804C0 		ldrh	ip, [r0, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1527              		.loc 2 135 44 view .LVU488
+ 1528 011e 0288     		ldrh	r2, [r0]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1529              		.loc 2 135 36 view .LVU489
+ 1530 0120 ACEB020C 		sub	ip, ip, r2
+ 1531 0124 1FFA8CFC 		uxth	ip, ip
+ 1532              	.LVL136:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1533              		.loc 2 135 36 view .LVU490
+ 1534              	.LBE143:
+ARM GAS  /tmp/ccuYsjKa.s 			page 45
+
+
+ 1535              	.LBE142:
+ 1536              	.LBB144:
+ 1537              	.LBI144:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1538              		.loc 2 133 26 is_stmt 1 view .LVU491
+ 1539              	.LBB145:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1540              		.loc 2 135 5 view .LVU492
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1541              		.loc 2 135 31 is_stmt 0 view .LVU493
+ 1542 0128 8C88     		ldrh	r4, [r1, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1543              		.loc 2 135 44 view .LVU494
+ 1544 012a 0A88     		ldrh	r2, [r1]
+ 1545              	.LVL137:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1546              		.loc 2 135 44 view .LVU495
+ 1547              	.LBE145:
+ 1548              	.LBE144:
+ 311:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 1549              		.loc 1 311 41 view .LVU496
+ 1550 012c 121B     		subs	r2, r2, r4
+ 1551 012e 9444     		add	ip, ip, r2
+ 311:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 1552              		.loc 1 311 15 view .LVU497
+ 1553 0130 0FFA8CFC 		sxth	ip, ip
+ 1554              	.LVL138:
+ 312:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1555              		.loc 1 312 13 is_stmt 1 view .LVU498
+ 313:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1556              		.loc 1 313 13 view .LVU499
+ 312:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1557              		.loc 1 312 15 is_stmt 0 view .LVU500
+ 1558 0134 0022     		movs	r2, #0
+ 313:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1559              		.loc 1 313 13 view .LVU501
+ 1560 0136 AEE7     		b	.L49
+ 1561              	.LVL139:
+ 1562              	.L68:
+ 316:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 1563              		.loc 1 316 13 is_stmt 1 view .LVU502
+ 317:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1564              		.loc 1 317 13 view .LVU503
+ 1565              	.LBB146:
+ 1566              	.LBI146:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1567              		.loc 2 143 26 view .LVU504
+ 1568              	.LBB147:
+ 1569              		.loc 2 145 5 view .LVU505
+ 1570              		.loc 2 145 31 is_stmt 0 view .LVU506
+ 1571 0138 C288     		ldrh	r2, [r0, #6]
+ 1572              		.loc 2 145 44 view .LVU507
+ 1573 013a 4488     		ldrh	r4, [r0, #2]
+ 1574              		.loc 2 145 36 view .LVU508
+ 1575 013c 121B     		subs	r2, r2, r4
+ 1576 013e 92B2     		uxth	r2, r2
+ 1577              	.LVL140:
+ARM GAS  /tmp/ccuYsjKa.s 			page 46
+
+
+ 1578              		.loc 2 145 36 view .LVU509
+ 1579              	.LBE147:
+ 1580              	.LBE146:
+ 1581              	.LBB148:
+ 1582              	.LBI148:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1583              		.loc 2 143 26 is_stmt 1 view .LVU510
+ 1584              	.LBB149:
+ 1585              		.loc 2 145 5 view .LVU511
+ 1586              		.loc 2 145 31 is_stmt 0 view .LVU512
+ 1587 0140 CD88     		ldrh	r5, [r1, #6]
+ 1588              		.loc 2 145 44 view .LVU513
+ 1589 0142 4C88     		ldrh	r4, [r1, #2]
+ 1590              	.LVL141:
+ 1591              		.loc 2 145 44 view .LVU514
+ 1592              	.LBE149:
+ 1593              	.LBE148:
+ 317:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1594              		.loc 1 317 42 view .LVU515
+ 1595 0144 641B     		subs	r4, r4, r5
+ 1596 0146 2244     		add	r2, r2, r4
+ 317:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1597              		.loc 1 317 15 view .LVU516
+ 1598 0148 12B2     		sxth	r2, r2
+ 1599              	.LVL142:
+ 318:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_BOTTOM_MID:
+ 1600              		.loc 1 318 13 is_stmt 1 view .LVU517
+ 316:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 1601              		.loc 1 316 15 is_stmt 0 view .LVU518
+ 1602 014a 4FF0000C 		mov	ip, #0
+ 318:Middlewares/lvgl/src/misc/lv_area.c ****         case LV_ALIGN_BOTTOM_MID:
+ 1603              		.loc 1 318 13 view .LVU519
+ 1604 014e A2E7     		b	.L49
+ 1605              	.LVL143:
+ 1606              	.L67:
+ 320:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 1607              		.loc 1 320 13 is_stmt 1 view .LVU520
+ 1608              	.LBB150:
+ 1609              	.LBI150:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1610              		.loc 2 133 26 view .LVU521
+ 1611              	.LBB151:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1612              		.loc 2 135 5 view .LVU522
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1613              		.loc 2 135 31 is_stmt 0 view .LVU523
+ 1614 0150 8488     		ldrh	r4, [r0, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1615              		.loc 2 135 44 view .LVU524
+ 1616 0152 0288     		ldrh	r2, [r0]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1617              		.loc 2 135 36 view .LVU525
+ 1618 0154 A41A     		subs	r4, r4, r2
+ 1619 0156 A4B2     		uxth	r4, r4
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1620              		.loc 2 135 49 view .LVU526
+ 1621 0158 0134     		adds	r4, r4, #1
+ARM GAS  /tmp/ccuYsjKa.s 			page 47
+
+
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1622              		.loc 2 135 12 view .LVU527
+ 1623 015a 0FFA84FC 		sxth	ip, r4
+ 1624              	.LVL144:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1625              		.loc 2 135 12 view .LVU528
+ 1626              	.LBE151:
+ 1627              	.LBE150:
+ 1628              	.LBB152:
+ 1629              	.LBI152:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1630              		.loc 2 133 26 is_stmt 1 view .LVU529
+ 1631              	.LBB153:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1632              		.loc 2 135 5 view .LVU530
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1633              		.loc 2 135 31 is_stmt 0 view .LVU531
+ 1634 015e 8A88     		ldrh	r2, [r1, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1635              		.loc 2 135 44 view .LVU532
+ 1636 0160 0D88     		ldrh	r5, [r1]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1637              		.loc 2 135 36 view .LVU533
+ 1638 0162 521B     		subs	r2, r2, r5
+ 1639 0164 92B2     		uxth	r2, r2
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1640              		.loc 2 135 49 view .LVU534
+ 1641 0166 0132     		adds	r2, r2, #1
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1642              		.loc 2 135 12 view .LVU535
+ 1643 0168 15B2     		sxth	r5, r2
+ 1644              	.LVL145:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1645              		.loc 2 135 12 view .LVU536
+ 1646              	.LBE153:
+ 1647              	.LBE152:
+ 320:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 1648              		.loc 1 320 45 view .LVU537
+ 1649 016a C4F3C034 		ubfx	r4, r4, #15, #1
+ 1650 016e 6444     		add	r4, r4, ip
+ 1651 0170 C2F3C03C 		ubfx	ip, r2, #15, #1
+ 1652 0174 AC44     		add	ip, ip, r5
+ 1653 0176 4FEA6C0C 		asr	ip, ip, #1
+ 1654 017a CCEB640C 		rsb	ip, ip, r4, asr #1
+ 320:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 1655              		.loc 1 320 15 view .LVU538
+ 1656 017e 0FFA8CFC 		sxth	ip, ip
+ 1657              	.LVL146:
+ 321:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1658              		.loc 1 321 13 is_stmt 1 view .LVU539
+ 1659              	.LBB154:
+ 1660              	.LBI154:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1661              		.loc 2 143 26 view .LVU540
+ 1662              	.LBB155:
+ 1663              		.loc 2 145 5 view .LVU541
+ 1664              		.loc 2 145 31 is_stmt 0 view .LVU542
+ARM GAS  /tmp/ccuYsjKa.s 			page 48
+
+
+ 1665 0182 C288     		ldrh	r2, [r0, #6]
+ 1666              		.loc 2 145 44 view .LVU543
+ 1667 0184 4488     		ldrh	r4, [r0, #2]
+ 1668              		.loc 2 145 36 view .LVU544
+ 1669 0186 121B     		subs	r2, r2, r4
+ 1670 0188 92B2     		uxth	r2, r2
+ 1671              	.LVL147:
+ 1672              		.loc 2 145 36 view .LVU545
+ 1673              	.LBE155:
+ 1674              	.LBE154:
+ 1675              	.LBB156:
+ 1676              	.LBI156:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1677              		.loc 2 143 26 is_stmt 1 view .LVU546
+ 1678              	.LBB157:
+ 1679              		.loc 2 145 5 view .LVU547
+ 1680              		.loc 2 145 31 is_stmt 0 view .LVU548
+ 1681 018a CD88     		ldrh	r5, [r1, #6]
+ 1682              		.loc 2 145 44 view .LVU549
+ 1683 018c 4C88     		ldrh	r4, [r1, #2]
+ 1684              	.LVL148:
+ 1685              		.loc 2 145 44 view .LVU550
+ 1686              	.LBE157:
+ 1687              	.LBE156:
+ 321:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1688              		.loc 1 321 42 view .LVU551
+ 1689 018e 641B     		subs	r4, r4, r5
+ 1690 0190 2244     		add	r2, r2, r4
+ 321:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1691              		.loc 1 321 15 view .LVU552
+ 1692 0192 12B2     		sxth	r2, r2
+ 1693              	.LVL149:
+ 322:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1694              		.loc 1 322 13 is_stmt 1 view .LVU553
+ 1695 0194 7FE7     		b	.L49
+ 1696              	.LVL150:
+ 1697              	.L66:
+ 325:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 1698              		.loc 1 325 13 view .LVU554
+ 1699              	.LBB158:
+ 1700              	.LBI158:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1701              		.loc 2 133 26 view .LVU555
+ 1702              	.LBB159:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1703              		.loc 2 135 5 view .LVU556
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1704              		.loc 2 135 31 is_stmt 0 view .LVU557
+ 1705 0196 B0F804C0 		ldrh	ip, [r0, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1706              		.loc 2 135 44 view .LVU558
+ 1707 019a 0288     		ldrh	r2, [r0]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1708              		.loc 2 135 36 view .LVU559
+ 1709 019c ACEB020C 		sub	ip, ip, r2
+ 1710 01a0 1FFA8CFC 		uxth	ip, ip
+ 1711              	.LVL151:
+ARM GAS  /tmp/ccuYsjKa.s 			page 49
+
+
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1712              		.loc 2 135 36 view .LVU560
+ 1713              	.LBE159:
+ 1714              	.LBE158:
+ 1715              	.LBB160:
+ 1716              	.LBI160:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1717              		.loc 2 133 26 is_stmt 1 view .LVU561
+ 1718              	.LBB161:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1719              		.loc 2 135 5 view .LVU562
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1720              		.loc 2 135 31 is_stmt 0 view .LVU563
+ 1721 01a4 8C88     		ldrh	r4, [r1, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1722              		.loc 2 135 44 view .LVU564
+ 1723 01a6 0A88     		ldrh	r2, [r1]
+ 1724              	.LVL152:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1725              		.loc 2 135 44 view .LVU565
+ 1726              	.LBE161:
+ 1727              	.LBE160:
+ 325:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 1728              		.loc 1 325 41 view .LVU566
+ 1729 01a8 121B     		subs	r2, r2, r4
+ 1730 01aa 9444     		add	ip, ip, r2
+ 325:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 1731              		.loc 1 325 15 view .LVU567
+ 1732 01ac 0FFA8CFC 		sxth	ip, ip
+ 1733              	.LVL153:
+ 326:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1734              		.loc 1 326 13 is_stmt 1 view .LVU568
+ 1735              	.LBB162:
+ 1736              	.LBI162:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1737              		.loc 2 143 26 view .LVU569
+ 1738              	.LBB163:
+ 1739              		.loc 2 145 5 view .LVU570
+ 1740              		.loc 2 145 31 is_stmt 0 view .LVU571
+ 1741 01b0 C288     		ldrh	r2, [r0, #6]
+ 1742              		.loc 2 145 44 view .LVU572
+ 1743 01b2 4488     		ldrh	r4, [r0, #2]
+ 1744              		.loc 2 145 36 view .LVU573
+ 1745 01b4 121B     		subs	r2, r2, r4
+ 1746 01b6 92B2     		uxth	r2, r2
+ 1747              	.LVL154:
+ 1748              		.loc 2 145 36 view .LVU574
+ 1749              	.LBE163:
+ 1750              	.LBE162:
+ 1751              	.LBB164:
+ 1752              	.LBI164:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1753              		.loc 2 143 26 is_stmt 1 view .LVU575
+ 1754              	.LBB165:
+ 1755              		.loc 2 145 5 view .LVU576
+ 1756              		.loc 2 145 31 is_stmt 0 view .LVU577
+ 1757 01b8 CD88     		ldrh	r5, [r1, #6]
+ARM GAS  /tmp/ccuYsjKa.s 			page 50
+
+
+ 1758              		.loc 2 145 44 view .LVU578
+ 1759 01ba 4C88     		ldrh	r4, [r1, #2]
+ 1760              	.LVL155:
+ 1761              		.loc 2 145 44 view .LVU579
+ 1762              	.LBE165:
+ 1763              	.LBE164:
+ 326:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1764              		.loc 1 326 42 view .LVU580
+ 1765 01bc 641B     		subs	r4, r4, r5
+ 1766 01be 2244     		add	r2, r2, r4
+ 326:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1767              		.loc 1 326 15 view .LVU581
+ 1768 01c0 12B2     		sxth	r2, r2
+ 1769              	.LVL156:
+ 327:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1770              		.loc 1 327 13 is_stmt 1 view .LVU582
+ 1771 01c2 68E7     		b	.L49
+ 1772              	.LVL157:
+ 1773              	.L65:
+ 330:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 1774              		.loc 1 330 13 view .LVU583
+ 331:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1775              		.loc 1 331 13 view .LVU584
+ 1776              	.LBB166:
+ 1777              	.LBI166:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1778              		.loc 2 143 26 view .LVU585
+ 1779              	.LBB167:
+ 1780              		.loc 2 145 5 view .LVU586
+ 1781              		.loc 2 145 31 is_stmt 0 view .LVU587
+ 1782 01c4 C488     		ldrh	r4, [r0, #6]
+ 1783              		.loc 2 145 44 view .LVU588
+ 1784 01c6 4288     		ldrh	r2, [r0, #2]
+ 1785              		.loc 2 145 36 view .LVU589
+ 1786 01c8 A41A     		subs	r4, r4, r2
+ 1787 01ca A4B2     		uxth	r4, r4
+ 1788              		.loc 2 145 49 view .LVU590
+ 1789 01cc 0134     		adds	r4, r4, #1
+ 1790              		.loc 2 145 12 view .LVU591
+ 1791 01ce 0FFA84FC 		sxth	ip, r4
+ 1792              	.LVL158:
+ 1793              		.loc 2 145 12 view .LVU592
+ 1794              	.LBE167:
+ 1795              	.LBE166:
+ 1796              	.LBB168:
+ 1797              	.LBI168:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1798              		.loc 2 143 26 is_stmt 1 view .LVU593
+ 1799              	.LBB169:
+ 1800              		.loc 2 145 5 view .LVU594
+ 1801              		.loc 2 145 31 is_stmt 0 view .LVU595
+ 1802 01d2 CA88     		ldrh	r2, [r1, #6]
+ 1803              		.loc 2 145 44 view .LVU596
+ 1804 01d4 4D88     		ldrh	r5, [r1, #2]
+ 1805              		.loc 2 145 36 view .LVU597
+ 1806 01d6 521B     		subs	r2, r2, r5
+ 1807 01d8 92B2     		uxth	r2, r2
+ARM GAS  /tmp/ccuYsjKa.s 			page 51
+
+
+ 1808              		.loc 2 145 49 view .LVU598
+ 1809 01da 0132     		adds	r2, r2, #1
+ 1810              		.loc 2 145 12 view .LVU599
+ 1811 01dc 15B2     		sxth	r5, r2
+ 1812              	.LVL159:
+ 1813              		.loc 2 145 12 view .LVU600
+ 1814              	.LBE169:
+ 1815              	.LBE168:
+ 331:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1816              		.loc 1 331 46 view .LVU601
+ 1817 01de C4F3C034 		ubfx	r4, r4, #15, #1
+ 1818 01e2 6444     		add	r4, r4, ip
+ 1819 01e4 C2F3C032 		ubfx	r2, r2, #15, #1
+ 1820 01e8 2A44     		add	r2, r2, r5
+ 1821 01ea 5210     		asrs	r2, r2, #1
+ 1822 01ec C2EB6402 		rsb	r2, r2, r4, asr #1
+ 331:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1823              		.loc 1 331 15 view .LVU602
+ 1824 01f0 12B2     		sxth	r2, r2
+ 1825              	.LVL160:
+ 332:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1826              		.loc 1 332 13 is_stmt 1 view .LVU603
+ 330:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 1827              		.loc 1 330 15 is_stmt 0 view .LVU604
+ 1828 01f2 4FF0000C 		mov	ip, #0
+ 332:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1829              		.loc 1 332 13 view .LVU605
+ 1830 01f6 4EE7     		b	.L49
+ 1831              	.LVL161:
+ 1832              	.L64:
+ 335:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 1833              		.loc 1 335 13 is_stmt 1 view .LVU606
+ 1834              	.LBB170:
+ 1835              	.LBI170:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1836              		.loc 2 133 26 view .LVU607
+ 1837              	.LBB171:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1838              		.loc 2 135 5 view .LVU608
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1839              		.loc 2 135 31 is_stmt 0 view .LVU609
+ 1840 01f8 B0F804C0 		ldrh	ip, [r0, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1841              		.loc 2 135 44 view .LVU610
+ 1842 01fc 0288     		ldrh	r2, [r0]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1843              		.loc 2 135 36 view .LVU611
+ 1844 01fe ACEB020C 		sub	ip, ip, r2
+ 1845 0202 1FFA8CFC 		uxth	ip, ip
+ 1846              	.LVL162:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1847              		.loc 2 135 36 view .LVU612
+ 1848              	.LBE171:
+ 1849              	.LBE170:
+ 1850              	.LBB172:
+ 1851              	.LBI172:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ARM GAS  /tmp/ccuYsjKa.s 			page 52
+
+
+ 1852              		.loc 2 133 26 is_stmt 1 view .LVU613
+ 1853              	.LBB173:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1854              		.loc 2 135 5 view .LVU614
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1855              		.loc 2 135 31 is_stmt 0 view .LVU615
+ 1856 0206 8C88     		ldrh	r4, [r1, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1857              		.loc 2 135 44 view .LVU616
+ 1858 0208 0A88     		ldrh	r2, [r1]
+ 1859              	.LVL163:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1860              		.loc 2 135 44 view .LVU617
+ 1861              	.LBE173:
+ 1862              	.LBE172:
+ 335:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 1863              		.loc 1 335 41 view .LVU618
+ 1864 020a 121B     		subs	r2, r2, r4
+ 1865 020c 9444     		add	ip, ip, r2
+ 335:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 1866              		.loc 1 335 15 view .LVU619
+ 1867 020e 0FFA8CFC 		sxth	ip, ip
+ 1868              	.LVL164:
+ 336:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1869              		.loc 1 336 13 is_stmt 1 view .LVU620
+ 1870              	.LBB174:
+ 1871              	.LBI174:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1872              		.loc 2 143 26 view .LVU621
+ 1873              	.LBB175:
+ 1874              		.loc 2 145 5 view .LVU622
+ 1875              		.loc 2 145 31 is_stmt 0 view .LVU623
+ 1876 0212 C488     		ldrh	r4, [r0, #6]
+ 1877              		.loc 2 145 44 view .LVU624
+ 1878 0214 4288     		ldrh	r2, [r0, #2]
+ 1879              		.loc 2 145 36 view .LVU625
+ 1880 0216 A41A     		subs	r4, r4, r2
+ 1881 0218 A4B2     		uxth	r4, r4
+ 1882              		.loc 2 145 49 view .LVU626
+ 1883 021a 0134     		adds	r4, r4, #1
+ 1884              		.loc 2 145 12 view .LVU627
+ 1885 021c 0FFA84FE 		sxth	lr, r4
+ 1886              	.LVL165:
+ 1887              		.loc 2 145 12 view .LVU628
+ 1888              	.LBE175:
+ 1889              	.LBE174:
+ 1890              	.LBB176:
+ 1891              	.LBI176:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1892              		.loc 2 143 26 is_stmt 1 view .LVU629
+ 1893              	.LBB177:
+ 1894              		.loc 2 145 5 view .LVU630
+ 1895              		.loc 2 145 31 is_stmt 0 view .LVU631
+ 1896 0220 CA88     		ldrh	r2, [r1, #6]
+ 1897              		.loc 2 145 44 view .LVU632
+ 1898 0222 4D88     		ldrh	r5, [r1, #2]
+ 1899              		.loc 2 145 36 view .LVU633
+ARM GAS  /tmp/ccuYsjKa.s 			page 53
+
+
+ 1900 0224 521B     		subs	r2, r2, r5
+ 1901 0226 92B2     		uxth	r2, r2
+ 1902              		.loc 2 145 49 view .LVU634
+ 1903 0228 0132     		adds	r2, r2, #1
+ 1904              		.loc 2 145 12 view .LVU635
+ 1905 022a 15B2     		sxth	r5, r2
+ 1906              	.LVL166:
+ 1907              		.loc 2 145 12 view .LVU636
+ 1908              	.LBE177:
+ 1909              	.LBE176:
+ 336:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1910              		.loc 1 336 46 view .LVU637
+ 1911 022c C4F3C034 		ubfx	r4, r4, #15, #1
+ 1912 0230 7444     		add	r4, r4, lr
+ 1913 0232 C2F3C032 		ubfx	r2, r2, #15, #1
+ 1914 0236 2A44     		add	r2, r2, r5
+ 1915 0238 5210     		asrs	r2, r2, #1
+ 1916 023a C2EB6402 		rsb	r2, r2, r4, asr #1
+ 336:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1917              		.loc 1 336 15 view .LVU638
+ 1918 023e 12B2     		sxth	r2, r2
+ 1919              	.LVL167:
+ 337:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1920              		.loc 1 337 13 is_stmt 1 view .LVU639
+ 1921 0240 29E7     		b	.L49
+ 1922              	.LVL168:
+ 1923              	.L62:
+ 340:Middlewares/lvgl/src/misc/lv_area.c ****             y = -lv_area_get_height(to_align);
+ 1924              		.loc 1 340 13 view .LVU640
+ 341:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1925              		.loc 1 341 13 view .LVU641
+ 1926              	.LBB178:
+ 1927              	.LBI178:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1928              		.loc 2 143 26 view .LVU642
+ 1929              	.LBB179:
+ 1930              		.loc 2 145 5 view .LVU643
+ 1931              		.loc 2 145 31 is_stmt 0 view .LVU644
+ 1932 0242 CC88     		ldrh	r4, [r1, #6]
+ 1933              		.loc 2 145 44 view .LVU645
+ 1934 0244 4A88     		ldrh	r2, [r1, #2]
+ 1935              	.LVL169:
+ 1936              		.loc 2 145 44 view .LVU646
+ 1937              	.LBE179:
+ 1938              	.LBE178:
+ 341:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 1939              		.loc 1 341 15 view .LVU647
+ 1940 0246 121B     		subs	r2, r2, r4
+ 1941 0248 013A     		subs	r2, r2, #1
+ 1942 024a 12B2     		sxth	r2, r2
+ 1943              	.LVL170:
+ 342:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 1944              		.loc 1 342 13 is_stmt 1 view .LVU648
+ 340:Middlewares/lvgl/src/misc/lv_area.c ****             y = -lv_area_get_height(to_align);
+ 1945              		.loc 1 340 15 is_stmt 0 view .LVU649
+ 1946 024c 4FF0000C 		mov	ip, #0
+ 342:Middlewares/lvgl/src/misc/lv_area.c **** 
+ARM GAS  /tmp/ccuYsjKa.s 			page 54
+
+
+ 1947              		.loc 1 342 13 view .LVU650
+ 1948 0250 21E7     		b	.L49
+ 1949              	.LVL171:
+ 1950              	.L61:
+ 345:Middlewares/lvgl/src/misc/lv_area.c ****             y = -lv_area_get_height(to_align);
+ 1951              		.loc 1 345 13 is_stmt 1 view .LVU651
+ 1952              	.LBB180:
+ 1953              	.LBI180:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1954              		.loc 2 133 26 view .LVU652
+ 1955              	.LBB181:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1956              		.loc 2 135 5 view .LVU653
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1957              		.loc 2 135 31 is_stmt 0 view .LVU654
+ 1958 0252 8488     		ldrh	r4, [r0, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1959              		.loc 2 135 44 view .LVU655
+ 1960 0254 0288     		ldrh	r2, [r0]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1961              		.loc 2 135 36 view .LVU656
+ 1962 0256 A41A     		subs	r4, r4, r2
+ 1963 0258 A4B2     		uxth	r4, r4
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1964              		.loc 2 135 49 view .LVU657
+ 1965 025a 0134     		adds	r4, r4, #1
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1966              		.loc 2 135 12 view .LVU658
+ 1967 025c 0FFA84FC 		sxth	ip, r4
+ 1968              	.LVL172:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1969              		.loc 2 135 12 view .LVU659
+ 1970              	.LBE181:
+ 1971              	.LBE180:
+ 1972              	.LBB182:
+ 1973              	.LBI182:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 1974              		.loc 2 133 26 is_stmt 1 view .LVU660
+ 1975              	.LBB183:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1976              		.loc 2 135 5 view .LVU661
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1977              		.loc 2 135 31 is_stmt 0 view .LVU662
+ 1978 0260 8A88     		ldrh	r2, [r1, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1979              		.loc 2 135 44 view .LVU663
+ 1980 0262 0D88     		ldrh	r5, [r1]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1981              		.loc 2 135 36 view .LVU664
+ 1982 0264 521B     		subs	r2, r2, r5
+ 1983 0266 92B2     		uxth	r2, r2
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1984              		.loc 2 135 49 view .LVU665
+ 1985 0268 0132     		adds	r2, r2, #1
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1986              		.loc 2 135 12 view .LVU666
+ 1987 026a 15B2     		sxth	r5, r2
+ARM GAS  /tmp/ccuYsjKa.s 			page 55
+
+
+ 1988              	.LVL173:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 1989              		.loc 2 135 12 view .LVU667
+ 1990              	.LBE183:
+ 1991              	.LBE182:
+ 345:Middlewares/lvgl/src/misc/lv_area.c ****             y = -lv_area_get_height(to_align);
+ 1992              		.loc 1 345 45 view .LVU668
+ 1993 026c C4F3C034 		ubfx	r4, r4, #15, #1
+ 1994 0270 6444     		add	r4, r4, ip
+ 1995 0272 C2F3C03C 		ubfx	ip, r2, #15, #1
+ 1996 0276 AC44     		add	ip, ip, r5
+ 1997 0278 4FEA6C0C 		asr	ip, ip, #1
+ 1998 027c CCEB640C 		rsb	ip, ip, r4, asr #1
+ 345:Middlewares/lvgl/src/misc/lv_area.c ****             y = -lv_area_get_height(to_align);
+ 1999              		.loc 1 345 15 view .LVU669
+ 2000 0280 0FFA8CFC 		sxth	ip, ip
+ 2001              	.LVL174:
+ 346:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2002              		.loc 1 346 13 is_stmt 1 view .LVU670
+ 2003              	.LBB184:
+ 2004              	.LBI184:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2005              		.loc 2 143 26 view .LVU671
+ 2006              	.LBB185:
+ 2007              		.loc 2 145 5 view .LVU672
+ 2008              		.loc 2 145 31 is_stmt 0 view .LVU673
+ 2009 0284 CC88     		ldrh	r4, [r1, #6]
+ 2010              		.loc 2 145 44 view .LVU674
+ 2011 0286 4A88     		ldrh	r2, [r1, #2]
+ 2012              	.LVL175:
+ 2013              		.loc 2 145 44 view .LVU675
+ 2014              	.LBE185:
+ 2015              	.LBE184:
+ 346:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2016              		.loc 1 346 15 view .LVU676
+ 2017 0288 121B     		subs	r2, r2, r4
+ 2018 028a 013A     		subs	r2, r2, #1
+ 2019 028c 12B2     		sxth	r2, r2
+ 2020              	.LVL176:
+ 347:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 2021              		.loc 1 347 13 is_stmt 1 view .LVU677
+ 2022 028e 02E7     		b	.L49
+ 2023              	.LVL177:
+ 2024              	.L60:
+ 350:Middlewares/lvgl/src/misc/lv_area.c ****             y = -lv_area_get_height(to_align);
+ 2025              		.loc 1 350 13 view .LVU678
+ 2026              	.LBB186:
+ 2027              	.LBI186:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2028              		.loc 2 133 26 view .LVU679
+ 2029              	.LBB187:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2030              		.loc 2 135 5 view .LVU680
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2031              		.loc 2 135 31 is_stmt 0 view .LVU681
+ 2032 0290 B0F804C0 		ldrh	ip, [r0, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ARM GAS  /tmp/ccuYsjKa.s 			page 56
+
+
+ 2033              		.loc 2 135 44 view .LVU682
+ 2034 0294 0288     		ldrh	r2, [r0]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2035              		.loc 2 135 36 view .LVU683
+ 2036 0296 ACEB020C 		sub	ip, ip, r2
+ 2037 029a 1FFA8CFC 		uxth	ip, ip
+ 2038              	.LVL178:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2039              		.loc 2 135 36 view .LVU684
+ 2040              	.LBE187:
+ 2041              	.LBE186:
+ 2042              	.LBB188:
+ 2043              	.LBI188:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2044              		.loc 2 133 26 is_stmt 1 view .LVU685
+ 2045              	.LBB189:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2046              		.loc 2 135 5 view .LVU686
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2047              		.loc 2 135 31 is_stmt 0 view .LVU687
+ 2048 029e 8C88     		ldrh	r4, [r1, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2049              		.loc 2 135 44 view .LVU688
+ 2050 02a0 0A88     		ldrh	r2, [r1]
+ 2051              	.LVL179:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2052              		.loc 2 135 44 view .LVU689
+ 2053              	.LBE189:
+ 2054              	.LBE188:
+ 350:Middlewares/lvgl/src/misc/lv_area.c ****             y = -lv_area_get_height(to_align);
+ 2055              		.loc 1 350 41 view .LVU690
+ 2056 02a2 121B     		subs	r2, r2, r4
+ 2057 02a4 9444     		add	ip, ip, r2
+ 350:Middlewares/lvgl/src/misc/lv_area.c ****             y = -lv_area_get_height(to_align);
+ 2058              		.loc 1 350 15 view .LVU691
+ 2059 02a6 0FFA8CFC 		sxth	ip, ip
+ 2060              	.LVL180:
+ 351:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2061              		.loc 1 351 13 is_stmt 1 view .LVU692
+ 2062              	.LBB190:
+ 2063              	.LBI190:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2064              		.loc 2 143 26 view .LVU693
+ 2065              	.LBB191:
+ 2066              		.loc 2 145 5 view .LVU694
+ 2067              		.loc 2 145 31 is_stmt 0 view .LVU695
+ 2068 02aa CC88     		ldrh	r4, [r1, #6]
+ 2069              		.loc 2 145 44 view .LVU696
+ 2070 02ac 4A88     		ldrh	r2, [r1, #2]
+ 2071              	.LVL181:
+ 2072              		.loc 2 145 44 view .LVU697
+ 2073              	.LBE191:
+ 2074              	.LBE190:
+ 351:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2075              		.loc 1 351 15 view .LVU698
+ 2076 02ae 121B     		subs	r2, r2, r4
+ 2077 02b0 013A     		subs	r2, r2, #1
+ARM GAS  /tmp/ccuYsjKa.s 			page 57
+
+
+ 2078 02b2 12B2     		sxth	r2, r2
+ 2079              	.LVL182:
+ 352:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 2080              		.loc 1 352 13 is_stmt 1 view .LVU699
+ 2081 02b4 EFE6     		b	.L49
+ 2082              	.LVL183:
+ 2083              	.L59:
+ 355:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base);
+ 2084              		.loc 1 355 13 view .LVU700
+ 356:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2085              		.loc 1 356 13 view .LVU701
+ 2086              	.LBB192:
+ 2087              	.LBI192:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2088              		.loc 2 143 26 view .LVU702
+ 2089              	.LBB193:
+ 2090              		.loc 2 145 5 view .LVU703
+ 2091              		.loc 2 145 31 is_stmt 0 view .LVU704
+ 2092 02b6 C288     		ldrh	r2, [r0, #6]
+ 2093              		.loc 2 145 44 view .LVU705
+ 2094 02b8 4488     		ldrh	r4, [r0, #2]
+ 2095              		.loc 2 145 36 view .LVU706
+ 2096 02ba 121B     		subs	r2, r2, r4
+ 2097 02bc 92B2     		uxth	r2, r2
+ 2098              		.loc 2 145 49 view .LVU707
+ 2099 02be 0132     		adds	r2, r2, #1
+ 2100              		.loc 2 145 12 view .LVU708
+ 2101 02c0 12B2     		sxth	r2, r2
+ 2102              	.LVL184:
+ 2103              		.loc 2 145 12 view .LVU709
+ 2104              	.LBE193:
+ 2105              	.LBE192:
+ 357:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 2106              		.loc 1 357 13 is_stmt 1 view .LVU710
+ 355:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base);
+ 2107              		.loc 1 355 15 is_stmt 0 view .LVU711
+ 2108 02c2 4FF0000C 		mov	ip, #0
+ 357:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 2109              		.loc 1 357 13 view .LVU712
+ 2110 02c6 E6E6     		b	.L49
+ 2111              	.LVL185:
+ 2112              	.L58:
+ 360:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base);
+ 2113              		.loc 1 360 13 is_stmt 1 view .LVU713
+ 2114              	.LBB194:
+ 2115              	.LBI194:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2116              		.loc 2 133 26 view .LVU714
+ 2117              	.LBB195:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2118              		.loc 2 135 5 view .LVU715
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2119              		.loc 2 135 31 is_stmt 0 view .LVU716
+ 2120 02c8 8488     		ldrh	r4, [r0, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2121              		.loc 2 135 44 view .LVU717
+ 2122 02ca 0288     		ldrh	r2, [r0]
+ARM GAS  /tmp/ccuYsjKa.s 			page 58
+
+
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2123              		.loc 2 135 36 view .LVU718
+ 2124 02cc A41A     		subs	r4, r4, r2
+ 2125 02ce A4B2     		uxth	r4, r4
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2126              		.loc 2 135 49 view .LVU719
+ 2127 02d0 0134     		adds	r4, r4, #1
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2128              		.loc 2 135 12 view .LVU720
+ 2129 02d2 0FFA84FC 		sxth	ip, r4
+ 2130              	.LVL186:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2131              		.loc 2 135 12 view .LVU721
+ 2132              	.LBE195:
+ 2133              	.LBE194:
+ 2134              	.LBB196:
+ 2135              	.LBI196:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2136              		.loc 2 133 26 is_stmt 1 view .LVU722
+ 2137              	.LBB197:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2138              		.loc 2 135 5 view .LVU723
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2139              		.loc 2 135 31 is_stmt 0 view .LVU724
+ 2140 02d6 8A88     		ldrh	r2, [r1, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2141              		.loc 2 135 44 view .LVU725
+ 2142 02d8 0D88     		ldrh	r5, [r1]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2143              		.loc 2 135 36 view .LVU726
+ 2144 02da 521B     		subs	r2, r2, r5
+ 2145 02dc 92B2     		uxth	r2, r2
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2146              		.loc 2 135 49 view .LVU727
+ 2147 02de 0132     		adds	r2, r2, #1
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2148              		.loc 2 135 12 view .LVU728
+ 2149 02e0 15B2     		sxth	r5, r2
+ 2150              	.LVL187:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2151              		.loc 2 135 12 view .LVU729
+ 2152              	.LBE197:
+ 2153              	.LBE196:
+ 360:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base);
+ 2154              		.loc 1 360 45 view .LVU730
+ 2155 02e2 C4F3C034 		ubfx	r4, r4, #15, #1
+ 2156 02e6 6444     		add	r4, r4, ip
+ 2157 02e8 C2F3C03C 		ubfx	ip, r2, #15, #1
+ 2158 02ec AC44     		add	ip, ip, r5
+ 2159 02ee 4FEA6C0C 		asr	ip, ip, #1
+ 2160 02f2 CCEB640C 		rsb	ip, ip, r4, asr #1
+ 360:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base);
+ 2161              		.loc 1 360 15 view .LVU731
+ 2162 02f6 0FFA8CFC 		sxth	ip, ip
+ 2163              	.LVL188:
+ 361:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2164              		.loc 1 361 13 is_stmt 1 view .LVU732
+ARM GAS  /tmp/ccuYsjKa.s 			page 59
+
+
+ 2165              	.LBB198:
+ 2166              	.LBI198:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2167              		.loc 2 143 26 view .LVU733
+ 2168              	.LBB199:
+ 2169              		.loc 2 145 5 view .LVU734
+ 2170              		.loc 2 145 31 is_stmt 0 view .LVU735
+ 2171 02fa C288     		ldrh	r2, [r0, #6]
+ 2172              		.loc 2 145 44 view .LVU736
+ 2173 02fc 4488     		ldrh	r4, [r0, #2]
+ 2174              		.loc 2 145 36 view .LVU737
+ 2175 02fe 121B     		subs	r2, r2, r4
+ 2176 0300 92B2     		uxth	r2, r2
+ 2177              		.loc 2 145 49 view .LVU738
+ 2178 0302 0132     		adds	r2, r2, #1
+ 2179              		.loc 2 145 12 view .LVU739
+ 2180 0304 12B2     		sxth	r2, r2
+ 2181              	.LVL189:
+ 2182              		.loc 2 145 12 view .LVU740
+ 2183              	.LBE199:
+ 2184              	.LBE198:
+ 362:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 2185              		.loc 1 362 13 is_stmt 1 view .LVU741
+ 2186 0306 C6E6     		b	.L49
+ 2187              	.LVL190:
+ 2188              	.L57:
+ 365:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base);
+ 2189              		.loc 1 365 13 view .LVU742
+ 2190              	.LBB200:
+ 2191              	.LBI200:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2192              		.loc 2 133 26 view .LVU743
+ 2193              	.LBB201:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2194              		.loc 2 135 5 view .LVU744
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2195              		.loc 2 135 31 is_stmt 0 view .LVU745
+ 2196 0308 B0F804C0 		ldrh	ip, [r0, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2197              		.loc 2 135 44 view .LVU746
+ 2198 030c 0288     		ldrh	r2, [r0]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2199              		.loc 2 135 36 view .LVU747
+ 2200 030e ACEB020C 		sub	ip, ip, r2
+ 2201 0312 1FFA8CFC 		uxth	ip, ip
+ 2202              	.LVL191:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2203              		.loc 2 135 36 view .LVU748
+ 2204              	.LBE201:
+ 2205              	.LBE200:
+ 2206              	.LBB202:
+ 2207              	.LBI202:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2208              		.loc 2 133 26 is_stmt 1 view .LVU749
+ 2209              	.LBB203:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2210              		.loc 2 135 5 view .LVU750
+ARM GAS  /tmp/ccuYsjKa.s 			page 60
+
+
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2211              		.loc 2 135 31 is_stmt 0 view .LVU751
+ 2212 0316 8C88     		ldrh	r4, [r1, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2213              		.loc 2 135 44 view .LVU752
+ 2214 0318 0A88     		ldrh	r2, [r1]
+ 2215              	.LVL192:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2216              		.loc 2 135 44 view .LVU753
+ 2217              	.LBE203:
+ 2218              	.LBE202:
+ 365:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base);
+ 2219              		.loc 1 365 41 view .LVU754
+ 2220 031a 121B     		subs	r2, r2, r4
+ 2221 031c 9444     		add	ip, ip, r2
+ 365:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base);
+ 2222              		.loc 1 365 15 view .LVU755
+ 2223 031e 0FFA8CFC 		sxth	ip, ip
+ 2224              	.LVL193:
+ 366:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2225              		.loc 1 366 13 is_stmt 1 view .LVU756
+ 2226              	.LBB204:
+ 2227              	.LBI204:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2228              		.loc 2 143 26 view .LVU757
+ 2229              	.LBB205:
+ 2230              		.loc 2 145 5 view .LVU758
+ 2231              		.loc 2 145 31 is_stmt 0 view .LVU759
+ 2232 0322 C288     		ldrh	r2, [r0, #6]
+ 2233              		.loc 2 145 44 view .LVU760
+ 2234 0324 4488     		ldrh	r4, [r0, #2]
+ 2235              		.loc 2 145 36 view .LVU761
+ 2236 0326 121B     		subs	r2, r2, r4
+ 2237 0328 92B2     		uxth	r2, r2
+ 2238              		.loc 2 145 49 view .LVU762
+ 2239 032a 0132     		adds	r2, r2, #1
+ 2240              		.loc 2 145 12 view .LVU763
+ 2241 032c 12B2     		sxth	r2, r2
+ 2242              	.LVL194:
+ 2243              		.loc 2 145 12 view .LVU764
+ 2244              	.LBE205:
+ 2245              	.LBE204:
+ 367:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 2246              		.loc 1 367 13 is_stmt 1 view .LVU765
+ 2247 032e B2E6     		b	.L49
+ 2248              	.LVL195:
+ 2249              	.L56:
+ 370:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 2250              		.loc 1 370 13 view .LVU766
+ 2251              	.LBB206:
+ 2252              	.LBI206:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2253              		.loc 2 133 26 view .LVU767
+ 2254              	.LBB207:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2255              		.loc 2 135 5 view .LVU768
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ARM GAS  /tmp/ccuYsjKa.s 			page 61
+
+
+ 2256              		.loc 2 135 31 is_stmt 0 view .LVU769
+ 2257 0330 8A88     		ldrh	r2, [r1, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2258              		.loc 2 135 44 view .LVU770
+ 2259 0332 B1F800C0 		ldrh	ip, [r1]
+ 2260              	.LVL196:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2261              		.loc 2 135 44 view .LVU771
+ 2262              	.LBE207:
+ 2263              	.LBE206:
+ 370:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 2264              		.loc 1 370 15 view .LVU772
+ 2265 0336 ACEB020C 		sub	ip, ip, r2
+ 2266 033a 0CF1FF3C 		add	ip, ip, #-1
+ 2267 033e 0FFA8CFC 		sxth	ip, ip
+ 2268              	.LVL197:
+ 371:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2269              		.loc 1 371 13 is_stmt 1 view .LVU773
+ 372:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 2270              		.loc 1 372 13 view .LVU774
+ 371:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2271              		.loc 1 371 15 is_stmt 0 view .LVU775
+ 2272 0342 0022     		movs	r2, #0
+ 372:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 2273              		.loc 1 372 13 view .LVU776
+ 2274 0344 A7E6     		b	.L49
+ 2275              	.LVL198:
+ 2276              	.L55:
+ 375:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 2277              		.loc 1 375 13 is_stmt 1 view .LVU777
+ 2278              	.LBB208:
+ 2279              	.LBI208:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2280              		.loc 2 133 26 view .LVU778
+ 2281              	.LBB209:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2282              		.loc 2 135 5 view .LVU779
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2283              		.loc 2 135 31 is_stmt 0 view .LVU780
+ 2284 0346 8A88     		ldrh	r2, [r1, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2285              		.loc 2 135 44 view .LVU781
+ 2286 0348 B1F800C0 		ldrh	ip, [r1]
+ 2287              	.LVL199:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2288              		.loc 2 135 44 view .LVU782
+ 2289              	.LBE209:
+ 2290              	.LBE208:
+ 375:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 2291              		.loc 1 375 15 view .LVU783
+ 2292 034c ACEB020C 		sub	ip, ip, r2
+ 2293 0350 0CF1FF3C 		add	ip, ip, #-1
+ 2294 0354 0FFA8CFC 		sxth	ip, ip
+ 2295              	.LVL200:
+ 376:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2296              		.loc 1 376 13 is_stmt 1 view .LVU784
+ 2297              	.LBB210:
+ARM GAS  /tmp/ccuYsjKa.s 			page 62
+
+
+ 2298              	.LBI210:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2299              		.loc 2 143 26 view .LVU785
+ 2300              	.LBB211:
+ 2301              		.loc 2 145 5 view .LVU786
+ 2302              		.loc 2 145 31 is_stmt 0 view .LVU787
+ 2303 0358 C488     		ldrh	r4, [r0, #6]
+ 2304              		.loc 2 145 44 view .LVU788
+ 2305 035a 4288     		ldrh	r2, [r0, #2]
+ 2306              		.loc 2 145 36 view .LVU789
+ 2307 035c A41A     		subs	r4, r4, r2
+ 2308 035e A4B2     		uxth	r4, r4
+ 2309              		.loc 2 145 49 view .LVU790
+ 2310 0360 0134     		adds	r4, r4, #1
+ 2311              		.loc 2 145 12 view .LVU791
+ 2312 0362 0FFA84FE 		sxth	lr, r4
+ 2313              	.LVL201:
+ 2314              		.loc 2 145 12 view .LVU792
+ 2315              	.LBE211:
+ 2316              	.LBE210:
+ 2317              	.LBB212:
+ 2318              	.LBI212:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2319              		.loc 2 143 26 is_stmt 1 view .LVU793
+ 2320              	.LBB213:
+ 2321              		.loc 2 145 5 view .LVU794
+ 2322              		.loc 2 145 31 is_stmt 0 view .LVU795
+ 2323 0366 CA88     		ldrh	r2, [r1, #6]
+ 2324              		.loc 2 145 44 view .LVU796
+ 2325 0368 4D88     		ldrh	r5, [r1, #2]
+ 2326              		.loc 2 145 36 view .LVU797
+ 2327 036a 521B     		subs	r2, r2, r5
+ 2328 036c 92B2     		uxth	r2, r2
+ 2329              		.loc 2 145 49 view .LVU798
+ 2330 036e 0132     		adds	r2, r2, #1
+ 2331              		.loc 2 145 12 view .LVU799
+ 2332 0370 15B2     		sxth	r5, r2
+ 2333              	.LVL202:
+ 2334              		.loc 2 145 12 view .LVU800
+ 2335              	.LBE213:
+ 2336              	.LBE212:
+ 376:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2337              		.loc 1 376 46 view .LVU801
+ 2338 0372 C4F3C034 		ubfx	r4, r4, #15, #1
+ 2339 0376 7444     		add	r4, r4, lr
+ 2340 0378 C2F3C032 		ubfx	r2, r2, #15, #1
+ 2341 037c 2A44     		add	r2, r2, r5
+ 2342 037e 5210     		asrs	r2, r2, #1
+ 2343 0380 C2EB6402 		rsb	r2, r2, r4, asr #1
+ 376:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2344              		.loc 1 376 15 view .LVU802
+ 2345 0384 12B2     		sxth	r2, r2
+ 2346              	.LVL203:
+ 377:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 2347              		.loc 1 377 13 is_stmt 1 view .LVU803
+ 2348 0386 86E6     		b	.L49
+ 2349              	.LVL204:
+ARM GAS  /tmp/ccuYsjKa.s 			page 63
+
+
+ 2350              	.L54:
+ 380:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 2351              		.loc 1 380 13 view .LVU804
+ 2352              	.LBB214:
+ 2353              	.LBI214:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2354              		.loc 2 133 26 view .LVU805
+ 2355              	.LBB215:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2356              		.loc 2 135 5 view .LVU806
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2357              		.loc 2 135 31 is_stmt 0 view .LVU807
+ 2358 0388 8A88     		ldrh	r2, [r1, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2359              		.loc 2 135 44 view .LVU808
+ 2360 038a B1F800C0 		ldrh	ip, [r1]
+ 2361              	.LVL205:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2362              		.loc 2 135 44 view .LVU809
+ 2363              	.LBE215:
+ 2364              	.LBE214:
+ 380:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 2365              		.loc 1 380 15 view .LVU810
+ 2366 038e ACEB020C 		sub	ip, ip, r2
+ 2367 0392 0CF1FF3C 		add	ip, ip, #-1
+ 2368 0396 0FFA8CFC 		sxth	ip, ip
+ 2369              	.LVL206:
+ 381:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2370              		.loc 1 381 13 is_stmt 1 view .LVU811
+ 2371              	.LBB216:
+ 2372              	.LBI216:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2373              		.loc 2 143 26 view .LVU812
+ 2374              	.LBB217:
+ 2375              		.loc 2 145 5 view .LVU813
+ 2376              		.loc 2 145 31 is_stmt 0 view .LVU814
+ 2377 039a C288     		ldrh	r2, [r0, #6]
+ 2378              		.loc 2 145 44 view .LVU815
+ 2379 039c 4488     		ldrh	r4, [r0, #2]
+ 2380              		.loc 2 145 36 view .LVU816
+ 2381 039e 121B     		subs	r2, r2, r4
+ 2382 03a0 92B2     		uxth	r2, r2
+ 2383              	.LVL207:
+ 2384              		.loc 2 145 36 view .LVU817
+ 2385              	.LBE217:
+ 2386              	.LBE216:
+ 2387              	.LBB218:
+ 2388              	.LBI218:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2389              		.loc 2 143 26 is_stmt 1 view .LVU818
+ 2390              	.LBB219:
+ 2391              		.loc 2 145 5 view .LVU819
+ 2392              		.loc 2 145 31 is_stmt 0 view .LVU820
+ 2393 03a2 CD88     		ldrh	r5, [r1, #6]
+ 2394              		.loc 2 145 44 view .LVU821
+ 2395 03a4 4C88     		ldrh	r4, [r1, #2]
+ 2396              	.LVL208:
+ARM GAS  /tmp/ccuYsjKa.s 			page 64
+
+
+ 2397              		.loc 2 145 44 view .LVU822
+ 2398              	.LBE219:
+ 2399              	.LBE218:
+ 381:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2400              		.loc 1 381 42 view .LVU823
+ 2401 03a6 641B     		subs	r4, r4, r5
+ 2402 03a8 2244     		add	r2, r2, r4
+ 381:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2403              		.loc 1 381 15 view .LVU824
+ 2404 03aa 12B2     		sxth	r2, r2
+ 2405              	.LVL209:
+ 382:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 2406              		.loc 1 382 13 is_stmt 1 view .LVU825
+ 2407 03ac 73E6     		b	.L49
+ 2408              	.LVL210:
+ 2409              	.L53:
+ 385:Middlewares/lvgl/src/misc/lv_area.c ****             y = 0;
+ 2410              		.loc 1 385 13 view .LVU826
+ 2411              	.LBB220:
+ 2412              	.LBI220:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2413              		.loc 2 133 26 view .LVU827
+ 2414              	.LBB221:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2415              		.loc 2 135 5 view .LVU828
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2416              		.loc 2 135 31 is_stmt 0 view .LVU829
+ 2417 03ae B0F804C0 		ldrh	ip, [r0, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2418              		.loc 2 135 44 view .LVU830
+ 2419 03b2 0288     		ldrh	r2, [r0]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2420              		.loc 2 135 36 view .LVU831
+ 2421 03b4 ACEB020C 		sub	ip, ip, r2
+ 2422 03b8 1FFA8CFC 		uxth	ip, ip
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2423              		.loc 2 135 49 view .LVU832
+ 2424 03bc 0CF1010C 		add	ip, ip, #1
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2425              		.loc 2 135 12 view .LVU833
+ 2426 03c0 0FFA8CFC 		sxth	ip, ip
+ 2427              	.LVL211:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2428              		.loc 2 135 12 view .LVU834
+ 2429              	.LBE221:
+ 2430              	.LBE220:
+ 386:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2431              		.loc 1 386 13 is_stmt 1 view .LVU835
+ 387:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 2432              		.loc 1 387 13 view .LVU836
+ 386:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2433              		.loc 1 386 15 is_stmt 0 view .LVU837
+ 2434 03c4 0022     		movs	r2, #0
+ 387:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 2435              		.loc 1 387 13 view .LVU838
+ 2436 03c6 66E6     		b	.L49
+ 2437              	.LVL212:
+ARM GAS  /tmp/ccuYsjKa.s 			page 65
+
+
+ 2438              	.L52:
+ 390:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) / 2 - lv_area_get_height(to_align) / 2;
+ 2439              		.loc 1 390 13 is_stmt 1 view .LVU839
+ 2440              	.LBB222:
+ 2441              	.LBI222:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2442              		.loc 2 133 26 view .LVU840
+ 2443              	.LBB223:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2444              		.loc 2 135 5 view .LVU841
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2445              		.loc 2 135 31 is_stmt 0 view .LVU842
+ 2446 03c8 B0F804C0 		ldrh	ip, [r0, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2447              		.loc 2 135 44 view .LVU843
+ 2448 03cc 0288     		ldrh	r2, [r0]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2449              		.loc 2 135 36 view .LVU844
+ 2450 03ce ACEB020C 		sub	ip, ip, r2
+ 2451 03d2 1FFA8CFC 		uxth	ip, ip
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2452              		.loc 2 135 49 view .LVU845
+ 2453 03d6 0CF1010C 		add	ip, ip, #1
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2454              		.loc 2 135 12 view .LVU846
+ 2455 03da 0FFA8CFC 		sxth	ip, ip
+ 2456              	.LVL213:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2457              		.loc 2 135 12 view .LVU847
+ 2458              	.LBE223:
+ 2459              	.LBE222:
+ 391:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2460              		.loc 1 391 13 is_stmt 1 view .LVU848
+ 2461              	.LBB224:
+ 2462              	.LBI224:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2463              		.loc 2 143 26 view .LVU849
+ 2464              	.LBB225:
+ 2465              		.loc 2 145 5 view .LVU850
+ 2466              		.loc 2 145 31 is_stmt 0 view .LVU851
+ 2467 03de C488     		ldrh	r4, [r0, #6]
+ 2468              		.loc 2 145 44 view .LVU852
+ 2469 03e0 4288     		ldrh	r2, [r0, #2]
+ 2470              		.loc 2 145 36 view .LVU853
+ 2471 03e2 A41A     		subs	r4, r4, r2
+ 2472 03e4 A4B2     		uxth	r4, r4
+ 2473              		.loc 2 145 49 view .LVU854
+ 2474 03e6 0134     		adds	r4, r4, #1
+ 2475              		.loc 2 145 12 view .LVU855
+ 2476 03e8 25B2     		sxth	r5, r4
+ 2477              	.LVL214:
+ 2478              		.loc 2 145 12 view .LVU856
+ 2479              	.LBE225:
+ 2480              	.LBE224:
+ 2481              	.LBB226:
+ 2482              	.LBI226:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ARM GAS  /tmp/ccuYsjKa.s 			page 66
+
+
+ 2483              		.loc 2 143 26 is_stmt 1 view .LVU857
+ 2484              	.LBB227:
+ 2485              		.loc 2 145 5 view .LVU858
+ 2486              		.loc 2 145 31 is_stmt 0 view .LVU859
+ 2487 03ea CA88     		ldrh	r2, [r1, #6]
+ 2488              		.loc 2 145 44 view .LVU860
+ 2489 03ec B1F802E0 		ldrh	lr, [r1, #2]
+ 2490              		.loc 2 145 36 view .LVU861
+ 2491 03f0 A2EB0E02 		sub	r2, r2, lr
+ 2492 03f4 92B2     		uxth	r2, r2
+ 2493              		.loc 2 145 49 view .LVU862
+ 2494 03f6 0132     		adds	r2, r2, #1
+ 2495              		.loc 2 145 12 view .LVU863
+ 2496 03f8 0FFA82FE 		sxth	lr, r2
+ 2497              	.LVL215:
+ 2498              		.loc 2 145 12 view .LVU864
+ 2499              	.LBE227:
+ 2500              	.LBE226:
+ 391:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2501              		.loc 1 391 46 view .LVU865
+ 2502 03fc C4F3C034 		ubfx	r4, r4, #15, #1
+ 2503 0400 2C44     		add	r4, r4, r5
+ 2504 0402 C2F3C032 		ubfx	r2, r2, #15, #1
+ 2505 0406 7244     		add	r2, r2, lr
+ 2506 0408 5210     		asrs	r2, r2, #1
+ 2507 040a C2EB6402 		rsb	r2, r2, r4, asr #1
+ 391:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2508              		.loc 1 391 15 view .LVU866
+ 2509 040e 12B2     		sxth	r2, r2
+ 2510              	.LVL216:
+ 392:Middlewares/lvgl/src/misc/lv_area.c **** 
+ 2511              		.loc 1 392 13 is_stmt 1 view .LVU867
+ 2512 0410 41E6     		b	.L49
+ 2513              	.LVL217:
+ 2514              	.L50:
+ 395:Middlewares/lvgl/src/misc/lv_area.c ****             y = lv_area_get_height(base) - lv_area_get_height(to_align);
+ 2515              		.loc 1 395 13 view .LVU868
+ 2516              	.LBB228:
+ 2517              	.LBI228:
+ 133:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2518              		.loc 2 133 26 view .LVU869
+ 2519              	.LBB229:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2520              		.loc 2 135 5 view .LVU870
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2521              		.loc 2 135 31 is_stmt 0 view .LVU871
+ 2522 0412 B0F804C0 		ldrh	ip, [r0, #4]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2523              		.loc 2 135 44 view .LVU872
+ 2524 0416 0288     		ldrh	r2, [r0]
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2525              		.loc 2 135 36 view .LVU873
+ 2526 0418 ACEB020C 		sub	ip, ip, r2
+ 2527 041c 1FFA8CFC 		uxth	ip, ip
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2528              		.loc 2 135 49 view .LVU874
+ 2529 0420 0CF1010C 		add	ip, ip, #1
+ARM GAS  /tmp/ccuYsjKa.s 			page 67
+
+
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2530              		.loc 2 135 12 view .LVU875
+ 2531 0424 0FFA8CFC 		sxth	ip, ip
+ 2532              	.LVL218:
+ 135:Middlewares/lvgl/src/misc/lv_area.h **** }
+ 2533              		.loc 2 135 12 view .LVU876
+ 2534              	.LBE229:
+ 2535              	.LBE228:
+ 396:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2536              		.loc 1 396 13 is_stmt 1 view .LVU877
+ 2537              	.LBB230:
+ 2538              	.LBI230:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2539              		.loc 2 143 26 view .LVU878
+ 2540              	.LBB231:
+ 2541              		.loc 2 145 5 view .LVU879
+ 2542              		.loc 2 145 31 is_stmt 0 view .LVU880
+ 2543 0428 C288     		ldrh	r2, [r0, #6]
+ 2544              		.loc 2 145 44 view .LVU881
+ 2545 042a 4488     		ldrh	r4, [r0, #2]
+ 2546              		.loc 2 145 36 view .LVU882
+ 2547 042c 121B     		subs	r2, r2, r4
+ 2548 042e 92B2     		uxth	r2, r2
+ 2549              	.LVL219:
+ 2550              		.loc 2 145 36 view .LVU883
+ 2551              	.LBE231:
+ 2552              	.LBE230:
+ 2553              	.LBB232:
+ 2554              	.LBI232:
+ 143:Middlewares/lvgl/src/misc/lv_area.h **** {
+ 2555              		.loc 2 143 26 is_stmt 1 view .LVU884
+ 2556              	.LBB233:
+ 2557              		.loc 2 145 5 view .LVU885
+ 2558              		.loc 2 145 31 is_stmt 0 view .LVU886
+ 2559 0430 B1F806E0 		ldrh	lr, [r1, #6]
+ 2560              		.loc 2 145 44 view .LVU887
+ 2561 0434 4C88     		ldrh	r4, [r1, #2]
+ 2562              	.LVL220:
+ 2563              		.loc 2 145 44 view .LVU888
+ 2564              	.LBE233:
+ 2565              	.LBE232:
+ 396:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2566              		.loc 1 396 42 view .LVU889
+ 2567 0436 A4EB0E04 		sub	r4, r4, lr
+ 2568 043a 2244     		add	r2, r2, r4
+ 396:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2569              		.loc 1 396 15 view .LVU890
+ 2570 043c 12B2     		sxth	r2, r2
+ 2571              	.LVL221:
+ 397:Middlewares/lvgl/src/misc/lv_area.c ****         default:
+ 2572              		.loc 1 397 13 is_stmt 1 view .LVU891
+ 2573 043e 2AE6     		b	.L49
+ 2574              	.LVL222:
+ 2575              	.L71:
+ 386:Middlewares/lvgl/src/misc/lv_area.c ****             break;
+ 2576              		.loc 1 386 15 is_stmt 0 view .LVU892
+ 2577 0440 0022     		movs	r2, #0
+ARM GAS  /tmp/ccuYsjKa.s 			page 68
+
+
+ 2578 0442 9446     		mov	ip, r2
+ 2579 0444 27E6     		b	.L49
+ 2580              		.cfi_endproc
+ 2581              	.LFE17:
+ 2583              		.text
+ 2584              	.Letext0:
+ 2585              		.file 3 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 2586              		.file 4 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ARM GAS  /tmp/ccuYsjKa.s 			page 69
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 lv_area.c
+     /tmp/ccuYsjKa.s:16     .text.lv_point_within_circle:0000000000000000 $t
+     /tmp/ccuYsjKa.s:23     .text.lv_point_within_circle:0000000000000000 lv_point_within_circle
+     /tmp/ccuYsjKa.s:113    .text.lv_area_set:0000000000000000 $t
+     /tmp/ccuYsjKa.s:120    .text.lv_area_set:0000000000000000 lv_area_set
+     /tmp/ccuYsjKa.s:149    .text.lv_area_set_width:0000000000000000 $t
+     /tmp/ccuYsjKa.s:156    .text.lv_area_set_width:0000000000000000 lv_area_set_width
+     /tmp/ccuYsjKa.s:180    .text.lv_area_set_height:0000000000000000 $t
+     /tmp/ccuYsjKa.s:187    .text.lv_area_set_height:0000000000000000 lv_area_set_height
+     /tmp/ccuYsjKa.s:211    .text._lv_area_set_pos:0000000000000000 $t
+     /tmp/ccuYsjKa.s:218    .text._lv_area_set_pos:0000000000000000 _lv_area_set_pos
+     /tmp/ccuYsjKa.s:300    .text.lv_area_get_size:0000000000000000 $t
+     /tmp/ccuYsjKa.s:307    .text.lv_area_get_size:0000000000000000 lv_area_get_size
+     /tmp/ccuYsjKa.s:343    .text.lv_area_increase:0000000000000000 $t
+     /tmp/ccuYsjKa.s:350    .text.lv_area_increase:0000000000000000 lv_area_increase
+     /tmp/ccuYsjKa.s:392    .text.lv_area_move:0000000000000000 $t
+     /tmp/ccuYsjKa.s:399    .text.lv_area_move:0000000000000000 lv_area_move
+     /tmp/ccuYsjKa.s:441    .text._lv_area_intersect:0000000000000000 $t
+     /tmp/ccuYsjKa.s:448    .text._lv_area_intersect:0000000000000000 _lv_area_intersect
+     /tmp/ccuYsjKa.s:535    .text._lv_area_join:0000000000000000 $t
+     /tmp/ccuYsjKa.s:542    .text._lv_area_join:0000000000000000 _lv_area_join
+     /tmp/ccuYsjKa.s:594    .text._lv_area_is_point_on:0000000000000000 $t
+     /tmp/ccuYsjKa.s:601    .text._lv_area_is_point_on:0000000000000000 _lv_area_is_point_on
+     /tmp/ccuYsjKa.s:941    .text._lv_area_is_on:0000000000000000 $t
+     /tmp/ccuYsjKa.s:948    .text._lv_area_is_on:0000000000000000 _lv_area_is_on
+     /tmp/ccuYsjKa.s:1022   .text._lv_area_is_in:0000000000000000 $t
+     /tmp/ccuYsjKa.s:1029   .text._lv_area_is_in:0000000000000000 _lv_area_is_in
+     /tmp/ccuYsjKa.s:1202   .text.lv_area_align:0000000000000000 $t
+     /tmp/ccuYsjKa.s:1209   .text.lv_area_align:0000000000000000 lv_area_align
+     /tmp/ccuYsjKa.s:1233   .text.lv_area_align:000000000000000e $d
+     /tmp/ccuYsjKa.s:1253   .text.lv_area_align:0000000000000036 $t
+
+NO UNDEFINED SYMBOLS

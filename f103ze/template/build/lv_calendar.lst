@@ -1,0 +1,2398 @@
+ARM GAS  /tmp/ccc3jGzO.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"lv_calendar.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.is_leap_year,"ax",%progbits
+  16              		.align	1
+  17              		.arch armv7-m
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	is_leap_year:
+  24              	.LVL0:
+  25              	.LFB197:
+  26              		.file 1 "Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c"
+   1:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /**
+   2:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @file lv_calendar.c
+   3:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  *
+   4:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  */
+   5:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+   6:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /*********************
+   7:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  *      INCLUDES
+   8:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  *********************/
+   9:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** #include "lv_calendar.h"
+  10:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** #include "../../../lvgl.h"
+  11:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** #if LV_USE_CALENDAR
+  12:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  13:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /*********************
+  14:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  *      DEFINES
+  15:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  *********************/
+  16:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** #define LV_CALENDAR_CTRL_TODAY      LV_BTNMATRIX_CTRL_CUSTOM_1
+  17:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** #define LV_CALENDAR_CTRL_HIGHLIGHT  LV_BTNMATRIX_CTRL_CUSTOM_2
+  18:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  19:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /**********************
+  20:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  *      TYPEDEFS
+  21:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  **********************/
+  22:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  23:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /**********************
+  24:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  *  STATIC PROTOTYPES
+  25:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  **********************/
+  26:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** static void lv_calendar_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj);
+  27:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** static void draw_part_begin_event_cb(lv_event_t * e);
+  28:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  29:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** static uint8_t get_day_of_week(uint32_t year, uint32_t month, uint32_t day);
+  30:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** static uint8_t get_month_length(int32_t year, int32_t month);
+  31:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** static uint8_t is_leap_year(uint32_t year);
+  32:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** static void highlight_update(lv_obj_t * calendar);
+ARM GAS  /tmp/ccc3jGzO.s 			page 2
+
+
+  33:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  34:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /**********************
+  35:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  *  STATIC VARIABLES
+  36:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  **********************/
+  37:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** const lv_obj_class_t lv_calendar_class = {
+  38:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     .constructor_cb = lv_calendar_constructor,
+  39:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     .width_def = (LV_DPI_DEF * 3) / 2,
+  40:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     .height_def =(LV_DPI_DEF * 3) / 2,
+  41:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     .group_def = LV_OBJ_CLASS_GROUP_DEF_TRUE,
+  42:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     .instance_size = sizeof(lv_calendar_t),
+  43:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     .base_class = &lv_btnmatrix_class
+  44:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** };
+  45:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  46:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  47:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** static const char * day_names_def[7] = LV_CALENDAR_DEFAULT_DAY_NAMES;
+  48:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  49:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /**********************
+  50:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  *      MACROS
+  51:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  **********************/
+  52:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  53:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /**********************
+  54:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  *   GLOBAL FUNCTIONS
+  55:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  **********************/
+  56:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  57:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** lv_obj_t * lv_calendar_create(lv_obj_t * parent)
+  58:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+  59:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     LV_LOG_INFO("begin")
+  60:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_t * obj = lv_obj_class_create_obj(&lv_calendar_class, parent);
+  61:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_class_init_obj(obj);
+  62:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     return obj;
+  63:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+  64:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  65:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /*=====================
+  66:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * Setter functions
+  67:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  *====================*/
+  68:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  69:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** void lv_calendar_set_day_names(lv_obj_t * obj, const char * day_names[])
+  70:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+  71:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+  72:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint32_t i;
+  73:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     for(i = 0; i < 7; i++) {
+  74:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         calendar->map[i] = day_names[i];
+  75:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+  76:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+  77:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  78:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** void lv_calendar_set_today_date(lv_obj_t * obj, uint32_t year, uint32_t month, uint32_t day)
+  79:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+  80:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+  81:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.year         = year;
+  82:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.month        = month;
+  83:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.day          = day;
+  84:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  85:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     highlight_update(obj);
+  86:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+  87:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  88:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** void lv_calendar_set_highlighted_dates(lv_obj_t * obj, lv_calendar_date_t highlighted[], uint16_t d
+  89:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+ARM GAS  /tmp/ccc3jGzO.s 			page 3
+
+
+  90:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     LV_ASSERT_NULL(highlighted);
+  91:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  92:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+  93:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->highlighted_dates     = highlighted;
+  94:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->highlighted_dates_num = date_num;
+  95:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  96:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     highlight_update(obj);
+  97:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+  98:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+  99:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** void lv_calendar_set_showed_date(lv_obj_t * obj, uint32_t year, uint32_t month)
+ 100:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+ 101:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 102:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.year   = year;
+ 103:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.month  = month;
+ 104:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.day    = 1;
+ 105:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 106:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_date_t d;
+ 107:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     d.year = calendar->showed_date.year;
+ 108:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     d.month = calendar->showed_date.month;
+ 109:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     d.day = calendar->showed_date.day;
+ 110:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 111:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t i;
+ 112:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 113:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     /*Remove the disabled state but revert it for day names*/
+ 114:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_btnmatrix_clear_btn_ctrl_all(obj, LV_BTNMATRIX_CTRL_DISABLED);
+ 115:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     for(i = 0; i < 7; i++) {
+ 116:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i, LV_BTNMATRIX_CTRL_DISABLED);
+ 117:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 118:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 119:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t act_mo_len = get_month_length(d.year, d.month);
+ 120:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t day_first = get_day_of_week(d.year, d.month, 1);
+ 121:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t c;
+ 122:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     for(i = day_first, c = 1; i < act_mo_len + day_first; i++, c++) {
+ 123:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 124:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 125:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 126:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t prev_mo_len = get_month_length(d.year, d.month - 1);
+ 127:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     for(i = 0, c = prev_mo_len - day_first + 1; i < day_first; i++, c++) {
+ 128:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 129:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i + 7, LV_BTNMATRIX_CTRL_DISABLED);
+ 130:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 131:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 132:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     for(i = day_first + act_mo_len, c = 1; i < 6 * 7; i++, c++) {
+ 133:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 134:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i + 7, LV_BTNMATRIX_CTRL_DISABLED);
+ 135:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 136:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 137:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     highlight_update(obj);
+ 138:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_invalidate(obj);
+ 139:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 140:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 141:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /*=====================
+ 142:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * Getter functions
+ 143:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  *====================*/
+ 144:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 145:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /**
+ 146:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * Get the today's date
+ARM GAS  /tmp/ccc3jGzO.s 			page 4
+
+
+ 147:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @param calendar pointer to a calendar object
+ 148:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @return return pointer to an `lv_calendar_date_t` variable containing the date of today.
+ 149:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  */
+ 150:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** const lv_calendar_date_t * lv_calendar_get_today_date(const lv_obj_t * obj)
+ 151:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+ 152:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     const lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 153:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     return &calendar->today;
+ 154:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 155:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 156:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /**
+ 157:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * Get the currently showed
+ 158:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @param calendar pointer to a calendar object
+ 159:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @return pointer to an `lv_calendar_date_t` variable containing the date is being shown.
+ 160:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  */
+ 161:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** const lv_calendar_date_t * lv_calendar_get_showed_date(const lv_obj_t * obj)
+ 162:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+ 163:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     const lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 164:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     return &calendar->showed_date;
+ 165:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 166:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 167:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /**
+ 168:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * Get the the highlighted dates
+ 169:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @param calendar pointer to a calendar object
+ 170:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @return pointer to an `lv_calendar_date_t` array containing the dates.
+ 171:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  */
+ 172:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** lv_calendar_date_t * lv_calendar_get_highlighted_dates(const lv_obj_t * obj)
+ 173:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+ 174:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 175:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     return calendar->highlighted_dates;
+ 176:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 177:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 178:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** uint16_t lv_calendar_get_highlighted_dates_num(const lv_obj_t * obj)
+ 179:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+ 180:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 181:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     return calendar->highlighted_dates_num;
+ 182:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 183:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 184:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** lv_res_t lv_calendar_get_pressed_date(const lv_obj_t * obj, lv_calendar_date_t * date)
+ 185:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+ 186:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 187:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint16_t d = lv_btnmatrix_get_selected_btn(obj);
+ 188:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     if(d == LV_BTNMATRIX_BTN_NONE) {
+ 189:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         date->year = 0;
+ 190:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         date->month = 0;
+ 191:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         date->day = 0;
+ 192:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         return LV_RES_INV;
+ 193:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 194:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 195:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     const char * txt = lv_btnmatrix_get_btn_text(obj, lv_btnmatrix_get_selected_btn(obj));
+ 196:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 197:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     if(txt[1] == 0) date->day = txt[0] - '0';
+ 198:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     else date->day = (txt[0] - '0') * 10 + (txt[1] - '0');
+ 199:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 200:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     date->year = calendar->showed_date.year;
+ 201:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     date->month = calendar->showed_date.month;
+ 202:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 203:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     return LV_RES_OK;
+ARM GAS  /tmp/ccc3jGzO.s 			page 5
+
+
+ 204:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 205:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 206:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 207:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /**********************
+ 208:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  *  STATIC FUNCTIONS
+ 209:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  **********************/
+ 210:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 211:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** static void lv_calendar_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
+ 212:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+ 213:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     LV_UNUSED(class_p);
+ 214:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 215:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 216:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     /*Initialize the allocated 'ext'*/
+ 217:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.year  = 2020;
+ 218:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.month = 1;
+ 219:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.day   = 1;
+ 220:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 221:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.year  = 2020;
+ 222:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.month = 1;
+ 223:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.day   = 1;
+ 224:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 225:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->highlighted_dates      = NULL;
+ 226:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->highlighted_dates_num  = 0;
+ 227:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 228:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_memset_00(calendar->nums, sizeof(calendar->nums));
+ 229:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t i;
+ 230:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t j = 0;
+ 231:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     for(i = 0; i < 8 * 7; i++) {
+ 232:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         /*Every 8th string is "\n"*/
+ 233:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         if(i != 0 && (i + 1) % 8 == 0) {
+ 234:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             calendar->map[i] = "\n";
+ 235:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         } else if(i < 8){
+ 236:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             calendar->map[i] = day_names_def[i];
+ 237:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         } else {
+ 238:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             calendar->nums[j][0] = 'x';
+ 239:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             calendar->map[i] = calendar->nums[j];
+ 240:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             j++;
+ 241:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 242:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 243:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->map[8 * 7 - 1] = "";
+ 244:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 245:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_btnmatrix_set_map(obj, calendar->map);
+ 246:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_btnmatrix_set_btn_ctrl_all(obj, LV_BTNMATRIX_CTRL_CLICK_TRIG | LV_BTNMATRIX_CTRL_NO_REPEAT);
+ 247:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 248:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 249:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_set_showed_date(obj, calendar->showed_date.year, calendar->showed_date.month);
+ 250:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_set_today_date(obj, calendar->today.year, calendar->today.month, calendar->today.da
+ 251:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 252:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_add_event_cb(obj, draw_part_begin_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+ 253:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 254:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 255:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** static void draw_part_begin_event_cb(lv_event_t * e)
+ 256:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+ 257:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_t * obj = lv_event_get_target(e);
+ 258:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_draw_part_dsc_t * dsc = lv_event_get_param(e);
+ 259:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     if(dsc->part == LV_PART_ITEMS) {
+ 260:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         /*Day name styles*/
+ARM GAS  /tmp/ccc3jGzO.s 			page 6
+
+
+ 261:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         if(dsc->id < 7) {
+ 262:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_opa = LV_OPA_TRANSP;
+ 263:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_opa = LV_OPA_TRANSP;
+ 264:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 265:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         else if(lv_btnmatrix_has_btn_ctrl(obj, dsc->id, LV_BTNMATRIX_CTRL_DISABLED)) {
+ 266:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_opa = LV_OPA_TRANSP;
+ 267:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_opa = LV_OPA_TRANSP;
+ 268:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->label_dsc->color = lv_palette_main(LV_PALETTE_GREY);
+ 269:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 270:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 271:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         if(lv_btnmatrix_has_btn_ctrl(obj, dsc->id, LV_CALENDAR_CTRL_HIGHLIGHT)) {
+ 272:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_opa = LV_OPA_40;
+ 273:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_color = lv_theme_get_color_primary(obj);
+ 274:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             if(lv_btnmatrix_get_selected_btn(obj) == dsc->id) {
+ 275:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****                 dsc->rect_dsc->bg_opa = LV_OPA_70;
+ 276:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             }
+ 277:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 278:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 279:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         if(lv_btnmatrix_has_btn_ctrl(obj, dsc->id, LV_CALENDAR_CTRL_TODAY)) {
+ 280:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_opa = LV_OPA_COVER;
+ 281:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_color = lv_theme_get_color_primary(obj);
+ 282:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_width += 1;
+ 283:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 284:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 285:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 286:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 287:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 288:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 289:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 290:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 291:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /**
+ 292:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * Get the number of days in a month
+ 293:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @param year a year
+ 294:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @param month a month. The range is basically [1..12] but [-11..0] or [13..24] is also
+ 295:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  *              supported to handle next/prev. year
+ 296:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @return [28..31]
+ 297:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  */
+ 298:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** static uint8_t get_month_length(int32_t year, int32_t month)
+ 299:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+ 300:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     month--;
+ 301:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     if(month < 0) {
+ 302:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         year--;             /*Already in the previous year (won't be less then -12 to skip a whole 
+ 303:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         month = 12 + month; /*`month` is negative, the result will be < 12*/
+ 304:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 305:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     if(month >= 12) {
+ 306:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         year++;
+ 307:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         month -= 12;
+ 308:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 309:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 310:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     /*month == 1 is february*/
+ 311:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     return (month == 1) ? (28 + is_leap_year(year)) : 31 - month % 7 % 2;
+ 312:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 313:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 314:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /**
+ 315:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * Tells whether a year is leap year or not
+ 316:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @param year a year
+ 317:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @return 0: not leap year; 1: leap year
+ARM GAS  /tmp/ccc3jGzO.s 			page 7
+
+
+ 318:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  */
+ 319:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** static uint8_t is_leap_year(uint32_t year)
+ 320:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+  27              		.loc 1 320 1 view -0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+ 321:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     return (year % 4) || ((year % 100 == 0) && (year % 400)) ? 0 : 1;
+  32              		.loc 1 321 5 view .LVU1
+  33              		.loc 1 321 66 is_stmt 0 view .LVU2
+  34 0000 10F0030F 		tst	r0, #3
+  35 0004 12D1     		bne	.L3
+  36              		.loc 1 321 33 discriminator 1 view .LVU3
+  37 0006 0C4B     		ldr	r3, .L6
+  38 0008 A3FB0023 		umull	r2, r3, r3, r0
+  39 000c 5B09     		lsrs	r3, r3, #5
+  40 000e 6422     		movs	r2, #100
+  41 0010 02FB1303 		mls	r3, r2, r3, r0
+  42              		.loc 1 321 66 discriminator 1 view .LVU4
+  43 0014 63B9     		cbnz	r3, .L4
+  44              		.loc 1 321 54 discriminator 4 view .LVU5
+  45 0016 084B     		ldr	r3, .L6
+  46 0018 A3FB0023 		umull	r2, r3, r3, r0
+  47 001c DB09     		lsrs	r3, r3, #7
+  48 001e 4FF4C872 		mov	r2, #400
+  49 0022 02FB1303 		mls	r3, r2, r3, r0
+  50              		.loc 1 321 45 discriminator 4 view .LVU6
+  51 0026 2BB1     		cbz	r3, .L5
+  52              		.loc 1 321 66 view .LVU7
+  53 0028 0020     		movs	r0, #0
+  54              	.LVL1:
+  55              		.loc 1 321 66 view .LVU8
+  56 002a 7047     		bx	lr
+  57              	.LVL2:
+  58              	.L3:
+  59              		.loc 1 321 66 view .LVU9
+  60 002c 0020     		movs	r0, #0
+  61              	.LVL3:
+  62              		.loc 1 321 66 view .LVU10
+  63 002e 7047     		bx	lr
+  64              	.LVL4:
+  65              	.L4:
+  66              		.loc 1 321 66 view .LVU11
+  67 0030 0120     		movs	r0, #1
+  68              	.LVL5:
+  69              		.loc 1 321 66 view .LVU12
+  70 0032 7047     		bx	lr
+  71              	.LVL6:
+  72              	.L5:
+  73              		.loc 1 321 66 view .LVU13
+  74 0034 0120     		movs	r0, #1
+  75              	.LVL7:
+ 322:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+  76              		.loc 1 322 1 view .LVU14
+  77 0036 7047     		bx	lr
+  78              	.L7:
+ARM GAS  /tmp/ccc3jGzO.s 			page 8
+
+
+  79              		.align	2
+  80              	.L6:
+  81 0038 1F85EB51 		.word	1374389535
+  82              		.cfi_endproc
+  83              	.LFE197:
+  85              		.section	.text.get_month_length,"ax",%progbits
+  86              		.align	1
+  87              		.syntax unified
+  88              		.thumb
+  89              		.thumb_func
+  90              		.fpu softvfp
+  92              	get_month_length:
+  93              	.LVL8:
+  94              	.LFB196:
+ 299:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     month--;
+  95              		.loc 1 299 1 is_stmt 1 view -0
+  96              		.cfi_startproc
+  97              		@ args = 0, pretend = 0, frame = 0
+  98              		@ frame_needed = 0, uses_anonymous_args = 0
+ 299:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     month--;
+  99              		.loc 1 299 1 is_stmt 0 view .LVU16
+ 100 0000 08B5     		push	{r3, lr}
+ 101              	.LCFI0:
+ 102              		.cfi_def_cfa_offset 8
+ 103              		.cfi_offset 3, -8
+ 104              		.cfi_offset 14, -4
+ 300:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     if(month < 0) {
+ 105              		.loc 1 300 5 is_stmt 1 view .LVU17
+ 106              	.LVL9:
+ 301:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         year--;             /*Already in the previous year (won't be less then -12 to skip a whole 
+ 107              		.loc 1 301 5 view .LVU18
+ 301:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         year--;             /*Already in the previous year (won't be less then -12 to skip a whole 
+ 108              		.loc 1 301 7 is_stmt 0 view .LVU19
+ 109 0002 4A1E     		subs	r2, r1, #1
+ 110              	.LVL10:
+ 301:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         year--;             /*Already in the previous year (won't be less then -12 to skip a whole 
+ 111              		.loc 1 301 7 view .LVU20
+ 112 0004 18D4     		bmi	.L14
+ 113              	.L9:
+ 305:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         year++;
+ 114              		.loc 1 305 5 is_stmt 1 view .LVU21
+ 305:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         year++;
+ 115              		.loc 1 305 7 is_stmt 0 view .LVU22
+ 116 0006 0B2A     		cmp	r2, #11
+ 117 0008 01DD     		ble	.L10
+ 306:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         month -= 12;
+ 118              		.loc 1 306 9 is_stmt 1 view .LVU23
+ 306:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         month -= 12;
+ 119              		.loc 1 306 13 is_stmt 0 view .LVU24
+ 120 000a 0130     		adds	r0, r0, #1
+ 121              	.LVL11:
+ 307:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 122              		.loc 1 307 9 is_stmt 1 view .LVU25
+ 307:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 123              		.loc 1 307 15 is_stmt 0 view .LVU26
+ 124 000c 0C3A     		subs	r2, r2, #12
+ 125              	.LVL12:
+ARM GAS  /tmp/ccc3jGzO.s 			page 9
+
+
+ 126              	.L10:
+ 311:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 127              		.loc 1 311 5 is_stmt 1 view .LVU27
+ 311:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 128              		.loc 1 311 53 is_stmt 0 view .LVU28
+ 129 000e 012A     		cmp	r2, #1
+ 130 0010 16D0     		beq	.L15
+ 311:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 131              		.loc 1 311 66 discriminator 2 view .LVU29
+ 132 0012 0E4B     		ldr	r3, .L16
+ 133 0014 83FB0213 		smull	r1, r3, r3, r2
+ 134 0018 9918     		adds	r1, r3, r2
+ 135 001a D317     		asrs	r3, r2, #31
+ 136 001c C3EBA103 		rsb	r3, r3, r1, asr #2
+ 137 0020 C3EBC303 		rsb	r3, r3, r3, lsl #3
+ 311:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 138              		.loc 1 311 70 discriminator 2 view .LVU30
+ 139 0024 D31A     		subs	r3, r2, r3
+ 140 0026 03F00103 		and	r3, r3, #1
+ 141 002a 48BF     		it	mi
+ 142 002c 5B42     		rsbmi	r3, r3, #0
+ 311:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 143              		.loc 1 311 58 discriminator 2 view .LVU31
+ 144 002e D8B2     		uxtb	r0, r3
+ 145              	.LVL13:
+ 311:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 146              		.loc 1 311 53 discriminator 2 view .LVU32
+ 147 0030 C0F11F00 		rsb	r0, r0, #31
+ 148 0034 C0B2     		uxtb	r0, r0
+ 149              	.LVL14:
+ 150              	.L12:
+ 312:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 151              		.loc 1 312 1 discriminator 4 view .LVU33
+ 152 0036 08BD     		pop	{r3, pc}
+ 153              	.LVL15:
+ 154              	.L14:
+ 302:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         month = 12 + month; /*`month` is negative, the result will be < 12*/
+ 155              		.loc 1 302 9 is_stmt 1 view .LVU34
+ 302:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         month = 12 + month; /*`month` is negative, the result will be < 12*/
+ 156              		.loc 1 302 13 is_stmt 0 view .LVU35
+ 157 0038 0138     		subs	r0, r0, #1
+ 158              	.LVL16:
+ 303:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 159              		.loc 1 303 9 is_stmt 1 view .LVU36
+ 303:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 160              		.loc 1 303 15 is_stmt 0 view .LVU37
+ 161 003a 01F10B02 		add	r2, r1, #11
+ 162              	.LVL17:
+ 303:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 163              		.loc 1 303 15 view .LVU38
+ 164 003e E2E7     		b	.L9
+ 165              	.L15:
+ 311:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 166              		.loc 1 311 33 discriminator 1 view .LVU39
+ 167 0040 FFF7FEFF 		bl	is_leap_year
+ 168              	.LVL18:
+ 311:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ARM GAS  /tmp/ccc3jGzO.s 			page 10
+
+
+ 169              		.loc 1 311 53 discriminator 1 view .LVU40
+ 170 0044 1C30     		adds	r0, r0, #28
+ 171 0046 C0B2     		uxtb	r0, r0
+ 172 0048 F5E7     		b	.L12
+ 173              	.L17:
+ 174 004a 00BF     		.align	2
+ 175              	.L16:
+ 176 004c 93244992 		.word	-1840700269
+ 177              		.cfi_endproc
+ 178              	.LFE196:
+ 180              		.section	.text.get_day_of_week,"ax",%progbits
+ 181              		.align	1
+ 182              		.syntax unified
+ 183              		.thumb
+ 184              		.thumb_func
+ 185              		.fpu softvfp
+ 187              	get_day_of_week:
+ 188              	.LVL19:
+ 189              	.LFB198:
+ 323:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 324:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** /**
+ 325:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * Get the day of the week
+ 326:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @param year a year
+ 327:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @param month a  month [1..12]
+ 328:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @param day a day [1..32]
+ 329:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  * @return [0..6] which means [Sun..Sat] or [Mon..Sun] depending on LV_CALENDAR_WEEK_STARTS_MONDAY
+ 330:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****  */
+ 331:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** static uint8_t get_day_of_week(uint32_t year, uint32_t month, uint32_t day)
+ 332:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+ 190              		.loc 1 332 1 is_stmt 1 view -0
+ 191              		.cfi_startproc
+ 192              		@ args = 0, pretend = 0, frame = 0
+ 193              		@ frame_needed = 0, uses_anonymous_args = 0
+ 194              		@ link register save eliminated.
+ 333:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint32_t a = month < 3 ? 1 : 0;
+ 195              		.loc 1 333 5 view .LVU42
+ 196              		.loc 1 333 32 is_stmt 0 view .LVU43
+ 197 0000 0229     		cmp	r1, #2
+ 198 0002 94BF     		ite	ls
+ 199 0004 0123     		movls	r3, #1
+ 200 0006 0023     		movhi	r3, #0
+ 201              	.LVL20:
+ 334:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint32_t b = year - a;
+ 202              		.loc 1 334 5 is_stmt 1 view .LVU44
+ 203              		.loc 1 334 14 is_stmt 0 view .LVU45
+ 204 0008 A0EB0300 		sub	r0, r0, r3
+ 205              	.LVL21:
+ 335:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 336:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** #if LV_CALENDAR_WEEK_STARTS_MONDAY
+ 337:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint32_t day_of_week = (day + (31 * (month - 2 + 12 * a) / 12) + b + (b / 4) - (b / 100) + (b /
+ 338:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** #else
+ 339:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint32_t day_of_week = (day + (31 * (month - 2 + 12 * a) / 12) + b + (b / 4) - (b / 100) + (b /
+ 206              		.loc 1 339 5 is_stmt 1 view .LVU46
+ 207              		.loc 1 339 57 is_stmt 0 view .LVU47
+ 208 000c 94BF     		ite	ls
+ 209 000e 4FF00C0C 		movls	ip, #12
+ 210 0012 4FF0000C 		movhi	ip, #0
+ARM GAS  /tmp/ccc3jGzO.s 			page 11
+
+
+ 211              		.loc 1 339 52 view .LVU48
+ 212 0016 6144     		add	r1, r1, ip
+ 213              	.LVL22:
+ 214              		.loc 1 339 39 view .LVU49
+ 215 0018 C1EB4113 		rsb	r3, r1, r1, lsl #5
+ 216              	.LVL23:
+ 217              		.loc 1 339 39 view .LVU50
+ 218 001c 3E3B     		subs	r3, r3, #62
+ 219              		.loc 1 339 62 view .LVU51
+ 220 001e 0D49     		ldr	r1, .L19
+ 221 0020 A1FB0313 		umull	r1, r3, r1, r3
+ 222              		.loc 1 339 33 view .LVU52
+ 223 0024 02EBD303 		add	r3, r2, r3, lsr #3
+ 224              		.loc 1 339 68 view .LVU53
+ 225 0028 0344     		add	r3, r3, r0
+ 226              		.loc 1 339 72 view .LVU54
+ 227 002a 03EB9003 		add	r3, r3, r0, lsr #2
+ 228              		.loc 1 339 87 view .LVU55
+ 229 002e 0A4A     		ldr	r2, .L19+4
+ 230              	.LVL24:
+ 231              		.loc 1 339 87 view .LVU56
+ 232 0030 A2FB0020 		umull	r2, r0, r2, r0
+ 233              	.LVL25:
+ 234              		.loc 1 339 82 view .LVU57
+ 235 0034 A3EB5013 		sub	r3, r3, r0, lsr #5
+ 236              		.loc 1 339 94 view .LVU58
+ 237 0038 03EBD013 		add	r3, r3, r0, lsr #7
+ 238              		.loc 1 339 14 view .LVU59
+ 239 003c 0748     		ldr	r0, .L19+8
+ 240 003e A0FB0320 		umull	r2, r0, r0, r3
+ 241 0042 1A1A     		subs	r2, r3, r0
+ 242 0044 00EB5200 		add	r0, r0, r2, lsr #1
+ 243 0048 8008     		lsrs	r0, r0, #2
+ 244 004a C0EBC000 		rsb	r0, r0, r0, lsl #3
+ 245 004e 181A     		subs	r0, r3, r0
+ 246              	.LVL26:
+ 340:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** #endif
+ 341:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 342:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     return day_of_week;
+ 247              		.loc 1 342 5 is_stmt 1 view .LVU60
+ 343:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 248              		.loc 1 343 1 is_stmt 0 view .LVU61
+ 249 0050 C0B2     		uxtb	r0, r0
+ 250              	.LVL27:
+ 251              		.loc 1 343 1 view .LVU62
+ 252 0052 7047     		bx	lr
+ 253              	.L20:
+ 254              		.align	2
+ 255              	.L19:
+ 256 0054 ABAAAAAA 		.word	-1431655765
+ 257 0058 1F85EB51 		.word	1374389535
+ 258 005c 25499224 		.word	613566757
+ 259              		.cfi_endproc
+ 260              	.LFE198:
+ 262              		.section	.text.draw_part_begin_event_cb,"ax",%progbits
+ 263              		.align	1
+ 264              		.syntax unified
+ARM GAS  /tmp/ccc3jGzO.s 			page 12
+
+
+ 265              		.thumb
+ 266              		.thumb_func
+ 267              		.fpu softvfp
+ 269              	draw_part_begin_event_cb:
+ 270              	.LVL28:
+ 271              	.LFB195:
+ 256:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_t * obj = lv_event_get_target(e);
+ 272              		.loc 1 256 1 is_stmt 1 view -0
+ 273              		.cfi_startproc
+ 274              		@ args = 0, pretend = 0, frame = 0
+ 275              		@ frame_needed = 0, uses_anonymous_args = 0
+ 256:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_t * obj = lv_event_get_target(e);
+ 276              		.loc 1 256 1 is_stmt 0 view .LVU64
+ 277 0000 70B5     		push	{r4, r5, r6, lr}
+ 278              	.LCFI1:
+ 279              		.cfi_def_cfa_offset 16
+ 280              		.cfi_offset 4, -16
+ 281              		.cfi_offset 5, -12
+ 282              		.cfi_offset 6, -8
+ 283              		.cfi_offset 14, -4
+ 284 0002 0446     		mov	r4, r0
+ 257:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_draw_part_dsc_t * dsc = lv_event_get_param(e);
+ 285              		.loc 1 257 5 is_stmt 1 view .LVU65
+ 257:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_draw_part_dsc_t * dsc = lv_event_get_param(e);
+ 286              		.loc 1 257 22 is_stmt 0 view .LVU66
+ 287 0004 FFF7FEFF 		bl	lv_event_get_target
+ 288              	.LVL29:
+ 257:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_draw_part_dsc_t * dsc = lv_event_get_param(e);
+ 289              		.loc 1 257 22 view .LVU67
+ 290 0008 0546     		mov	r5, r0
+ 291              	.LVL30:
+ 258:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     if(dsc->part == LV_PART_ITEMS) {
+ 292              		.loc 1 258 5 is_stmt 1 view .LVU68
+ 258:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     if(dsc->part == LV_PART_ITEMS) {
+ 293              		.loc 1 258 36 is_stmt 0 view .LVU69
+ 294 000a 2046     		mov	r0, r4
+ 295              	.LVL31:
+ 258:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     if(dsc->part == LV_PART_ITEMS) {
+ 296              		.loc 1 258 36 view .LVU70
+ 297 000c FFF7FEFF 		bl	lv_event_get_param
+ 298              	.LVL32:
+ 259:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         /*Day name styles*/
+ 299              		.loc 1 259 5 is_stmt 1 view .LVU71
+ 259:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         /*Day name styles*/
+ 300              		.loc 1 259 11 is_stmt 0 view .LVU72
+ 301 0010 436B     		ldr	r3, [r0, #52]
+ 259:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         /*Day name styles*/
+ 302              		.loc 1 259 7 view .LVU73
+ 303 0012 B3F5A02F 		cmp	r3, #327680
+ 304 0016 00D0     		beq	.L27
+ 305              	.LVL33:
+ 306              	.L21:
+ 286:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 307              		.loc 1 286 1 view .LVU74
+ 308 0018 70BD     		pop	{r4, r5, r6, pc}
+ 309              	.LVL34:
+ 310              	.L27:
+ARM GAS  /tmp/ccc3jGzO.s 			page 13
+
+
+ 286:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 311              		.loc 1 286 1 view .LVU75
+ 312 001a 0446     		mov	r4, r0
+ 313              	.LVL35:
+ 261:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_opa = LV_OPA_TRANSP;
+ 314              		.loc 1 261 9 is_stmt 1 view .LVU76
+ 261:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_opa = LV_OPA_TRANSP;
+ 315              		.loc 1 261 15 is_stmt 0 view .LVU77
+ 316 001c 816B     		ldr	r1, [r0, #56]
+ 261:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_opa = LV_OPA_TRANSP;
+ 317              		.loc 1 261 11 view .LVU78
+ 318 001e 0629     		cmp	r1, #6
+ 319 0020 20D8     		bhi	.L23
+ 262:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_opa = LV_OPA_TRANSP;
+ 320              		.loc 1 262 13 is_stmt 1 view .LVU79
+ 262:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_opa = LV_OPA_TRANSP;
+ 321              		.loc 1 262 16 is_stmt 0 view .LVU80
+ 322 0022 8268     		ldr	r2, [r0, #8]
+ 262:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_opa = LV_OPA_TRANSP;
+ 323              		.loc 1 262 35 view .LVU81
+ 324 0024 0023     		movs	r3, #0
+ 325 0026 9372     		strb	r3, [r2, #10]
+ 263:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 326              		.loc 1 263 13 is_stmt 1 view .LVU82
+ 263:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 327              		.loc 1 263 16 is_stmt 0 view .LVU83
+ 328 0028 8268     		ldr	r2, [r0, #8]
+ 263:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 329              		.loc 1 263 39 view .LVU84
+ 330 002a 9377     		strb	r3, [r2, #30]
+ 331              	.LVL36:
+ 332              	.L24:
+ 271:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_opa = LV_OPA_40;
+ 333              		.loc 1 271 9 is_stmt 1 view .LVU85
+ 271:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_opa = LV_OPA_40;
+ 334              		.loc 1 271 12 is_stmt 0 view .LVU86
+ 335 002c 4FF40042 		mov	r2, #32768
+ 336 0030 218F     		ldrh	r1, [r4, #56]
+ 337 0032 2846     		mov	r0, r5
+ 338 0034 FFF7FEFF 		bl	lv_btnmatrix_has_btn_ctrl
+ 339              	.LVL37:
+ 271:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_opa = LV_OPA_40;
+ 340              		.loc 1 271 11 view .LVU87
+ 341 0038 30BB     		cbnz	r0, .L28
+ 342              	.L25:
+ 279:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_opa = LV_OPA_COVER;
+ 343              		.loc 1 279 9 is_stmt 1 view .LVU88
+ 279:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_opa = LV_OPA_COVER;
+ 344              		.loc 1 279 12 is_stmt 0 view .LVU89
+ 345 003a 4FF48042 		mov	r2, #16384
+ 346 003e 218F     		ldrh	r1, [r4, #56]
+ 347 0040 2846     		mov	r0, r5
+ 348 0042 FFF7FEFF 		bl	lv_btnmatrix_has_btn_ctrl
+ 349              	.LVL38:
+ 279:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_opa = LV_OPA_COVER;
+ 350              		.loc 1 279 11 view .LVU90
+ 351 0046 0028     		cmp	r0, #0
+ARM GAS  /tmp/ccc3jGzO.s 			page 14
+
+
+ 352 0048 E6D0     		beq	.L21
+ 280:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_color = lv_theme_get_color_primary(obj);
+ 353              		.loc 1 280 13 is_stmt 1 view .LVU91
+ 280:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_color = lv_theme_get_color_primary(obj);
+ 354              		.loc 1 280 16 is_stmt 0 view .LVU92
+ 355 004a A368     		ldr	r3, [r4, #8]
+ 280:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_color = lv_theme_get_color_primary(obj);
+ 356              		.loc 1 280 39 view .LVU93
+ 357 004c FF22     		movs	r2, #255
+ 358 004e 9A77     		strb	r2, [r3, #30]
+ 281:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_width += 1;
+ 359              		.loc 1 281 13 is_stmt 1 view .LVU94
+ 281:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_width += 1;
+ 360              		.loc 1 281 16 is_stmt 0 view .LVU95
+ 361 0050 A668     		ldr	r6, [r4, #8]
+ 281:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_width += 1;
+ 362              		.loc 1 281 43 view .LVU96
+ 363 0052 2846     		mov	r0, r5
+ 364 0054 FFF7FEFF 		bl	lv_theme_get_color_primary
+ 365              	.LVL39:
+ 366 0058 7083     		strh	r0, [r6, #26]	@ movhi
+ 282:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 367              		.loc 1 282 13 is_stmt 1 view .LVU97
+ 282:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 368              		.loc 1 282 16 is_stmt 0 view .LVU98
+ 369 005a A268     		ldr	r2, [r4, #8]
+ 282:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 370              		.loc 1 282 41 view .LVU99
+ 371 005c 938B     		ldrh	r3, [r2, #28]
+ 372 005e 0133     		adds	r3, r3, #1
+ 373 0060 9383     		strh	r3, [r2, #28]	@ movhi
+ 286:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 374              		.loc 1 286 1 view .LVU100
+ 375 0062 D9E7     		b	.L21
+ 376              	.LVL40:
+ 377              	.L23:
+ 265:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_opa = LV_OPA_TRANSP;
+ 378              		.loc 1 265 14 is_stmt 1 view .LVU101
+ 265:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_opa = LV_OPA_TRANSP;
+ 379              		.loc 1 265 17 is_stmt 0 view .LVU102
+ 380 0064 2022     		movs	r2, #32
+ 381 0066 89B2     		uxth	r1, r1
+ 382 0068 2846     		mov	r0, r5
+ 383              	.LVL41:
+ 265:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_opa = LV_OPA_TRANSP;
+ 384              		.loc 1 265 17 view .LVU103
+ 385 006a FFF7FEFF 		bl	lv_btnmatrix_has_btn_ctrl
+ 386              	.LVL42:
+ 265:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_opa = LV_OPA_TRANSP;
+ 387              		.loc 1 265 16 view .LVU104
+ 388 006e 0028     		cmp	r0, #0
+ 389 0070 DCD0     		beq	.L24
+ 266:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_opa = LV_OPA_TRANSP;
+ 390              		.loc 1 266 13 is_stmt 1 view .LVU105
+ 266:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_opa = LV_OPA_TRANSP;
+ 391              		.loc 1 266 16 is_stmt 0 view .LVU106
+ 392 0072 A268     		ldr	r2, [r4, #8]
+ARM GAS  /tmp/ccc3jGzO.s 			page 15
+
+
+ 266:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->border_opa = LV_OPA_TRANSP;
+ 393              		.loc 1 266 35 view .LVU107
+ 394 0074 0023     		movs	r3, #0
+ 395 0076 9372     		strb	r3, [r2, #10]
+ 267:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->label_dsc->color = lv_palette_main(LV_PALETTE_GREY);
+ 396              		.loc 1 267 13 is_stmt 1 view .LVU108
+ 267:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->label_dsc->color = lv_palette_main(LV_PALETTE_GREY);
+ 397              		.loc 1 267 16 is_stmt 0 view .LVU109
+ 398 0078 A268     		ldr	r2, [r4, #8]
+ 267:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->label_dsc->color = lv_palette_main(LV_PALETTE_GREY);
+ 399              		.loc 1 267 39 view .LVU110
+ 400 007a 9377     		strb	r3, [r2, #30]
+ 268:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 401              		.loc 1 268 13 is_stmt 1 view .LVU111
+ 268:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 402              		.loc 1 268 16 is_stmt 0 view .LVU112
+ 403 007c E668     		ldr	r6, [r4, #12]
+ 268:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 404              		.loc 1 268 37 view .LVU113
+ 405 007e 1220     		movs	r0, #18
+ 406 0080 FFF7FEFF 		bl	lv_palette_main
+ 407              	.LVL43:
+ 408 0084 B081     		strh	r0, [r6, #12]	@ movhi
+ 409 0086 D1E7     		b	.L24
+ 410              	.L28:
+ 272:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_color = lv_theme_get_color_primary(obj);
+ 411              		.loc 1 272 13 is_stmt 1 view .LVU114
+ 272:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_color = lv_theme_get_color_primary(obj);
+ 412              		.loc 1 272 16 is_stmt 0 view .LVU115
+ 413 0088 A368     		ldr	r3, [r4, #8]
+ 272:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             dsc->rect_dsc->bg_color = lv_theme_get_color_primary(obj);
+ 414              		.loc 1 272 35 view .LVU116
+ 415 008a 6622     		movs	r2, #102
+ 416 008c 9A72     		strb	r2, [r3, #10]
+ 273:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             if(lv_btnmatrix_get_selected_btn(obj) == dsc->id) {
+ 417              		.loc 1 273 13 is_stmt 1 view .LVU117
+ 273:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             if(lv_btnmatrix_get_selected_btn(obj) == dsc->id) {
+ 418              		.loc 1 273 16 is_stmt 0 view .LVU118
+ 419 008e A668     		ldr	r6, [r4, #8]
+ 273:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             if(lv_btnmatrix_get_selected_btn(obj) == dsc->id) {
+ 420              		.loc 1 273 39 view .LVU119
+ 421 0090 2846     		mov	r0, r5
+ 422 0092 FFF7FEFF 		bl	lv_theme_get_color_primary
+ 423              	.LVL44:
+ 424 0096 B080     		strh	r0, [r6, #4]	@ movhi
+ 274:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****                 dsc->rect_dsc->bg_opa = LV_OPA_70;
+ 425              		.loc 1 274 13 is_stmt 1 view .LVU120
+ 274:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****                 dsc->rect_dsc->bg_opa = LV_OPA_70;
+ 426              		.loc 1 274 16 is_stmt 0 view .LVU121
+ 427 0098 2846     		mov	r0, r5
+ 428 009a FFF7FEFF 		bl	lv_btnmatrix_get_selected_btn
+ 429              	.LVL45:
+ 274:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****                 dsc->rect_dsc->bg_opa = LV_OPA_70;
+ 430              		.loc 1 274 57 view .LVU122
+ 431 009e A36B     		ldr	r3, [r4, #56]
+ 274:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****                 dsc->rect_dsc->bg_opa = LV_OPA_70;
+ 432              		.loc 1 274 15 view .LVU123
+ARM GAS  /tmp/ccc3jGzO.s 			page 16
+
+
+ 433 00a0 9842     		cmp	r0, r3
+ 434 00a2 CAD1     		bne	.L25
+ 275:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             }
+ 435              		.loc 1 275 17 is_stmt 1 view .LVU124
+ 275:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             }
+ 436              		.loc 1 275 20 is_stmt 0 view .LVU125
+ 437 00a4 A368     		ldr	r3, [r4, #8]
+ 275:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             }
+ 438              		.loc 1 275 39 view .LVU126
+ 439 00a6 B222     		movs	r2, #178
+ 440 00a8 9A72     		strb	r2, [r3, #10]
+ 441 00aa C6E7     		b	.L25
+ 442              		.cfi_endproc
+ 443              	.LFE195:
+ 445              		.section	.text.highlight_update,"ax",%progbits
+ 446              		.align	1
+ 447              		.syntax unified
+ 448              		.thumb
+ 449              		.thumb_func
+ 450              		.fpu softvfp
+ 452              	highlight_update:
+ 453              	.LVL46:
+ 454              	.LFB199:
+ 344:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 345:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** static void highlight_update(lv_obj_t * obj)
+ 346:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** {
+ 455              		.loc 1 346 1 is_stmt 1 view -0
+ 456              		.cfi_startproc
+ 457              		@ args = 0, pretend = 0, frame = 0
+ 458              		@ frame_needed = 0, uses_anonymous_args = 0
+ 459              		.loc 1 346 1 is_stmt 0 view .LVU128
+ 460 0000 38B5     		push	{r3, r4, r5, lr}
+ 461              	.LCFI2:
+ 462              		.cfi_def_cfa_offset 16
+ 463              		.cfi_offset 3, -16
+ 464              		.cfi_offset 4, -12
+ 465              		.cfi_offset 5, -8
+ 466              		.cfi_offset 14, -4
+ 467 0002 0546     		mov	r5, r0
+ 347:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 468              		.loc 1 347 5 is_stmt 1 view .LVU129
+ 469              	.LVL47:
+ 348:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint16_t i;
+ 470              		.loc 1 348 5 view .LVU130
+ 349:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 350:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     /*Clear all kind of selection*/
+ 351:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_btnmatrix_clear_btn_ctrl_all(obj, LV_CALENDAR_CTRL_TODAY | LV_CALENDAR_CTRL_HIGHLIGHT);
+ 471              		.loc 1 351 5 view .LVU131
+ 472 0004 4FF44041 		mov	r1, #49152
+ 473 0008 FFF7FEFF 		bl	lv_btnmatrix_clear_btn_ctrl_all
+ 474              	.LVL48:
+ 352:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 353:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     if(calendar->highlighted_dates) {
+ 475              		.loc 1 353 5 view .LVU132
+ 476              		.loc 1 353 16 is_stmt 0 view .LVU133
+ 477 000c 2B6C     		ldr	r3, [r5, #64]
+ 478              		.loc 1 353 7 view .LVU134
+ARM GAS  /tmp/ccc3jGzO.s 			page 17
+
+
+ 479 000e 03B3     		cbz	r3, .L31
+ 354:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         for(i = 0; i < calendar->highlighted_dates_num; i++) {
+ 480              		.loc 1 354 15 view .LVU135
+ 481 0010 0024     		movs	r4, #0
+ 482 0012 01E0     		b	.L30
+ 483              	.LVL49:
+ 484              	.L32:
+ 485              		.loc 1 354 57 is_stmt 1 discriminator 2 view .LVU136
+ 486              		.loc 1 354 58 is_stmt 0 discriminator 2 view .LVU137
+ 487 0014 0134     		adds	r4, r4, #1
+ 488              	.LVL50:
+ 489              		.loc 1 354 58 discriminator 2 view .LVU138
+ 490 0016 A4B2     		uxth	r4, r4
+ 491              	.LVL51:
+ 492              	.L30:
+ 493              		.loc 1 354 20 is_stmt 1 discriminator 1 view .LVU139
+ 494              		.loc 1 354 32 is_stmt 0 discriminator 1 view .LVU140
+ 495 0018 B5F84430 		ldrh	r3, [r5, #68]
+ 496              		.loc 1 354 9 discriminator 1 view .LVU141
+ 497 001c A342     		cmp	r3, r4
+ 498 001e 18D9     		bls	.L31
+ 355:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             if(calendar->highlighted_dates[i].year == calendar->today.year && calendar->highlighted
+ 499              		.loc 1 355 13 is_stmt 1 view .LVU142
+ 500              		.loc 1 355 24 is_stmt 0 view .LVU143
+ 501 0020 2B6C     		ldr	r3, [r5, #64]
+ 502              		.loc 1 355 43 view .LVU144
+ 503 0022 03EB8401 		add	r1, r3, r4, lsl #2
+ 504              		.loc 1 355 46 view .LVU145
+ 505 0026 33F82420 		ldrh	r2, [r3, r4, lsl #2]
+ 506              		.loc 1 355 70 view .LVU146
+ 507 002a 2B8F     		ldrh	r3, [r5, #56]
+ 508              		.loc 1 355 15 view .LVU147
+ 509 002c 9A42     		cmp	r2, r3
+ 510 002e F1D1     		bne	.L32
+ 511              		.loc 1 355 109 discriminator 1 view .LVU148
+ 512 0030 91F90220 		ldrsb	r2, [r1, #2]
+ 513              		.loc 1 355 140 discriminator 1 view .LVU149
+ 514 0034 95F93E30 		ldrsb	r3, [r5, #62]
+ 515              		.loc 1 355 76 discriminator 1 view .LVU150
+ 516 0038 9A42     		cmp	r2, r3
+ 517 003a EBD1     		bne	.L32
+ 356:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****                 lv_btnmatrix_set_btn_ctrl(obj, calendar->highlighted_dates[i].day + 7, LV_CALENDAR_
+ 518              		.loc 1 356 17 is_stmt 1 view .LVU151
+ 519              		.loc 1 356 78 is_stmt 0 view .LVU152
+ 520 003c 91F90310 		ldrsb	r1, [r1, #3]
+ 521 0040 89B2     		uxth	r1, r1
+ 522              		.loc 1 356 17 view .LVU153
+ 523 0042 0731     		adds	r1, r1, #7
+ 524 0044 4FF40042 		mov	r2, #32768
+ 525 0048 89B2     		uxth	r1, r1
+ 526 004a 2846     		mov	r0, r5
+ 527 004c FFF7FEFF 		bl	lv_btnmatrix_set_btn_ctrl
+ 528              	.LVL52:
+ 529 0050 E0E7     		b	.L32
+ 530              	.LVL53:
+ 531              	.L31:
+ 357:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             }
+ARM GAS  /tmp/ccc3jGzO.s 			page 18
+
+
+ 358:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 359:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 360:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 361:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     if(calendar->showed_date.year == calendar->today.year && calendar->showed_date.month == calenda
+ 532              		.loc 1 361 5 is_stmt 1 view .LVU154
+ 533              		.loc 1 361 59 is_stmt 0 view .LVU155
+ 534 0052 EB6B     		ldr	r3, [r5, #60]
+ 535 0054 23F07F42 		bic	r2, r3, #-16777216
+ 536 0058 AB6B     		ldr	r3, [r5, #56]
+ 537 005a 23F07F43 		bic	r3, r3, #-16777216
+ 538              		.loc 1 361 7 view .LVU156
+ 539 005e 9A42     		cmp	r2, r3
+ 540 0060 00D0     		beq	.L37
+ 541              	.L29:
+ 362:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         uint8_t day_first = get_day_of_week(calendar->today.year, calendar->today.month, 0);
+ 363:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, calendar->today.day + day_first + 7, LV_CALENDAR_CTRL_TODAY)
+ 364:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 365:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 542              		.loc 1 365 1 view .LVU157
+ 543 0062 38BD     		pop	{r3, r4, r5, pc}
+ 544              	.LVL54:
+ 545              	.L37:
+ 546              	.LBB2:
+ 362:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         uint8_t day_first = get_day_of_week(calendar->today.year, calendar->today.month, 0);
+ 547              		.loc 1 362 9 is_stmt 1 view .LVU158
+ 362:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         uint8_t day_first = get_day_of_week(calendar->today.year, calendar->today.month, 0);
+ 548              		.loc 1 362 29 is_stmt 0 view .LVU159
+ 549 0064 0022     		movs	r2, #0
+ 550 0066 95F93A10 		ldrsb	r1, [r5, #58]
+ 551 006a 288F     		ldrh	r0, [r5, #56]
+ 552 006c FFF7FEFF 		bl	get_day_of_week
+ 553              	.LVL55:
+ 363:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 554              		.loc 1 363 9 is_stmt 1 view .LVU160
+ 363:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 555              		.loc 1 363 55 is_stmt 0 view .LVU161
+ 556 0070 95F93B30 		ldrsb	r3, [r5, #59]
+ 363:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 557              		.loc 1 363 60 view .LVU162
+ 558 0074 1918     		adds	r1, r3, r0
+ 559 0076 89B2     		uxth	r1, r1
+ 363:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 560              		.loc 1 363 9 view .LVU163
+ 561 0078 0731     		adds	r1, r1, #7
+ 562 007a 4FF48042 		mov	r2, #16384
+ 563 007e 89B2     		uxth	r1, r1
+ 564 0080 2846     		mov	r0, r5
+ 565              	.LVL56:
+ 363:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 566              		.loc 1 363 9 view .LVU164
+ 567 0082 FFF7FEFF 		bl	lv_btnmatrix_set_btn_ctrl
+ 568              	.LVL57:
+ 569              	.LBE2:
+ 570              		.loc 1 365 1 view .LVU165
+ 571 0086 ECE7     		b	.L29
+ 572              		.cfi_endproc
+ 573              	.LFE199:
+ARM GAS  /tmp/ccc3jGzO.s 			page 19
+
+
+ 575              		.section	.text.lv_calendar_create,"ax",%progbits
+ 576              		.align	1
+ 577              		.global	lv_calendar_create
+ 578              		.syntax unified
+ 579              		.thumb
+ 580              		.thumb_func
+ 581              		.fpu softvfp
+ 583              	lv_calendar_create:
+ 584              	.LVL58:
+ 585              	.LFB184:
+  58:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     LV_LOG_INFO("begin")
+ 586              		.loc 1 58 1 is_stmt 1 view -0
+ 587              		.cfi_startproc
+ 588              		@ args = 0, pretend = 0, frame = 0
+ 589              		@ frame_needed = 0, uses_anonymous_args = 0
+  58:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     LV_LOG_INFO("begin")
+ 590              		.loc 1 58 1 is_stmt 0 view .LVU167
+ 591 0000 10B5     		push	{r4, lr}
+ 592              	.LCFI3:
+ 593              		.cfi_def_cfa_offset 8
+ 594              		.cfi_offset 4, -8
+ 595              		.cfi_offset 14, -4
+ 596 0002 0146     		mov	r1, r0
+  60:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_class_init_obj(obj);
+ 597              		.loc 1 60 5 is_stmt 1 view .LVU168
+  60:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_class_init_obj(obj);
+ 598              		.loc 1 60 22 is_stmt 0 view .LVU169
+ 599 0004 0348     		ldr	r0, .L40
+ 600              	.LVL59:
+  60:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_class_init_obj(obj);
+ 601              		.loc 1 60 22 view .LVU170
+ 602 0006 FFF7FEFF 		bl	lv_obj_class_create_obj
+ 603              	.LVL60:
+  60:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_class_init_obj(obj);
+ 604              		.loc 1 60 22 view .LVU171
+ 605 000a 0446     		mov	r4, r0
+ 606              	.LVL61:
+  61:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     return obj;
+ 607              		.loc 1 61 5 is_stmt 1 view .LVU172
+ 608 000c FFF7FEFF 		bl	lv_obj_class_init_obj
+ 609              	.LVL62:
+  62:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 610              		.loc 1 62 5 view .LVU173
+  63:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 611              		.loc 1 63 1 is_stmt 0 view .LVU174
+ 612 0010 2046     		mov	r0, r4
+ 613 0012 10BD     		pop	{r4, pc}
+ 614              	.LVL63:
+ 615              	.L41:
+  63:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 616              		.loc 1 63 1 view .LVU175
+ 617              		.align	2
+ 618              	.L40:
+ 619 0014 00000000 		.word	.LANCHOR0
+ 620              		.cfi_endproc
+ 621              	.LFE184:
+ 623              		.section	.text.lv_calendar_set_day_names,"ax",%progbits
+ARM GAS  /tmp/ccc3jGzO.s 			page 20
+
+
+ 624              		.align	1
+ 625              		.global	lv_calendar_set_day_names
+ 626              		.syntax unified
+ 627              		.thumb
+ 628              		.thumb_func
+ 629              		.fpu softvfp
+ 631              	lv_calendar_set_day_names:
+ 632              	.LVL64:
+ 633              	.LFB185:
+  70:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 634              		.loc 1 70 1 is_stmt 1 view -0
+ 635              		.cfi_startproc
+ 636              		@ args = 0, pretend = 0, frame = 0
+ 637              		@ frame_needed = 0, uses_anonymous_args = 0
+ 638              		@ link register save eliminated.
+  71:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint32_t i;
+ 639              		.loc 1 71 5 view .LVU177
+  72:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     for(i = 0; i < 7; i++) {
+ 640              		.loc 1 72 5 view .LVU178
+  73:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         calendar->map[i] = day_names[i];
+ 641              		.loc 1 73 5 view .LVU179
+  73:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         calendar->map[i] = day_names[i];
+ 642              		.loc 1 73 11 is_stmt 0 view .LVU180
+ 643 0000 0023     		movs	r3, #0
+  73:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         calendar->map[i] = day_names[i];
+ 644              		.loc 1 73 5 view .LVU181
+ 645 0002 06E0     		b	.L43
+ 646              	.LVL65:
+ 647              	.L44:
+  74:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 648              		.loc 1 74 9 is_stmt 1 discriminator 3 view .LVU182
+  74:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 649              		.loc 1 74 26 is_stmt 0 discriminator 3 view .LVU183
+ 650 0004 03F11202 		add	r2, r3, #18
+ 651 0008 51F823C0 		ldr	ip, [r1, r3, lsl #2]
+ 652 000c 40F822C0 		str	ip, [r0, r2, lsl #2]
+  73:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         calendar->map[i] = day_names[i];
+ 653              		.loc 1 73 23 is_stmt 1 discriminator 3 view .LVU184
+  73:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         calendar->map[i] = day_names[i];
+ 654              		.loc 1 73 24 is_stmt 0 discriminator 3 view .LVU185
+ 655 0010 0133     		adds	r3, r3, #1
+ 656              	.LVL66:
+ 657              	.L43:
+  73:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         calendar->map[i] = day_names[i];
+ 658              		.loc 1 73 16 is_stmt 1 discriminator 1 view .LVU186
+  73:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         calendar->map[i] = day_names[i];
+ 659              		.loc 1 73 5 is_stmt 0 discriminator 1 view .LVU187
+ 660 0012 062B     		cmp	r3, #6
+ 661 0014 F6D9     		bls	.L44
+  76:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 662              		.loc 1 76 1 view .LVU188
+ 663 0016 7047     		bx	lr
+ 664              		.cfi_endproc
+ 665              	.LFE185:
+ 667              		.section	.text.lv_calendar_set_today_date,"ax",%progbits
+ 668              		.align	1
+ 669              		.global	lv_calendar_set_today_date
+ARM GAS  /tmp/ccc3jGzO.s 			page 21
+
+
+ 670              		.syntax unified
+ 671              		.thumb
+ 672              		.thumb_func
+ 673              		.fpu softvfp
+ 675              	lv_calendar_set_today_date:
+ 676              	.LVL67:
+ 677              	.LFB186:
+  79:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 678              		.loc 1 79 1 is_stmt 1 view -0
+ 679              		.cfi_startproc
+ 680              		@ args = 0, pretend = 0, frame = 0
+ 681              		@ frame_needed = 0, uses_anonymous_args = 0
+  79:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 682              		.loc 1 79 1 is_stmt 0 view .LVU190
+ 683 0000 08B5     		push	{r3, lr}
+ 684              	.LCFI4:
+ 685              		.cfi_def_cfa_offset 8
+ 686              		.cfi_offset 3, -8
+ 687              		.cfi_offset 14, -4
+  80:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.year         = year;
+ 688              		.loc 1 80 5 is_stmt 1 view .LVU191
+ 689              	.LVL68:
+  81:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.month        = month;
+ 690              		.loc 1 81 5 view .LVU192
+  81:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.month        = month;
+ 691              		.loc 1 81 34 is_stmt 0 view .LVU193
+ 692 0002 0187     		strh	r1, [r0, #56]	@ movhi
+  82:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.day          = day;
+ 693              		.loc 1 82 5 is_stmt 1 view .LVU194
+  82:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.day          = day;
+ 694              		.loc 1 82 34 is_stmt 0 view .LVU195
+ 695 0004 80F83A20 		strb	r2, [r0, #58]
+  83:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 696              		.loc 1 83 5 is_stmt 1 view .LVU196
+  83:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 697              		.loc 1 83 34 is_stmt 0 view .LVU197
+ 698 0008 80F83B30 		strb	r3, [r0, #59]
+  85:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 699              		.loc 1 85 5 is_stmt 1 view .LVU198
+ 700 000c FFF7FEFF 		bl	highlight_update
+ 701              	.LVL69:
+  86:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 702              		.loc 1 86 1 is_stmt 0 view .LVU199
+ 703 0010 08BD     		pop	{r3, pc}
+ 704              		.cfi_endproc
+ 705              	.LFE186:
+ 707              		.section	.text.lv_calendar_set_highlighted_dates,"ax",%progbits
+ 708              		.align	1
+ 709              		.global	lv_calendar_set_highlighted_dates
+ 710              		.syntax unified
+ 711              		.thumb
+ 712              		.thumb_func
+ 713              		.fpu softvfp
+ 715              	lv_calendar_set_highlighted_dates:
+ 716              	.LVL70:
+ 717              	.LFB187:
+  89:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     LV_ASSERT_NULL(highlighted);
+ARM GAS  /tmp/ccc3jGzO.s 			page 22
+
+
+ 718              		.loc 1 89 1 is_stmt 1 view -0
+ 719              		.cfi_startproc
+ 720              		@ args = 0, pretend = 0, frame = 0
+ 721              		@ frame_needed = 0, uses_anonymous_args = 0
+  90:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 722              		.loc 1 90 5 view .LVU201
+  90:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 723              		.loc 1 90 5 view .LVU202
+ 724 0000 31B1     		cbz	r1, .L49
+  89:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     LV_ASSERT_NULL(highlighted);
+ 725              		.loc 1 89 1 is_stmt 0 discriminator 2 view .LVU203
+ 726 0002 08B5     		push	{r3, lr}
+ 727              	.LCFI5:
+ 728              		.cfi_def_cfa_offset 8
+ 729              		.cfi_offset 3, -8
+ 730              		.cfi_offset 14, -4
+  90:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 731              		.loc 1 90 5 is_stmt 1 discriminator 2 view .LVU204
+  90:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 732              		.loc 1 90 32 discriminator 2 view .LVU205
+  92:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->highlighted_dates     = highlighted;
+ 733              		.loc 1 92 5 discriminator 2 view .LVU206
+ 734              	.LVL71:
+  93:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->highlighted_dates_num = date_num;
+ 735              		.loc 1 93 5 discriminator 2 view .LVU207
+  93:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->highlighted_dates_num = date_num;
+ 736              		.loc 1 93 37 is_stmt 0 discriminator 2 view .LVU208
+ 737 0004 0164     		str	r1, [r0, #64]
+  94:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 738              		.loc 1 94 5 is_stmt 1 discriminator 2 view .LVU209
+  94:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 739              		.loc 1 94 37 is_stmt 0 discriminator 2 view .LVU210
+ 740 0006 A0F84420 		strh	r2, [r0, #68]	@ movhi
+  96:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 741              		.loc 1 96 5 is_stmt 1 discriminator 2 view .LVU211
+ 742 000a FFF7FEFF 		bl	highlight_update
+ 743              	.LVL72:
+  97:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 744              		.loc 1 97 1 is_stmt 0 discriminator 2 view .LVU212
+ 745 000e 08BD     		pop	{r3, pc}
+ 746              	.LVL73:
+ 747              	.L49:
+ 748              	.LCFI6:
+ 749              		.cfi_def_cfa_offset 0
+ 750              		.cfi_restore 3
+ 751              		.cfi_restore 14
+  90:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 752              		.loc 1 90 5 is_stmt 1 discriminator 1 view .LVU213
+  90:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 753              		.loc 1 90 5 discriminator 1 view .LVU214
+  90:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 754              		.loc 1 90 5 discriminator 1 view .LVU215
+  90:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 755              		.loc 1 90 5 discriminator 1 view .LVU216
+ 756 0010 FEE7     		b	.L49
+ 757              		.cfi_endproc
+ 758              	.LFE187:
+ARM GAS  /tmp/ccc3jGzO.s 			page 23
+
+
+ 760              		.section	.rodata.lv_calendar_set_showed_date.str1.4,"aMS",%progbits,1
+ 761              		.align	2
+ 762              	.LC0:
+ 763 0000 256400   		.ascii	"%d\000"
+ 764              		.section	.text.lv_calendar_set_showed_date,"ax",%progbits
+ 765              		.align	1
+ 766              		.global	lv_calendar_set_showed_date
+ 767              		.syntax unified
+ 768              		.thumb
+ 769              		.thumb_func
+ 770              		.fpu softvfp
+ 772              	lv_calendar_set_showed_date:
+ 773              	.LVL74:
+ 774              	.LFB188:
+ 100:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 775              		.loc 1 100 1 view -0
+ 776              		.cfi_startproc
+ 777              		@ args = 0, pretend = 0, frame = 8
+ 778              		@ frame_needed = 0, uses_anonymous_args = 0
+ 100:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 779              		.loc 1 100 1 is_stmt 0 view .LVU218
+ 780 0000 2DE9F047 		push	{r4, r5, r6, r7, r8, r9, r10, lr}
+ 781              	.LCFI7:
+ 782              		.cfi_def_cfa_offset 32
+ 783              		.cfi_offset 4, -32
+ 784              		.cfi_offset 5, -28
+ 785              		.cfi_offset 6, -24
+ 786              		.cfi_offset 7, -20
+ 787              		.cfi_offset 8, -16
+ 788              		.cfi_offset 9, -12
+ 789              		.cfi_offset 10, -8
+ 790              		.cfi_offset 14, -4
+ 791 0004 82B0     		sub	sp, sp, #8
+ 792              	.LCFI8:
+ 793              		.cfi_def_cfa_offset 40
+ 794 0006 0646     		mov	r6, r0
+ 101:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.year   = year;
+ 795              		.loc 1 101 5 is_stmt 1 view .LVU219
+ 796              	.LVL75:
+ 102:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.month  = month;
+ 797              		.loc 1 102 5 view .LVU220
+ 102:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.month  = month;
+ 798              		.loc 1 102 34 is_stmt 0 view .LVU221
+ 799 0008 8FB2     		uxth	r7, r1
+ 800 000a 8787     		strh	r7, [r0, #60]	@ movhi
+ 103:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.day    = 1;
+ 801              		.loc 1 103 5 is_stmt 1 view .LVU222
+ 103:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.day    = 1;
+ 802              		.loc 1 103 34 is_stmt 0 view .LVU223
+ 803 000c 4FFA82F9 		sxtb	r9, r2
+ 804 0010 80F83E90 		strb	r9, [r0, #62]
+ 104:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 805              		.loc 1 104 5 is_stmt 1 view .LVU224
+ 104:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 806              		.loc 1 104 34 is_stmt 0 view .LVU225
+ 807 0014 0123     		movs	r3, #1
+ 808 0016 80F83F30 		strb	r3, [r0, #63]
+ARM GAS  /tmp/ccc3jGzO.s 			page 24
+
+
+ 106:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     d.year = calendar->showed_date.year;
+ 809              		.loc 1 106 5 is_stmt 1 view .LVU226
+ 107:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     d.month = calendar->showed_date.month;
+ 810              		.loc 1 107 5 view .LVU227
+ 107:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     d.month = calendar->showed_date.month;
+ 811              		.loc 1 107 12 is_stmt 0 view .LVU228
+ 812 001a ADF80470 		strh	r7, [sp, #4]	@ movhi
+ 108:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     d.day = calendar->showed_date.day;
+ 813              		.loc 1 108 5 is_stmt 1 view .LVU229
+ 108:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     d.day = calendar->showed_date.day;
+ 814              		.loc 1 108 13 is_stmt 0 view .LVU230
+ 815 001e 8DF80690 		strb	r9, [sp, #6]
+ 109:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 816              		.loc 1 109 5 is_stmt 1 view .LVU231
+ 109:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 817              		.loc 1 109 11 is_stmt 0 view .LVU232
+ 818 0022 8DF80730 		strb	r3, [sp, #7]
+ 111:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 819              		.loc 1 111 5 is_stmt 1 view .LVU233
+ 114:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     for(i = 0; i < 7; i++) {
+ 820              		.loc 1 114 5 view .LVU234
+ 821 0026 2021     		movs	r1, #32
+ 822              	.LVL76:
+ 114:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     for(i = 0; i < 7; i++) {
+ 823              		.loc 1 114 5 is_stmt 0 view .LVU235
+ 824 0028 FFF7FEFF 		bl	lv_btnmatrix_clear_btn_ctrl_all
+ 825              	.LVL77:
+ 115:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i, LV_BTNMATRIX_CTRL_DISABLED);
+ 826              		.loc 1 115 5 is_stmt 1 view .LVU236
+ 115:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i, LV_BTNMATRIX_CTRL_DISABLED);
+ 827              		.loc 1 115 11 is_stmt 0 view .LVU237
+ 828 002c 0024     		movs	r4, #0
+ 115:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i, LV_BTNMATRIX_CTRL_DISABLED);
+ 829              		.loc 1 115 5 view .LVU238
+ 830 002e 06E0     		b	.L53
+ 831              	.LVL78:
+ 832              	.L54:
+ 116:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 833              		.loc 1 116 9 is_stmt 1 discriminator 3 view .LVU239
+ 834 0030 2022     		movs	r2, #32
+ 835 0032 2146     		mov	r1, r4
+ 836 0034 3046     		mov	r0, r6
+ 837 0036 FFF7FEFF 		bl	lv_btnmatrix_set_btn_ctrl
+ 838              	.LVL79:
+ 115:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i, LV_BTNMATRIX_CTRL_DISABLED);
+ 839              		.loc 1 115 23 discriminator 3 view .LVU240
+ 115:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i, LV_BTNMATRIX_CTRL_DISABLED);
+ 840              		.loc 1 115 24 is_stmt 0 discriminator 3 view .LVU241
+ 841 003a 0134     		adds	r4, r4, #1
+ 842              	.LVL80:
+ 115:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i, LV_BTNMATRIX_CTRL_DISABLED);
+ 843              		.loc 1 115 24 discriminator 3 view .LVU242
+ 844 003c E4B2     		uxtb	r4, r4
+ 845              	.LVL81:
+ 846              	.L53:
+ 115:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i, LV_BTNMATRIX_CTRL_DISABLED);
+ 847              		.loc 1 115 16 is_stmt 1 discriminator 1 view .LVU243
+ARM GAS  /tmp/ccc3jGzO.s 			page 25
+
+
+ 115:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i, LV_BTNMATRIX_CTRL_DISABLED);
+ 848              		.loc 1 115 5 is_stmt 0 discriminator 1 view .LVU244
+ 849 003e 062C     		cmp	r4, #6
+ 850 0040 F6D9     		bls	.L54
+ 119:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t day_first = get_day_of_week(d.year, d.month, 1);
+ 851              		.loc 1 119 5 is_stmt 1 view .LVU245
+ 119:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t day_first = get_day_of_week(d.year, d.month, 1);
+ 852              		.loc 1 119 26 is_stmt 0 view .LVU246
+ 853 0042 4946     		mov	r1, r9
+ 854 0044 3846     		mov	r0, r7
+ 855 0046 FFF7FEFF 		bl	get_month_length
+ 856              	.LVL82:
+ 857 004a 0446     		mov	r4, r0
+ 858              	.LVL83:
+ 120:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t c;
+ 859              		.loc 1 120 5 is_stmt 1 view .LVU247
+ 120:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t c;
+ 860              		.loc 1 120 25 is_stmt 0 view .LVU248
+ 861 004c 0122     		movs	r2, #1
+ 862 004e 4946     		mov	r1, r9
+ 863 0050 3846     		mov	r0, r7
+ 864 0052 FFF7FEFF 		bl	get_day_of_week
+ 865              	.LVL84:
+ 866 0056 8046     		mov	r8, r0
+ 867              	.LVL85:
+ 121:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     for(i = day_first, c = 1; i < act_mo_len + day_first; i++, c++) {
+ 868              		.loc 1 121 5 is_stmt 1 view .LVU249
+ 122:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 869              		.loc 1 122 5 view .LVU250
+ 122:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 870              		.loc 1 122 11 is_stmt 0 view .LVU251
+ 871 0058 0546     		mov	r5, r0
+ 122:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 872              		.loc 1 122 26 view .LVU252
+ 873 005a 4FF0010A 		mov	r10, #1
+ 122:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 874              		.loc 1 122 5 view .LVU253
+ 875 005e 0EE0     		b	.L55
+ 876              	.LVL86:
+ 877              	.L56:
+ 123:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 878              		.loc 1 123 9 is_stmt 1 discriminator 3 view .LVU254
+ 123:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 879              		.loc 1 123 35 is_stmt 0 discriminator 3 view .LVU255
+ 880 0060 05F14A00 		add	r0, r5, #74
+ 123:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 881              		.loc 1 123 9 discriminator 3 view .LVU256
+ 882 0064 5346     		mov	r3, r10
+ 883 0066 284A     		ldr	r2, .L62
+ 884 0068 0421     		movs	r1, #4
+ 885 006a 06EB8000 		add	r0, r6, r0, lsl #2
+ 886 006e FFF7FEFF 		bl	lv_snprintf
+ 887              	.LVL87:
+ 122:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 888              		.loc 1 122 59 is_stmt 1 discriminator 3 view .LVU257
+ 122:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 889              		.loc 1 122 60 is_stmt 0 discriminator 3 view .LVU258
+ARM GAS  /tmp/ccc3jGzO.s 			page 26
+
+
+ 890 0072 0135     		adds	r5, r5, #1
+ 891              	.LVL88:
+ 122:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 892              		.loc 1 122 60 discriminator 3 view .LVU259
+ 893 0074 EDB2     		uxtb	r5, r5
+ 894              	.LVL89:
+ 122:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 895              		.loc 1 122 65 discriminator 3 view .LVU260
+ 896 0076 0AF1010A 		add	r10, r10, #1
+ 897              	.LVL90:
+ 122:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 898              		.loc 1 122 65 discriminator 3 view .LVU261
+ 899 007a 5FFA8AFA 		uxtb	r10, r10
+ 900              	.LVL91:
+ 901              	.L55:
+ 122:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 902              		.loc 1 122 31 is_stmt 1 discriminator 1 view .LVU262
+ 122:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 903              		.loc 1 122 46 is_stmt 0 discriminator 1 view .LVU263
+ 904 007e 04EB0803 		add	r3, r4, r8
+ 122:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 905              		.loc 1 122 5 discriminator 1 view .LVU264
+ 906 0082 9D42     		cmp	r5, r3
+ 907 0084 ECDB     		blt	.L56
+ 126:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     for(i = 0, c = prev_mo_len - day_first + 1; i < day_first; i++, c++) {
+ 908              		.loc 1 126 5 is_stmt 1 view .LVU265
+ 126:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     for(i = 0, c = prev_mo_len - day_first + 1; i < day_first; i++, c++) {
+ 909              		.loc 1 126 27 is_stmt 0 view .LVU266
+ 910 0086 09F1FF31 		add	r1, r9, #-1
+ 911 008a 3846     		mov	r0, r7
+ 912 008c FFF7FEFF 		bl	get_month_length
+ 913              	.LVL92:
+ 127:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 914              		.loc 1 127 5 is_stmt 1 view .LVU267
+ 127:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 915              		.loc 1 127 32 is_stmt 0 view .LVU268
+ 916 0090 A0EB0807 		sub	r7, r0, r8
+ 917 0094 FFB2     		uxtb	r7, r7
+ 127:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 918              		.loc 1 127 18 view .LVU269
+ 919 0096 0137     		adds	r7, r7, #1
+ 920 0098 FFB2     		uxtb	r7, r7
+ 921              	.LVL93:
+ 127:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 922              		.loc 1 127 11 view .LVU270
+ 923 009a 0025     		movs	r5, #0
+ 127:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 924              		.loc 1 127 5 view .LVU271
+ 925 009c 11E0     		b	.L57
+ 926              	.LVL94:
+ 927              	.L58:
+ 128:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i + 7, LV_BTNMATRIX_CTRL_DISABLED);
+ 928              		.loc 1 128 9 is_stmt 1 discriminator 3 view .LVU272
+ 128:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i + 7, LV_BTNMATRIX_CTRL_DISABLED);
+ 929              		.loc 1 128 35 is_stmt 0 discriminator 3 view .LVU273
+ 930 009e 05F14A00 		add	r0, r5, #74
+ 128:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i + 7, LV_BTNMATRIX_CTRL_DISABLED);
+ARM GAS  /tmp/ccc3jGzO.s 			page 27
+
+
+ 931              		.loc 1 128 9 discriminator 3 view .LVU274
+ 932 00a2 3B46     		mov	r3, r7
+ 933 00a4 184A     		ldr	r2, .L62
+ 934 00a6 0421     		movs	r1, #4
+ 935 00a8 06EB8000 		add	r0, r6, r0, lsl #2
+ 936 00ac FFF7FEFF 		bl	lv_snprintf
+ 937              	.LVL95:
+ 129:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 938              		.loc 1 129 9 is_stmt 1 discriminator 3 view .LVU275
+ 939 00b0 2022     		movs	r2, #32
+ 940 00b2 E91D     		adds	r1, r5, #7
+ 941 00b4 3046     		mov	r0, r6
+ 942 00b6 FFF7FEFF 		bl	lv_btnmatrix_set_btn_ctrl
+ 943              	.LVL96:
+ 127:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 944              		.loc 1 127 64 discriminator 3 view .LVU276
+ 127:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 945              		.loc 1 127 65 is_stmt 0 discriminator 3 view .LVU277
+ 946 00ba 0135     		adds	r5, r5, #1
+ 947              	.LVL97:
+ 127:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 948              		.loc 1 127 65 discriminator 3 view .LVU278
+ 949 00bc EDB2     		uxtb	r5, r5
+ 950              	.LVL98:
+ 127:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 951              		.loc 1 127 70 discriminator 3 view .LVU279
+ 952 00be 0137     		adds	r7, r7, #1
+ 953              	.LVL99:
+ 127:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 954              		.loc 1 127 70 discriminator 3 view .LVU280
+ 955 00c0 FFB2     		uxtb	r7, r7
+ 956              	.LVL100:
+ 957              	.L57:
+ 127:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 958              		.loc 1 127 49 is_stmt 1 discriminator 1 view .LVU281
+ 127:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 959              		.loc 1 127 5 is_stmt 0 discriminator 1 view .LVU282
+ 960 00c2 4545     		cmp	r5, r8
+ 961 00c4 EBD3     		bcc	.L58
+ 132:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 962              		.loc 1 132 5 is_stmt 1 view .LVU283
+ 132:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 963              		.loc 1 132 11 is_stmt 0 view .LVU284
+ 964 00c6 4444     		add	r4, r4, r8
+ 965              	.LVL101:
+ 132:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 966              		.loc 1 132 11 view .LVU285
+ 967 00c8 E4B2     		uxtb	r4, r4
+ 968              	.LVL102:
+ 132:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 969              		.loc 1 132 39 view .LVU286
+ 970 00ca 0125     		movs	r5, #1
+ 132:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 971              		.loc 1 132 5 view .LVU287
+ 972 00cc 11E0     		b	.L59
+ 973              	.LVL103:
+ 974              	.L60:
+ARM GAS  /tmp/ccc3jGzO.s 			page 28
+
+
+ 133:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i + 7, LV_BTNMATRIX_CTRL_DISABLED);
+ 975              		.loc 1 133 9 is_stmt 1 discriminator 3 view .LVU288
+ 133:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i + 7, LV_BTNMATRIX_CTRL_DISABLED);
+ 976              		.loc 1 133 35 is_stmt 0 discriminator 3 view .LVU289
+ 977 00ce 04F14A00 		add	r0, r4, #74
+ 133:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_btnmatrix_set_btn_ctrl(obj, i + 7, LV_BTNMATRIX_CTRL_DISABLED);
+ 978              		.loc 1 133 9 discriminator 3 view .LVU290
+ 979 00d2 2B46     		mov	r3, r5
+ 980 00d4 0C4A     		ldr	r2, .L62
+ 981 00d6 0421     		movs	r1, #4
+ 982 00d8 06EB8000 		add	r0, r6, r0, lsl #2
+ 983 00dc FFF7FEFF 		bl	lv_snprintf
+ 984              	.LVL104:
+ 134:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 985              		.loc 1 134 9 is_stmt 1 discriminator 3 view .LVU291
+ 986 00e0 2022     		movs	r2, #32
+ 987 00e2 E11D     		adds	r1, r4, #7
+ 988 00e4 3046     		mov	r0, r6
+ 989 00e6 FFF7FEFF 		bl	lv_btnmatrix_set_btn_ctrl
+ 990              	.LVL105:
+ 132:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 991              		.loc 1 132 55 discriminator 3 view .LVU292
+ 132:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 992              		.loc 1 132 56 is_stmt 0 discriminator 3 view .LVU293
+ 993 00ea 0134     		adds	r4, r4, #1
+ 994              	.LVL106:
+ 132:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 995              		.loc 1 132 56 discriminator 3 view .LVU294
+ 996 00ec E4B2     		uxtb	r4, r4
+ 997              	.LVL107:
+ 132:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 998              		.loc 1 132 61 discriminator 3 view .LVU295
+ 999 00ee 0135     		adds	r5, r5, #1
+ 1000              	.LVL108:
+ 132:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 1001              		.loc 1 132 61 discriminator 3 view .LVU296
+ 1002 00f0 EDB2     		uxtb	r5, r5
+ 1003              	.LVL109:
+ 1004              	.L59:
+ 132:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 1005              		.loc 1 132 44 is_stmt 1 discriminator 1 view .LVU297
+ 132:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         lv_snprintf(calendar->nums[i], sizeof(calendar->nums[0]), "%d", c);
+ 1006              		.loc 1 132 5 is_stmt 0 discriminator 1 view .LVU298
+ 1007 00f2 292C     		cmp	r4, #41
+ 1008 00f4 EBD9     		bls	.L60
+ 137:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_obj_invalidate(obj);
+ 1009              		.loc 1 137 5 is_stmt 1 view .LVU299
+ 1010 00f6 3046     		mov	r0, r6
+ 1011 00f8 FFF7FEFF 		bl	highlight_update
+ 1012              	.LVL110:
+ 138:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 1013              		.loc 1 138 5 view .LVU300
+ 1014 00fc 3046     		mov	r0, r6
+ 1015 00fe FFF7FEFF 		bl	lv_obj_invalidate
+ 1016              	.LVL111:
+ 139:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1017              		.loc 1 139 1 is_stmt 0 view .LVU301
+ARM GAS  /tmp/ccc3jGzO.s 			page 29
+
+
+ 1018 0102 02B0     		add	sp, sp, #8
+ 1019              	.LCFI9:
+ 1020              		.cfi_def_cfa_offset 32
+ 1021              		@ sp needed
+ 1022 0104 BDE8F087 		pop	{r4, r5, r6, r7, r8, r9, r10, pc}
+ 1023              	.LVL112:
+ 1024              	.L63:
+ 139:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1025              		.loc 1 139 1 view .LVU302
+ 1026              		.align	2
+ 1027              	.L62:
+ 1028 0108 00000000 		.word	.LC0
+ 1029              		.cfi_endproc
+ 1030              	.LFE188:
+ 1032              		.section	.rodata.lv_calendar_constructor.str1.4,"aMS",%progbits,1
+ 1033              		.align	2
+ 1034              	.LC1:
+ 1035 0000 0A00     		.ascii	"\012\000"
+ 1036 0002 0000     		.align	2
+ 1037              	.LC2:
+ 1038 0004 00       		.ascii	"\000"
+ 1039              		.section	.text.lv_calendar_constructor,"ax",%progbits
+ 1040              		.align	1
+ 1041              		.syntax unified
+ 1042              		.thumb
+ 1043              		.thumb_func
+ 1044              		.fpu softvfp
+ 1046              	lv_calendar_constructor:
+ 1047              	.LVL113:
+ 1048              	.LFB194:
+ 212:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     LV_UNUSED(class_p);
+ 1049              		.loc 1 212 1 is_stmt 1 view -0
+ 1050              		.cfi_startproc
+ 1051              		@ args = 0, pretend = 0, frame = 0
+ 1052              		@ frame_needed = 0, uses_anonymous_args = 0
+ 212:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     LV_UNUSED(class_p);
+ 1053              		.loc 1 212 1 is_stmt 0 view .LVU304
+ 1054 0000 38B5     		push	{r3, r4, r5, lr}
+ 1055              	.LCFI10:
+ 1056              		.cfi_def_cfa_offset 16
+ 1057              		.cfi_offset 3, -16
+ 1058              		.cfi_offset 4, -12
+ 1059              		.cfi_offset 5, -8
+ 1060              		.cfi_offset 14, -4
+ 1061 0002 0C46     		mov	r4, r1
+ 213:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 1062              		.loc 1 213 5 is_stmt 1 view .LVU305
+ 214:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1063              		.loc 1 214 5 view .LVU306
+ 1064              	.LVL114:
+ 217:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.month = 1;
+ 1065              		.loc 1 217 5 view .LVU307
+ 217:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.month = 1;
+ 1066              		.loc 1 217 27 is_stmt 0 view .LVU308
+ 1067 0004 40F2E472 		movw	r2, #2020
+ 1068 0008 0A87     		strh	r2, [r1, #56]	@ movhi
+ 218:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.day   = 1;
+ARM GAS  /tmp/ccc3jGzO.s 			page 30
+
+
+ 1069              		.loc 1 218 5 is_stmt 1 view .LVU309
+ 218:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->today.day   = 1;
+ 1070              		.loc 1 218 27 is_stmt 0 view .LVU310
+ 1071 000a 0123     		movs	r3, #1
+ 1072 000c 81F83A30 		strb	r3, [r1, #58]
+ 219:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1073              		.loc 1 219 5 is_stmt 1 view .LVU311
+ 219:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1074              		.loc 1 219 27 is_stmt 0 view .LVU312
+ 1075 0010 81F83B30 		strb	r3, [r1, #59]
+ 221:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.month = 1;
+ 1076              		.loc 1 221 5 is_stmt 1 view .LVU313
+ 221:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.month = 1;
+ 1077              		.loc 1 221 33 is_stmt 0 view .LVU314
+ 1078 0014 8A87     		strh	r2, [r1, #60]	@ movhi
+ 222:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.day   = 1;
+ 1079              		.loc 1 222 5 is_stmt 1 view .LVU315
+ 222:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->showed_date.day   = 1;
+ 1080              		.loc 1 222 33 is_stmt 0 view .LVU316
+ 1081 0016 81F83E30 		strb	r3, [r1, #62]
+ 223:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1082              		.loc 1 223 5 is_stmt 1 view .LVU317
+ 223:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1083              		.loc 1 223 33 is_stmt 0 view .LVU318
+ 1084 001a 81F83F30 		strb	r3, [r1, #63]
+ 225:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->highlighted_dates_num  = 0;
+ 1085              		.loc 1 225 5 is_stmt 1 view .LVU319
+ 225:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     calendar->highlighted_dates_num  = 0;
+ 1086              		.loc 1 225 38 is_stmt 0 view .LVU320
+ 1087 001e 0025     		movs	r5, #0
+ 1088 0020 0D64     		str	r5, [r1, #64]
+ 226:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1089              		.loc 1 226 5 is_stmt 1 view .LVU321
+ 226:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1090              		.loc 1 226 38 is_stmt 0 view .LVU322
+ 1091 0022 A1F84450 		strh	r5, [r1, #68]	@ movhi
+ 228:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t i;
+ 1092              		.loc 1 228 5 is_stmt 1 view .LVU323
+ 1093 0026 A821     		movs	r1, #168
+ 1094              	.LVL115:
+ 228:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t i;
+ 1095              		.loc 1 228 5 is_stmt 0 view .LVU324
+ 1096 0028 04F59470 		add	r0, r4, #296
+ 1097              	.LVL116:
+ 228:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t i;
+ 1098              		.loc 1 228 5 view .LVU325
+ 1099 002c FFF7FEFF 		bl	lv_memset_00
+ 1100              	.LVL117:
+ 229:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint8_t j = 0;
+ 1101              		.loc 1 229 5 is_stmt 1 view .LVU326
+ 230:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     for(i = 0; i < 8 * 7; i++) {
+ 1102              		.loc 1 230 5 view .LVU327
+ 231:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         /*Every 8th string is "\n"*/
+ 1103              		.loc 1 231 5 view .LVU328
+ 230:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     for(i = 0; i < 8 * 7; i++) {
+ 1104              		.loc 1 230 13 is_stmt 0 view .LVU329
+ 1105 0030 2846     		mov	r0, r5
+ARM GAS  /tmp/ccc3jGzO.s 			page 31
+
+
+ 231:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         /*Every 8th string is "\n"*/
+ 1106              		.loc 1 231 11 view .LVU330
+ 1107 0032 2B46     		mov	r3, r5
+ 231:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         /*Every 8th string is "\n"*/
+ 1108              		.loc 1 231 5 view .LVU331
+ 1109 0034 10E0     		b	.L65
+ 1110              	.LVL118:
+ 1111              	.L66:
+ 235:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             calendar->map[i] = day_names_def[i];
+ 1112              		.loc 1 235 16 is_stmt 1 view .LVU332
+ 235:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             calendar->map[i] = day_names_def[i];
+ 1113              		.loc 1 235 18 is_stmt 0 view .LVU333
+ 1114 0036 072B     		cmp	r3, #7
+ 1115 0038 1CD9     		bls	.L71
+ 238:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             calendar->map[i] = calendar->nums[j];
+ 1116              		.loc 1 238 13 is_stmt 1 view .LVU334
+ 238:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             calendar->map[i] = calendar->nums[j];
+ 1117              		.loc 1 238 34 is_stmt 0 view .LVU335
+ 1118 003a 00F14A02 		add	r2, r0, #74
+ 1119 003e 7821     		movs	r1, #120
+ 1120 0040 04F82210 		strb	r1, [r4, r2, lsl #2]
+ 239:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             j++;
+ 1121              		.loc 1 239 13 is_stmt 1 view .LVU336
+ 239:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             j++;
+ 1122              		.loc 1 239 32 is_stmt 0 view .LVU337
+ 1123 0044 04EB8202 		add	r2, r4, r2, lsl #2
+ 239:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             j++;
+ 1124              		.loc 1 239 30 view .LVU338
+ 1125 0048 03F11201 		add	r1, r3, #18
+ 1126 004c 44F82120 		str	r2, [r4, r1, lsl #2]
+ 240:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 1127              		.loc 1 240 13 is_stmt 1 view .LVU339
+ 240:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 1128              		.loc 1 240 14 is_stmt 0 view .LVU340
+ 1129 0050 0130     		adds	r0, r0, #1
+ 1130              	.LVL119:
+ 240:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         }
+ 1131              		.loc 1 240 14 view .LVU341
+ 1132 0052 C0B2     		uxtb	r0, r0
+ 1133              	.LVL120:
+ 1134              	.L67:
+ 231:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         /*Every 8th string is "\n"*/
+ 1135              		.loc 1 231 27 is_stmt 1 discriminator 2 view .LVU342
+ 231:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         /*Every 8th string is "\n"*/
+ 1136              		.loc 1 231 28 is_stmt 0 discriminator 2 view .LVU343
+ 1137 0054 0133     		adds	r3, r3, #1
+ 1138              	.LVL121:
+ 231:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         /*Every 8th string is "\n"*/
+ 1139              		.loc 1 231 28 discriminator 2 view .LVU344
+ 1140 0056 DBB2     		uxtb	r3, r3
+ 1141              	.LVL122:
+ 1142              	.L65:
+ 231:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         /*Every 8th string is "\n"*/
+ 1143              		.loc 1 231 16 is_stmt 1 discriminator 1 view .LVU345
+ 231:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         /*Every 8th string is "\n"*/
+ 1144              		.loc 1 231 5 is_stmt 0 discriminator 1 view .LVU346
+ 1145 0058 372B     		cmp	r3, #55
+ARM GAS  /tmp/ccc3jGzO.s 			page 32
+
+
+ 1146 005a 13D8     		bhi	.L72
+ 233:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             calendar->map[i] = "\n";
+ 1147              		.loc 1 233 9 is_stmt 1 view .LVU347
+ 233:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             calendar->map[i] = "\n";
+ 1148              		.loc 1 233 11 is_stmt 0 view .LVU348
+ 1149 005c 002B     		cmp	r3, #0
+ 1150 005e EAD0     		beq	.L66
+ 233:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             calendar->map[i] = "\n";
+ 1151              		.loc 1 233 25 discriminator 1 view .LVU349
+ 1152 0060 5A1C     		adds	r2, r3, #1
+ 233:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****             calendar->map[i] = "\n";
+ 1153              		.loc 1 233 19 discriminator 1 view .LVU350
+ 1154 0062 12F0070F 		tst	r2, #7
+ 1155 0066 E6D1     		bne	.L66
+ 234:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         } else if(i < 8){
+ 1156              		.loc 1 234 13 is_stmt 1 view .LVU351
+ 234:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         } else if(i < 8){
+ 1157              		.loc 1 234 30 is_stmt 0 view .LVU352
+ 1158 0068 03F11202 		add	r2, r3, #18
+ 1159 006c 1649     		ldr	r1, .L73
+ 1160 006e 44F82210 		str	r1, [r4, r2, lsl #2]
+ 1161 0072 EFE7     		b	.L67
+ 1162              	.L71:
+ 236:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         } else {
+ 1163              		.loc 1 236 13 is_stmt 1 view .LVU353
+ 236:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         } else {
+ 1164              		.loc 1 236 45 is_stmt 0 view .LVU354
+ 1165 0074 154A     		ldr	r2, .L73+4
+ 1166 0076 52F82310 		ldr	r1, [r2, r3, lsl #2]
+ 236:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         } else {
+ 1167              		.loc 1 236 30 view .LVU355
+ 1168 007a 03F11202 		add	r2, r3, #18
+ 1169 007e 44F82210 		str	r1, [r4, r2, lsl #2]
+ 1170 0082 E7E7     		b	.L67
+ 1171              	.L72:
+ 243:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1172              		.loc 1 243 5 is_stmt 1 view .LVU356
+ 243:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1173              		.loc 1 243 30 is_stmt 0 view .LVU357
+ 1174 0084 124B     		ldr	r3, .L73+8
+ 1175              	.LVL123:
+ 243:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1176              		.loc 1 243 30 view .LVU358
+ 1177 0086 C4F82431 		str	r3, [r4, #292]
+ 245:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_btnmatrix_set_btn_ctrl_all(obj, LV_BTNMATRIX_CTRL_CLICK_TRIG | LV_BTNMATRIX_CTRL_NO_REPEAT);
+ 1178              		.loc 1 245 5 is_stmt 1 view .LVU359
+ 1179 008a 04F14801 		add	r1, r4, #72
+ 1180 008e 2046     		mov	r0, r4
+ 1181              	.LVL124:
+ 245:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_btnmatrix_set_btn_ctrl_all(obj, LV_BTNMATRIX_CTRL_CLICK_TRIG | LV_BTNMATRIX_CTRL_NO_REPEAT);
+ 1182              		.loc 1 245 5 is_stmt 0 view .LVU360
+ 1183 0090 FFF7FEFF 		bl	lv_btnmatrix_set_map
+ 1184              	.LVL125:
+ 246:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1185              		.loc 1 246 5 is_stmt 1 view .LVU361
+ 1186 0094 4FF48871 		mov	r1, #272
+ 1187 0098 2046     		mov	r0, r4
+ARM GAS  /tmp/ccc3jGzO.s 			page 33
+
+
+ 1188 009a FFF7FEFF 		bl	lv_btnmatrix_set_btn_ctrl_all
+ 1189              	.LVL126:
+ 249:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_set_today_date(obj, calendar->today.year, calendar->today.month, calendar->today.da
+ 1190              		.loc 1 249 5 view .LVU362
+ 1191 009e 94F93E20 		ldrsb	r2, [r4, #62]
+ 1192 00a2 A18F     		ldrh	r1, [r4, #60]
+ 1193 00a4 2046     		mov	r0, r4
+ 1194 00a6 FFF7FEFF 		bl	lv_calendar_set_showed_date
+ 1195              	.LVL127:
+ 250:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1196              		.loc 1 250 5 view .LVU363
+ 1197 00aa 94F93B30 		ldrsb	r3, [r4, #59]
+ 1198 00ae 94F93A20 		ldrsb	r2, [r4, #58]
+ 1199 00b2 218F     		ldrh	r1, [r4, #56]
+ 1200 00b4 2046     		mov	r0, r4
+ 1201 00b6 FFF7FEFF 		bl	lv_calendar_set_today_date
+ 1202              	.LVL128:
+ 252:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 1203              		.loc 1 252 5 view .LVU364
+ 1204 00ba 0023     		movs	r3, #0
+ 1205 00bc 1A22     		movs	r2, #26
+ 1206 00be 0549     		ldr	r1, .L73+12
+ 1207 00c0 2046     		mov	r0, r4
+ 1208 00c2 FFF7FEFF 		bl	lv_obj_add_event_cb
+ 1209              	.LVL129:
+ 253:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1210              		.loc 1 253 1 is_stmt 0 view .LVU365
+ 1211 00c6 38BD     		pop	{r3, r4, r5, pc}
+ 1212              	.LVL130:
+ 1213              	.L74:
+ 253:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1214              		.loc 1 253 1 view .LVU366
+ 1215              		.align	2
+ 1216              	.L73:
+ 1217 00c8 00000000 		.word	.LC1
+ 1218 00cc 00000000 		.word	.LANCHOR1
+ 1219 00d0 04000000 		.word	.LC2
+ 1220 00d4 00000000 		.word	draw_part_begin_event_cb
+ 1221              		.cfi_endproc
+ 1222              	.LFE194:
+ 1224              		.section	.text.lv_calendar_get_today_date,"ax",%progbits
+ 1225              		.align	1
+ 1226              		.global	lv_calendar_get_today_date
+ 1227              		.syntax unified
+ 1228              		.thumb
+ 1229              		.thumb_func
+ 1230              		.fpu softvfp
+ 1232              	lv_calendar_get_today_date:
+ 1233              	.LVL131:
+ 1234              	.LFB189:
+ 151:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     const lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 1235              		.loc 1 151 1 is_stmt 1 view -0
+ 1236              		.cfi_startproc
+ 1237              		@ args = 0, pretend = 0, frame = 0
+ 1238              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1239              		@ link register save eliminated.
+ 152:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     return &calendar->today;
+ARM GAS  /tmp/ccc3jGzO.s 			page 34
+
+
+ 1240              		.loc 1 152 5 view .LVU368
+ 153:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 1241              		.loc 1 153 5 view .LVU369
+ 154:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1242              		.loc 1 154 1 is_stmt 0 view .LVU370
+ 1243 0000 3830     		adds	r0, r0, #56
+ 1244              	.LVL132:
+ 154:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1245              		.loc 1 154 1 view .LVU371
+ 1246 0002 7047     		bx	lr
+ 1247              		.cfi_endproc
+ 1248              	.LFE189:
+ 1250              		.section	.text.lv_calendar_get_showed_date,"ax",%progbits
+ 1251              		.align	1
+ 1252              		.global	lv_calendar_get_showed_date
+ 1253              		.syntax unified
+ 1254              		.thumb
+ 1255              		.thumb_func
+ 1256              		.fpu softvfp
+ 1258              	lv_calendar_get_showed_date:
+ 1259              	.LVL133:
+ 1260              	.LFB190:
+ 162:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     const lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 1261              		.loc 1 162 1 is_stmt 1 view -0
+ 1262              		.cfi_startproc
+ 1263              		@ args = 0, pretend = 0, frame = 0
+ 1264              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1265              		@ link register save eliminated.
+ 163:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     return &calendar->showed_date;
+ 1266              		.loc 1 163 5 view .LVU373
+ 164:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 1267              		.loc 1 164 5 view .LVU374
+ 165:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1268              		.loc 1 165 1 is_stmt 0 view .LVU375
+ 1269 0000 3C30     		adds	r0, r0, #60
+ 1270              	.LVL134:
+ 165:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1271              		.loc 1 165 1 view .LVU376
+ 1272 0002 7047     		bx	lr
+ 1273              		.cfi_endproc
+ 1274              	.LFE190:
+ 1276              		.section	.text.lv_calendar_get_highlighted_dates,"ax",%progbits
+ 1277              		.align	1
+ 1278              		.global	lv_calendar_get_highlighted_dates
+ 1279              		.syntax unified
+ 1280              		.thumb
+ 1281              		.thumb_func
+ 1282              		.fpu softvfp
+ 1284              	lv_calendar_get_highlighted_dates:
+ 1285              	.LVL135:
+ 1286              	.LFB191:
+ 173:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 1287              		.loc 1 173 1 is_stmt 1 view -0
+ 1288              		.cfi_startproc
+ 1289              		@ args = 0, pretend = 0, frame = 0
+ 1290              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1291              		@ link register save eliminated.
+ARM GAS  /tmp/ccc3jGzO.s 			page 35
+
+
+ 174:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     return calendar->highlighted_dates;
+ 1292              		.loc 1 174 5 view .LVU378
+ 175:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 1293              		.loc 1 175 5 view .LVU379
+ 176:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1294              		.loc 1 176 1 is_stmt 0 view .LVU380
+ 1295 0000 006C     		ldr	r0, [r0, #64]
+ 1296              	.LVL136:
+ 176:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1297              		.loc 1 176 1 view .LVU381
+ 1298 0002 7047     		bx	lr
+ 1299              		.cfi_endproc
+ 1300              	.LFE191:
+ 1302              		.section	.text.lv_calendar_get_highlighted_dates_num,"ax",%progbits
+ 1303              		.align	1
+ 1304              		.global	lv_calendar_get_highlighted_dates_num
+ 1305              		.syntax unified
+ 1306              		.thumb
+ 1307              		.thumb_func
+ 1308              		.fpu softvfp
+ 1310              	lv_calendar_get_highlighted_dates_num:
+ 1311              	.LVL137:
+ 1312              	.LFB192:
+ 179:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 1313              		.loc 1 179 1 is_stmt 1 view -0
+ 1314              		.cfi_startproc
+ 1315              		@ args = 0, pretend = 0, frame = 0
+ 1316              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1317              		@ link register save eliminated.
+ 180:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     return calendar->highlighted_dates_num;
+ 1318              		.loc 1 180 5 view .LVU383
+ 181:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 1319              		.loc 1 181 5 view .LVU384
+ 182:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1320              		.loc 1 182 1 is_stmt 0 view .LVU385
+ 1321 0000 B0F84400 		ldrh	r0, [r0, #68]
+ 1322              	.LVL138:
+ 182:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1323              		.loc 1 182 1 view .LVU386
+ 1324 0004 7047     		bx	lr
+ 1325              		.cfi_endproc
+ 1326              	.LFE192:
+ 1328              		.section	.text.lv_calendar_get_pressed_date,"ax",%progbits
+ 1329              		.align	1
+ 1330              		.global	lv_calendar_get_pressed_date
+ 1331              		.syntax unified
+ 1332              		.thumb
+ 1333              		.thumb_func
+ 1334              		.fpu softvfp
+ 1336              	lv_calendar_get_pressed_date:
+ 1337              	.LVL139:
+ 1338              	.LFB193:
+ 185:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 1339              		.loc 1 185 1 is_stmt 1 view -0
+ 1340              		.cfi_startproc
+ 1341              		@ args = 0, pretend = 0, frame = 0
+ 1342              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  /tmp/ccc3jGzO.s 			page 36
+
+
+ 185:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     lv_calendar_t * calendar = (lv_calendar_t *)obj;
+ 1343              		.loc 1 185 1 is_stmt 0 view .LVU388
+ 1344 0000 38B5     		push	{r3, r4, r5, lr}
+ 1345              	.LCFI11:
+ 1346              		.cfi_def_cfa_offset 16
+ 1347              		.cfi_offset 3, -16
+ 1348              		.cfi_offset 4, -12
+ 1349              		.cfi_offset 5, -8
+ 1350              		.cfi_offset 14, -4
+ 1351 0002 0546     		mov	r5, r0
+ 1352 0004 0C46     		mov	r4, r1
+ 186:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     uint16_t d = lv_btnmatrix_get_selected_btn(obj);
+ 1353              		.loc 1 186 5 is_stmt 1 view .LVU389
+ 1354              	.LVL140:
+ 187:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     if(d == LV_BTNMATRIX_BTN_NONE) {
+ 1355              		.loc 1 187 5 view .LVU390
+ 187:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     if(d == LV_BTNMATRIX_BTN_NONE) {
+ 1356              		.loc 1 187 18 is_stmt 0 view .LVU391
+ 1357 0006 FFF7FEFF 		bl	lv_btnmatrix_get_selected_btn
+ 1358              	.LVL141:
+ 188:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         date->year = 0;
+ 1359              		.loc 1 188 5 is_stmt 1 view .LVU392
+ 188:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         date->year = 0;
+ 1360              		.loc 1 188 7 is_stmt 0 view .LVU393
+ 1361 000a 4FF6FF73 		movw	r3, #65535
+ 1362 000e 9842     		cmp	r0, r3
+ 1363 0010 12D0     		beq	.L85
+ 195:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1364              		.loc 1 195 5 is_stmt 1 view .LVU394
+ 195:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1365              		.loc 1 195 24 is_stmt 0 view .LVU395
+ 1366 0012 2846     		mov	r0, r5
+ 1367              	.LVL142:
+ 195:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1368              		.loc 1 195 24 view .LVU396
+ 1369 0014 FFF7FEFF 		bl	lv_btnmatrix_get_selected_btn
+ 1370              	.LVL143:
+ 1371 0018 0146     		mov	r1, r0
+ 1372 001a 2846     		mov	r0, r5
+ 1373 001c FFF7FEFF 		bl	lv_btnmatrix_get_btn_text
+ 1374              	.LVL144:
+ 197:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     else date->day = (txt[0] - '0') * 10 + (txt[1] - '0');
+ 1375              		.loc 1 197 5 is_stmt 1 view .LVU397
+ 197:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     else date->day = (txt[0] - '0') * 10 + (txt[1] - '0');
+ 1376              		.loc 1 197 11 is_stmt 0 view .LVU398
+ 1377 0020 4378     		ldrb	r3, [r0, #1]	@ zero_extendqisi2
+ 197:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     else date->day = (txt[0] - '0') * 10 + (txt[1] - '0');
+ 1378              		.loc 1 197 7 view .LVU399
+ 1379 0022 73B9     		cbnz	r3, .L82
+ 197:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     else date->day = (txt[0] - '0') * 10 + (txt[1] - '0');
+ 1380              		.loc 1 197 21 is_stmt 1 discriminator 1 view .LVU400
+ 197:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     else date->day = (txt[0] - '0') * 10 + (txt[1] - '0');
+ 1381              		.loc 1 197 36 is_stmt 0 discriminator 1 view .LVU401
+ 1382 0024 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ 197:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     else date->day = (txt[0] - '0') * 10 + (txt[1] - '0');
+ 1383              		.loc 1 197 40 discriminator 1 view .LVU402
+ 1384 0026 303B     		subs	r3, r3, #48
+ARM GAS  /tmp/ccc3jGzO.s 			page 37
+
+
+ 197:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     else date->day = (txt[0] - '0') * 10 + (txt[1] - '0');
+ 1385              		.loc 1 197 31 discriminator 1 view .LVU403
+ 1386 0028 E370     		strb	r3, [r4, #3]
+ 1387              	.L83:
+ 200:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     date->month = calendar->showed_date.month;
+ 1388              		.loc 1 200 5 is_stmt 1 view .LVU404
+ 200:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     date->month = calendar->showed_date.month;
+ 1389              		.loc 1 200 39 is_stmt 0 view .LVU405
+ 1390 002a AB8F     		ldrh	r3, [r5, #60]
+ 200:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     date->month = calendar->showed_date.month;
+ 1391              		.loc 1 200 16 view .LVU406
+ 1392 002c 2380     		strh	r3, [r4]	@ movhi
+ 201:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1393              		.loc 1 201 5 is_stmt 1 view .LVU407
+ 201:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1394              		.loc 1 201 40 is_stmt 0 view .LVU408
+ 1395 002e 95F93E30 		ldrsb	r3, [r5, #62]
+ 201:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1396              		.loc 1 201 17 view .LVU409
+ 1397 0032 A370     		strb	r3, [r4, #2]
+ 203:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 1398              		.loc 1 203 5 is_stmt 1 view .LVU410
+ 203:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** }
+ 1399              		.loc 1 203 12 is_stmt 0 view .LVU411
+ 1400 0034 0120     		movs	r0, #1
+ 1401              	.LVL145:
+ 1402              	.L81:
+ 204:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1403              		.loc 1 204 1 view .LVU412
+ 1404 0036 38BD     		pop	{r3, r4, r5, pc}
+ 1405              	.LVL146:
+ 1406              	.L85:
+ 189:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         date->month = 0;
+ 1407              		.loc 1 189 9 is_stmt 1 view .LVU413
+ 189:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         date->month = 0;
+ 1408              		.loc 1 189 20 is_stmt 0 view .LVU414
+ 1409 0038 0020     		movs	r0, #0
+ 1410              	.LVL147:
+ 189:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         date->month = 0;
+ 1411              		.loc 1 189 20 view .LVU415
+ 1412 003a 2080     		strh	r0, [r4]	@ movhi
+ 190:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         date->day = 0;
+ 1413              		.loc 1 190 9 is_stmt 1 view .LVU416
+ 190:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         date->day = 0;
+ 1414              		.loc 1 190 21 is_stmt 0 view .LVU417
+ 1415 003c A070     		strb	r0, [r4, #2]
+ 191:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         return LV_RES_INV;
+ 1416              		.loc 1 191 9 is_stmt 1 view .LVU418
+ 191:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****         return LV_RES_INV;
+ 1417              		.loc 1 191 19 is_stmt 0 view .LVU419
+ 1418 003e E070     		strb	r0, [r4, #3]
+ 192:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 1419              		.loc 1 192 9 is_stmt 1 view .LVU420
+ 192:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c ****     }
+ 1420              		.loc 1 192 16 is_stmt 0 view .LVU421
+ 1421 0040 F9E7     		b	.L81
+ 1422              	.LVL148:
+ARM GAS  /tmp/ccc3jGzO.s 			page 38
+
+
+ 1423              	.L82:
+ 198:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1424              		.loc 1 198 10 is_stmt 1 view .LVU422
+ 198:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1425              		.loc 1 198 26 is_stmt 0 view .LVU423
+ 1426 0042 0278     		ldrb	r2, [r0]	@ zero_extendqisi2
+ 198:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1427              		.loc 1 198 42 view .LVU424
+ 1428 0044 303A     		subs	r2, r2, #48
+ 1429 0046 02EB8202 		add	r2, r2, r2, lsl #2
+ 1430 004a 03EB4203 		add	r3, r3, r2, lsl #1
+ 1431 004e 303B     		subs	r3, r3, #48
+ 198:Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.c **** 
+ 1432              		.loc 1 198 20 view .LVU425
+ 1433 0050 E370     		strb	r3, [r4, #3]
+ 1434 0052 EAE7     		b	.L83
+ 1435              		.cfi_endproc
+ 1436              	.LFE193:
+ 1438              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 1439              		.align	2
+ 1440              	.LC3:
+ 1441 0000 537500   		.ascii	"Su\000"
+ 1442 0003 00       		.align	2
+ 1443              	.LC4:
+ 1444 0004 4D6F00   		.ascii	"Mo\000"
+ 1445 0007 00       		.align	2
+ 1446              	.LC5:
+ 1447 0008 547500   		.ascii	"Tu\000"
+ 1448 000b 00       		.align	2
+ 1449              	.LC6:
+ 1450 000c 576500   		.ascii	"We\000"
+ 1451 000f 00       		.align	2
+ 1452              	.LC7:
+ 1453 0010 546800   		.ascii	"Th\000"
+ 1454 0013 00       		.align	2
+ 1455              	.LC8:
+ 1456 0014 467200   		.ascii	"Fr\000"
+ 1457 0017 00       		.align	2
+ 1458              	.LC9:
+ 1459 0018 536100   		.ascii	"Sa\000"
+ 1460              		.global	lv_calendar_class
+ 1461              		.section	.rodata.day_names_def,"a"
+ 1462              		.align	2
+ 1463              		.set	.LANCHOR1,. + 0
+ 1466              	day_names_def:
+ 1467 0000 00000000 		.word	.LC3
+ 1468 0004 04000000 		.word	.LC4
+ 1469 0008 08000000 		.word	.LC5
+ 1470 000c 0C000000 		.word	.LC6
+ 1471 0010 10000000 		.word	.LC7
+ 1472 0014 14000000 		.word	.LC8
+ 1473 0018 18000000 		.word	.LC9
+ 1474              		.section	.rodata.lv_calendar_class,"a"
+ 1475              		.align	2
+ 1476              		.set	.LANCHOR0,. + 0
+ 1479              	lv_calendar_class:
+ 1480 0000 00000000 		.word	lv_btnmatrix_class
+ARM GAS  /tmp/ccc3jGzO.s 			page 39
+
+
+ 1481 0004 00000000 		.word	lv_calendar_constructor
+ 1482 0008 00000000 		.space	12
+ 1482      00000000 
+ 1482      00000000 
+ 1483 0014 C300     		.short	195
+ 1484 0016 C300     		.short	195
+ 1485 0018 04       		.byte	4
+ 1486 0019 1D       		.byte	29
+ 1487 001a 00       		.byte	0
+ 1488 001b 00       		.space	1
+ 1489              		.text
+ 1490              	.Letext0:
+ 1491              		.file 2 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 1492              		.file 3 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ 1493              		.file 4 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../misc/../font/../m
+ 1494              		.file 5 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../misc/../font/lv_f
+ 1495              		.file 6 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../misc/lv_types.h"
+ 1496              		.file 7 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../misc/lv_color.h"
+ 1497              		.file 8 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../misc/lv_txt.h"
+ 1498              		.file 9 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../misc/lv_bidi.h"
+ 1499              		.file 10 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../misc/lv_style.h"
+ 1500              		.file 11 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../hal/../misc/lv_l
+ 1501              		.file 12 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/lv_obj.h"
+ 1502              		.file 13 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/lv_group.h"
+ 1503              		.file 14 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/lv_obj_scroll.h"
+ 1504              		.file 15 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/lv_obj_style.h"
+ 1505              		.file 16 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../draw/lv_draw_rec
+ 1506              		.file 17 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../draw/lv_draw_lab
+ 1507              		.file 18 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../draw/lv_draw_img
+ 1508              		.file 19 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../draw/lv_draw_lin
+ 1509              		.file 20 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../draw/lv_draw_arc
+ 1510              		.file 21 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/lv_obj_draw.h"
+ 1511              		.file 22 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/lv_obj_class.h"
+ 1512              		.file 23 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/lv_event.h"
+ 1513              		.file 24 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/lv_btnmatrix.h"
+ 1514              		.file 25 "Middlewares/lvgl/src/extra/widgets/calendar/lv_calendar.h"
+ 1515              		.file 26 "Middlewares/lvgl/src/extra/widgets/calendar/../../../../src/widgets/lv_bar.h"
+ 1516              		.file 27 "Middlewares/lvgl/src/extra/widgets/calendar/../../../../src/extra/widgets/imgbtn/lv_imgb
+ 1517              		.file 28 "Middlewares/lvgl/src/extra/widgets/calendar/../../../../src/core/lv_theme.h"
+ 1518              		.file 29 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../hal/../misc/lv_m
+ 1519              		.file 30 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/../misc/lv_printf.h
+ 1520              		.file 31 "Middlewares/lvgl/src/extra/widgets/calendar/../../../widgets/../core/lv_obj_pos.h"
+ARM GAS  /tmp/ccc3jGzO.s 			page 40
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 lv_calendar.c
+     /tmp/ccc3jGzO.s:16     .text.is_leap_year:0000000000000000 $t
+     /tmp/ccc3jGzO.s:23     .text.is_leap_year:0000000000000000 is_leap_year
+     /tmp/ccc3jGzO.s:81     .text.is_leap_year:0000000000000038 $d
+     /tmp/ccc3jGzO.s:86     .text.get_month_length:0000000000000000 $t
+     /tmp/ccc3jGzO.s:92     .text.get_month_length:0000000000000000 get_month_length
+     /tmp/ccc3jGzO.s:176    .text.get_month_length:000000000000004c $d
+     /tmp/ccc3jGzO.s:181    .text.get_day_of_week:0000000000000000 $t
+     /tmp/ccc3jGzO.s:187    .text.get_day_of_week:0000000000000000 get_day_of_week
+     /tmp/ccc3jGzO.s:256    .text.get_day_of_week:0000000000000054 $d
+     /tmp/ccc3jGzO.s:263    .text.draw_part_begin_event_cb:0000000000000000 $t
+     /tmp/ccc3jGzO.s:269    .text.draw_part_begin_event_cb:0000000000000000 draw_part_begin_event_cb
+     /tmp/ccc3jGzO.s:446    .text.highlight_update:0000000000000000 $t
+     /tmp/ccc3jGzO.s:452    .text.highlight_update:0000000000000000 highlight_update
+     /tmp/ccc3jGzO.s:576    .text.lv_calendar_create:0000000000000000 $t
+     /tmp/ccc3jGzO.s:583    .text.lv_calendar_create:0000000000000000 lv_calendar_create
+     /tmp/ccc3jGzO.s:619    .text.lv_calendar_create:0000000000000014 $d
+     /tmp/ccc3jGzO.s:624    .text.lv_calendar_set_day_names:0000000000000000 $t
+     /tmp/ccc3jGzO.s:631    .text.lv_calendar_set_day_names:0000000000000000 lv_calendar_set_day_names
+     /tmp/ccc3jGzO.s:668    .text.lv_calendar_set_today_date:0000000000000000 $t
+     /tmp/ccc3jGzO.s:675    .text.lv_calendar_set_today_date:0000000000000000 lv_calendar_set_today_date
+     /tmp/ccc3jGzO.s:708    .text.lv_calendar_set_highlighted_dates:0000000000000000 $t
+     /tmp/ccc3jGzO.s:715    .text.lv_calendar_set_highlighted_dates:0000000000000000 lv_calendar_set_highlighted_dates
+     /tmp/ccc3jGzO.s:761    .rodata.lv_calendar_set_showed_date.str1.4:0000000000000000 $d
+     /tmp/ccc3jGzO.s:765    .text.lv_calendar_set_showed_date:0000000000000000 $t
+     /tmp/ccc3jGzO.s:772    .text.lv_calendar_set_showed_date:0000000000000000 lv_calendar_set_showed_date
+     /tmp/ccc3jGzO.s:1028   .text.lv_calendar_set_showed_date:0000000000000108 $d
+     /tmp/ccc3jGzO.s:1033   .rodata.lv_calendar_constructor.str1.4:0000000000000000 $d
+     /tmp/ccc3jGzO.s:1040   .text.lv_calendar_constructor:0000000000000000 $t
+     /tmp/ccc3jGzO.s:1046   .text.lv_calendar_constructor:0000000000000000 lv_calendar_constructor
+     /tmp/ccc3jGzO.s:1217   .text.lv_calendar_constructor:00000000000000c8 $d
+     /tmp/ccc3jGzO.s:1225   .text.lv_calendar_get_today_date:0000000000000000 $t
+     /tmp/ccc3jGzO.s:1232   .text.lv_calendar_get_today_date:0000000000000000 lv_calendar_get_today_date
+     /tmp/ccc3jGzO.s:1251   .text.lv_calendar_get_showed_date:0000000000000000 $t
+     /tmp/ccc3jGzO.s:1258   .text.lv_calendar_get_showed_date:0000000000000000 lv_calendar_get_showed_date
+     /tmp/ccc3jGzO.s:1277   .text.lv_calendar_get_highlighted_dates:0000000000000000 $t
+     /tmp/ccc3jGzO.s:1284   .text.lv_calendar_get_highlighted_dates:0000000000000000 lv_calendar_get_highlighted_dates
+     /tmp/ccc3jGzO.s:1303   .text.lv_calendar_get_highlighted_dates_num:0000000000000000 $t
+     /tmp/ccc3jGzO.s:1310   .text.lv_calendar_get_highlighted_dates_num:0000000000000000 lv_calendar_get_highlighted_dates_num
+     /tmp/ccc3jGzO.s:1329   .text.lv_calendar_get_pressed_date:0000000000000000 $t
+     /tmp/ccc3jGzO.s:1336   .text.lv_calendar_get_pressed_date:0000000000000000 lv_calendar_get_pressed_date
+     /tmp/ccc3jGzO.s:1439   .rodata.str1.4:0000000000000000 $d
+     /tmp/ccc3jGzO.s:1479   .rodata.lv_calendar_class:0000000000000000 lv_calendar_class
+     /tmp/ccc3jGzO.s:1462   .rodata.day_names_def:0000000000000000 $d
+     /tmp/ccc3jGzO.s:1466   .rodata.day_names_def:0000000000000000 day_names_def
+     /tmp/ccc3jGzO.s:1475   .rodata.lv_calendar_class:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+lv_event_get_target
+lv_event_get_param
+lv_btnmatrix_has_btn_ctrl
+lv_theme_get_color_primary
+lv_palette_main
+lv_btnmatrix_get_selected_btn
+lv_btnmatrix_clear_btn_ctrl_all
+lv_btnmatrix_set_btn_ctrl
+ARM GAS  /tmp/ccc3jGzO.s 			page 41
+
+
+lv_obj_class_create_obj
+lv_obj_class_init_obj
+lv_snprintf
+lv_obj_invalidate
+lv_memset_00
+lv_btnmatrix_set_map
+lv_btnmatrix_set_btn_ctrl_all
+lv_obj_add_event_cb
+lv_btnmatrix_get_btn_text
+lv_btnmatrix_class

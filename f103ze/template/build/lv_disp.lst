@@ -1,0 +1,3732 @@
+ARM GAS  /tmp/ccun8SuT.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"lv_disp.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.scr_anim_ready,"ax",%progbits
+  16              		.align	1
+  17              		.arch armv7-m
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	scr_anim_ready:
+  24              	.LVL0:
+  25              	.LFB172:
+  26              		.file 1 "Middlewares/lvgl/src/core/lv_disp.c"
+   1:Middlewares/lvgl/src/core/lv_disp.c **** /**
+   2:Middlewares/lvgl/src/core/lv_disp.c ****  * @file lv_disp.c
+   3:Middlewares/lvgl/src/core/lv_disp.c ****  *
+   4:Middlewares/lvgl/src/core/lv_disp.c ****  */
+   5:Middlewares/lvgl/src/core/lv_disp.c **** 
+   6:Middlewares/lvgl/src/core/lv_disp.c **** /*********************
+   7:Middlewares/lvgl/src/core/lv_disp.c ****  *      INCLUDES
+   8:Middlewares/lvgl/src/core/lv_disp.c ****  *********************/
+   9:Middlewares/lvgl/src/core/lv_disp.c **** #include "lv_disp.h"
+  10:Middlewares/lvgl/src/core/lv_disp.c **** #include "../misc/lv_math.h"
+  11:Middlewares/lvgl/src/core/lv_disp.c **** #include "../core/lv_refr.h"
+  12:Middlewares/lvgl/src/core/lv_disp.c **** 
+  13:Middlewares/lvgl/src/core/lv_disp.c **** /*********************
+  14:Middlewares/lvgl/src/core/lv_disp.c ****  *      DEFINES
+  15:Middlewares/lvgl/src/core/lv_disp.c ****  *********************/
+  16:Middlewares/lvgl/src/core/lv_disp.c **** 
+  17:Middlewares/lvgl/src/core/lv_disp.c **** /**********************
+  18:Middlewares/lvgl/src/core/lv_disp.c ****  *      TYPEDEFS
+  19:Middlewares/lvgl/src/core/lv_disp.c ****  **********************/
+  20:Middlewares/lvgl/src/core/lv_disp.c **** 
+  21:Middlewares/lvgl/src/core/lv_disp.c **** /**********************
+  22:Middlewares/lvgl/src/core/lv_disp.c ****  *  STATIC PROTOTYPES
+  23:Middlewares/lvgl/src/core/lv_disp.c ****  **********************/
+  24:Middlewares/lvgl/src/core/lv_disp.c **** 
+  25:Middlewares/lvgl/src/core/lv_disp.c **** static void scr_load_anim_start(lv_anim_t * a);
+  26:Middlewares/lvgl/src/core/lv_disp.c **** static void opa_scale_anim(void * obj, int32_t v);
+  27:Middlewares/lvgl/src/core/lv_disp.c **** static void set_x_anim(void * obj, int32_t v);
+  28:Middlewares/lvgl/src/core/lv_disp.c **** static void set_y_anim(void * obj, int32_t v);
+  29:Middlewares/lvgl/src/core/lv_disp.c **** static void scr_anim_ready(lv_anim_t * a);
+  30:Middlewares/lvgl/src/core/lv_disp.c **** 
+  31:Middlewares/lvgl/src/core/lv_disp.c **** /**********************
+  32:Middlewares/lvgl/src/core/lv_disp.c ****  *  STATIC VARIABLES
+ARM GAS  /tmp/ccun8SuT.s 			page 2
+
+
+  33:Middlewares/lvgl/src/core/lv_disp.c ****  **********************/
+  34:Middlewares/lvgl/src/core/lv_disp.c **** 
+  35:Middlewares/lvgl/src/core/lv_disp.c **** /**********************
+  36:Middlewares/lvgl/src/core/lv_disp.c ****  *      MACROS
+  37:Middlewares/lvgl/src/core/lv_disp.c ****  **********************/
+  38:Middlewares/lvgl/src/core/lv_disp.c **** 
+  39:Middlewares/lvgl/src/core/lv_disp.c **** /**********************
+  40:Middlewares/lvgl/src/core/lv_disp.c ****  *   GLOBAL FUNCTIONS
+  41:Middlewares/lvgl/src/core/lv_disp.c ****  **********************/
+  42:Middlewares/lvgl/src/core/lv_disp.c **** 
+  43:Middlewares/lvgl/src/core/lv_disp.c **** /**
+  44:Middlewares/lvgl/src/core/lv_disp.c ****  * Return with a pointer to the active screen
+  45:Middlewares/lvgl/src/core/lv_disp.c ****  * @param disp pointer to display which active screen should be get. (NULL to use the default
+  46:Middlewares/lvgl/src/core/lv_disp.c ****  * screen)
+  47:Middlewares/lvgl/src/core/lv_disp.c ****  * @return pointer to the active screen object (loaded by 'lv_scr_load()')
+  48:Middlewares/lvgl/src/core/lv_disp.c ****  */
+  49:Middlewares/lvgl/src/core/lv_disp.c **** lv_obj_t * lv_disp_get_scr_act(lv_disp_t * disp)
+  50:Middlewares/lvgl/src/core/lv_disp.c **** {
+  51:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+  52:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+  53:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered to get its active screen");
+  54:Middlewares/lvgl/src/core/lv_disp.c ****         return NULL;
+  55:Middlewares/lvgl/src/core/lv_disp.c ****     }
+  56:Middlewares/lvgl/src/core/lv_disp.c **** 
+  57:Middlewares/lvgl/src/core/lv_disp.c ****     return disp->act_scr;
+  58:Middlewares/lvgl/src/core/lv_disp.c **** }
+  59:Middlewares/lvgl/src/core/lv_disp.c **** 
+  60:Middlewares/lvgl/src/core/lv_disp.c **** /**
+  61:Middlewares/lvgl/src/core/lv_disp.c ****  * Return with a pointer to the previous screen. Only used during screen transitions.
+  62:Middlewares/lvgl/src/core/lv_disp.c ****  * @param disp pointer to display which previous screen should be get. (NULL to use the default
+  63:Middlewares/lvgl/src/core/lv_disp.c ****  * screen)
+  64:Middlewares/lvgl/src/core/lv_disp.c ****  * @return pointer to the previous screen object or NULL if not used now
+  65:Middlewares/lvgl/src/core/lv_disp.c ****  */
+  66:Middlewares/lvgl/src/core/lv_disp.c **** lv_obj_t * lv_disp_get_scr_prev(lv_disp_t * disp)
+  67:Middlewares/lvgl/src/core/lv_disp.c **** {
+  68:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+  69:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+  70:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered to get its previous screen");
+  71:Middlewares/lvgl/src/core/lv_disp.c ****         return NULL;
+  72:Middlewares/lvgl/src/core/lv_disp.c ****     }
+  73:Middlewares/lvgl/src/core/lv_disp.c **** 
+  74:Middlewares/lvgl/src/core/lv_disp.c ****     return disp->prev_scr;
+  75:Middlewares/lvgl/src/core/lv_disp.c **** }
+  76:Middlewares/lvgl/src/core/lv_disp.c **** 
+  77:Middlewares/lvgl/src/core/lv_disp.c **** /**
+  78:Middlewares/lvgl/src/core/lv_disp.c ****  * Make a screen active
+  79:Middlewares/lvgl/src/core/lv_disp.c ****  * @param scr pointer to a screen
+  80:Middlewares/lvgl/src/core/lv_disp.c ****  */
+  81:Middlewares/lvgl/src/core/lv_disp.c **** void lv_disp_load_scr(lv_obj_t * scr)
+  82:Middlewares/lvgl/src/core/lv_disp.c **** {
+  83:Middlewares/lvgl/src/core/lv_disp.c ****     lv_disp_t * d = lv_obj_get_disp(scr);
+  84:Middlewares/lvgl/src/core/lv_disp.c ****     if(!d) return;  /*Shouldn't happen, just to be sure*/
+  85:Middlewares/lvgl/src/core/lv_disp.c ****     d->act_scr = scr;
+  86:Middlewares/lvgl/src/core/lv_disp.c **** 
+  87:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_invalidate(scr);
+  88:Middlewares/lvgl/src/core/lv_disp.c **** }
+  89:Middlewares/lvgl/src/core/lv_disp.c **** 
+ARM GAS  /tmp/ccun8SuT.s 			page 3
+
+
+  90:Middlewares/lvgl/src/core/lv_disp.c **** /**
+  91:Middlewares/lvgl/src/core/lv_disp.c ****  * Return with the top layer. (Same on every screen and it is above the normal screen layer)
+  92:Middlewares/lvgl/src/core/lv_disp.c ****  * @param disp pointer to display which top layer should be get. (NULL to use the default screen)
+  93:Middlewares/lvgl/src/core/lv_disp.c ****  * @return pointer to the top layer object  (transparent screen sized lv_obj)
+  94:Middlewares/lvgl/src/core/lv_disp.c ****  */
+  95:Middlewares/lvgl/src/core/lv_disp.c **** lv_obj_t * lv_disp_get_layer_top(lv_disp_t * disp)
+  96:Middlewares/lvgl/src/core/lv_disp.c **** {
+  97:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+  98:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+  99:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_layer_top: no display registered to get its top layer");
+ 100:Middlewares/lvgl/src/core/lv_disp.c ****         return NULL;
+ 101:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 102:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 103:Middlewares/lvgl/src/core/lv_disp.c ****     return disp->top_layer;
+ 104:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 105:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 106:Middlewares/lvgl/src/core/lv_disp.c **** /**
+ 107:Middlewares/lvgl/src/core/lv_disp.c ****  * Return with the sys. layer. (Same on every screen and it is above the normal screen and the top
+ 108:Middlewares/lvgl/src/core/lv_disp.c ****  * layer)
+ 109:Middlewares/lvgl/src/core/lv_disp.c ****  * @param disp pointer to display which sys. layer  should be get. (NULL to use the default screen)
+ 110:Middlewares/lvgl/src/core/lv_disp.c ****  * @return pointer to the sys layer object  (transparent screen sized lv_obj)
+ 111:Middlewares/lvgl/src/core/lv_disp.c ****  */
+ 112:Middlewares/lvgl/src/core/lv_disp.c **** lv_obj_t * lv_disp_get_layer_sys(lv_disp_t * disp)
+ 113:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 114:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 115:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 116:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_layer_sys: no display registered to get its sys. layer");
+ 117:Middlewares/lvgl/src/core/lv_disp.c ****         return NULL;
+ 118:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 119:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 120:Middlewares/lvgl/src/core/lv_disp.c ****     return disp->sys_layer;
+ 121:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 122:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 123:Middlewares/lvgl/src/core/lv_disp.c **** /**
+ 124:Middlewares/lvgl/src/core/lv_disp.c ****  * Get the theme of a display
+ 125:Middlewares/lvgl/src/core/lv_disp.c ****  * @param disp pointer to a display
+ 126:Middlewares/lvgl/src/core/lv_disp.c ****  * @return the display's theme (can be NULL)
+ 127:Middlewares/lvgl/src/core/lv_disp.c ****  */
+ 128:Middlewares/lvgl/src/core/lv_disp.c **** void lv_disp_set_theme(lv_disp_t * disp, lv_theme_t * th)
+ 129:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 130:Middlewares/lvgl/src/core/lv_disp.c **** 	if(disp == NULL) disp = lv_disp_get_default();
+ 131:Middlewares/lvgl/src/core/lv_disp.c ****     disp->theme = th;
+ 132:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 133:Middlewares/lvgl/src/core/lv_disp.c ****     if(disp->screen_cnt == 3 &&
+ 134:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_get_child_cnt(disp->screens[0]) == 0 &&
+ 135:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_get_child_cnt(disp->screens[1]) == 0 &&
+ 136:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_get_child_cnt(disp->screens[2]) == 0)
+ 137:Middlewares/lvgl/src/core/lv_disp.c ****     {
+ 138:Middlewares/lvgl/src/core/lv_disp.c ****         lv_theme_apply(disp->screens[0]);
+ 139:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 140:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 141:Middlewares/lvgl/src/core/lv_disp.c **** /**
+ 142:Middlewares/lvgl/src/core/lv_disp.c ****  * Get the theme of a display
+ 143:Middlewares/lvgl/src/core/lv_disp.c ****  * @param disp pointer to a display
+ 144:Middlewares/lvgl/src/core/lv_disp.c ****  * @return the display's theme (can be NULL)
+ 145:Middlewares/lvgl/src/core/lv_disp.c ****  */
+ 146:Middlewares/lvgl/src/core/lv_disp.c **** lv_theme_t * lv_disp_get_theme(lv_disp_t * disp)
+ARM GAS  /tmp/ccun8SuT.s 			page 4
+
+
+ 147:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 148:Middlewares/lvgl/src/core/lv_disp.c **** 	if(disp == NULL) disp = lv_disp_get_default();
+ 149:Middlewares/lvgl/src/core/lv_disp.c ****     return disp->theme;
+ 150:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 151:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 152:Middlewares/lvgl/src/core/lv_disp.c **** /**
+ 153:Middlewares/lvgl/src/core/lv_disp.c ****  * Set the background color of a display
+ 154:Middlewares/lvgl/src/core/lv_disp.c ****  * @param disp pointer to a display
+ 155:Middlewares/lvgl/src/core/lv_disp.c ****  * @param color color of the background
+ 156:Middlewares/lvgl/src/core/lv_disp.c ****  */
+ 157:Middlewares/lvgl/src/core/lv_disp.c **** void lv_disp_set_bg_color(lv_disp_t * disp, lv_color_t color)
+ 158:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 159:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 160:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 161:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered");
+ 162:Middlewares/lvgl/src/core/lv_disp.c ****         return;
+ 163:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 164:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 165:Middlewares/lvgl/src/core/lv_disp.c ****     disp->bg_color = color;
+ 166:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 167:Middlewares/lvgl/src/core/lv_disp.c ****     lv_area_t a;
+ 168:Middlewares/lvgl/src/core/lv_disp.c ****     lv_area_set(&a, 0, 0, lv_disp_get_hor_res(disp) - 1, lv_disp_get_ver_res(disp) - 1);
+ 169:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 170:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 171:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 172:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 173:Middlewares/lvgl/src/core/lv_disp.c **** /**
+ 174:Middlewares/lvgl/src/core/lv_disp.c ****  * Set the background image of a display
+ 175:Middlewares/lvgl/src/core/lv_disp.c ****  * @param disp pointer to a display
+ 176:Middlewares/lvgl/src/core/lv_disp.c ****  * @param img_src path to file or pointer to an `lv_img_dsc_t` variable
+ 177:Middlewares/lvgl/src/core/lv_disp.c ****  */
+ 178:Middlewares/lvgl/src/core/lv_disp.c **** void lv_disp_set_bg_image(lv_disp_t * disp, const void  * img_src)
+ 179:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 180:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 181:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 182:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered");
+ 183:Middlewares/lvgl/src/core/lv_disp.c ****         return;
+ 184:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 185:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 186:Middlewares/lvgl/src/core/lv_disp.c ****     disp->bg_img = img_src;
+ 187:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 188:Middlewares/lvgl/src/core/lv_disp.c ****     lv_area_t a;
+ 189:Middlewares/lvgl/src/core/lv_disp.c ****     lv_area_set(&a, 0, 0, lv_disp_get_hor_res(disp) - 1, lv_disp_get_ver_res(disp) - 1);
+ 190:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 191:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 192:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 193:Middlewares/lvgl/src/core/lv_disp.c **** /**
+ 194:Middlewares/lvgl/src/core/lv_disp.c ****  * Opacity of the background
+ 195:Middlewares/lvgl/src/core/lv_disp.c ****  * @param disp pointer to a display
+ 196:Middlewares/lvgl/src/core/lv_disp.c ****  * @param opa opacity (0..255)
+ 197:Middlewares/lvgl/src/core/lv_disp.c ****  */
+ 198:Middlewares/lvgl/src/core/lv_disp.c **** void lv_disp_set_bg_opa(lv_disp_t * disp, lv_opa_t opa)
+ 199:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 200:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 201:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 202:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered");
+ 203:Middlewares/lvgl/src/core/lv_disp.c ****         return;
+ARM GAS  /tmp/ccun8SuT.s 			page 5
+
+
+ 204:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 205:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 206:Middlewares/lvgl/src/core/lv_disp.c ****     disp->bg_opa = opa;
+ 207:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 208:Middlewares/lvgl/src/core/lv_disp.c ****     lv_area_t a;
+ 209:Middlewares/lvgl/src/core/lv_disp.c ****     lv_area_set(&a, 0, 0, lv_disp_get_hor_res(disp) - 1, lv_disp_get_ver_res(disp) - 1);
+ 210:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 211:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 212:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 213:Middlewares/lvgl/src/core/lv_disp.c **** /**
+ 214:Middlewares/lvgl/src/core/lv_disp.c ****  * Switch screen with animation
+ 215:Middlewares/lvgl/src/core/lv_disp.c ****  * @param scr pointer to the new screen to load
+ 216:Middlewares/lvgl/src/core/lv_disp.c ****  * @param anim_type type of the animation from `lv_scr_load_anim_t`. E.g.  `LV_SCR_LOAD_ANIM_MOVE_L
+ 217:Middlewares/lvgl/src/core/lv_disp.c ****  * @param time time of the animation
+ 218:Middlewares/lvgl/src/core/lv_disp.c ****  * @param delay delay before the transition
+ 219:Middlewares/lvgl/src/core/lv_disp.c ****  * @param auto_del true: automatically delete the old screen
+ 220:Middlewares/lvgl/src/core/lv_disp.c ****  */
+ 221:Middlewares/lvgl/src/core/lv_disp.c **** void lv_scr_load_anim(lv_obj_t * new_scr, lv_scr_load_anim_t anim_type, uint32_t time, uint32_t del
+ 222:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 223:Middlewares/lvgl/src/core/lv_disp.c ****     lv_disp_t * d = lv_obj_get_disp(new_scr);
+ 224:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_t * act_scr = lv_scr_act();
+ 225:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 226:Middlewares/lvgl/src/core/lv_disp.c ****     if(d->del_prev && act_scr != d->scr_to_load && d->scr_to_load) {
+ 227:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_del(act_scr);
+ 228:Middlewares/lvgl/src/core/lv_disp.c ****         lv_disp_load_scr(d->scr_to_load);
+ 229:Middlewares/lvgl/src/core/lv_disp.c ****         lv_anim_del(d->scr_to_load, NULL);
+ 230:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_set_pos(d->scr_to_load, 0, 0);
+ 231:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_remove_local_style_prop(d->scr_to_load, LV_STYLE_OPA, 0);
+ 232:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 233:Middlewares/lvgl/src/core/lv_disp.c ****         act_scr = d->scr_to_load;
+ 234:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 235:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 236:Middlewares/lvgl/src/core/lv_disp.c ****     d->scr_to_load = new_scr;
+ 237:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 238:Middlewares/lvgl/src/core/lv_disp.c ****     if(d->prev_scr && d->del_prev) {
+ 239:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_del(d->prev_scr);
+ 240:Middlewares/lvgl/src/core/lv_disp.c ****         d->prev_scr = NULL;
+ 241:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 242:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 243:Middlewares/lvgl/src/core/lv_disp.c ****     d->del_prev = auto_del;
+ 244:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 245:Middlewares/lvgl/src/core/lv_disp.c ****     /*Be sure there is no other animation on the screens*/
+ 246:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_del(new_scr, NULL);
+ 247:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_del(lv_scr_act(), NULL);
+ 248:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 249:Middlewares/lvgl/src/core/lv_disp.c ****     /*Be sure both screens are in a normal position*/
+ 250:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_set_pos(new_scr, 0, 0);
+ 251:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_set_pos(lv_scr_act(), 0, 0);
+ 252:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_remove_local_style_prop(new_scr, LV_STYLE_OPA, 0);
+ 253:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_remove_local_style_prop(lv_scr_act(), LV_STYLE_OPA, 0);
+ 254:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 255:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_t a_new;
+ 256:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_init(&a_new);
+ 257:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_var(&a_new, new_scr);
+ 258:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_start_cb(&a_new, scr_load_anim_start);
+ 259:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_ready_cb(&a_new, scr_anim_ready);
+ 260:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_time(&a_new, time);
+ARM GAS  /tmp/ccun8SuT.s 			page 6
+
+
+ 261:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_delay(&a_new, delay);
+ 262:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 263:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_t a_old;
+ 264:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_init(&a_old);
+ 265:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_var(&a_old, d->act_scr);
+ 266:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_time(&a_old, time);
+ 267:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_delay(&a_old, delay);
+ 268:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 269:Middlewares/lvgl/src/core/lv_disp.c ****     switch(anim_type) {
+ 270:Middlewares/lvgl/src/core/lv_disp.c ****         case LV_SCR_LOAD_ANIM_NONE:
+ 271:Middlewares/lvgl/src/core/lv_disp.c ****             /*Create a dummy animation to apply the delay*/
+ 272:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_exec_cb(&a_new, set_x_anim);
+ 273:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, 0, 0);
+ 274:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 275:Middlewares/lvgl/src/core/lv_disp.c ****         case LV_SCR_LOAD_ANIM_OVER_LEFT:
+ 276:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_exec_cb(&a_new, set_x_anim);
+ 277:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, lv_disp_get_hor_res(d), 0);
+ 278:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 279:Middlewares/lvgl/src/core/lv_disp.c ****         case LV_SCR_LOAD_ANIM_OVER_RIGHT:
+ 280:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_exec_cb(&a_new, set_x_anim);
+ 281:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, -lv_disp_get_hor_res(d), 0);
+ 282:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 283:Middlewares/lvgl/src/core/lv_disp.c ****         case LV_SCR_LOAD_ANIM_OVER_TOP:
+ 284:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_exec_cb(&a_new, set_y_anim);
+ 285:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, lv_disp_get_ver_res(d), 0);
+ 286:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 287:Middlewares/lvgl/src/core/lv_disp.c ****         case LV_SCR_LOAD_ANIM_OVER_BOTTOM:
+ 288:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_exec_cb(&a_new, set_y_anim);
+ 289:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, -lv_disp_get_ver_res(d), 0);
+ 290:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 291:Middlewares/lvgl/src/core/lv_disp.c ****         case LV_SCR_LOAD_ANIM_MOVE_LEFT:
+ 292:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_exec_cb(&a_new, set_x_anim);
+ 293:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, lv_disp_get_hor_res(d), 0);
+ 294:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 295:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_exec_cb(&a_old, set_x_anim);
+ 296:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_old, 0, -lv_disp_get_hor_res(d));
+ 297:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 298:Middlewares/lvgl/src/core/lv_disp.c ****         case LV_SCR_LOAD_ANIM_MOVE_RIGHT:
+ 299:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_exec_cb(&a_new, set_x_anim);
+ 300:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, -lv_disp_get_hor_res(d), 0);
+ 301:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 302:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_exec_cb(&a_old, set_x_anim);
+ 303:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_old, 0, lv_disp_get_hor_res(d));
+ 304:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 305:Middlewares/lvgl/src/core/lv_disp.c ****         case LV_SCR_LOAD_ANIM_MOVE_TOP:
+ 306:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_exec_cb(&a_new, set_y_anim);
+ 307:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, lv_disp_get_ver_res(d), 0);
+ 308:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 309:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_exec_cb(&a_old, set_y_anim);
+ 310:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_old, 0, -lv_disp_get_ver_res(d));
+ 311:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 312:Middlewares/lvgl/src/core/lv_disp.c ****         case LV_SCR_LOAD_ANIM_MOVE_BOTTOM:
+ 313:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_exec_cb(&a_new, set_y_anim);
+ 314:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, -lv_disp_get_ver_res(d), 0);
+ 315:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 316:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_exec_cb(&a_old, set_y_anim);
+ 317:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_old, 0, lv_disp_get_ver_res(d));
+ARM GAS  /tmp/ccun8SuT.s 			page 7
+
+
+ 318:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 319:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 320:Middlewares/lvgl/src/core/lv_disp.c ****         case LV_SCR_LOAD_ANIM_FADE_ON:
+ 321:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_exec_cb(&a_new, opa_scale_anim);
+ 322:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, LV_OPA_TRANSP, LV_OPA_COVER);
+ 323:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 324:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 325:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 326:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_start(&a_new);
+ 327:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_start(&a_old);
+ 328:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 329:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 330:Middlewares/lvgl/src/core/lv_disp.c **** /**
+ 331:Middlewares/lvgl/src/core/lv_disp.c ****  * Get elapsed time since last user activity on a display (e.g. click)
+ 332:Middlewares/lvgl/src/core/lv_disp.c ****  * @param disp pointer to an display (NULL to get the overall smallest inactivity)
+ 333:Middlewares/lvgl/src/core/lv_disp.c ****  * @return elapsed ticks (milliseconds) since the last activity
+ 334:Middlewares/lvgl/src/core/lv_disp.c ****  */
+ 335:Middlewares/lvgl/src/core/lv_disp.c **** uint32_t lv_disp_get_inactive_time(const lv_disp_t * disp)
+ 336:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 337:Middlewares/lvgl/src/core/lv_disp.c ****     if(disp) return lv_tick_elaps(disp->last_activity_time);
+ 338:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 339:Middlewares/lvgl/src/core/lv_disp.c ****     lv_disp_t * d;
+ 340:Middlewares/lvgl/src/core/lv_disp.c ****     uint32_t t = UINT32_MAX;
+ 341:Middlewares/lvgl/src/core/lv_disp.c ****     d          = lv_disp_get_next(NULL);
+ 342:Middlewares/lvgl/src/core/lv_disp.c ****     while(d) {
+ 343:Middlewares/lvgl/src/core/lv_disp.c ****         uint32_t elaps = lv_tick_elaps(d->last_activity_time);
+ 344:Middlewares/lvgl/src/core/lv_disp.c ****         t = LV_MIN(t, elaps);
+ 345:Middlewares/lvgl/src/core/lv_disp.c ****         d = lv_disp_get_next(d);
+ 346:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 347:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 348:Middlewares/lvgl/src/core/lv_disp.c ****     return t;
+ 349:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 350:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 351:Middlewares/lvgl/src/core/lv_disp.c **** /**
+ 352:Middlewares/lvgl/src/core/lv_disp.c ****  * Manually trigger an activity on a display
+ 353:Middlewares/lvgl/src/core/lv_disp.c ****  * @param disp pointer to an display (NULL to use the default display)
+ 354:Middlewares/lvgl/src/core/lv_disp.c ****  */
+ 355:Middlewares/lvgl/src/core/lv_disp.c **** void lv_disp_trig_activity(lv_disp_t * disp)
+ 356:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 357:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 358:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 359:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_disp_trig_activity: no display registered");
+ 360:Middlewares/lvgl/src/core/lv_disp.c ****         return;
+ 361:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 362:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 363:Middlewares/lvgl/src/core/lv_disp.c ****     disp->last_activity_time = lv_tick_get();
+ 364:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 365:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 366:Middlewares/lvgl/src/core/lv_disp.c **** /**
+ 367:Middlewares/lvgl/src/core/lv_disp.c ****  * Clean any CPU cache that is related to the display.
+ 368:Middlewares/lvgl/src/core/lv_disp.c ****  * @param disp pointer to an display (NULL to use the default display)
+ 369:Middlewares/lvgl/src/core/lv_disp.c ****  */
+ 370:Middlewares/lvgl/src/core/lv_disp.c **** void lv_disp_clean_dcache(lv_disp_t * disp)
+ 371:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 372:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 373:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 374:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_disp_clean_dcache: no display registered");
+ARM GAS  /tmp/ccun8SuT.s 			page 8
+
+
+ 375:Middlewares/lvgl/src/core/lv_disp.c ****         return;
+ 376:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 377:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 378:Middlewares/lvgl/src/core/lv_disp.c ****     if(disp->driver->clean_dcache_cb)
+ 379:Middlewares/lvgl/src/core/lv_disp.c ****         disp->driver->clean_dcache_cb(disp->driver);
+ 380:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 381:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 382:Middlewares/lvgl/src/core/lv_disp.c **** /**
+ 383:Middlewares/lvgl/src/core/lv_disp.c ****  * Get a pointer to the screen refresher timer to
+ 384:Middlewares/lvgl/src/core/lv_disp.c ****  * modify its parameters with `lv_timer_...` functions.
+ 385:Middlewares/lvgl/src/core/lv_disp.c ****  * @param disp pointer to a display
+ 386:Middlewares/lvgl/src/core/lv_disp.c ****  * @return pointer to the display refresher timer. (NULL on error)
+ 387:Middlewares/lvgl/src/core/lv_disp.c ****  */
+ 388:Middlewares/lvgl/src/core/lv_disp.c **** lv_timer_t * _lv_disp_get_refr_timer(lv_disp_t * disp)
+ 389:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 390:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 391:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 392:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_disp_get_refr_timer: no display registered");
+ 393:Middlewares/lvgl/src/core/lv_disp.c ****         return NULL;
+ 394:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 395:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 396:Middlewares/lvgl/src/core/lv_disp.c ****     return disp->refr_timer;
+ 397:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 398:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 399:Middlewares/lvgl/src/core/lv_disp.c **** /**********************
+ 400:Middlewares/lvgl/src/core/lv_disp.c ****  *   STATIC FUNCTIONS
+ 401:Middlewares/lvgl/src/core/lv_disp.c ****  **********************/
+ 402:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 403:Middlewares/lvgl/src/core/lv_disp.c **** static void scr_load_anim_start(lv_anim_t * a)
+ 404:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 405:Middlewares/lvgl/src/core/lv_disp.c ****     lv_disp_t * d = lv_obj_get_disp(a->var);
+ 406:Middlewares/lvgl/src/core/lv_disp.c ****     d->prev_scr = lv_scr_act();
+ 407:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 408:Middlewares/lvgl/src/core/lv_disp.c ****     lv_disp_load_scr(a->var);
+ 409:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 410:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 411:Middlewares/lvgl/src/core/lv_disp.c **** static void opa_scale_anim(void * obj, int32_t v)
+ 412:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 413:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_set_style_opa(obj, v, 0);
+ 414:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 415:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 416:Middlewares/lvgl/src/core/lv_disp.c **** static void set_x_anim(void * obj, int32_t v)
+ 417:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 418:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_set_x(obj, v);
+ 419:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 420:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 421:Middlewares/lvgl/src/core/lv_disp.c **** static void set_y_anim(void * obj, int32_t v)
+ 422:Middlewares/lvgl/src/core/lv_disp.c **** {
+ 423:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_set_y(obj, v);
+ 424:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 425:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 426:Middlewares/lvgl/src/core/lv_disp.c **** static void scr_anim_ready(lv_anim_t * a)
+ 427:Middlewares/lvgl/src/core/lv_disp.c **** {
+  27              		.loc 1 427 1 view -0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  /tmp/ccun8SuT.s 			page 9
+
+
+  31              		.loc 1 427 1 is_stmt 0 view .LVU1
+  32 0000 38B5     		push	{r3, r4, r5, lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 16
+  35              		.cfi_offset 3, -16
+  36              		.cfi_offset 4, -12
+  37              		.cfi_offset 5, -8
+  38              		.cfi_offset 14, -4
+  39 0002 0546     		mov	r5, r0
+ 428:Middlewares/lvgl/src/core/lv_disp.c ****     lv_disp_t * d = lv_obj_get_disp(a->var);
+  40              		.loc 1 428 5 is_stmt 1 view .LVU2
+  41              		.loc 1 428 21 is_stmt 0 view .LVU3
+  42 0004 0068     		ldr	r0, [r0]
+  43              	.LVL1:
+  44              		.loc 1 428 21 view .LVU4
+  45 0006 FFF7FEFF 		bl	lv_obj_get_disp
+  46              	.LVL2:
+  47 000a 0446     		mov	r4, r0
+  48              	.LVL3:
+ 429:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 430:Middlewares/lvgl/src/core/lv_disp.c ****     if(d->prev_scr && d->del_prev) lv_obj_del(d->prev_scr);
+  49              		.loc 1 430 5 is_stmt 1 view .LVU5
+  50              		.loc 1 430 9 is_stmt 0 view .LVU6
+  51 000c 4069     		ldr	r0, [r0, #20]
+  52              	.LVL4:
+  53              		.loc 1 430 7 view .LVU7
+  54 000e 20B1     		cbz	r0, .L2
+  55              		.loc 1 430 20 discriminator 1 view .LVU8
+  56 0010 94F82830 		ldrb	r3, [r4, #40]	@ zero_extendqisi2
+  57 0014 13F0010F 		tst	r3, #1
+  58 0018 08D1     		bne	.L4
+  59              	.L2:
+ 431:Middlewares/lvgl/src/core/lv_disp.c ****     d->prev_scr = NULL;
+  60              		.loc 1 431 5 is_stmt 1 view .LVU9
+  61              		.loc 1 431 17 is_stmt 0 view .LVU10
+  62 001a 0022     		movs	r2, #0
+  63 001c 6261     		str	r2, [r4, #20]
+ 432:Middlewares/lvgl/src/core/lv_disp.c ****     d->scr_to_load = NULL;
+  64              		.loc 1 432 5 is_stmt 1 view .LVU11
+  65              		.loc 1 432 20 is_stmt 0 view .LVU12
+  66 001e A261     		str	r2, [r4, #24]
+ 433:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_remove_local_style_prop(a->var, LV_STYLE_OPA, 0);
+  67              		.loc 1 433 5 is_stmt 1 view .LVU13
+  68 0020 40F26241 		movw	r1, #1122
+  69 0024 2868     		ldr	r0, [r5]
+  70 0026 FFF7FEFF 		bl	lv_obj_remove_local_style_prop
+  71              	.LVL5:
+ 434:Middlewares/lvgl/src/core/lv_disp.c **** }
+  72              		.loc 1 434 1 is_stmt 0 view .LVU14
+  73 002a 38BD     		pop	{r3, r4, r5, pc}
+  74              	.LVL6:
+  75              	.L4:
+ 430:Middlewares/lvgl/src/core/lv_disp.c ****     d->prev_scr = NULL;
+  76              		.loc 1 430 36 is_stmt 1 discriminator 2 view .LVU15
+  77 002c FFF7FEFF 		bl	lv_obj_del
+  78              	.LVL7:
+  79 0030 F3E7     		b	.L2
+ARM GAS  /tmp/ccun8SuT.s 			page 10
+
+
+  80              		.cfi_endproc
+  81              	.LFE172:
+  83              		.section	.text.opa_scale_anim,"ax",%progbits
+  84              		.align	1
+  85              		.syntax unified
+  86              		.thumb
+  87              		.thumb_func
+  88              		.fpu softvfp
+  90              	opa_scale_anim:
+  91              	.LVL8:
+  92              	.LFB169:
+ 412:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_set_style_opa(obj, v, 0);
+  93              		.loc 1 412 1 view -0
+  94              		.cfi_startproc
+  95              		@ args = 0, pretend = 0, frame = 0
+  96              		@ frame_needed = 0, uses_anonymous_args = 0
+ 412:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_set_style_opa(obj, v, 0);
+  97              		.loc 1 412 1 is_stmt 0 view .LVU17
+  98 0000 08B5     		push	{r3, lr}
+  99              	.LCFI1:
+ 100              		.cfi_def_cfa_offset 8
+ 101              		.cfi_offset 3, -8
+ 102              		.cfi_offset 14, -4
+ 413:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 103              		.loc 1 413 5 is_stmt 1 view .LVU18
+ 104 0002 0022     		movs	r2, #0
+ 105 0004 C9B2     		uxtb	r1, r1
+ 106              	.LVL9:
+ 413:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 107              		.loc 1 413 5 is_stmt 0 view .LVU19
+ 108 0006 FFF7FEFF 		bl	lv_obj_set_style_opa
+ 109              	.LVL10:
+ 414:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 110              		.loc 1 414 1 view .LVU20
+ 111 000a 08BD     		pop	{r3, pc}
+ 112              		.cfi_endproc
+ 113              	.LFE169:
+ 115              		.section	.text.set_y_anim,"ax",%progbits
+ 116              		.align	1
+ 117              		.syntax unified
+ 118              		.thumb
+ 119              		.thumb_func
+ 120              		.fpu softvfp
+ 122              	set_y_anim:
+ 123              	.LVL11:
+ 124              	.LFB171:
+ 422:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_set_y(obj, v);
+ 125              		.loc 1 422 1 is_stmt 1 view -0
+ 126              		.cfi_startproc
+ 127              		@ args = 0, pretend = 0, frame = 0
+ 128              		@ frame_needed = 0, uses_anonymous_args = 0
+ 422:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_set_y(obj, v);
+ 129              		.loc 1 422 1 is_stmt 0 view .LVU22
+ 130 0000 08B5     		push	{r3, lr}
+ 131              	.LCFI2:
+ 132              		.cfi_def_cfa_offset 8
+ 133              		.cfi_offset 3, -8
+ARM GAS  /tmp/ccun8SuT.s 			page 11
+
+
+ 134              		.cfi_offset 14, -4
+ 423:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 135              		.loc 1 423 5 is_stmt 1 view .LVU23
+ 136 0002 09B2     		sxth	r1, r1
+ 137              	.LVL12:
+ 423:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 138              		.loc 1 423 5 is_stmt 0 view .LVU24
+ 139 0004 FFF7FEFF 		bl	lv_obj_set_y
+ 140              	.LVL13:
+ 424:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 141              		.loc 1 424 1 view .LVU25
+ 142 0008 08BD     		pop	{r3, pc}
+ 143              		.cfi_endproc
+ 144              	.LFE171:
+ 146              		.section	.text.set_x_anim,"ax",%progbits
+ 147              		.align	1
+ 148              		.syntax unified
+ 149              		.thumb
+ 150              		.thumb_func
+ 151              		.fpu softvfp
+ 153              	set_x_anim:
+ 154              	.LVL14:
+ 155              	.LFB170:
+ 417:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_set_x(obj, v);
+ 156              		.loc 1 417 1 is_stmt 1 view -0
+ 157              		.cfi_startproc
+ 158              		@ args = 0, pretend = 0, frame = 0
+ 159              		@ frame_needed = 0, uses_anonymous_args = 0
+ 417:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_set_x(obj, v);
+ 160              		.loc 1 417 1 is_stmt 0 view .LVU27
+ 161 0000 08B5     		push	{r3, lr}
+ 162              	.LCFI3:
+ 163              		.cfi_def_cfa_offset 8
+ 164              		.cfi_offset 3, -8
+ 165              		.cfi_offset 14, -4
+ 418:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 166              		.loc 1 418 5 is_stmt 1 view .LVU28
+ 167 0002 09B2     		sxth	r1, r1
+ 168              	.LVL15:
+ 418:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 169              		.loc 1 418 5 is_stmt 0 view .LVU29
+ 170 0004 FFF7FEFF 		bl	lv_obj_set_x
+ 171              	.LVL16:
+ 419:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 172              		.loc 1 419 1 view .LVU30
+ 173 0008 08BD     		pop	{r3, pc}
+ 174              		.cfi_endproc
+ 175              	.LFE170:
+ 177              		.section	.text.lv_disp_get_scr_act,"ax",%progbits
+ 178              		.align	1
+ 179              		.global	lv_disp_get_scr_act
+ 180              		.syntax unified
+ 181              		.thumb
+ 182              		.thumb_func
+ 183              		.fpu softvfp
+ 185              	lv_disp_get_scr_act:
+ 186              	.LVL17:
+ARM GAS  /tmp/ccun8SuT.s 			page 12
+
+
+ 187              	.LFB153:
+  50:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 188              		.loc 1 50 1 is_stmt 1 view -0
+ 189              		.cfi_startproc
+ 190              		@ args = 0, pretend = 0, frame = 0
+ 191              		@ frame_needed = 0, uses_anonymous_args = 0
+  50:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 192              		.loc 1 50 1 is_stmt 0 view .LVU32
+ 193 0000 08B5     		push	{r3, lr}
+ 194              	.LCFI4:
+ 195              		.cfi_def_cfa_offset 8
+ 196              		.cfi_offset 3, -8
+ 197              		.cfi_offset 14, -4
+  51:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 198              		.loc 1 51 5 is_stmt 1 view .LVU33
+  51:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 199              		.loc 1 51 7 is_stmt 0 view .LVU34
+ 200 0002 0346     		mov	r3, r0
+ 201 0004 10B1     		cbz	r0, .L16
+ 202              	.L12:
+  52:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered to get its active screen");
+ 203              		.loc 1 52 5 is_stmt 1 view .LVU35
+  52:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered to get its active screen");
+ 204              		.loc 1 52 7 is_stmt 0 view .LVU36
+ 205 0006 2BB1     		cbz	r3, .L14
+  57:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 206              		.loc 1 57 5 is_stmt 1 view .LVU37
+  57:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 207              		.loc 1 57 16 is_stmt 0 view .LVU38
+ 208 0008 1869     		ldr	r0, [r3, #16]
+ 209              	.LVL18:
+ 210              	.L11:
+  58:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 211              		.loc 1 58 1 view .LVU39
+ 212 000a 08BD     		pop	{r3, pc}
+ 213              	.LVL19:
+ 214              	.L16:
+  51:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 215              		.loc 1 51 15 is_stmt 1 discriminator 1 view .LVU40
+  51:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 216              		.loc 1 51 22 is_stmt 0 discriminator 1 view .LVU41
+ 217 000c FFF7FEFF 		bl	lv_disp_get_default
+ 218              	.LVL20:
+  51:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 219              		.loc 1 51 22 discriminator 1 view .LVU42
+ 220 0010 0346     		mov	r3, r0
+ 221              	.LVL21:
+  51:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 222              		.loc 1 51 22 discriminator 1 view .LVU43
+ 223 0012 F8E7     		b	.L12
+ 224              	.L14:
+  54:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 225              		.loc 1 54 16 view .LVU44
+ 226 0014 1846     		mov	r0, r3
+ 227              	.LVL22:
+  54:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 228              		.loc 1 54 16 view .LVU45
+ARM GAS  /tmp/ccun8SuT.s 			page 13
+
+
+ 229 0016 F8E7     		b	.L11
+ 230              		.cfi_endproc
+ 231              	.LFE153:
+ 233              		.section	.text.lv_disp_get_scr_prev,"ax",%progbits
+ 234              		.align	1
+ 235              		.global	lv_disp_get_scr_prev
+ 236              		.syntax unified
+ 237              		.thumb
+ 238              		.thumb_func
+ 239              		.fpu softvfp
+ 241              	lv_disp_get_scr_prev:
+ 242              	.LVL23:
+ 243              	.LFB154:
+  67:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 244              		.loc 1 67 1 is_stmt 1 view -0
+ 245              		.cfi_startproc
+ 246              		@ args = 0, pretend = 0, frame = 0
+ 247              		@ frame_needed = 0, uses_anonymous_args = 0
+  67:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 248              		.loc 1 67 1 is_stmt 0 view .LVU47
+ 249 0000 08B5     		push	{r3, lr}
+ 250              	.LCFI5:
+ 251              		.cfi_def_cfa_offset 8
+ 252              		.cfi_offset 3, -8
+ 253              		.cfi_offset 14, -4
+  68:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 254              		.loc 1 68 5 is_stmt 1 view .LVU48
+  68:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 255              		.loc 1 68 7 is_stmt 0 view .LVU49
+ 256 0002 0346     		mov	r3, r0
+ 257 0004 10B1     		cbz	r0, .L22
+ 258              	.L18:
+  69:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered to get its previous screen");
+ 259              		.loc 1 69 5 is_stmt 1 view .LVU50
+  69:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered to get its previous screen");
+ 260              		.loc 1 69 7 is_stmt 0 view .LVU51
+ 261 0006 2BB1     		cbz	r3, .L20
+  74:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 262              		.loc 1 74 5 is_stmt 1 view .LVU52
+  74:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 263              		.loc 1 74 16 is_stmt 0 view .LVU53
+ 264 0008 5869     		ldr	r0, [r3, #20]
+ 265              	.LVL24:
+ 266              	.L17:
+  75:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 267              		.loc 1 75 1 view .LVU54
+ 268 000a 08BD     		pop	{r3, pc}
+ 269              	.LVL25:
+ 270              	.L22:
+  68:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 271              		.loc 1 68 15 is_stmt 1 discriminator 1 view .LVU55
+  68:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 272              		.loc 1 68 22 is_stmt 0 discriminator 1 view .LVU56
+ 273 000c FFF7FEFF 		bl	lv_disp_get_default
+ 274              	.LVL26:
+  68:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 275              		.loc 1 68 22 discriminator 1 view .LVU57
+ARM GAS  /tmp/ccun8SuT.s 			page 14
+
+
+ 276 0010 0346     		mov	r3, r0
+ 277              	.LVL27:
+  68:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 278              		.loc 1 68 22 discriminator 1 view .LVU58
+ 279 0012 F8E7     		b	.L18
+ 280              	.L20:
+  71:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 281              		.loc 1 71 16 view .LVU59
+ 282 0014 1846     		mov	r0, r3
+ 283              	.LVL28:
+  71:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 284              		.loc 1 71 16 view .LVU60
+ 285 0016 F8E7     		b	.L17
+ 286              		.cfi_endproc
+ 287              	.LFE154:
+ 289              		.section	.text.lv_disp_load_scr,"ax",%progbits
+ 290              		.align	1
+ 291              		.global	lv_disp_load_scr
+ 292              		.syntax unified
+ 293              		.thumb
+ 294              		.thumb_func
+ 295              		.fpu softvfp
+ 297              	lv_disp_load_scr:
+ 298              	.LVL29:
+ 299              	.LFB155:
+  82:Middlewares/lvgl/src/core/lv_disp.c ****     lv_disp_t * d = lv_obj_get_disp(scr);
+ 300              		.loc 1 82 1 is_stmt 1 view -0
+ 301              		.cfi_startproc
+ 302              		@ args = 0, pretend = 0, frame = 0
+ 303              		@ frame_needed = 0, uses_anonymous_args = 0
+  82:Middlewares/lvgl/src/core/lv_disp.c ****     lv_disp_t * d = lv_obj_get_disp(scr);
+ 304              		.loc 1 82 1 is_stmt 0 view .LVU62
+ 305 0000 10B5     		push	{r4, lr}
+ 306              	.LCFI6:
+ 307              		.cfi_def_cfa_offset 8
+ 308              		.cfi_offset 4, -8
+ 309              		.cfi_offset 14, -4
+ 310 0002 0446     		mov	r4, r0
+  83:Middlewares/lvgl/src/core/lv_disp.c ****     if(!d) return;  /*Shouldn't happen, just to be sure*/
+ 311              		.loc 1 83 5 is_stmt 1 view .LVU63
+  83:Middlewares/lvgl/src/core/lv_disp.c ****     if(!d) return;  /*Shouldn't happen, just to be sure*/
+ 312              		.loc 1 83 21 is_stmt 0 view .LVU64
+ 313 0004 FFF7FEFF 		bl	lv_obj_get_disp
+ 314              	.LVL30:
+  84:Middlewares/lvgl/src/core/lv_disp.c ****     d->act_scr = scr;
+ 315              		.loc 1 84 5 is_stmt 1 view .LVU65
+  84:Middlewares/lvgl/src/core/lv_disp.c ****     d->act_scr = scr;
+ 316              		.loc 1 84 7 is_stmt 0 view .LVU66
+ 317 0008 18B1     		cbz	r0, .L23
+  85:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 318              		.loc 1 85 5 is_stmt 1 view .LVU67
+  85:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 319              		.loc 1 85 16 is_stmt 0 view .LVU68
+ 320 000a 0461     		str	r4, [r0, #16]
+  87:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 321              		.loc 1 87 5 is_stmt 1 view .LVU69
+ 322 000c 2046     		mov	r0, r4
+ARM GAS  /tmp/ccun8SuT.s 			page 15
+
+
+ 323              	.LVL31:
+  87:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 324              		.loc 1 87 5 is_stmt 0 view .LVU70
+ 325 000e FFF7FEFF 		bl	lv_obj_invalidate
+ 326              	.LVL32:
+ 327              	.L23:
+  88:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 328              		.loc 1 88 1 view .LVU71
+ 329 0012 10BD     		pop	{r4, pc}
+  88:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 330              		.loc 1 88 1 view .LVU72
+ 331              		.cfi_endproc
+ 332              	.LFE155:
+ 334              		.section	.text.scr_load_anim_start,"ax",%progbits
+ 335              		.align	1
+ 336              		.syntax unified
+ 337              		.thumb
+ 338              		.thumb_func
+ 339              		.fpu softvfp
+ 341              	scr_load_anim_start:
+ 342              	.LVL33:
+ 343              	.LFB168:
+ 404:Middlewares/lvgl/src/core/lv_disp.c ****     lv_disp_t * d = lv_obj_get_disp(a->var);
+ 344              		.loc 1 404 1 is_stmt 1 view -0
+ 345              		.cfi_startproc
+ 346              		@ args = 0, pretend = 0, frame = 0
+ 347              		@ frame_needed = 0, uses_anonymous_args = 0
+ 404:Middlewares/lvgl/src/core/lv_disp.c ****     lv_disp_t * d = lv_obj_get_disp(a->var);
+ 348              		.loc 1 404 1 is_stmt 0 view .LVU74
+ 349 0000 38B5     		push	{r3, r4, r5, lr}
+ 350              	.LCFI7:
+ 351              		.cfi_def_cfa_offset 16
+ 352              		.cfi_offset 3, -16
+ 353              		.cfi_offset 4, -12
+ 354              		.cfi_offset 5, -8
+ 355              		.cfi_offset 14, -4
+ 356 0002 0446     		mov	r4, r0
+ 405:Middlewares/lvgl/src/core/lv_disp.c ****     d->prev_scr = lv_scr_act();
+ 357              		.loc 1 405 5 is_stmt 1 view .LVU75
+ 405:Middlewares/lvgl/src/core/lv_disp.c ****     d->prev_scr = lv_scr_act();
+ 358              		.loc 1 405 21 is_stmt 0 view .LVU76
+ 359 0004 0068     		ldr	r0, [r0]
+ 360              	.LVL34:
+ 405:Middlewares/lvgl/src/core/lv_disp.c ****     d->prev_scr = lv_scr_act();
+ 361              		.loc 1 405 21 view .LVU77
+ 362 0006 FFF7FEFF 		bl	lv_obj_get_disp
+ 363              	.LVL35:
+ 364 000a 0546     		mov	r5, r0
+ 365              	.LVL36:
+ 406:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 366              		.loc 1 406 5 is_stmt 1 view .LVU78
+ 367              	.LBB76:
+ 368              	.LBI76:
+ 369              		.file 2 "Middlewares/lvgl/src/core/lv_disp.h"
+   1:Middlewares/lvgl/src/core/lv_disp.h **** /**
+   2:Middlewares/lvgl/src/core/lv_disp.h ****  * @file lv_disp.h
+   3:Middlewares/lvgl/src/core/lv_disp.h ****  *
+ARM GAS  /tmp/ccun8SuT.s 			page 16
+
+
+   4:Middlewares/lvgl/src/core/lv_disp.h ****  */
+   5:Middlewares/lvgl/src/core/lv_disp.h **** 
+   6:Middlewares/lvgl/src/core/lv_disp.h **** #ifndef LV_DISP_H
+   7:Middlewares/lvgl/src/core/lv_disp.h **** #define LV_DISP_H
+   8:Middlewares/lvgl/src/core/lv_disp.h **** 
+   9:Middlewares/lvgl/src/core/lv_disp.h **** #ifdef __cplusplus
+  10:Middlewares/lvgl/src/core/lv_disp.h **** extern "C" {
+  11:Middlewares/lvgl/src/core/lv_disp.h **** #endif
+  12:Middlewares/lvgl/src/core/lv_disp.h **** 
+  13:Middlewares/lvgl/src/core/lv_disp.h **** /*********************
+  14:Middlewares/lvgl/src/core/lv_disp.h ****  *      INCLUDES
+  15:Middlewares/lvgl/src/core/lv_disp.h ****  *********************/
+  16:Middlewares/lvgl/src/core/lv_disp.h **** #include "../hal/lv_hal.h"
+  17:Middlewares/lvgl/src/core/lv_disp.h **** #include "lv_obj.h"
+  18:Middlewares/lvgl/src/core/lv_disp.h **** #include "lv_theme.h"
+  19:Middlewares/lvgl/src/core/lv_disp.h **** 
+  20:Middlewares/lvgl/src/core/lv_disp.h **** /*********************
+  21:Middlewares/lvgl/src/core/lv_disp.h ****  *      DEFINES
+  22:Middlewares/lvgl/src/core/lv_disp.h ****  *********************/
+  23:Middlewares/lvgl/src/core/lv_disp.h **** 
+  24:Middlewares/lvgl/src/core/lv_disp.h **** /**********************
+  25:Middlewares/lvgl/src/core/lv_disp.h ****  *      TYPEDEFS
+  26:Middlewares/lvgl/src/core/lv_disp.h ****  **********************/
+  27:Middlewares/lvgl/src/core/lv_disp.h **** 
+  28:Middlewares/lvgl/src/core/lv_disp.h **** typedef enum {
+  29:Middlewares/lvgl/src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_NONE,
+  30:Middlewares/lvgl/src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_LEFT,
+  31:Middlewares/lvgl/src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_RIGHT,
+  32:Middlewares/lvgl/src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_TOP,
+  33:Middlewares/lvgl/src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_BOTTOM,
+  34:Middlewares/lvgl/src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_LEFT,
+  35:Middlewares/lvgl/src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_RIGHT,
+  36:Middlewares/lvgl/src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_TOP,
+  37:Middlewares/lvgl/src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_BOTTOM,
+  38:Middlewares/lvgl/src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_FADE_ON,
+  39:Middlewares/lvgl/src/core/lv_disp.h **** } lv_scr_load_anim_t;
+  40:Middlewares/lvgl/src/core/lv_disp.h **** 
+  41:Middlewares/lvgl/src/core/lv_disp.h **** /**********************
+  42:Middlewares/lvgl/src/core/lv_disp.h ****  * GLOBAL PROTOTYPES
+  43:Middlewares/lvgl/src/core/lv_disp.h ****  **********************/
+  44:Middlewares/lvgl/src/core/lv_disp.h **** 
+  45:Middlewares/lvgl/src/core/lv_disp.h **** /**
+  46:Middlewares/lvgl/src/core/lv_disp.h ****  * Return with a pointer to the active screen
+  47:Middlewares/lvgl/src/core/lv_disp.h ****  * @param disp pointer to display which active screen should be get. (NULL to use the default
+  48:Middlewares/lvgl/src/core/lv_disp.h ****  * screen)
+  49:Middlewares/lvgl/src/core/lv_disp.h ****  * @return pointer to the active screen object (loaded by 'lv_scr_load()')
+  50:Middlewares/lvgl/src/core/lv_disp.h ****  */
+  51:Middlewares/lvgl/src/core/lv_disp.h **** lv_obj_t * lv_disp_get_scr_act(lv_disp_t * disp);
+  52:Middlewares/lvgl/src/core/lv_disp.h **** 
+  53:Middlewares/lvgl/src/core/lv_disp.h **** /**
+  54:Middlewares/lvgl/src/core/lv_disp.h ****  * Return with a pointer to the previous screen. Only used during screen transitions.
+  55:Middlewares/lvgl/src/core/lv_disp.h ****  * @param disp pointer to display which previous screen should be get. (NULL to use the default
+  56:Middlewares/lvgl/src/core/lv_disp.h ****  * screen)
+  57:Middlewares/lvgl/src/core/lv_disp.h ****  * @return pointer to the previous screen object or NULL if not used now
+  58:Middlewares/lvgl/src/core/lv_disp.h ****  */
+  59:Middlewares/lvgl/src/core/lv_disp.h **** lv_obj_t * lv_disp_get_scr_prev(lv_disp_t * disp);
+  60:Middlewares/lvgl/src/core/lv_disp.h **** 
+ARM GAS  /tmp/ccun8SuT.s 			page 17
+
+
+  61:Middlewares/lvgl/src/core/lv_disp.h **** /**
+  62:Middlewares/lvgl/src/core/lv_disp.h ****  * Make a screen active
+  63:Middlewares/lvgl/src/core/lv_disp.h ****  * @param scr pointer to a screen
+  64:Middlewares/lvgl/src/core/lv_disp.h ****  */
+  65:Middlewares/lvgl/src/core/lv_disp.h **** void lv_disp_load_scr(lv_obj_t * scr);
+  66:Middlewares/lvgl/src/core/lv_disp.h **** 
+  67:Middlewares/lvgl/src/core/lv_disp.h **** /**
+  68:Middlewares/lvgl/src/core/lv_disp.h ****  * Return with the top layer. (Same on every screen and it is above the normal screen layer)
+  69:Middlewares/lvgl/src/core/lv_disp.h ****  * @param disp pointer to display which top layer should be get. (NULL to use the default screen)
+  70:Middlewares/lvgl/src/core/lv_disp.h ****  * @return pointer to the top layer object  (transparent screen sized lv_obj)
+  71:Middlewares/lvgl/src/core/lv_disp.h ****  */
+  72:Middlewares/lvgl/src/core/lv_disp.h **** lv_obj_t * lv_disp_get_layer_top(lv_disp_t * disp);
+  73:Middlewares/lvgl/src/core/lv_disp.h **** 
+  74:Middlewares/lvgl/src/core/lv_disp.h **** /**
+  75:Middlewares/lvgl/src/core/lv_disp.h ****  * Return with the sys. layer. (Same on every screen and it is above the normal screen and the top
+  76:Middlewares/lvgl/src/core/lv_disp.h ****  * layer)
+  77:Middlewares/lvgl/src/core/lv_disp.h ****  * @param disp pointer to display which sys. layer  should be get. (NULL to use the default screen)
+  78:Middlewares/lvgl/src/core/lv_disp.h ****  * @return pointer to the sys layer object  (transparent screen sized lv_obj)
+  79:Middlewares/lvgl/src/core/lv_disp.h ****  */
+  80:Middlewares/lvgl/src/core/lv_disp.h **** lv_obj_t * lv_disp_get_layer_sys(lv_disp_t * disp);
+  81:Middlewares/lvgl/src/core/lv_disp.h **** 
+  82:Middlewares/lvgl/src/core/lv_disp.h **** /**
+  83:Middlewares/lvgl/src/core/lv_disp.h ****  * Get the theme of a display
+  84:Middlewares/lvgl/src/core/lv_disp.h ****  * @param disp pointer to a display
+  85:Middlewares/lvgl/src/core/lv_disp.h ****  * @return the display's theme (can be NULL)
+  86:Middlewares/lvgl/src/core/lv_disp.h ****  */
+  87:Middlewares/lvgl/src/core/lv_disp.h **** void lv_disp_set_theme(lv_disp_t * disp, lv_theme_t * th);
+  88:Middlewares/lvgl/src/core/lv_disp.h **** 
+  89:Middlewares/lvgl/src/core/lv_disp.h **** /**
+  90:Middlewares/lvgl/src/core/lv_disp.h ****  * Get the theme of a display
+  91:Middlewares/lvgl/src/core/lv_disp.h ****  * @param disp pointer to a display
+  92:Middlewares/lvgl/src/core/lv_disp.h ****  * @return the display's theme (can be NULL)
+  93:Middlewares/lvgl/src/core/lv_disp.h ****  */
+  94:Middlewares/lvgl/src/core/lv_disp.h **** lv_theme_t * lv_disp_get_theme(lv_disp_t * disp);
+  95:Middlewares/lvgl/src/core/lv_disp.h **** 
+  96:Middlewares/lvgl/src/core/lv_disp.h **** /**
+  97:Middlewares/lvgl/src/core/lv_disp.h ****  * Set the background color of a display
+  98:Middlewares/lvgl/src/core/lv_disp.h ****  * @param disp pointer to a display
+  99:Middlewares/lvgl/src/core/lv_disp.h ****  * @param color color of the background
+ 100:Middlewares/lvgl/src/core/lv_disp.h ****  */
+ 101:Middlewares/lvgl/src/core/lv_disp.h **** void lv_disp_set_bg_color(lv_disp_t * disp, lv_color_t color);
+ 102:Middlewares/lvgl/src/core/lv_disp.h **** 
+ 103:Middlewares/lvgl/src/core/lv_disp.h **** /**
+ 104:Middlewares/lvgl/src/core/lv_disp.h ****  * Set the background image of a display
+ 105:Middlewares/lvgl/src/core/lv_disp.h ****  * @param disp pointer to a display
+ 106:Middlewares/lvgl/src/core/lv_disp.h ****  * @param img_src path to file or pointer to an `lv_img_dsc_t` variable
+ 107:Middlewares/lvgl/src/core/lv_disp.h ****  */
+ 108:Middlewares/lvgl/src/core/lv_disp.h **** void lv_disp_set_bg_image(lv_disp_t * disp, const void  * img_src);
+ 109:Middlewares/lvgl/src/core/lv_disp.h **** 
+ 110:Middlewares/lvgl/src/core/lv_disp.h **** /**
+ 111:Middlewares/lvgl/src/core/lv_disp.h ****  * Opacity of the background
+ 112:Middlewares/lvgl/src/core/lv_disp.h ****  * @param disp pointer to a display
+ 113:Middlewares/lvgl/src/core/lv_disp.h ****  * @param opa opacity (0..255)
+ 114:Middlewares/lvgl/src/core/lv_disp.h ****  */
+ 115:Middlewares/lvgl/src/core/lv_disp.h **** void lv_disp_set_bg_opa(lv_disp_t * disp, lv_opa_t opa);
+ 116:Middlewares/lvgl/src/core/lv_disp.h **** 
+ 117:Middlewares/lvgl/src/core/lv_disp.h **** /**
+ARM GAS  /tmp/ccun8SuT.s 			page 18
+
+
+ 118:Middlewares/lvgl/src/core/lv_disp.h ****  * Switch screen with animation
+ 119:Middlewares/lvgl/src/core/lv_disp.h ****  * @param scr pointer to the new screen to load
+ 120:Middlewares/lvgl/src/core/lv_disp.h ****  * @param anim_type type of the animation from `lv_scr_load_anim_t`. E.g.  `LV_SCR_LOAD_ANIM_MOVE_L
+ 121:Middlewares/lvgl/src/core/lv_disp.h ****  * @param time time of the animation
+ 122:Middlewares/lvgl/src/core/lv_disp.h ****  * @param delay delay before the transition
+ 123:Middlewares/lvgl/src/core/lv_disp.h ****  * @param auto_del true: automatically delete the old screen
+ 124:Middlewares/lvgl/src/core/lv_disp.h ****  */
+ 125:Middlewares/lvgl/src/core/lv_disp.h **** void lv_scr_load_anim(lv_obj_t * scr, lv_scr_load_anim_t anim_type, uint32_t time, uint32_t delay, 
+ 126:Middlewares/lvgl/src/core/lv_disp.h **** 
+ 127:Middlewares/lvgl/src/core/lv_disp.h **** /**
+ 128:Middlewares/lvgl/src/core/lv_disp.h ****  * Get elapsed time since last user activity on a display (e.g. click)
+ 129:Middlewares/lvgl/src/core/lv_disp.h ****  * @param disp pointer to an display (NULL to get the overall smallest inactivity)
+ 130:Middlewares/lvgl/src/core/lv_disp.h ****  * @return elapsed ticks (milliseconds) since the last activity
+ 131:Middlewares/lvgl/src/core/lv_disp.h ****  */
+ 132:Middlewares/lvgl/src/core/lv_disp.h **** uint32_t lv_disp_get_inactive_time(const lv_disp_t * disp);
+ 133:Middlewares/lvgl/src/core/lv_disp.h **** 
+ 134:Middlewares/lvgl/src/core/lv_disp.h **** /**
+ 135:Middlewares/lvgl/src/core/lv_disp.h ****  * Manually trigger an activity on a display
+ 136:Middlewares/lvgl/src/core/lv_disp.h ****  * @param disp pointer to an display (NULL to use the default display)
+ 137:Middlewares/lvgl/src/core/lv_disp.h ****  */
+ 138:Middlewares/lvgl/src/core/lv_disp.h **** void lv_disp_trig_activity(lv_disp_t * disp);
+ 139:Middlewares/lvgl/src/core/lv_disp.h **** 
+ 140:Middlewares/lvgl/src/core/lv_disp.h **** /**
+ 141:Middlewares/lvgl/src/core/lv_disp.h ****  * Clean any CPU cache that is related to the display.
+ 142:Middlewares/lvgl/src/core/lv_disp.h ****  * @param disp pointer to an display (NULL to use the default display)
+ 143:Middlewares/lvgl/src/core/lv_disp.h ****  */
+ 144:Middlewares/lvgl/src/core/lv_disp.h **** void lv_disp_clean_dcache(lv_disp_t * disp);
+ 145:Middlewares/lvgl/src/core/lv_disp.h **** 
+ 146:Middlewares/lvgl/src/core/lv_disp.h **** /**
+ 147:Middlewares/lvgl/src/core/lv_disp.h ****  * Get a pointer to the screen refresher timer to
+ 148:Middlewares/lvgl/src/core/lv_disp.h ****  * modify its parameters with `lv_timer_...` functions.
+ 149:Middlewares/lvgl/src/core/lv_disp.h ****  * @param disp pointer to a display
+ 150:Middlewares/lvgl/src/core/lv_disp.h ****  * @return pointer to the display refresher timer. (NULL on error)
+ 151:Middlewares/lvgl/src/core/lv_disp.h ****  */
+ 152:Middlewares/lvgl/src/core/lv_disp.h **** lv_timer_t * _lv_disp_get_refr_timer(lv_disp_t * disp);
+ 153:Middlewares/lvgl/src/core/lv_disp.h **** 
+ 154:Middlewares/lvgl/src/core/lv_disp.h **** /*------------------------------------------------
+ 155:Middlewares/lvgl/src/core/lv_disp.h ****  * To improve backward compatibility
+ 156:Middlewares/lvgl/src/core/lv_disp.h ****  * Recommended only if you have one display
+ 157:Middlewares/lvgl/src/core/lv_disp.h ****  *------------------------------------------------*/
+ 158:Middlewares/lvgl/src/core/lv_disp.h **** 
+ 159:Middlewares/lvgl/src/core/lv_disp.h **** /**
+ 160:Middlewares/lvgl/src/core/lv_disp.h ****  * Get the active screen of the default display
+ 161:Middlewares/lvgl/src/core/lv_disp.h ****  * @return pointer to the active screen
+ 162:Middlewares/lvgl/src/core/lv_disp.h ****  */
+ 163:Middlewares/lvgl/src/core/lv_disp.h **** static inline lv_obj_t * lv_scr_act(void)
+ 370              		.loc 2 163 26 view .LVU79
+ 371              	.LBB77:
+ 164:Middlewares/lvgl/src/core/lv_disp.h **** {
+ 165:Middlewares/lvgl/src/core/lv_disp.h ****     return lv_disp_get_scr_act(lv_disp_get_default());
+ 372              		.loc 2 165 5 view .LVU80
+ 373              		.loc 2 165 12 is_stmt 0 view .LVU81
+ 374 000c FFF7FEFF 		bl	lv_disp_get_default
+ 375              	.LVL37:
+ 376              		.loc 2 165 12 view .LVU82
+ 377 0010 FFF7FEFF 		bl	lv_disp_get_scr_act
+ 378              	.LVL38:
+ARM GAS  /tmp/ccun8SuT.s 			page 19
+
+
+ 379              	.LBE77:
+ 380              	.LBE76:
+ 406:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 381              		.loc 1 406 17 view .LVU83
+ 382 0014 6861     		str	r0, [r5, #20]
+ 408:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 383              		.loc 1 408 5 is_stmt 1 view .LVU84
+ 384 0016 2068     		ldr	r0, [r4]
+ 385 0018 FFF7FEFF 		bl	lv_disp_load_scr
+ 386              	.LVL39:
+ 409:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 387              		.loc 1 409 1 is_stmt 0 view .LVU85
+ 388 001c 38BD     		pop	{r3, r4, r5, pc}
+ 409:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 389              		.loc 1 409 1 view .LVU86
+ 390              		.cfi_endproc
+ 391              	.LFE168:
+ 393              		.section	.text.lv_disp_get_layer_top,"ax",%progbits
+ 394              		.align	1
+ 395              		.global	lv_disp_get_layer_top
+ 396              		.syntax unified
+ 397              		.thumb
+ 398              		.thumb_func
+ 399              		.fpu softvfp
+ 401              	lv_disp_get_layer_top:
+ 402              	.LVL40:
+ 403              	.LFB156:
+  96:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 404              		.loc 1 96 1 is_stmt 1 view -0
+ 405              		.cfi_startproc
+ 406              		@ args = 0, pretend = 0, frame = 0
+ 407              		@ frame_needed = 0, uses_anonymous_args = 0
+  96:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 408              		.loc 1 96 1 is_stmt 0 view .LVU88
+ 409 0000 08B5     		push	{r3, lr}
+ 410              	.LCFI8:
+ 411              		.cfi_def_cfa_offset 8
+ 412              		.cfi_offset 3, -8
+ 413              		.cfi_offset 14, -4
+  97:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 414              		.loc 1 97 5 is_stmt 1 view .LVU89
+  97:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 415              		.loc 1 97 7 is_stmt 0 view .LVU90
+ 416 0002 0346     		mov	r3, r0
+ 417 0004 10B1     		cbz	r0, .L33
+ 418              	.L29:
+  98:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_layer_top: no display registered to get its top layer");
+ 419              		.loc 1 98 5 is_stmt 1 view .LVU91
+  98:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_layer_top: no display registered to get its top layer");
+ 420              		.loc 1 98 7 is_stmt 0 view .LVU92
+ 421 0006 2BB1     		cbz	r3, .L31
+ 103:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 422              		.loc 1 103 5 is_stmt 1 view .LVU93
+ 103:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 423              		.loc 1 103 16 is_stmt 0 view .LVU94
+ 424 0008 D869     		ldr	r0, [r3, #28]
+ 425              	.LVL41:
+ARM GAS  /tmp/ccun8SuT.s 			page 20
+
+
+ 426              	.L28:
+ 104:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 427              		.loc 1 104 1 view .LVU95
+ 428 000a 08BD     		pop	{r3, pc}
+ 429              	.LVL42:
+ 430              	.L33:
+  97:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 431              		.loc 1 97 15 is_stmt 1 discriminator 1 view .LVU96
+  97:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 432              		.loc 1 97 22 is_stmt 0 discriminator 1 view .LVU97
+ 433 000c FFF7FEFF 		bl	lv_disp_get_default
+ 434              	.LVL43:
+  97:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 435              		.loc 1 97 22 discriminator 1 view .LVU98
+ 436 0010 0346     		mov	r3, r0
+ 437              	.LVL44:
+  97:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 438              		.loc 1 97 22 discriminator 1 view .LVU99
+ 439 0012 F8E7     		b	.L29
+ 440              	.L31:
+ 100:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 441              		.loc 1 100 16 view .LVU100
+ 442 0014 1846     		mov	r0, r3
+ 443              	.LVL45:
+ 100:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 444              		.loc 1 100 16 view .LVU101
+ 445 0016 F8E7     		b	.L28
+ 446              		.cfi_endproc
+ 447              	.LFE156:
+ 449              		.section	.text.lv_disp_get_layer_sys,"ax",%progbits
+ 450              		.align	1
+ 451              		.global	lv_disp_get_layer_sys
+ 452              		.syntax unified
+ 453              		.thumb
+ 454              		.thumb_func
+ 455              		.fpu softvfp
+ 457              	lv_disp_get_layer_sys:
+ 458              	.LVL46:
+ 459              	.LFB157:
+ 113:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 460              		.loc 1 113 1 is_stmt 1 view -0
+ 461              		.cfi_startproc
+ 462              		@ args = 0, pretend = 0, frame = 0
+ 463              		@ frame_needed = 0, uses_anonymous_args = 0
+ 113:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 464              		.loc 1 113 1 is_stmt 0 view .LVU103
+ 465 0000 08B5     		push	{r3, lr}
+ 466              	.LCFI9:
+ 467              		.cfi_def_cfa_offset 8
+ 468              		.cfi_offset 3, -8
+ 469              		.cfi_offset 14, -4
+ 114:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 470              		.loc 1 114 5 is_stmt 1 view .LVU104
+ 114:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 471              		.loc 1 114 7 is_stmt 0 view .LVU105
+ 472 0002 0346     		mov	r3, r0
+ 473 0004 10B1     		cbz	r0, .L39
+ARM GAS  /tmp/ccun8SuT.s 			page 21
+
+
+ 474              	.L35:
+ 115:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_layer_sys: no display registered to get its sys. layer");
+ 475              		.loc 1 115 5 is_stmt 1 view .LVU106
+ 115:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_layer_sys: no display registered to get its sys. layer");
+ 476              		.loc 1 115 7 is_stmt 0 view .LVU107
+ 477 0006 2BB1     		cbz	r3, .L37
+ 120:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 478              		.loc 1 120 5 is_stmt 1 view .LVU108
+ 120:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 479              		.loc 1 120 16 is_stmt 0 view .LVU109
+ 480 0008 186A     		ldr	r0, [r3, #32]
+ 481              	.LVL47:
+ 482              	.L34:
+ 121:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 483              		.loc 1 121 1 view .LVU110
+ 484 000a 08BD     		pop	{r3, pc}
+ 485              	.LVL48:
+ 486              	.L39:
+ 114:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 487              		.loc 1 114 15 is_stmt 1 discriminator 1 view .LVU111
+ 114:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 488              		.loc 1 114 22 is_stmt 0 discriminator 1 view .LVU112
+ 489 000c FFF7FEFF 		bl	lv_disp_get_default
+ 490              	.LVL49:
+ 114:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 491              		.loc 1 114 22 discriminator 1 view .LVU113
+ 492 0010 0346     		mov	r3, r0
+ 493              	.LVL50:
+ 114:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 494              		.loc 1 114 22 discriminator 1 view .LVU114
+ 495 0012 F8E7     		b	.L35
+ 496              	.L37:
+ 117:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 497              		.loc 1 117 16 view .LVU115
+ 498 0014 1846     		mov	r0, r3
+ 499              	.LVL51:
+ 117:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 500              		.loc 1 117 16 view .LVU116
+ 501 0016 F8E7     		b	.L34
+ 502              		.cfi_endproc
+ 503              	.LFE157:
+ 505              		.section	.text.lv_disp_set_theme,"ax",%progbits
+ 506              		.align	1
+ 507              		.global	lv_disp_set_theme
+ 508              		.syntax unified
+ 509              		.thumb
+ 510              		.thumb_func
+ 511              		.fpu softvfp
+ 513              	lv_disp_set_theme:
+ 514              	.LVL52:
+ 515              	.LFB158:
+ 129:Middlewares/lvgl/src/core/lv_disp.c **** 	if(disp == NULL) disp = lv_disp_get_default();
+ 516              		.loc 1 129 1 is_stmt 1 view -0
+ 517              		.cfi_startproc
+ 518              		@ args = 0, pretend = 0, frame = 0
+ 519              		@ frame_needed = 0, uses_anonymous_args = 0
+ 129:Middlewares/lvgl/src/core/lv_disp.c **** 	if(disp == NULL) disp = lv_disp_get_default();
+ARM GAS  /tmp/ccun8SuT.s 			page 22
+
+
+ 520              		.loc 1 129 1 is_stmt 0 view .LVU118
+ 521 0000 38B5     		push	{r3, r4, r5, lr}
+ 522              	.LCFI10:
+ 523              		.cfi_def_cfa_offset 16
+ 524              		.cfi_offset 3, -16
+ 525              		.cfi_offset 4, -12
+ 526              		.cfi_offset 5, -8
+ 527              		.cfi_offset 14, -4
+ 528 0002 0C46     		mov	r4, r1
+ 130:Middlewares/lvgl/src/core/lv_disp.c ****     disp->theme = th;
+ 529              		.loc 1 130 2 is_stmt 1 view .LVU119
+ 130:Middlewares/lvgl/src/core/lv_disp.c ****     disp->theme = th;
+ 530              		.loc 1 130 4 is_stmt 0 view .LVU120
+ 531 0004 0546     		mov	r5, r0
+ 532 0006 20B1     		cbz	r0, .L44
+ 533              	.LVL53:
+ 534              	.L41:
+ 131:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 535              		.loc 1 131 5 is_stmt 1 view .LVU121
+ 131:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 536              		.loc 1 131 17 is_stmt 0 view .LVU122
+ 537 0008 AC60     		str	r4, [r5, #8]
+ 133:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_get_child_cnt(disp->screens[0]) == 0 &&
+ 538              		.loc 1 133 5 is_stmt 1 view .LVU123
+ 133:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_get_child_cnt(disp->screens[0]) == 0 &&
+ 539              		.loc 1 133 12 is_stmt 0 view .LVU124
+ 540 000a 6B6A     		ldr	r3, [r5, #36]
+ 133:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_get_child_cnt(disp->screens[0]) == 0 &&
+ 541              		.loc 1 133 7 view .LVU125
+ 542 000c 032B     		cmp	r3, #3
+ 543 000e 04D0     		beq	.L45
+ 544              	.LVL54:
+ 545              	.L40:
+ 140:Middlewares/lvgl/src/core/lv_disp.c **** /**
+ 546              		.loc 1 140 1 view .LVU126
+ 547 0010 38BD     		pop	{r3, r4, r5, pc}
+ 548              	.LVL55:
+ 549              	.L44:
+ 130:Middlewares/lvgl/src/core/lv_disp.c ****     disp->theme = th;
+ 550              		.loc 1 130 19 is_stmt 1 discriminator 1 view .LVU127
+ 130:Middlewares/lvgl/src/core/lv_disp.c ****     disp->theme = th;
+ 551              		.loc 1 130 26 is_stmt 0 discriminator 1 view .LVU128
+ 552 0012 FFF7FEFF 		bl	lv_disp_get_default
+ 553              	.LVL56:
+ 130:Middlewares/lvgl/src/core/lv_disp.c ****     disp->theme = th;
+ 554              		.loc 1 130 26 discriminator 1 view .LVU129
+ 555 0016 0546     		mov	r5, r0
+ 556              	.LVL57:
+ 130:Middlewares/lvgl/src/core/lv_disp.c ****     disp->theme = th;
+ 557              		.loc 1 130 26 discriminator 1 view .LVU130
+ 558 0018 F6E7     		b	.L41
+ 559              	.L45:
+ 134:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_get_child_cnt(disp->screens[1]) == 0 &&
+ 560              		.loc 1 134 34 discriminator 1 view .LVU131
+ 561 001a EB68     		ldr	r3, [r5, #12]
+ 134:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_get_child_cnt(disp->screens[1]) == 0 &&
+ 562              		.loc 1 134 9 discriminator 1 view .LVU132
+ARM GAS  /tmp/ccun8SuT.s 			page 23
+
+
+ 563 001c 1868     		ldr	r0, [r3]
+ 564              	.LVL58:
+ 134:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_get_child_cnt(disp->screens[1]) == 0 &&
+ 565              		.loc 1 134 9 discriminator 1 view .LVU133
+ 566 001e FFF7FEFF 		bl	lv_obj_get_child_cnt
+ 567              	.LVL59:
+ 133:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_get_child_cnt(disp->screens[0]) == 0 &&
+ 568              		.loc 1 133 30 discriminator 1 view .LVU134
+ 569 0022 0028     		cmp	r0, #0
+ 570 0024 F4D1     		bne	.L40
+ 135:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_get_child_cnt(disp->screens[2]) == 0)
+ 571              		.loc 1 135 34 view .LVU135
+ 572 0026 EB68     		ldr	r3, [r5, #12]
+ 135:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_get_child_cnt(disp->screens[2]) == 0)
+ 573              		.loc 1 135 9 view .LVU136
+ 574 0028 5868     		ldr	r0, [r3, #4]
+ 575 002a FFF7FEFF 		bl	lv_obj_get_child_cnt
+ 576              	.LVL60:
+ 134:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_get_child_cnt(disp->screens[1]) == 0 &&
+ 577              		.loc 1 134 53 view .LVU137
+ 578 002e 0028     		cmp	r0, #0
+ 579 0030 EED1     		bne	.L40
+ 136:Middlewares/lvgl/src/core/lv_disp.c ****     {
+ 580              		.loc 1 136 34 view .LVU138
+ 581 0032 EB68     		ldr	r3, [r5, #12]
+ 136:Middlewares/lvgl/src/core/lv_disp.c ****     {
+ 582              		.loc 1 136 9 view .LVU139
+ 583 0034 9868     		ldr	r0, [r3, #8]
+ 584 0036 FFF7FEFF 		bl	lv_obj_get_child_cnt
+ 585              	.LVL61:
+ 135:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_get_child_cnt(disp->screens[2]) == 0)
+ 586              		.loc 1 135 53 view .LVU140
+ 587 003a 0028     		cmp	r0, #0
+ 588 003c E8D1     		bne	.L40
+ 138:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 589              		.loc 1 138 9 is_stmt 1 view .LVU141
+ 138:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 590              		.loc 1 138 28 is_stmt 0 view .LVU142
+ 591 003e EB68     		ldr	r3, [r5, #12]
+ 138:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 592              		.loc 1 138 9 view .LVU143
+ 593 0040 1868     		ldr	r0, [r3]
+ 594 0042 FFF7FEFF 		bl	lv_theme_apply
+ 595              	.LVL62:
+ 140:Middlewares/lvgl/src/core/lv_disp.c **** /**
+ 596              		.loc 1 140 1 view .LVU144
+ 597 0046 E3E7     		b	.L40
+ 598              		.cfi_endproc
+ 599              	.LFE158:
+ 601              		.section	.text.lv_disp_get_theme,"ax",%progbits
+ 602              		.align	1
+ 603              		.global	lv_disp_get_theme
+ 604              		.syntax unified
+ 605              		.thumb
+ 606              		.thumb_func
+ 607              		.fpu softvfp
+ 609              	lv_disp_get_theme:
+ARM GAS  /tmp/ccun8SuT.s 			page 24
+
+
+ 610              	.LVL63:
+ 611              	.LFB159:
+ 147:Middlewares/lvgl/src/core/lv_disp.c **** 	if(disp == NULL) disp = lv_disp_get_default();
+ 612              		.loc 1 147 1 is_stmt 1 view -0
+ 613              		.cfi_startproc
+ 614              		@ args = 0, pretend = 0, frame = 0
+ 615              		@ frame_needed = 0, uses_anonymous_args = 0
+ 147:Middlewares/lvgl/src/core/lv_disp.c **** 	if(disp == NULL) disp = lv_disp_get_default();
+ 616              		.loc 1 147 1 is_stmt 0 view .LVU146
+ 617 0000 08B5     		push	{r3, lr}
+ 618              	.LCFI11:
+ 619              		.cfi_def_cfa_offset 8
+ 620              		.cfi_offset 3, -8
+ 621              		.cfi_offset 14, -4
+ 148:Middlewares/lvgl/src/core/lv_disp.c ****     return disp->theme;
+ 622              		.loc 1 148 2 is_stmt 1 view .LVU147
+ 148:Middlewares/lvgl/src/core/lv_disp.c ****     return disp->theme;
+ 623              		.loc 1 148 4 is_stmt 0 view .LVU148
+ 624 0002 0346     		mov	r3, r0
+ 625 0004 08B1     		cbz	r0, .L49
+ 626              	.L47:
+ 149:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 627              		.loc 1 149 5 is_stmt 1 view .LVU149
+ 150:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 628              		.loc 1 150 1 is_stmt 0 view .LVU150
+ 629 0006 9868     		ldr	r0, [r3, #8]
+ 630              	.LVL64:
+ 150:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 631              		.loc 1 150 1 view .LVU151
+ 632 0008 08BD     		pop	{r3, pc}
+ 633              	.LVL65:
+ 634              	.L49:
+ 148:Middlewares/lvgl/src/core/lv_disp.c ****     return disp->theme;
+ 635              		.loc 1 148 19 is_stmt 1 discriminator 1 view .LVU152
+ 148:Middlewares/lvgl/src/core/lv_disp.c ****     return disp->theme;
+ 636              		.loc 1 148 26 is_stmt 0 discriminator 1 view .LVU153
+ 637 000a FFF7FEFF 		bl	lv_disp_get_default
+ 638              	.LVL66:
+ 148:Middlewares/lvgl/src/core/lv_disp.c ****     return disp->theme;
+ 639              		.loc 1 148 26 discriminator 1 view .LVU154
+ 640 000e 0346     		mov	r3, r0
+ 641              	.LVL67:
+ 148:Middlewares/lvgl/src/core/lv_disp.c ****     return disp->theme;
+ 642              		.loc 1 148 26 discriminator 1 view .LVU155
+ 643 0010 F9E7     		b	.L47
+ 644              		.cfi_endproc
+ 645              	.LFE159:
+ 647              		.section	.text.lv_disp_set_bg_color,"ax",%progbits
+ 648              		.align	1
+ 649              		.global	lv_disp_set_bg_color
+ 650              		.syntax unified
+ 651              		.thumb
+ 652              		.thumb_func
+ 653              		.fpu softvfp
+ 655              	lv_disp_set_bg_color:
+ 656              	.LVL68:
+ 657              	.LFB160:
+ARM GAS  /tmp/ccun8SuT.s 			page 25
+
+
+ 158:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 658              		.loc 1 158 1 is_stmt 1 view -0
+ 659              		.cfi_startproc
+ 660              		@ args = 0, pretend = 0, frame = 8
+ 661              		@ frame_needed = 0, uses_anonymous_args = 0
+ 158:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 662              		.loc 1 158 1 is_stmt 0 view .LVU157
+ 663 0000 30B5     		push	{r4, r5, lr}
+ 664              	.LCFI12:
+ 665              		.cfi_def_cfa_offset 12
+ 666              		.cfi_offset 4, -12
+ 667              		.cfi_offset 5, -8
+ 668              		.cfi_offset 14, -4
+ 669 0002 85B0     		sub	sp, sp, #20
+ 670              	.LCFI13:
+ 671              		.cfi_def_cfa_offset 32
+ 672 0004 0C46     		mov	r4, r1	@ movhi
+ 673              	.LVL69:
+ 159:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 674              		.loc 1 159 5 is_stmt 1 view .LVU158
+ 159:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 675              		.loc 1 159 7 is_stmt 0 view .LVU159
+ 676 0006 0546     		mov	r5, r0
+ 677 0008 D0B1     		cbz	r0, .L55
+ 678              	.L51:
+ 160:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered");
+ 679              		.loc 1 160 5 is_stmt 1 view .LVU160
+ 160:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered");
+ 680              		.loc 1 160 7 is_stmt 0 view .LVU161
+ 681 000a BDB1     		cbz	r5, .L50
+ 165:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 682              		.loc 1 165 5 is_stmt 1 view .LVU162
+ 683              	.LVL70:
+ 165:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 684              		.loc 1 165 20 is_stmt 0 view .LVU163
+ 685 000c 6C85     		strh	r4, [r5, #42]	@ movhi
+ 167:Middlewares/lvgl/src/core/lv_disp.c ****     lv_area_set(&a, 0, 0, lv_disp_get_hor_res(disp) - 1, lv_disp_get_ver_res(disp) - 1);
+ 686              		.loc 1 167 5 is_stmt 1 view .LVU164
+ 168:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 687              		.loc 1 168 5 view .LVU165
+ 168:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 688              		.loc 1 168 27 is_stmt 0 view .LVU166
+ 689 000e 2846     		mov	r0, r5
+ 168:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 690              		.loc 1 168 27 view .LVU167
+ 691 0010 FFF7FEFF 		bl	lv_disp_get_hor_res
+ 692              	.LVL71:
+ 168:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 693              		.loc 1 168 27 view .LVU168
+ 694 0014 84B2     		uxth	r4, r0
+ 695              	.LVL72:
+ 168:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 696              		.loc 1 168 53 view .LVU169
+ 697 0016 013C     		subs	r4, r4, #1
+ 698 0018 A4B2     		uxth	r4, r4
+ 168:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 699              		.loc 1 168 58 view .LVU170
+ARM GAS  /tmp/ccun8SuT.s 			page 26
+
+
+ 700 001a 2846     		mov	r0, r5
+ 701 001c FFF7FEFF 		bl	lv_disp_get_ver_res
+ 702              	.LVL73:
+ 703 0020 83B2     		uxth	r3, r0
+ 168:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 704              		.loc 1 168 84 view .LVU171
+ 705 0022 013B     		subs	r3, r3, #1
+ 168:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 706              		.loc 1 168 5 view .LVU172
+ 707 0024 1BB2     		sxth	r3, r3
+ 708 0026 0093     		str	r3, [sp]
+ 709 0028 23B2     		sxth	r3, r4
+ 710 002a 0022     		movs	r2, #0
+ 711 002c 1146     		mov	r1, r2
+ 712 002e 02A8     		add	r0, sp, #8
+ 713 0030 FFF7FEFF 		bl	lv_area_set
+ 714              	.LVL74:
+ 169:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 715              		.loc 1 169 5 is_stmt 1 view .LVU173
+ 716 0034 02A9     		add	r1, sp, #8
+ 717 0036 2846     		mov	r0, r5
+ 718 0038 FFF7FEFF 		bl	_lv_inv_area
+ 719              	.LVL75:
+ 720              	.L50:
+ 171:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 721              		.loc 1 171 1 is_stmt 0 view .LVU174
+ 722 003c 05B0     		add	sp, sp, #20
+ 723              	.LCFI14:
+ 724              		.cfi_remember_state
+ 725              		.cfi_def_cfa_offset 12
+ 726              		@ sp needed
+ 727 003e 30BD     		pop	{r4, r5, pc}
+ 728              	.LVL76:
+ 729              	.L55:
+ 730              	.LCFI15:
+ 731              		.cfi_restore_state
+ 159:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 732              		.loc 1 159 15 is_stmt 1 discriminator 1 view .LVU175
+ 159:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 733              		.loc 1 159 22 is_stmt 0 discriminator 1 view .LVU176
+ 734 0040 FFF7FEFF 		bl	lv_disp_get_default
+ 735              	.LVL77:
+ 159:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 736              		.loc 1 159 22 discriminator 1 view .LVU177
+ 737 0044 0546     		mov	r5, r0
+ 738              	.LVL78:
+ 159:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 739              		.loc 1 159 22 discriminator 1 view .LVU178
+ 740 0046 E0E7     		b	.L51
+ 741              		.cfi_endproc
+ 742              	.LFE160:
+ 744              		.section	.text.lv_disp_set_bg_image,"ax",%progbits
+ 745              		.align	1
+ 746              		.global	lv_disp_set_bg_image
+ 747              		.syntax unified
+ 748              		.thumb
+ 749              		.thumb_func
+ARM GAS  /tmp/ccun8SuT.s 			page 27
+
+
+ 750              		.fpu softvfp
+ 752              	lv_disp_set_bg_image:
+ 753              	.LVL79:
+ 754              	.LFB161:
+ 179:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 755              		.loc 1 179 1 is_stmt 1 view -0
+ 756              		.cfi_startproc
+ 757              		@ args = 0, pretend = 0, frame = 8
+ 758              		@ frame_needed = 0, uses_anonymous_args = 0
+ 179:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 759              		.loc 1 179 1 is_stmt 0 view .LVU180
+ 760 0000 30B5     		push	{r4, r5, lr}
+ 761              	.LCFI16:
+ 762              		.cfi_def_cfa_offset 12
+ 763              		.cfi_offset 4, -12
+ 764              		.cfi_offset 5, -8
+ 765              		.cfi_offset 14, -4
+ 766 0002 85B0     		sub	sp, sp, #20
+ 767              	.LCFI17:
+ 768              		.cfi_def_cfa_offset 32
+ 769 0004 0C46     		mov	r4, r1
+ 180:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 770              		.loc 1 180 5 is_stmt 1 view .LVU181
+ 180:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 771              		.loc 1 180 7 is_stmt 0 view .LVU182
+ 772 0006 0546     		mov	r5, r0
+ 773 0008 D0B1     		cbz	r0, .L61
+ 774              	.LVL80:
+ 775              	.L57:
+ 181:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered");
+ 776              		.loc 1 181 5 is_stmt 1 view .LVU183
+ 181:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered");
+ 777              		.loc 1 181 7 is_stmt 0 view .LVU184
+ 778 000a BDB1     		cbz	r5, .L56
+ 186:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 779              		.loc 1 186 5 is_stmt 1 view .LVU185
+ 186:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 780              		.loc 1 186 18 is_stmt 0 view .LVU186
+ 781 000c EC62     		str	r4, [r5, #44]
+ 188:Middlewares/lvgl/src/core/lv_disp.c ****     lv_area_set(&a, 0, 0, lv_disp_get_hor_res(disp) - 1, lv_disp_get_ver_res(disp) - 1);
+ 782              		.loc 1 188 5 is_stmt 1 view .LVU187
+ 189:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 783              		.loc 1 189 5 view .LVU188
+ 189:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 784              		.loc 1 189 27 is_stmt 0 view .LVU189
+ 785 000e 2846     		mov	r0, r5
+ 189:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 786              		.loc 1 189 27 view .LVU190
+ 787 0010 FFF7FEFF 		bl	lv_disp_get_hor_res
+ 788              	.LVL81:
+ 189:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 789              		.loc 1 189 27 view .LVU191
+ 790 0014 84B2     		uxth	r4, r0
+ 791              	.LVL82:
+ 189:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 792              		.loc 1 189 53 view .LVU192
+ 793 0016 013C     		subs	r4, r4, #1
+ARM GAS  /tmp/ccun8SuT.s 			page 28
+
+
+ 794 0018 A4B2     		uxth	r4, r4
+ 189:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 795              		.loc 1 189 58 view .LVU193
+ 796 001a 2846     		mov	r0, r5
+ 797 001c FFF7FEFF 		bl	lv_disp_get_ver_res
+ 798              	.LVL83:
+ 799 0020 83B2     		uxth	r3, r0
+ 189:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 800              		.loc 1 189 84 view .LVU194
+ 801 0022 013B     		subs	r3, r3, #1
+ 189:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 802              		.loc 1 189 5 view .LVU195
+ 803 0024 1BB2     		sxth	r3, r3
+ 804 0026 0093     		str	r3, [sp]
+ 805 0028 23B2     		sxth	r3, r4
+ 806 002a 0022     		movs	r2, #0
+ 807 002c 1146     		mov	r1, r2
+ 808 002e 02A8     		add	r0, sp, #8
+ 809 0030 FFF7FEFF 		bl	lv_area_set
+ 810              	.LVL84:
+ 190:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 811              		.loc 1 190 5 is_stmt 1 view .LVU196
+ 812 0034 02A9     		add	r1, sp, #8
+ 813 0036 2846     		mov	r0, r5
+ 814 0038 FFF7FEFF 		bl	_lv_inv_area
+ 815              	.LVL85:
+ 816              	.L56:
+ 191:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 817              		.loc 1 191 1 is_stmt 0 view .LVU197
+ 818 003c 05B0     		add	sp, sp, #20
+ 819              	.LCFI18:
+ 820              		.cfi_remember_state
+ 821              		.cfi_def_cfa_offset 12
+ 822              		@ sp needed
+ 823 003e 30BD     		pop	{r4, r5, pc}
+ 824              	.LVL86:
+ 825              	.L61:
+ 826              	.LCFI19:
+ 827              		.cfi_restore_state
+ 180:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 828              		.loc 1 180 15 is_stmt 1 discriminator 1 view .LVU198
+ 180:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 829              		.loc 1 180 22 is_stmt 0 discriminator 1 view .LVU199
+ 830 0040 FFF7FEFF 		bl	lv_disp_get_default
+ 831              	.LVL87:
+ 180:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 832              		.loc 1 180 22 discriminator 1 view .LVU200
+ 833 0044 0546     		mov	r5, r0
+ 834              	.LVL88:
+ 180:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 835              		.loc 1 180 22 discriminator 1 view .LVU201
+ 836 0046 E0E7     		b	.L57
+ 837              		.cfi_endproc
+ 838              	.LFE161:
+ 840              		.section	.text.lv_disp_set_bg_opa,"ax",%progbits
+ 841              		.align	1
+ 842              		.global	lv_disp_set_bg_opa
+ARM GAS  /tmp/ccun8SuT.s 			page 29
+
+
+ 843              		.syntax unified
+ 844              		.thumb
+ 845              		.thumb_func
+ 846              		.fpu softvfp
+ 848              	lv_disp_set_bg_opa:
+ 849              	.LVL89:
+ 850              	.LFB162:
+ 199:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 851              		.loc 1 199 1 is_stmt 1 view -0
+ 852              		.cfi_startproc
+ 853              		@ args = 0, pretend = 0, frame = 8
+ 854              		@ frame_needed = 0, uses_anonymous_args = 0
+ 199:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 855              		.loc 1 199 1 is_stmt 0 view .LVU203
+ 856 0000 30B5     		push	{r4, r5, lr}
+ 857              	.LCFI20:
+ 858              		.cfi_def_cfa_offset 12
+ 859              		.cfi_offset 4, -12
+ 860              		.cfi_offset 5, -8
+ 861              		.cfi_offset 14, -4
+ 862 0002 85B0     		sub	sp, sp, #20
+ 863              	.LCFI21:
+ 864              		.cfi_def_cfa_offset 32
+ 865 0004 0C46     		mov	r4, r1
+ 200:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 866              		.loc 1 200 5 is_stmt 1 view .LVU204
+ 200:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 867              		.loc 1 200 7 is_stmt 0 view .LVU205
+ 868 0006 0546     		mov	r5, r0
+ 869 0008 D8B1     		cbz	r0, .L67
+ 870              	.LVL90:
+ 871              	.L63:
+ 201:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered");
+ 872              		.loc 1 201 5 is_stmt 1 view .LVU206
+ 201:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("no display registered");
+ 873              		.loc 1 201 7 is_stmt 0 view .LVU207
+ 874 000a C5B1     		cbz	r5, .L62
+ 206:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 875              		.loc 1 206 5 is_stmt 1 view .LVU208
+ 206:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 876              		.loc 1 206 18 is_stmt 0 view .LVU209
+ 877 000c 85F82940 		strb	r4, [r5, #41]
+ 208:Middlewares/lvgl/src/core/lv_disp.c ****     lv_area_set(&a, 0, 0, lv_disp_get_hor_res(disp) - 1, lv_disp_get_ver_res(disp) - 1);
+ 878              		.loc 1 208 5 is_stmt 1 view .LVU210
+ 209:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 879              		.loc 1 209 5 view .LVU211
+ 209:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 880              		.loc 1 209 27 is_stmt 0 view .LVU212
+ 881 0010 2846     		mov	r0, r5
+ 209:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 882              		.loc 1 209 27 view .LVU213
+ 883 0012 FFF7FEFF 		bl	lv_disp_get_hor_res
+ 884              	.LVL91:
+ 209:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 885              		.loc 1 209 27 view .LVU214
+ 886 0016 84B2     		uxth	r4, r0
+ 209:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ARM GAS  /tmp/ccun8SuT.s 			page 30
+
+
+ 887              		.loc 1 209 53 view .LVU215
+ 888 0018 013C     		subs	r4, r4, #1
+ 889 001a A4B2     		uxth	r4, r4
+ 209:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 890              		.loc 1 209 58 view .LVU216
+ 891 001c 2846     		mov	r0, r5
+ 892 001e FFF7FEFF 		bl	lv_disp_get_ver_res
+ 893              	.LVL92:
+ 894 0022 83B2     		uxth	r3, r0
+ 209:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 895              		.loc 1 209 84 view .LVU217
+ 896 0024 013B     		subs	r3, r3, #1
+ 209:Middlewares/lvgl/src/core/lv_disp.c ****     _lv_inv_area(disp, &a);
+ 897              		.loc 1 209 5 view .LVU218
+ 898 0026 1BB2     		sxth	r3, r3
+ 899 0028 0093     		str	r3, [sp]
+ 900 002a 23B2     		sxth	r3, r4
+ 901 002c 0022     		movs	r2, #0
+ 902 002e 1146     		mov	r1, r2
+ 903 0030 02A8     		add	r0, sp, #8
+ 904 0032 FFF7FEFF 		bl	lv_area_set
+ 905              	.LVL93:
+ 210:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 906              		.loc 1 210 5 is_stmt 1 view .LVU219
+ 907 0036 02A9     		add	r1, sp, #8
+ 908 0038 2846     		mov	r0, r5
+ 909 003a FFF7FEFF 		bl	_lv_inv_area
+ 910              	.LVL94:
+ 911              	.L62:
+ 211:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 912              		.loc 1 211 1 is_stmt 0 view .LVU220
+ 913 003e 05B0     		add	sp, sp, #20
+ 914              	.LCFI22:
+ 915              		.cfi_remember_state
+ 916              		.cfi_def_cfa_offset 12
+ 917              		@ sp needed
+ 918 0040 30BD     		pop	{r4, r5, pc}
+ 919              	.LVL95:
+ 920              	.L67:
+ 921              	.LCFI23:
+ 922              		.cfi_restore_state
+ 200:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 923              		.loc 1 200 15 is_stmt 1 discriminator 1 view .LVU221
+ 200:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 924              		.loc 1 200 22 is_stmt 0 discriminator 1 view .LVU222
+ 925 0042 FFF7FEFF 		bl	lv_disp_get_default
+ 926              	.LVL96:
+ 200:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 927              		.loc 1 200 22 discriminator 1 view .LVU223
+ 928 0046 0546     		mov	r5, r0
+ 929              	.LVL97:
+ 200:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 930              		.loc 1 200 22 discriminator 1 view .LVU224
+ 931 0048 DFE7     		b	.L63
+ 932              		.cfi_endproc
+ 933              	.LFE162:
+ 935              		.section	.text.lv_scr_load_anim,"ax",%progbits
+ARM GAS  /tmp/ccun8SuT.s 			page 31
+
+
+ 936              		.align	1
+ 937              		.global	lv_scr_load_anim
+ 938              		.syntax unified
+ 939              		.thumb
+ 940              		.thumb_func
+ 941              		.fpu softvfp
+ 943              	lv_scr_load_anim:
+ 944              	.LVL98:
+ 945              	.LFB163:
+ 222:Middlewares/lvgl/src/core/lv_disp.c ****     lv_disp_t * d = lv_obj_get_disp(new_scr);
+ 946              		.loc 1 222 1 is_stmt 1 view -0
+ 947              		.cfi_startproc
+ 948              		@ args = 4, pretend = 0, frame = 136
+ 949              		@ frame_needed = 0, uses_anonymous_args = 0
+ 222:Middlewares/lvgl/src/core/lv_disp.c ****     lv_disp_t * d = lv_obj_get_disp(new_scr);
+ 950              		.loc 1 222 1 is_stmt 0 view .LVU226
+ 951 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 952              	.LCFI24:
+ 953              		.cfi_def_cfa_offset 24
+ 954              		.cfi_offset 4, -24
+ 955              		.cfi_offset 5, -20
+ 956              		.cfi_offset 6, -16
+ 957              		.cfi_offset 7, -12
+ 958              		.cfi_offset 8, -8
+ 959              		.cfi_offset 14, -4
+ 960 0004 A2B0     		sub	sp, sp, #136
+ 961              	.LCFI25:
+ 962              		.cfi_def_cfa_offset 160
+ 963 0006 0546     		mov	r5, r0
+ 964 0008 0F46     		mov	r7, r1
+ 965 000a 9046     		mov	r8, r2
+ 966 000c 1E46     		mov	r6, r3
+ 223:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_t * act_scr = lv_scr_act();
+ 967              		.loc 1 223 5 is_stmt 1 view .LVU227
+ 223:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_t * act_scr = lv_scr_act();
+ 968              		.loc 1 223 21 is_stmt 0 view .LVU228
+ 969 000e FFF7FEFF 		bl	lv_obj_get_disp
+ 970              	.LVL99:
+ 223:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_t * act_scr = lv_scr_act();
+ 971              		.loc 1 223 21 view .LVU229
+ 972 0012 0446     		mov	r4, r0
+ 973              	.LVL100:
+ 224:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 974              		.loc 1 224 5 is_stmt 1 view .LVU230
+ 975              	.LBB158:
+ 976              	.LBI158:
+ 163:Middlewares/lvgl/src/core/lv_disp.h **** {
+ 977              		.loc 2 163 26 view .LVU231
+ 978              	.LBB159:
+ 979              		.loc 2 165 5 view .LVU232
+ 980              		.loc 2 165 12 is_stmt 0 view .LVU233
+ 981 0014 FFF7FEFF 		bl	lv_disp_get_default
+ 982              	.LVL101:
+ 983              		.loc 2 165 12 view .LVU234
+ 984 0018 FFF7FEFF 		bl	lv_disp_get_scr_act
+ 985              	.LVL102:
+ 986              		.loc 2 165 12 view .LVU235
+ARM GAS  /tmp/ccun8SuT.s 			page 32
+
+
+ 987              	.LBE159:
+ 988              	.LBE158:
+ 226:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_del(act_scr);
+ 989              		.loc 1 226 5 is_stmt 1 view .LVU236
+ 226:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_del(act_scr);
+ 990              		.loc 1 226 8 is_stmt 0 view .LVU237
+ 991 001c 94F82830 		ldrb	r3, [r4, #40]	@ zero_extendqisi2
+ 226:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_del(act_scr);
+ 992              		.loc 1 226 7 view .LVU238
+ 993 0020 13F0010F 		tst	r3, #1
+ 994 0024 17D0     		beq	.L69
+ 226:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_del(act_scr);
+ 995              		.loc 1 226 35 discriminator 1 view .LVU239
+ 996 0026 A369     		ldr	r3, [r4, #24]
+ 226:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_del(act_scr);
+ 997              		.loc 1 226 20 discriminator 1 view .LVU240
+ 998 0028 8342     		cmp	r3, r0
+ 999 002a 14D0     		beq	.L69
+ 226:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_del(act_scr);
+ 1000              		.loc 1 226 49 discriminator 2 view .LVU241
+ 1001 002c 9BB1     		cbz	r3, .L69
+ 227:Middlewares/lvgl/src/core/lv_disp.c ****         lv_disp_load_scr(d->scr_to_load);
+ 1002              		.loc 1 227 9 is_stmt 1 view .LVU242
+ 1003 002e FFF7FEFF 		bl	lv_obj_del
+ 1004              	.LVL103:
+ 228:Middlewares/lvgl/src/core/lv_disp.c ****         lv_anim_del(d->scr_to_load, NULL);
+ 1005              		.loc 1 228 9 view .LVU243
+ 1006 0032 A069     		ldr	r0, [r4, #24]
+ 1007 0034 FFF7FEFF 		bl	lv_disp_load_scr
+ 1008              	.LVL104:
+ 229:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_set_pos(d->scr_to_load, 0, 0);
+ 1009              		.loc 1 229 9 view .LVU244
+ 1010 0038 0021     		movs	r1, #0
+ 1011 003a A069     		ldr	r0, [r4, #24]
+ 1012 003c FFF7FEFF 		bl	lv_anim_del
+ 1013              	.LVL105:
+ 230:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_remove_local_style_prop(d->scr_to_load, LV_STYLE_OPA, 0);
+ 1014              		.loc 1 230 9 view .LVU245
+ 1015 0040 0022     		movs	r2, #0
+ 1016 0042 1146     		mov	r1, r2
+ 1017 0044 A069     		ldr	r0, [r4, #24]
+ 1018 0046 FFF7FEFF 		bl	lv_obj_set_pos
+ 1019              	.LVL106:
+ 231:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1020              		.loc 1 231 9 view .LVU246
+ 1021 004a 0022     		movs	r2, #0
+ 1022 004c 40F26241 		movw	r1, #1122
+ 1023 0050 A069     		ldr	r0, [r4, #24]
+ 1024 0052 FFF7FEFF 		bl	lv_obj_remove_local_style_prop
+ 1025              	.LVL107:
+ 233:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 1026              		.loc 1 233 9 view .LVU247
+ 1027              	.L69:
+ 236:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1028              		.loc 1 236 5 view .LVU248
+ 236:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1029              		.loc 1 236 20 is_stmt 0 view .LVU249
+ARM GAS  /tmp/ccun8SuT.s 			page 33
+
+
+ 1030 0056 A561     		str	r5, [r4, #24]
+ 238:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_del(d->prev_scr);
+ 1031              		.loc 1 238 5 is_stmt 1 view .LVU250
+ 238:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_del(d->prev_scr);
+ 1032              		.loc 1 238 9 is_stmt 0 view .LVU251
+ 1033 0058 6069     		ldr	r0, [r4, #20]
+ 238:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_del(d->prev_scr);
+ 1034              		.loc 1 238 7 view .LVU252
+ 1035 005a 20B1     		cbz	r0, .L70
+ 238:Middlewares/lvgl/src/core/lv_disp.c ****         lv_obj_del(d->prev_scr);
+ 1036              		.loc 1 238 20 discriminator 1 view .LVU253
+ 1037 005c 94F82830 		ldrb	r3, [r4, #40]	@ zero_extendqisi2
+ 1038 0060 13F0010F 		tst	r3, #1
+ 1039 0064 4BD1     		bne	.L84
+ 1040              	.L70:
+ 243:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1041              		.loc 1 243 5 is_stmt 1 view .LVU254
+ 243:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1042              		.loc 1 243 17 is_stmt 0 view .LVU255
+ 1043 0066 94F82830 		ldrb	r3, [r4, #40]	@ zero_extendqisi2
+ 1044 006a 9DF8A020 		ldrb	r2, [sp, #160]	@ zero_extendqisi2
+ 1045 006e 62F30003 		bfi	r3, r2, #0, #1
+ 1046 0072 84F82830 		strb	r3, [r4, #40]
+ 246:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_del(lv_scr_act(), NULL);
+ 1047              		.loc 1 246 5 is_stmt 1 view .LVU256
+ 1048 0076 0021     		movs	r1, #0
+ 1049 0078 2846     		mov	r0, r5
+ 1050 007a FFF7FEFF 		bl	lv_anim_del
+ 1051              	.LVL108:
+ 247:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1052              		.loc 1 247 5 view .LVU257
+ 1053              	.LBB160:
+ 1054              	.LBI160:
+ 163:Middlewares/lvgl/src/core/lv_disp.h **** {
+ 1055              		.loc 2 163 26 view .LVU258
+ 1056              	.LBB161:
+ 1057              		.loc 2 165 5 view .LVU259
+ 1058              		.loc 2 165 12 is_stmt 0 view .LVU260
+ 1059 007e FFF7FEFF 		bl	lv_disp_get_default
+ 1060              	.LVL109:
+ 1061 0082 FFF7FEFF 		bl	lv_disp_get_scr_act
+ 1062              	.LVL110:
+ 1063              	.LBE161:
+ 1064              	.LBE160:
+ 247:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1065              		.loc 1 247 5 view .LVU261
+ 1066 0086 0021     		movs	r1, #0
+ 1067 0088 FFF7FEFF 		bl	lv_anim_del
+ 1068              	.LVL111:
+ 250:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_set_pos(lv_scr_act(), 0, 0);
+ 1069              		.loc 1 250 5 is_stmt 1 view .LVU262
+ 1070 008c 0022     		movs	r2, #0
+ 1071 008e 1146     		mov	r1, r2
+ 1072 0090 2846     		mov	r0, r5
+ 1073 0092 FFF7FEFF 		bl	lv_obj_set_pos
+ 1074              	.LVL112:
+ 251:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_remove_local_style_prop(new_scr, LV_STYLE_OPA, 0);
+ARM GAS  /tmp/ccun8SuT.s 			page 34
+
+
+ 1075              		.loc 1 251 5 view .LVU263
+ 1076              	.LBB162:
+ 1077              	.LBI162:
+ 163:Middlewares/lvgl/src/core/lv_disp.h **** {
+ 1078              		.loc 2 163 26 view .LVU264
+ 1079              	.LBB163:
+ 1080              		.loc 2 165 5 view .LVU265
+ 1081              		.loc 2 165 12 is_stmt 0 view .LVU266
+ 1082 0096 FFF7FEFF 		bl	lv_disp_get_default
+ 1083              	.LVL113:
+ 1084 009a FFF7FEFF 		bl	lv_disp_get_scr_act
+ 1085              	.LVL114:
+ 1086              	.LBE163:
+ 1087              	.LBE162:
+ 251:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_remove_local_style_prop(new_scr, LV_STYLE_OPA, 0);
+ 1088              		.loc 1 251 5 view .LVU267
+ 1089 009e 0022     		movs	r2, #0
+ 1090 00a0 1146     		mov	r1, r2
+ 1091 00a2 FFF7FEFF 		bl	lv_obj_set_pos
+ 1092              	.LVL115:
+ 252:Middlewares/lvgl/src/core/lv_disp.c ****     lv_obj_remove_local_style_prop(lv_scr_act(), LV_STYLE_OPA, 0);
+ 1093              		.loc 1 252 5 is_stmt 1 view .LVU268
+ 1094 00a6 0022     		movs	r2, #0
+ 1095 00a8 40F26241 		movw	r1, #1122
+ 1096 00ac 2846     		mov	r0, r5
+ 1097 00ae FFF7FEFF 		bl	lv_obj_remove_local_style_prop
+ 1098              	.LVL116:
+ 253:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1099              		.loc 1 253 5 view .LVU269
+ 1100              	.LBB164:
+ 1101              	.LBI164:
+ 163:Middlewares/lvgl/src/core/lv_disp.h **** {
+ 1102              		.loc 2 163 26 view .LVU270
+ 1103              	.LBB165:
+ 1104              		.loc 2 165 5 view .LVU271
+ 1105              		.loc 2 165 12 is_stmt 0 view .LVU272
+ 1106 00b2 FFF7FEFF 		bl	lv_disp_get_default
+ 1107              	.LVL117:
+ 1108 00b6 FFF7FEFF 		bl	lv_disp_get_scr_act
+ 1109              	.LVL118:
+ 1110              	.LBE165:
+ 1111              	.LBE164:
+ 253:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1112              		.loc 1 253 5 view .LVU273
+ 1113 00ba 0022     		movs	r2, #0
+ 1114 00bc 40F26241 		movw	r1, #1122
+ 1115 00c0 FFF7FEFF 		bl	lv_obj_remove_local_style_prop
+ 1116              	.LVL119:
+ 255:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_init(&a_new);
+ 1117              		.loc 1 255 5 is_stmt 1 view .LVU274
+ 256:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_var(&a_new, new_scr);
+ 1118              		.loc 1 256 5 view .LVU275
+ 1119 00c4 11A8     		add	r0, sp, #68
+ 1120 00c6 FFF7FEFF 		bl	lv_anim_init
+ 1121              	.LVL120:
+ 257:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_start_cb(&a_new, scr_load_anim_start);
+ 1122              		.loc 1 257 5 view .LVU276
+ARM GAS  /tmp/ccun8SuT.s 			page 35
+
+
+ 1123              	.LBB166:
+ 1124              	.LBI166:
+ 1125              		.file 3 "Middlewares/lvgl/src/core/../misc/lv_anim.h"
+   1:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**
+   2:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @file lv_anim.h
+   3:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  *
+   4:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  */
+   5:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+   6:Middlewares/lvgl/src/core/../misc/lv_anim.h **** #ifndef LV_ANIM_H
+   7:Middlewares/lvgl/src/core/../misc/lv_anim.h **** #define LV_ANIM_H
+   8:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+   9:Middlewares/lvgl/src/core/../misc/lv_anim.h **** #ifdef __cplusplus
+  10:Middlewares/lvgl/src/core/../misc/lv_anim.h **** extern "C" {
+  11:Middlewares/lvgl/src/core/../misc/lv_anim.h **** #endif
+  12:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  13:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /*********************
+  14:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  *      INCLUDES
+  15:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  *********************/
+  16:Middlewares/lvgl/src/core/../misc/lv_anim.h **** #include "../lv_conf_internal.h"
+  17:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  18:Middlewares/lvgl/src/core/../misc/lv_anim.h **** #include <stdint.h>
+  19:Middlewares/lvgl/src/core/../misc/lv_anim.h **** #include <stdbool.h>
+  20:Middlewares/lvgl/src/core/../misc/lv_anim.h **** #include <string.h>
+  21:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  22:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /*********************
+  23:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  *      DEFINES
+  24:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  *********************/
+  25:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  26:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**********************
+  27:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  *      TYPEDEFS
+  28:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  **********************/
+  29:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  30:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /** Can be used to indicate if animations are enabled or disabled in a case*/
+  31:Middlewares/lvgl/src/core/../misc/lv_anim.h **** typedef enum {
+  32:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     LV_ANIM_OFF,
+  33:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     LV_ANIM_ON,
+  34:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }lv_anim_enable_t;
+  35:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  36:Middlewares/lvgl/src/core/../misc/lv_anim.h **** #define LV_ANIM_REPEAT_INFINITE      0xFFFF
+  37:Middlewares/lvgl/src/core/../misc/lv_anim.h **** LV_EXPORT_CONST_INT(LV_ANIM_REPEAT_INFINITE);
+  38:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  39:Middlewares/lvgl/src/core/../misc/lv_anim.h **** struct _lv_anim_t;
+  40:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  41:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /** Get the current value during an animation*/
+  42:Middlewares/lvgl/src/core/../misc/lv_anim.h **** typedef int32_t (*lv_anim_path_cb_t)(const struct _lv_anim_t *);
+  43:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  44:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /** Generic prototype of "animator" functions.
+  45:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * First parameter is the variable to animate.
+  46:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * Second parameter is the value to set.
+  47:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * Compatible with `lv_xxx_set_yyy(obj, value)` functions
+  48:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * The `x` in `_xcb_t` means its not a fully generic prototype because
+  49:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * it doesn't receive `lv_anim_t *` as its first argument*/
+  50:Middlewares/lvgl/src/core/../misc/lv_anim.h **** typedef void (*lv_anim_exec_xcb_t)(void *, int32_t);
+  51:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  52:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /** Same as `lv_anim_exec_xcb_t` but receives `lv_anim_t *` as the first parameter.
+  53:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * It's more consistent but less convenient. Might be used by binding generator functions.*/
+  54:Middlewares/lvgl/src/core/../misc/lv_anim.h **** typedef void (*lv_anim_custom_exec_cb_t)(struct _lv_anim_t *, int32_t);
+ARM GAS  /tmp/ccun8SuT.s 			page 36
+
+
+  55:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  56:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /** Callback to call when the animation is ready*/
+  57:Middlewares/lvgl/src/core/../misc/lv_anim.h **** typedef void (*lv_anim_ready_cb_t)(struct _lv_anim_t *);
+  58:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  59:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /** Callback to call when the animation really stars (considering `delay`)*/
+  60:Middlewares/lvgl/src/core/../misc/lv_anim.h **** typedef void (*lv_anim_start_cb_t)(struct _lv_anim_t *);
+  61:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  62:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /** Callback used when the animation values are relative to get the current value*/
+  63:Middlewares/lvgl/src/core/../misc/lv_anim.h **** typedef int32_t (*lv_anim_get_value_cb_t)(struct _lv_anim_t *);
+  64:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  65:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /** Describes an animation*/
+  66:Middlewares/lvgl/src/core/../misc/lv_anim.h **** typedef struct _lv_anim_t {
+  67:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     void * var;                          /**<Variable to animate*/
+  68:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     lv_anim_exec_xcb_t exec_cb;          /**< Function to execute to animate*/
+  69:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     lv_anim_start_cb_t start_cb;         /**< Call it when the animation is starts (considering `de
+  70:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     lv_anim_ready_cb_t ready_cb;         /**< Call it when the animation is ready*/
+  71:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     lv_anim_get_value_cb_t get_value_cb; /**< Get the current value in relative mode*/
+  72:Middlewares/lvgl/src/core/../misc/lv_anim.h **** #if LV_USE_USER_DATA
+  73:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     void * user_data; /**< Custom user data*/
+  74:Middlewares/lvgl/src/core/../misc/lv_anim.h **** #endif
+  75:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     lv_anim_path_cb_t path_cb;         /**< Describe the path (curve) of animations*/
+  76:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     int32_t start_value;               /**< Start value*/
+  77:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     int32_t current_value;             /**< Current value*/
+  78:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     int32_t end_value;                 /**< End value*/
+  79:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     int32_t time;                /**< Animation time in ms*/
+  80:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     int32_t act_time;            /**< Current time in animation. Set to negative to make delay.*/
+  81:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     uint32_t playback_delay;     /**< Wait before play back*/
+  82:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     uint32_t playback_time;      /**< Duration of playback animation*/
+  83:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     uint32_t repeat_delay;       /**< Wait before repeat*/
+  84:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     uint16_t repeat_cnt;         /**< Repeat count for the animation*/
+  85:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     uint8_t early_apply  : 1;    /**< 1: Apply start value immediately even is there is `delay`*/
+  86:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  87:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     /*Animation system use these - user shouldn't set*/
+  88:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     uint8_t playback_now : 1; /**< Play back is in progress*/
+  89:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     uint8_t run_round : 1;    /**< Indicates the animation has run in this round*/
+  90:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     uint8_t start_cb_called : 1;    /**< Indicates that the `start_cb` was already called*/
+  91:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     uint32_t time_orig;
+  92:Middlewares/lvgl/src/core/../misc/lv_anim.h **** } lv_anim_t;
+  93:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  94:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**********************
+  95:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * GLOBAL PROTOTYPES
+  96:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  **********************/
+  97:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+  98:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**
+  99:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * Init. the animation module
+ 100:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  */
+ 101:Middlewares/lvgl/src/core/../misc/lv_anim.h **** void _lv_anim_core_init(void);
+ 102:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 103:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**
+ 104:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * Initialize an animation variable.
+ 105:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * E.g.:
+ 106:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * lv_anim_t a;
+ 107:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * lv_anim_init(&a);
+ 108:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * lv_anim_set_...(&a);
+ 109:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * lv_anim_start(&a);
+ 110:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param a     pointer to an `lv_anim_t` variable to initialize
+ 111:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  */
+ARM GAS  /tmp/ccun8SuT.s 			page 37
+
+
+ 112:Middlewares/lvgl/src/core/../misc/lv_anim.h **** void lv_anim_init(lv_anim_t * a);
+ 113:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 114:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**
+ 115:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * Set a variable to animate
+ 116:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param a     pointer to an initialized `lv_anim_t` variable
+ 117:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param var   pointer to a variable to animate
+ 118:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  */
+ 119:Middlewares/lvgl/src/core/../misc/lv_anim.h **** static inline void lv_anim_set_var(lv_anim_t * a, void * var)
+ 1126              		.loc 3 119 20 view .LVU277
+ 1127              	.LBB167:
+ 120:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 121:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->var = var;
+ 1128              		.loc 3 121 5 view .LVU278
+ 1129              		.loc 3 121 12 is_stmt 0 view .LVU279
+ 1130 00ca 1195     		str	r5, [sp, #68]
+ 1131              	.LVL121:
+ 1132              		.loc 3 121 12 view .LVU280
+ 1133              	.LBE167:
+ 1134              	.LBE166:
+ 258:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_ready_cb(&a_new, scr_anim_ready);
+ 1135              		.loc 1 258 5 is_stmt 1 view .LVU281
+ 1136              	.LBB168:
+ 1137              	.LBI168:
+ 122:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 123:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 124:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**
+ 125:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * Set a function to animate `var`
+ 126:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param a         pointer to an initialized `lv_anim_t` variable
+ 127:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param exec_cb   a function to execute during animation
+ 128:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  *                  LVGL's built-in functions can be used.
+ 129:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  *                  E.g. lv_obj_set_x
+ 130:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  */
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** static inline void lv_anim_set_exec_cb(lv_anim_t * a, lv_anim_exec_xcb_t exec_cb)
+ 132:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->exec_cb = exec_cb;
+ 134:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 135:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 136:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**
+ 137:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * Set the duration of an animation
+ 138:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param a         pointer to an initialized `lv_anim_t` variable
+ 139:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param duration  duration of the animation in milliseconds
+ 140:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  */
+ 141:Middlewares/lvgl/src/core/../misc/lv_anim.h **** static inline void lv_anim_set_time(lv_anim_t * a, uint32_t duration)
+ 142:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 143:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->time = duration;
+ 144:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 145:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 146:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**
+ 147:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * Set a delay before starting the animation
+ 148:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param a         pointer to an initialized `lv_anim_t` variable
+ 149:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param delay     delay before the animation in milliseconds
+ 150:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  */
+ 151:Middlewares/lvgl/src/core/../misc/lv_anim.h **** static inline void lv_anim_set_delay(lv_anim_t * a, uint32_t delay)
+ 152:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 153:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->act_time = -(int32_t)(delay);
+ 154:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 155:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ARM GAS  /tmp/ccun8SuT.s 			page 38
+
+
+ 156:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**
+ 157:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * Set the start and end values of an animation
+ 158:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param a         pointer to an initialized `lv_anim_t` variable
+ 159:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param start     the start value
+ 160:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param end       the end value
+ 161:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  */
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** static inline void lv_anim_set_values(lv_anim_t * a, int32_t start, int32_t end)
+ 163:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->start_value = start;
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 168:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 169:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**
+ 170:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * Similar to `lv_anim_set_exec_cb` but `lv_anim_custom_exec_cb_t` receives
+ 171:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * `lv_anim_t * ` as its first parameter instead of `void *`.
+ 172:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * This function might be used when LVGL is binded to other languages because
+ 173:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * it's more consistent to have `lv_anim_t *` as first parameter.
+ 174:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * The variable to animate can be stored in the animation's `user_sata`
+ 175:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param a         pointer to an initialized `lv_anim_t` variable
+ 176:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param exec_cb   a function to execute.
+ 177:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  */
+ 178:Middlewares/lvgl/src/core/../misc/lv_anim.h **** static inline void lv_anim_set_custom_exec_cb(lv_anim_t * a, lv_anim_custom_exec_cb_t exec_cb)
+ 179:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 180:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->var     = a;
+ 181:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->exec_cb = (lv_anim_exec_xcb_t)exec_cb;
+ 182:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 183:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 184:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**
+ 185:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * Set the path (curve) of the animation.
+ 186:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param a         pointer to an initialized `lv_anim_t` variable
+ 187:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param path_cb a function the get the current value of the animation.
+ 188:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  */
+ 189:Middlewares/lvgl/src/core/../misc/lv_anim.h **** static inline void lv_anim_set_path_cb(lv_anim_t * a, lv_anim_path_cb_t path_cb)
+ 190:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 191:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->path_cb = path_cb;
+ 192:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 193:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 194:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**
+ 195:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * Set a function call when the animation really starts (considering `delay`)
+ 196:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param a         pointer to an initialized `lv_anim_t` variable
+ 197:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param start_cb  a function call when the animation starts
+ 198:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  */
+ 199:Middlewares/lvgl/src/core/../misc/lv_anim.h **** static inline void lv_anim_set_start_cb(lv_anim_t * a, lv_anim_ready_cb_t start_cb)
+ 1138              		.loc 3 199 20 view .LVU282
+ 1139              	.LBB169:
+ 200:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 201:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->start_cb = start_cb;
+ 1140              		.loc 3 201 5 view .LVU283
+ 1141              		.loc 3 201 17 is_stmt 0 view .LVU284
+ 1142 00cc 534B     		ldr	r3, .L85
+ 1143 00ce 1393     		str	r3, [sp, #76]
+ 1144              	.LVL122:
+ 1145              		.loc 3 201 17 view .LVU285
+ 1146              	.LBE169:
+ 1147              	.LBE168:
+ 259:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_time(&a_new, time);
+ARM GAS  /tmp/ccun8SuT.s 			page 39
+
+
+ 1148              		.loc 1 259 5 is_stmt 1 view .LVU286
+ 1149              	.LBB170:
+ 1150              	.LBI170:
+ 202:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 203:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 204:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**
+ 205:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * Set a function to use the current value of the variable and make start and end value
+ 206:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * relative the the returned current value.
+ 207:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param a             pointer to an initialized `lv_anim_t` variable
+ 208:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param get_value_cb  a function call when the animation starts
+ 209:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  */
+ 210:Middlewares/lvgl/src/core/../misc/lv_anim.h **** static inline void lv_anim_set_get_value_cb(lv_anim_t * a, lv_anim_get_value_cb_t get_value_cb)
+ 211:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 212:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->get_value_cb = get_value_cb;
+ 213:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 214:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 215:Middlewares/lvgl/src/core/../misc/lv_anim.h **** /**
+ 216:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * Set a function call when the animation is ready
+ 217:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param a         pointer to an initialized `lv_anim_t` variable
+ 218:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  * @param ready_cb  a function call when the animation is ready
+ 219:Middlewares/lvgl/src/core/../misc/lv_anim.h ****  */
+ 220:Middlewares/lvgl/src/core/../misc/lv_anim.h **** static inline void lv_anim_set_ready_cb(lv_anim_t * a, lv_anim_ready_cb_t ready_cb)
+ 1151              		.loc 3 220 20 view .LVU287
+ 1152              	.LBB171:
+ 221:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 222:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->ready_cb = ready_cb;
+ 1153              		.loc 3 222 5 view .LVU288
+ 1154              		.loc 3 222 17 is_stmt 0 view .LVU289
+ 1155 00d0 534B     		ldr	r3, .L85+4
+ 1156 00d2 1493     		str	r3, [sp, #80]
+ 1157              	.LVL123:
+ 1158              		.loc 3 222 17 view .LVU290
+ 1159              	.LBE171:
+ 1160              	.LBE170:
+ 260:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_delay(&a_new, delay);
+ 1161              		.loc 1 260 5 is_stmt 1 view .LVU291
+ 1162              	.LBB172:
+ 1163              	.LBI172:
+ 141:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1164              		.loc 3 141 20 view .LVU292
+ 1165              	.LBB173:
+ 143:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1166              		.loc 3 143 5 view .LVU293
+ 143:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1167              		.loc 3 143 13 is_stmt 0 view .LVU294
+ 1168 00d4 CDF86C80 		str	r8, [sp, #108]
+ 1169              	.LVL124:
+ 143:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1170              		.loc 3 143 13 view .LVU295
+ 1171              	.LBE173:
+ 1172              	.LBE172:
+ 261:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1173              		.loc 1 261 5 is_stmt 1 view .LVU296
+ 1174              	.LBB174:
+ 1175              	.LBI174:
+ 151:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1176              		.loc 3 151 20 view .LVU297
+ARM GAS  /tmp/ccun8SuT.s 			page 40
+
+
+ 1177              	.LBB175:
+ 153:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1178              		.loc 3 153 5 view .LVU298
+ 153:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1179              		.loc 3 153 19 is_stmt 0 view .LVU299
+ 1180 00d8 7642     		rsbs	r6, r6, #0
+ 1181              	.LVL125:
+ 153:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1182              		.loc 3 153 17 view .LVU300
+ 1183 00da 1C96     		str	r6, [sp, #112]
+ 1184              	.LVL126:
+ 153:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1185              		.loc 3 153 17 view .LVU301
+ 1186              	.LBE175:
+ 1187              	.LBE174:
+ 263:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_init(&a_old);
+ 1188              		.loc 1 263 5 is_stmt 1 view .LVU302
+ 264:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_var(&a_old, d->act_scr);
+ 1189              		.loc 1 264 5 view .LVU303
+ 1190 00dc 6846     		mov	r0, sp
+ 1191 00de FFF7FEFF 		bl	lv_anim_init
+ 1192              	.LVL127:
+ 265:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_time(&a_old, time);
+ 1193              		.loc 1 265 5 view .LVU304
+ 265:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_time(&a_old, time);
+ 1194              		.loc 1 265 30 is_stmt 0 view .LVU305
+ 1195 00e2 2369     		ldr	r3, [r4, #16]
+ 1196              	.LVL128:
+ 1197              	.LBB176:
+ 1198              	.LBI176:
+ 119:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1199              		.loc 3 119 20 is_stmt 1 view .LVU306
+ 1200              	.LBB177:
+ 121:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1201              		.loc 3 121 5 view .LVU307
+ 121:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1202              		.loc 3 121 12 is_stmt 0 view .LVU308
+ 1203 00e4 0093     		str	r3, [sp]
+ 1204              	.LVL129:
+ 121:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1205              		.loc 3 121 12 view .LVU309
+ 1206              	.LBE177:
+ 1207              	.LBE176:
+ 266:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_set_delay(&a_old, delay);
+ 1208              		.loc 1 266 5 is_stmt 1 view .LVU310
+ 1209              	.LBB178:
+ 1210              	.LBI178:
+ 141:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1211              		.loc 3 141 20 view .LVU311
+ 1212              	.LBB179:
+ 143:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1213              		.loc 3 143 5 view .LVU312
+ 143:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1214              		.loc 3 143 13 is_stmt 0 view .LVU313
+ 1215 00e6 CDF82880 		str	r8, [sp, #40]
+ 1216              	.LVL130:
+ 143:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ARM GAS  /tmp/ccun8SuT.s 			page 41
+
+
+ 1217              		.loc 3 143 13 view .LVU314
+ 1218              	.LBE179:
+ 1219              	.LBE178:
+ 267:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1220              		.loc 1 267 5 is_stmt 1 view .LVU315
+ 1221              	.LBB180:
+ 1222              	.LBI180:
+ 151:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1223              		.loc 3 151 20 view .LVU316
+ 1224              	.LBB181:
+ 153:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1225              		.loc 3 153 5 view .LVU317
+ 153:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1226              		.loc 3 153 17 is_stmt 0 view .LVU318
+ 1227 00ea 0B96     		str	r6, [sp, #44]
+ 1228              	.LVL131:
+ 153:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1229              		.loc 3 153 17 view .LVU319
+ 1230              	.LBE181:
+ 1231              	.LBE180:
+ 269:Middlewares/lvgl/src/core/lv_disp.c ****         case LV_SCR_LOAD_ANIM_NONE:
+ 1232              		.loc 1 269 5 is_stmt 1 view .LVU320
+ 1233 00ec 092F     		cmp	r7, #9
+ 1234 00ee 11D8     		bhi	.L71
+ 1235 00f0 DFE807F0 		tbb	[pc, r7]
+ 1236              	.L73:
+ 1237 00f4 0A       		.byte	(.L82-.L73)/2
+ 1238 00f5 19       		.byte	(.L81-.L73)/2
+ 1239 00f6 23       		.byte	(.L80-.L73)/2
+ 1240 00f7 2E       		.byte	(.L79-.L73)/2
+ 1241 00f8 38       		.byte	(.L78-.L73)/2
+ 1242 00f9 43       		.byte	(.L77-.L73)/2
+ 1243 00fa 55       		.byte	(.L76-.L73)/2
+ 1244 00fb 67       		.byte	(.L75-.L73)/2
+ 1245 00fc 79       		.byte	(.L74-.L73)/2
+ 1246 00fd 8B       		.byte	(.L72-.L73)/2
+ 1247              	.LVL132:
+ 1248              		.p2align 1
+ 1249              	.L84:
+ 239:Middlewares/lvgl/src/core/lv_disp.c ****         d->prev_scr = NULL;
+ 1250              		.loc 1 239 9 view .LVU321
+ 1251 00fe FFF7FEFF 		bl	lv_obj_del
+ 1252              	.LVL133:
+ 240:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 1253              		.loc 1 240 9 view .LVU322
+ 240:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 1254              		.loc 1 240 21 is_stmt 0 view .LVU323
+ 1255 0102 0023     		movs	r3, #0
+ 1256 0104 6361     		str	r3, [r4, #20]
+ 1257 0106 AEE7     		b	.L70
+ 1258              	.LVL134:
+ 1259              	.L82:
+ 272:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, 0, 0);
+ 1260              		.loc 1 272 13 is_stmt 1 view .LVU324
+ 1261              	.LBB182:
+ 1262              	.LBI182:
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ARM GAS  /tmp/ccun8SuT.s 			page 42
+
+
+ 1263              		.loc 3 131 20 view .LVU325
+ 1264              	.LBB183:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1265              		.loc 3 133 5 view .LVU326
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1266              		.loc 3 133 16 is_stmt 0 view .LVU327
+ 1267 0108 464B     		ldr	r3, .L85+8
+ 1268 010a 1293     		str	r3, [sp, #72]
+ 1269              	.LVL135:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1270              		.loc 3 133 16 view .LVU328
+ 1271              	.LBE183:
+ 1272              	.LBE182:
+ 273:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1273              		.loc 1 273 13 is_stmt 1 view .LVU329
+ 1274              	.LBB184:
+ 1275              	.LBI184:
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1276              		.loc 3 162 20 view .LVU330
+ 1277              	.LBB185:
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1278              		.loc 3 164 5 view .LVU331
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1279              		.loc 3 164 20 is_stmt 0 view .LVU332
+ 1280 010c 0023     		movs	r3, #0
+ 1281 010e 1893     		str	r3, [sp, #96]
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1282              		.loc 3 165 5 is_stmt 1 view .LVU333
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1283              		.loc 3 165 22 is_stmt 0 view .LVU334
+ 1284 0110 1993     		str	r3, [sp, #100]
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1285              		.loc 3 166 5 is_stmt 1 view .LVU335
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1286              		.loc 3 166 18 is_stmt 0 view .LVU336
+ 1287 0112 1A93     		str	r3, [sp, #104]
+ 1288              	.LVL136:
+ 1289              	.L71:
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1290              		.loc 3 166 18 view .LVU337
+ 1291              	.LBE185:
+ 1292              	.LBE184:
+ 326:Middlewares/lvgl/src/core/lv_disp.c ****     lv_anim_start(&a_old);
+ 1293              		.loc 1 326 5 is_stmt 1 view .LVU338
+ 1294 0114 11A8     		add	r0, sp, #68
+ 1295 0116 FFF7FEFF 		bl	lv_anim_start
+ 1296              	.LVL137:
+ 327:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 1297              		.loc 1 327 5 view .LVU339
+ 1298 011a 6846     		mov	r0, sp
+ 1299 011c FFF7FEFF 		bl	lv_anim_start
+ 1300              	.LVL138:
+ 328:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1301              		.loc 1 328 1 is_stmt 0 view .LVU340
+ 1302 0120 22B0     		add	sp, sp, #136
+ 1303              	.LCFI26:
+ 1304              		.cfi_remember_state
+ARM GAS  /tmp/ccun8SuT.s 			page 43
+
+
+ 1305              		.cfi_def_cfa_offset 24
+ 1306              		@ sp needed
+ 1307 0122 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 1308              	.LVL139:
+ 1309              	.L81:
+ 1310              	.LCFI27:
+ 1311              		.cfi_restore_state
+ 276:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, lv_disp_get_hor_res(d), 0);
+ 1312              		.loc 1 276 13 is_stmt 1 view .LVU341
+ 1313              	.LBB186:
+ 1314              	.LBI186:
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1315              		.loc 3 131 20 view .LVU342
+ 1316              	.LBB187:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1317              		.loc 3 133 5 view .LVU343
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1318              		.loc 3 133 16 is_stmt 0 view .LVU344
+ 1319 0126 3F4B     		ldr	r3, .L85+8
+ 1320 0128 1293     		str	r3, [sp, #72]
+ 1321              	.LVL140:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1322              		.loc 3 133 16 view .LVU345
+ 1323              	.LBE187:
+ 1324              	.LBE186:
+ 277:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1325              		.loc 1 277 13 is_stmt 1 view .LVU346
+ 277:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1326              		.loc 1 277 40 is_stmt 0 view .LVU347
+ 1327 012a 2046     		mov	r0, r4
+ 1328 012c FFF7FEFF 		bl	lv_disp_get_hor_res
+ 1329              	.LVL141:
+ 1330              	.LBB188:
+ 1331              	.LBI188:
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1332              		.loc 3 162 20 is_stmt 1 view .LVU348
+ 1333              	.LBB189:
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1334              		.loc 3 164 5 view .LVU349
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1335              		.loc 3 164 20 is_stmt 0 view .LVU350
+ 1336 0130 1890     		str	r0, [sp, #96]
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1337              		.loc 3 165 5 is_stmt 1 view .LVU351
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1338              		.loc 3 165 22 is_stmt 0 view .LVU352
+ 1339 0132 1990     		str	r0, [sp, #100]
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1340              		.loc 3 166 5 is_stmt 1 view .LVU353
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1341              		.loc 3 166 18 is_stmt 0 view .LVU354
+ 1342 0134 0023     		movs	r3, #0
+ 1343 0136 1A93     		str	r3, [sp, #104]
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1344              		.loc 3 167 1 view .LVU355
+ 1345 0138 ECE7     		b	.L71
+ 1346              	.LVL142:
+ARM GAS  /tmp/ccun8SuT.s 			page 44
+
+
+ 1347              	.L80:
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1348              		.loc 3 167 1 view .LVU356
+ 1349              	.LBE189:
+ 1350              	.LBE188:
+ 280:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, -lv_disp_get_hor_res(d), 0);
+ 1351              		.loc 1 280 13 is_stmt 1 view .LVU357
+ 1352              	.LBB190:
+ 1353              	.LBI190:
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1354              		.loc 3 131 20 view .LVU358
+ 1355              	.LBB191:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1356              		.loc 3 133 5 view .LVU359
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1357              		.loc 3 133 16 is_stmt 0 view .LVU360
+ 1358 013a 3A4B     		ldr	r3, .L85+8
+ 1359 013c 1293     		str	r3, [sp, #72]
+ 1360              	.LVL143:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1361              		.loc 3 133 16 view .LVU361
+ 1362              	.LBE191:
+ 1363              	.LBE190:
+ 281:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1364              		.loc 1 281 13 is_stmt 1 view .LVU362
+ 281:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1365              		.loc 1 281 41 is_stmt 0 view .LVU363
+ 1366 013e 2046     		mov	r0, r4
+ 1367 0140 FFF7FEFF 		bl	lv_disp_get_hor_res
+ 1368              	.LVL144:
+ 281:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1369              		.loc 1 281 40 view .LVU364
+ 1370 0144 4042     		rsbs	r0, r0, #0
+ 1371              	.LVL145:
+ 1372              	.LBB192:
+ 1373              	.LBI192:
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1374              		.loc 3 162 20 is_stmt 1 view .LVU365
+ 1375              	.LBB193:
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1376              		.loc 3 164 5 view .LVU366
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1377              		.loc 3 164 20 is_stmt 0 view .LVU367
+ 1378 0146 1890     		str	r0, [sp, #96]
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1379              		.loc 3 165 5 is_stmt 1 view .LVU368
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1380              		.loc 3 165 22 is_stmt 0 view .LVU369
+ 1381 0148 1990     		str	r0, [sp, #100]
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1382              		.loc 3 166 5 is_stmt 1 view .LVU370
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1383              		.loc 3 166 18 is_stmt 0 view .LVU371
+ 1384 014a 0023     		movs	r3, #0
+ 1385 014c 1A93     		str	r3, [sp, #104]
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1386              		.loc 3 167 1 view .LVU372
+ARM GAS  /tmp/ccun8SuT.s 			page 45
+
+
+ 1387 014e E1E7     		b	.L71
+ 1388              	.LVL146:
+ 1389              	.L79:
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1390              		.loc 3 167 1 view .LVU373
+ 1391              	.LBE193:
+ 1392              	.LBE192:
+ 284:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, lv_disp_get_ver_res(d), 0);
+ 1393              		.loc 1 284 13 is_stmt 1 view .LVU374
+ 1394              	.LBB194:
+ 1395              	.LBI194:
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1396              		.loc 3 131 20 view .LVU375
+ 1397              	.LBB195:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1398              		.loc 3 133 5 view .LVU376
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1399              		.loc 3 133 16 is_stmt 0 view .LVU377
+ 1400 0150 354B     		ldr	r3, .L85+12
+ 1401 0152 1293     		str	r3, [sp, #72]
+ 1402              	.LVL147:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1403              		.loc 3 133 16 view .LVU378
+ 1404              	.LBE195:
+ 1405              	.LBE194:
+ 285:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1406              		.loc 1 285 13 is_stmt 1 view .LVU379
+ 285:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1407              		.loc 1 285 40 is_stmt 0 view .LVU380
+ 1408 0154 2046     		mov	r0, r4
+ 1409 0156 FFF7FEFF 		bl	lv_disp_get_ver_res
+ 1410              	.LVL148:
+ 1411              	.LBB196:
+ 1412              	.LBI196:
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1413              		.loc 3 162 20 is_stmt 1 view .LVU381
+ 1414              	.LBB197:
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1415              		.loc 3 164 5 view .LVU382
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1416              		.loc 3 164 20 is_stmt 0 view .LVU383
+ 1417 015a 1890     		str	r0, [sp, #96]
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1418              		.loc 3 165 5 is_stmt 1 view .LVU384
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1419              		.loc 3 165 22 is_stmt 0 view .LVU385
+ 1420 015c 1990     		str	r0, [sp, #100]
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1421              		.loc 3 166 5 is_stmt 1 view .LVU386
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1422              		.loc 3 166 18 is_stmt 0 view .LVU387
+ 1423 015e 0023     		movs	r3, #0
+ 1424 0160 1A93     		str	r3, [sp, #104]
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1425              		.loc 3 167 1 view .LVU388
+ 1426 0162 D7E7     		b	.L71
+ 1427              	.LVL149:
+ARM GAS  /tmp/ccun8SuT.s 			page 46
+
+
+ 1428              	.L78:
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1429              		.loc 3 167 1 view .LVU389
+ 1430              	.LBE197:
+ 1431              	.LBE196:
+ 288:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, -lv_disp_get_ver_res(d), 0);
+ 1432              		.loc 1 288 13 is_stmt 1 view .LVU390
+ 1433              	.LBB198:
+ 1434              	.LBI198:
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1435              		.loc 3 131 20 view .LVU391
+ 1436              	.LBB199:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1437              		.loc 3 133 5 view .LVU392
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1438              		.loc 3 133 16 is_stmt 0 view .LVU393
+ 1439 0164 304B     		ldr	r3, .L85+12
+ 1440 0166 1293     		str	r3, [sp, #72]
+ 1441              	.LVL150:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1442              		.loc 3 133 16 view .LVU394
+ 1443              	.LBE199:
+ 1444              	.LBE198:
+ 289:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1445              		.loc 1 289 13 is_stmt 1 view .LVU395
+ 289:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1446              		.loc 1 289 41 is_stmt 0 view .LVU396
+ 1447 0168 2046     		mov	r0, r4
+ 1448 016a FFF7FEFF 		bl	lv_disp_get_ver_res
+ 1449              	.LVL151:
+ 289:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1450              		.loc 1 289 40 view .LVU397
+ 1451 016e 4042     		rsbs	r0, r0, #0
+ 1452              	.LVL152:
+ 1453              	.LBB200:
+ 1454              	.LBI200:
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1455              		.loc 3 162 20 is_stmt 1 view .LVU398
+ 1456              	.LBB201:
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1457              		.loc 3 164 5 view .LVU399
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1458              		.loc 3 164 20 is_stmt 0 view .LVU400
+ 1459 0170 1890     		str	r0, [sp, #96]
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1460              		.loc 3 165 5 is_stmt 1 view .LVU401
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1461              		.loc 3 165 22 is_stmt 0 view .LVU402
+ 1462 0172 1990     		str	r0, [sp, #100]
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1463              		.loc 3 166 5 is_stmt 1 view .LVU403
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1464              		.loc 3 166 18 is_stmt 0 view .LVU404
+ 1465 0174 0023     		movs	r3, #0
+ 1466 0176 1A93     		str	r3, [sp, #104]
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1467              		.loc 3 167 1 view .LVU405
+ARM GAS  /tmp/ccun8SuT.s 			page 47
+
+
+ 1468 0178 CCE7     		b	.L71
+ 1469              	.LVL153:
+ 1470              	.L77:
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1471              		.loc 3 167 1 view .LVU406
+ 1472              	.LBE201:
+ 1473              	.LBE200:
+ 292:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, lv_disp_get_hor_res(d), 0);
+ 1474              		.loc 1 292 13 is_stmt 1 view .LVU407
+ 1475              	.LBB202:
+ 1476              	.LBI202:
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1477              		.loc 3 131 20 view .LVU408
+ 1478              	.LBB203:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1479              		.loc 3 133 5 view .LVU409
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1480              		.loc 3 133 16 is_stmt 0 view .LVU410
+ 1481 017a 2A4E     		ldr	r6, .L85+8
+ 1482 017c 1296     		str	r6, [sp, #72]
+ 1483              	.LVL154:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1484              		.loc 3 133 16 view .LVU411
+ 1485              	.LBE203:
+ 1486              	.LBE202:
+ 293:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1487              		.loc 1 293 13 is_stmt 1 view .LVU412
+ 293:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1488              		.loc 1 293 40 is_stmt 0 view .LVU413
+ 1489 017e 2046     		mov	r0, r4
+ 1490 0180 FFF7FEFF 		bl	lv_disp_get_hor_res
+ 1491              	.LVL155:
+ 1492              	.LBB204:
+ 1493              	.LBI204:
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1494              		.loc 3 162 20 is_stmt 1 view .LVU414
+ 1495              	.LBB205:
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1496              		.loc 3 164 5 view .LVU415
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1497              		.loc 3 164 20 is_stmt 0 view .LVU416
+ 1498 0184 1890     		str	r0, [sp, #96]
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1499              		.loc 3 165 5 is_stmt 1 view .LVU417
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1500              		.loc 3 165 22 is_stmt 0 view .LVU418
+ 1501 0186 1990     		str	r0, [sp, #100]
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1502              		.loc 3 166 5 is_stmt 1 view .LVU419
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1503              		.loc 3 166 18 is_stmt 0 view .LVU420
+ 1504 0188 0025     		movs	r5, #0
+ 1505              	.LVL156:
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1506              		.loc 3 166 18 view .LVU421
+ 1507 018a 1A95     		str	r5, [sp, #104]
+ 1508              	.LVL157:
+ARM GAS  /tmp/ccun8SuT.s 			page 48
+
+
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1509              		.loc 3 166 18 view .LVU422
+ 1510              	.LBE205:
+ 1511              	.LBE204:
+ 295:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_old, 0, -lv_disp_get_hor_res(d));
+ 1512              		.loc 1 295 13 is_stmt 1 view .LVU423
+ 1513              	.LBB206:
+ 1514              	.LBI206:
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1515              		.loc 3 131 20 view .LVU424
+ 1516              	.LBB207:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1517              		.loc 3 133 5 view .LVU425
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1518              		.loc 3 133 16 is_stmt 0 view .LVU426
+ 1519 018c 0196     		str	r6, [sp, #4]
+ 1520              	.LVL158:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1521              		.loc 3 133 16 view .LVU427
+ 1522              	.LBE207:
+ 1523              	.LBE206:
+ 296:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1524              		.loc 1 296 13 is_stmt 1 view .LVU428
+ 296:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1525              		.loc 1 296 44 is_stmt 0 view .LVU429
+ 1526 018e 2046     		mov	r0, r4
+ 1527 0190 FFF7FEFF 		bl	lv_disp_get_hor_res
+ 1528              	.LVL159:
+ 296:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1529              		.loc 1 296 43 view .LVU430
+ 1530 0194 4042     		rsbs	r0, r0, #0
+ 1531              	.LVL160:
+ 1532              	.LBB208:
+ 1533              	.LBI208:
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1534              		.loc 3 162 20 is_stmt 1 view .LVU431
+ 1535              	.LBB209:
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1536              		.loc 3 164 5 view .LVU432
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1537              		.loc 3 164 20 is_stmt 0 view .LVU433
+ 1538 0196 0795     		str	r5, [sp, #28]
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1539              		.loc 3 165 5 is_stmt 1 view .LVU434
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1540              		.loc 3 165 22 is_stmt 0 view .LVU435
+ 1541 0198 0895     		str	r5, [sp, #32]
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1542              		.loc 3 166 5 is_stmt 1 view .LVU436
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1543              		.loc 3 166 18 is_stmt 0 view .LVU437
+ 1544 019a 0990     		str	r0, [sp, #36]
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1545              		.loc 3 167 1 view .LVU438
+ 1546 019c BAE7     		b	.L71
+ 1547              	.LVL161:
+ 1548              	.L76:
+ARM GAS  /tmp/ccun8SuT.s 			page 49
+
+
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1549              		.loc 3 167 1 view .LVU439
+ 1550              	.LBE209:
+ 1551              	.LBE208:
+ 299:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, -lv_disp_get_hor_res(d), 0);
+ 1552              		.loc 1 299 13 is_stmt 1 view .LVU440
+ 1553              	.LBB210:
+ 1554              	.LBI210:
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1555              		.loc 3 131 20 view .LVU441
+ 1556              	.LBB211:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1557              		.loc 3 133 5 view .LVU442
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1558              		.loc 3 133 16 is_stmt 0 view .LVU443
+ 1559 019e 214E     		ldr	r6, .L85+8
+ 1560 01a0 1296     		str	r6, [sp, #72]
+ 1561              	.LVL162:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1562              		.loc 3 133 16 view .LVU444
+ 1563              	.LBE211:
+ 1564              	.LBE210:
+ 300:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1565              		.loc 1 300 13 is_stmt 1 view .LVU445
+ 300:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1566              		.loc 1 300 41 is_stmt 0 view .LVU446
+ 1567 01a2 2046     		mov	r0, r4
+ 1568 01a4 FFF7FEFF 		bl	lv_disp_get_hor_res
+ 1569              	.LVL163:
+ 300:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1570              		.loc 1 300 40 view .LVU447
+ 1571 01a8 4042     		rsbs	r0, r0, #0
+ 1572              	.LVL164:
+ 1573              	.LBB212:
+ 1574              	.LBI212:
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1575              		.loc 3 162 20 is_stmt 1 view .LVU448
+ 1576              	.LBB213:
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1577              		.loc 3 164 5 view .LVU449
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1578              		.loc 3 164 20 is_stmt 0 view .LVU450
+ 1579 01aa 1890     		str	r0, [sp, #96]
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1580              		.loc 3 165 5 is_stmt 1 view .LVU451
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1581              		.loc 3 165 22 is_stmt 0 view .LVU452
+ 1582 01ac 1990     		str	r0, [sp, #100]
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1583              		.loc 3 166 5 is_stmt 1 view .LVU453
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1584              		.loc 3 166 18 is_stmt 0 view .LVU454
+ 1585 01ae 0025     		movs	r5, #0
+ 1586              	.LVL165:
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1587              		.loc 3 166 18 view .LVU455
+ 1588 01b0 1A95     		str	r5, [sp, #104]
+ARM GAS  /tmp/ccun8SuT.s 			page 50
+
+
+ 1589              	.LVL166:
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1590              		.loc 3 166 18 view .LVU456
+ 1591              	.LBE213:
+ 1592              	.LBE212:
+ 302:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_old, 0, lv_disp_get_hor_res(d));
+ 1593              		.loc 1 302 13 is_stmt 1 view .LVU457
+ 1594              	.LBB214:
+ 1595              	.LBI214:
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1596              		.loc 3 131 20 view .LVU458
+ 1597              	.LBB215:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1598              		.loc 3 133 5 view .LVU459
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1599              		.loc 3 133 16 is_stmt 0 view .LVU460
+ 1600 01b2 0196     		str	r6, [sp, #4]
+ 1601              	.LVL167:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1602              		.loc 3 133 16 view .LVU461
+ 1603              	.LBE215:
+ 1604              	.LBE214:
+ 303:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1605              		.loc 1 303 13 is_stmt 1 view .LVU462
+ 303:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1606              		.loc 1 303 43 is_stmt 0 view .LVU463
+ 1607 01b4 2046     		mov	r0, r4
+ 1608 01b6 FFF7FEFF 		bl	lv_disp_get_hor_res
+ 1609              	.LVL168:
+ 1610              	.LBB216:
+ 1611              	.LBI216:
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1612              		.loc 3 162 20 is_stmt 1 view .LVU464
+ 1613              	.LBB217:
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1614              		.loc 3 164 5 view .LVU465
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1615              		.loc 3 164 20 is_stmt 0 view .LVU466
+ 1616 01ba 0795     		str	r5, [sp, #28]
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1617              		.loc 3 165 5 is_stmt 1 view .LVU467
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1618              		.loc 3 165 22 is_stmt 0 view .LVU468
+ 1619 01bc 0895     		str	r5, [sp, #32]
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1620              		.loc 3 166 5 is_stmt 1 view .LVU469
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1621              		.loc 3 166 18 is_stmt 0 view .LVU470
+ 1622 01be 0990     		str	r0, [sp, #36]
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1623              		.loc 3 167 1 view .LVU471
+ 1624 01c0 A8E7     		b	.L71
+ 1625              	.LVL169:
+ 1626              	.L75:
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1627              		.loc 3 167 1 view .LVU472
+ 1628              	.LBE217:
+ARM GAS  /tmp/ccun8SuT.s 			page 51
+
+
+ 1629              	.LBE216:
+ 306:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, lv_disp_get_ver_res(d), 0);
+ 1630              		.loc 1 306 13 is_stmt 1 view .LVU473
+ 1631              	.LBB218:
+ 1632              	.LBI218:
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1633              		.loc 3 131 20 view .LVU474
+ 1634              	.LBB219:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1635              		.loc 3 133 5 view .LVU475
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1636              		.loc 3 133 16 is_stmt 0 view .LVU476
+ 1637 01c2 194E     		ldr	r6, .L85+12
+ 1638 01c4 1296     		str	r6, [sp, #72]
+ 1639              	.LVL170:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1640              		.loc 3 133 16 view .LVU477
+ 1641              	.LBE219:
+ 1642              	.LBE218:
+ 307:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1643              		.loc 1 307 13 is_stmt 1 view .LVU478
+ 307:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1644              		.loc 1 307 40 is_stmt 0 view .LVU479
+ 1645 01c6 2046     		mov	r0, r4
+ 1646 01c8 FFF7FEFF 		bl	lv_disp_get_ver_res
+ 1647              	.LVL171:
+ 1648              	.LBB220:
+ 1649              	.LBI220:
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1650              		.loc 3 162 20 is_stmt 1 view .LVU480
+ 1651              	.LBB221:
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1652              		.loc 3 164 5 view .LVU481
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1653              		.loc 3 164 20 is_stmt 0 view .LVU482
+ 1654 01cc 1890     		str	r0, [sp, #96]
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1655              		.loc 3 165 5 is_stmt 1 view .LVU483
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1656              		.loc 3 165 22 is_stmt 0 view .LVU484
+ 1657 01ce 1990     		str	r0, [sp, #100]
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1658              		.loc 3 166 5 is_stmt 1 view .LVU485
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1659              		.loc 3 166 18 is_stmt 0 view .LVU486
+ 1660 01d0 0025     		movs	r5, #0
+ 1661              	.LVL172:
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1662              		.loc 3 166 18 view .LVU487
+ 1663 01d2 1A95     		str	r5, [sp, #104]
+ 1664              	.LVL173:
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1665              		.loc 3 166 18 view .LVU488
+ 1666              	.LBE221:
+ 1667              	.LBE220:
+ 309:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_old, 0, -lv_disp_get_ver_res(d));
+ 1668              		.loc 1 309 13 is_stmt 1 view .LVU489
+ARM GAS  /tmp/ccun8SuT.s 			page 52
+
+
+ 1669              	.LBB222:
+ 1670              	.LBI222:
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1671              		.loc 3 131 20 view .LVU490
+ 1672              	.LBB223:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1673              		.loc 3 133 5 view .LVU491
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1674              		.loc 3 133 16 is_stmt 0 view .LVU492
+ 1675 01d4 0196     		str	r6, [sp, #4]
+ 1676              	.LVL174:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1677              		.loc 3 133 16 view .LVU493
+ 1678              	.LBE223:
+ 1679              	.LBE222:
+ 310:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1680              		.loc 1 310 13 is_stmt 1 view .LVU494
+ 310:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1681              		.loc 1 310 44 is_stmt 0 view .LVU495
+ 1682 01d6 2046     		mov	r0, r4
+ 1683 01d8 FFF7FEFF 		bl	lv_disp_get_ver_res
+ 1684              	.LVL175:
+ 310:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1685              		.loc 1 310 43 view .LVU496
+ 1686 01dc 4042     		rsbs	r0, r0, #0
+ 1687              	.LVL176:
+ 1688              	.LBB224:
+ 1689              	.LBI224:
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1690              		.loc 3 162 20 is_stmt 1 view .LVU497
+ 1691              	.LBB225:
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1692              		.loc 3 164 5 view .LVU498
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1693              		.loc 3 164 20 is_stmt 0 view .LVU499
+ 1694 01de 0795     		str	r5, [sp, #28]
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1695              		.loc 3 165 5 is_stmt 1 view .LVU500
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1696              		.loc 3 165 22 is_stmt 0 view .LVU501
+ 1697 01e0 0895     		str	r5, [sp, #32]
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1698              		.loc 3 166 5 is_stmt 1 view .LVU502
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1699              		.loc 3 166 18 is_stmt 0 view .LVU503
+ 1700 01e2 0990     		str	r0, [sp, #36]
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1701              		.loc 3 167 1 view .LVU504
+ 1702 01e4 96E7     		b	.L71
+ 1703              	.LVL177:
+ 1704              	.L74:
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1705              		.loc 3 167 1 view .LVU505
+ 1706              	.LBE225:
+ 1707              	.LBE224:
+ 313:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, -lv_disp_get_ver_res(d), 0);
+ 1708              		.loc 1 313 13 is_stmt 1 view .LVU506
+ARM GAS  /tmp/ccun8SuT.s 			page 53
+
+
+ 1709              	.LBB226:
+ 1710              	.LBI226:
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1711              		.loc 3 131 20 view .LVU507
+ 1712              	.LBB227:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1713              		.loc 3 133 5 view .LVU508
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1714              		.loc 3 133 16 is_stmt 0 view .LVU509
+ 1715 01e6 104E     		ldr	r6, .L85+12
+ 1716 01e8 1296     		str	r6, [sp, #72]
+ 1717              	.LVL178:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1718              		.loc 3 133 16 view .LVU510
+ 1719              	.LBE227:
+ 1720              	.LBE226:
+ 314:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1721              		.loc 1 314 13 is_stmt 1 view .LVU511
+ 314:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1722              		.loc 1 314 41 is_stmt 0 view .LVU512
+ 1723 01ea 2046     		mov	r0, r4
+ 1724 01ec FFF7FEFF 		bl	lv_disp_get_ver_res
+ 1725              	.LVL179:
+ 314:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1726              		.loc 1 314 40 view .LVU513
+ 1727 01f0 4042     		rsbs	r0, r0, #0
+ 1728              	.LVL180:
+ 1729              	.LBB228:
+ 1730              	.LBI228:
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1731              		.loc 3 162 20 is_stmt 1 view .LVU514
+ 1732              	.LBB229:
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1733              		.loc 3 164 5 view .LVU515
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1734              		.loc 3 164 20 is_stmt 0 view .LVU516
+ 1735 01f2 1890     		str	r0, [sp, #96]
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1736              		.loc 3 165 5 is_stmt 1 view .LVU517
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1737              		.loc 3 165 22 is_stmt 0 view .LVU518
+ 1738 01f4 1990     		str	r0, [sp, #100]
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1739              		.loc 3 166 5 is_stmt 1 view .LVU519
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1740              		.loc 3 166 18 is_stmt 0 view .LVU520
+ 1741 01f6 0025     		movs	r5, #0
+ 1742              	.LVL181:
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1743              		.loc 3 166 18 view .LVU521
+ 1744 01f8 1A95     		str	r5, [sp, #104]
+ 1745              	.LVL182:
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1746              		.loc 3 166 18 view .LVU522
+ 1747              	.LBE229:
+ 1748              	.LBE228:
+ 316:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_old, 0, lv_disp_get_ver_res(d));
+ARM GAS  /tmp/ccun8SuT.s 			page 54
+
+
+ 1749              		.loc 1 316 13 is_stmt 1 view .LVU523
+ 1750              	.LBB230:
+ 1751              	.LBI230:
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1752              		.loc 3 131 20 view .LVU524
+ 1753              	.LBB231:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1754              		.loc 3 133 5 view .LVU525
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1755              		.loc 3 133 16 is_stmt 0 view .LVU526
+ 1756 01fa 0196     		str	r6, [sp, #4]
+ 1757              	.LVL183:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1758              		.loc 3 133 16 view .LVU527
+ 1759              	.LBE231:
+ 1760              	.LBE230:
+ 317:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1761              		.loc 1 317 13 is_stmt 1 view .LVU528
+ 317:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1762              		.loc 1 317 43 is_stmt 0 view .LVU529
+ 1763 01fc 2046     		mov	r0, r4
+ 1764 01fe FFF7FEFF 		bl	lv_disp_get_ver_res
+ 1765              	.LVL184:
+ 1766              	.LBB232:
+ 1767              	.LBI232:
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1768              		.loc 3 162 20 is_stmt 1 view .LVU530
+ 1769              	.LBB233:
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1770              		.loc 3 164 5 view .LVU531
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1771              		.loc 3 164 20 is_stmt 0 view .LVU532
+ 1772 0202 0795     		str	r5, [sp, #28]
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1773              		.loc 3 165 5 is_stmt 1 view .LVU533
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1774              		.loc 3 165 22 is_stmt 0 view .LVU534
+ 1775 0204 0895     		str	r5, [sp, #32]
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1776              		.loc 3 166 5 is_stmt 1 view .LVU535
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1777              		.loc 3 166 18 is_stmt 0 view .LVU536
+ 1778 0206 0990     		str	r0, [sp, #36]
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1779              		.loc 3 167 1 view .LVU537
+ 1780 0208 84E7     		b	.L71
+ 1781              	.LVL185:
+ 1782              	.L72:
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1783              		.loc 3 167 1 view .LVU538
+ 1784              	.LBE233:
+ 1785              	.LBE232:
+ 321:Middlewares/lvgl/src/core/lv_disp.c ****             lv_anim_set_values(&a_new, LV_OPA_TRANSP, LV_OPA_COVER);
+ 1786              		.loc 1 321 13 is_stmt 1 view .LVU539
+ 1787              	.LBB234:
+ 1788              	.LBI234:
+ 131:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ARM GAS  /tmp/ccun8SuT.s 			page 55
+
+
+ 1789              		.loc 3 131 20 view .LVU540
+ 1790              	.LBB235:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1791              		.loc 3 133 5 view .LVU541
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1792              		.loc 3 133 16 is_stmt 0 view .LVU542
+ 1793 020a 084B     		ldr	r3, .L85+16
+ 1794 020c 1293     		str	r3, [sp, #72]
+ 1795              	.LVL186:
+ 133:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1796              		.loc 3 133 16 view .LVU543
+ 1797              	.LBE235:
+ 1798              	.LBE234:
+ 322:Middlewares/lvgl/src/core/lv_disp.c ****             break;
+ 1799              		.loc 1 322 13 is_stmt 1 view .LVU544
+ 1800              	.LBB236:
+ 1801              	.LBI236:
+ 162:Middlewares/lvgl/src/core/../misc/lv_anim.h **** {
+ 1802              		.loc 3 162 20 view .LVU545
+ 1803              	.LBB237:
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1804              		.loc 3 164 5 view .LVU546
+ 164:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->current_value = start;
+ 1805              		.loc 3 164 20 is_stmt 0 view .LVU547
+ 1806 020e 0023     		movs	r3, #0
+ 1807 0210 1893     		str	r3, [sp, #96]
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1808              		.loc 3 165 5 is_stmt 1 view .LVU548
+ 165:Middlewares/lvgl/src/core/../misc/lv_anim.h ****     a->end_value = end;
+ 1809              		.loc 3 165 22 is_stmt 0 view .LVU549
+ 1810 0212 1993     		str	r3, [sp, #100]
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1811              		.loc 3 166 5 is_stmt 1 view .LVU550
+ 166:Middlewares/lvgl/src/core/../misc/lv_anim.h **** }
+ 1812              		.loc 3 166 18 is_stmt 0 view .LVU551
+ 1813 0214 FF23     		movs	r3, #255
+ 1814 0216 1A93     		str	r3, [sp, #104]
+ 167:Middlewares/lvgl/src/core/../misc/lv_anim.h **** 
+ 1815              		.loc 3 167 1 view .LVU552
+ 1816 0218 7CE7     		b	.L71
+ 1817              	.L86:
+ 1818 021a 00BF     		.align	2
+ 1819              	.L85:
+ 1820 021c 00000000 		.word	scr_load_anim_start
+ 1821 0220 00000000 		.word	scr_anim_ready
+ 1822 0224 00000000 		.word	set_x_anim
+ 1823 0228 00000000 		.word	set_y_anim
+ 1824 022c 00000000 		.word	opa_scale_anim
+ 1825              	.LBE237:
+ 1826              	.LBE236:
+ 1827              		.cfi_endproc
+ 1828              	.LFE163:
+ 1830              		.section	.text.lv_disp_get_inactive_time,"ax",%progbits
+ 1831              		.align	1
+ 1832              		.global	lv_disp_get_inactive_time
+ 1833              		.syntax unified
+ 1834              		.thumb
+ARM GAS  /tmp/ccun8SuT.s 			page 56
+
+
+ 1835              		.thumb_func
+ 1836              		.fpu softvfp
+ 1838              	lv_disp_get_inactive_time:
+ 1839              	.LVL187:
+ 1840              	.LFB164:
+ 336:Middlewares/lvgl/src/core/lv_disp.c ****     if(disp) return lv_tick_elaps(disp->last_activity_time);
+ 1841              		.loc 1 336 1 is_stmt 1 view -0
+ 1842              		.cfi_startproc
+ 1843              		@ args = 0, pretend = 0, frame = 0
+ 1844              		@ frame_needed = 0, uses_anonymous_args = 0
+ 336:Middlewares/lvgl/src/core/lv_disp.c ****     if(disp) return lv_tick_elaps(disp->last_activity_time);
+ 1845              		.loc 1 336 1 is_stmt 0 view .LVU554
+ 1846 0000 38B5     		push	{r3, r4, r5, lr}
+ 1847              	.LCFI28:
+ 1848              		.cfi_def_cfa_offset 16
+ 1849              		.cfi_offset 3, -16
+ 1850              		.cfi_offset 4, -12
+ 1851              		.cfi_offset 5, -8
+ 1852              		.cfi_offset 14, -4
+ 337:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1853              		.loc 1 337 5 is_stmt 1 view .LVU555
+ 337:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1854              		.loc 1 337 7 is_stmt 0 view .LVU556
+ 1855 0002 30B1     		cbz	r0, .L88
+ 337:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1856              		.loc 1 337 14 is_stmt 1 discriminator 1 view .LVU557
+ 337:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1857              		.loc 1 337 21 is_stmt 0 discriminator 1 view .LVU558
+ 1858 0004 D0F85401 		ldr	r0, [r0, #340]
+ 1859              	.LVL188:
+ 337:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1860              		.loc 1 337 21 discriminator 1 view .LVU559
+ 1861 0008 FFF7FEFF 		bl	lv_tick_elaps
+ 1862              	.LVL189:
+ 1863 000c 0546     		mov	r5, r0
+ 1864              	.L87:
+ 349:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1865              		.loc 1 349 1 view .LVU560
+ 1866 000e 2846     		mov	r0, r5
+ 1867 0010 38BD     		pop	{r3, r4, r5, pc}
+ 1868              	.LVL190:
+ 1869              	.L88:
+ 339:Middlewares/lvgl/src/core/lv_disp.c ****     uint32_t t = UINT32_MAX;
+ 1870              		.loc 1 339 5 is_stmt 1 view .LVU561
+ 340:Middlewares/lvgl/src/core/lv_disp.c ****     d          = lv_disp_get_next(NULL);
+ 1871              		.loc 1 340 5 view .LVU562
+ 341:Middlewares/lvgl/src/core/lv_disp.c ****     while(d) {
+ 1872              		.loc 1 341 5 view .LVU563
+ 341:Middlewares/lvgl/src/core/lv_disp.c ****     while(d) {
+ 1873              		.loc 1 341 18 is_stmt 0 view .LVU564
+ 1874 0012 0020     		movs	r0, #0
+ 1875              	.LVL191:
+ 341:Middlewares/lvgl/src/core/lv_disp.c ****     while(d) {
+ 1876              		.loc 1 341 18 view .LVU565
+ 1877 0014 FFF7FEFF 		bl	lv_disp_get_next
+ 1878              	.LVL192:
+ 1879 0018 0446     		mov	r4, r0
+ARM GAS  /tmp/ccun8SuT.s 			page 57
+
+
+ 1880              	.LVL193:
+ 342:Middlewares/lvgl/src/core/lv_disp.c ****         uint32_t elaps = lv_tick_elaps(d->last_activity_time);
+ 1881              		.loc 1 342 5 is_stmt 1 view .LVU566
+ 340:Middlewares/lvgl/src/core/lv_disp.c ****     d          = lv_disp_get_next(NULL);
+ 1882              		.loc 1 340 14 is_stmt 0 view .LVU567
+ 1883 001a 4FF0FF35 		mov	r5, #-1
+ 342:Middlewares/lvgl/src/core/lv_disp.c ****         uint32_t elaps = lv_tick_elaps(d->last_activity_time);
+ 1884              		.loc 1 342 10 view .LVU568
+ 1885 001e 0AE0     		b	.L90
+ 1886              	.LVL194:
+ 1887              	.L91:
+ 1888              	.LBB238:
+ 343:Middlewares/lvgl/src/core/lv_disp.c ****         t = LV_MIN(t, elaps);
+ 1889              		.loc 1 343 9 is_stmt 1 view .LVU569
+ 343:Middlewares/lvgl/src/core/lv_disp.c ****         t = LV_MIN(t, elaps);
+ 1890              		.loc 1 343 26 is_stmt 0 view .LVU570
+ 1891 0020 D4F85401 		ldr	r0, [r4, #340]
+ 1892              	.LVL195:
+ 343:Middlewares/lvgl/src/core/lv_disp.c ****         t = LV_MIN(t, elaps);
+ 1893              		.loc 1 343 26 view .LVU571
+ 1894 0024 FFF7FEFF 		bl	lv_tick_elaps
+ 1895              	.LVL196:
+ 344:Middlewares/lvgl/src/core/lv_disp.c ****         d = lv_disp_get_next(d);
+ 1896              		.loc 1 344 9 is_stmt 1 view .LVU572
+ 344:Middlewares/lvgl/src/core/lv_disp.c ****         d = lv_disp_get_next(d);
+ 1897              		.loc 1 344 11 is_stmt 0 view .LVU573
+ 1898 0028 8542     		cmp	r5, r0
+ 1899 002a 28BF     		it	cs
+ 1900 002c 0546     		movcs	r5, r0
+ 1901              	.LVL197:
+ 345:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 1902              		.loc 1 345 9 is_stmt 1 view .LVU574
+ 345:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 1903              		.loc 1 345 13 is_stmt 0 view .LVU575
+ 1904 002e 2046     		mov	r0, r4
+ 1905              	.LVL198:
+ 345:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 1906              		.loc 1 345 13 view .LVU576
+ 1907 0030 FFF7FEFF 		bl	lv_disp_get_next
+ 1908              	.LVL199:
+ 1909 0034 0446     		mov	r4, r0
+ 1910              	.LVL200:
+ 1911              	.L90:
+ 345:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 1912              		.loc 1 345 13 view .LVU577
+ 1913              	.LBE238:
+ 342:Middlewares/lvgl/src/core/lv_disp.c ****         uint32_t elaps = lv_tick_elaps(d->last_activity_time);
+ 1914              		.loc 1 342 10 is_stmt 1 view .LVU578
+ 1915 0036 002C     		cmp	r4, #0
+ 1916 0038 F2D1     		bne	.L91
+ 342:Middlewares/lvgl/src/core/lv_disp.c ****         uint32_t elaps = lv_tick_elaps(d->last_activity_time);
+ 1917              		.loc 1 342 10 is_stmt 0 view .LVU579
+ 1918 003a E8E7     		b	.L87
+ 1919              		.cfi_endproc
+ 1920              	.LFE164:
+ 1922              		.section	.text.lv_disp_trig_activity,"ax",%progbits
+ 1923              		.align	1
+ARM GAS  /tmp/ccun8SuT.s 			page 58
+
+
+ 1924              		.global	lv_disp_trig_activity
+ 1925              		.syntax unified
+ 1926              		.thumb
+ 1927              		.thumb_func
+ 1928              		.fpu softvfp
+ 1930              	lv_disp_trig_activity:
+ 1931              	.LVL201:
+ 1932              	.LFB165:
+ 356:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 1933              		.loc 1 356 1 is_stmt 1 view -0
+ 1934              		.cfi_startproc
+ 1935              		@ args = 0, pretend = 0, frame = 0
+ 1936              		@ frame_needed = 0, uses_anonymous_args = 0
+ 356:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 1937              		.loc 1 356 1 is_stmt 0 view .LVU581
+ 1938 0000 10B5     		push	{r4, lr}
+ 1939              	.LCFI29:
+ 1940              		.cfi_def_cfa_offset 8
+ 1941              		.cfi_offset 4, -8
+ 1942              		.cfi_offset 14, -4
+ 357:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 1943              		.loc 1 357 5 is_stmt 1 view .LVU582
+ 357:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 1944              		.loc 1 357 7 is_stmt 0 view .LVU583
+ 1945 0002 0446     		mov	r4, r0
+ 1946 0004 28B1     		cbz	r0, .L97
+ 1947              	.L94:
+ 358:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_disp_trig_activity: no display registered");
+ 1948              		.loc 1 358 5 is_stmt 1 view .LVU584
+ 358:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_disp_trig_activity: no display registered");
+ 1949              		.loc 1 358 7 is_stmt 0 view .LVU585
+ 1950 0006 1CB1     		cbz	r4, .L93
+ 363:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 1951              		.loc 1 363 5 is_stmt 1 view .LVU586
+ 363:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 1952              		.loc 1 363 32 is_stmt 0 view .LVU587
+ 1953 0008 FFF7FEFF 		bl	lv_tick_get
+ 1954              	.LVL202:
+ 363:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 1955              		.loc 1 363 30 view .LVU588
+ 1956 000c C4F85401 		str	r0, [r4, #340]
+ 1957              	.L93:
+ 364:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 1958              		.loc 1 364 1 view .LVU589
+ 1959 0010 10BD     		pop	{r4, pc}
+ 1960              	.LVL203:
+ 1961              	.L97:
+ 357:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 1962              		.loc 1 357 15 is_stmt 1 discriminator 1 view .LVU590
+ 357:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 1963              		.loc 1 357 22 is_stmt 0 discriminator 1 view .LVU591
+ 1964 0012 FFF7FEFF 		bl	lv_disp_get_default
+ 1965              	.LVL204:
+ 357:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 1966              		.loc 1 357 22 discriminator 1 view .LVU592
+ 1967 0016 0446     		mov	r4, r0
+ 1968              	.LVL205:
+ARM GAS  /tmp/ccun8SuT.s 			page 59
+
+
+ 357:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 1969              		.loc 1 357 22 discriminator 1 view .LVU593
+ 1970 0018 F5E7     		b	.L94
+ 1971              		.cfi_endproc
+ 1972              	.LFE165:
+ 1974              		.section	.text.lv_disp_clean_dcache,"ax",%progbits
+ 1975              		.align	1
+ 1976              		.global	lv_disp_clean_dcache
+ 1977              		.syntax unified
+ 1978              		.thumb
+ 1979              		.thumb_func
+ 1980              		.fpu softvfp
+ 1982              	lv_disp_clean_dcache:
+ 1983              	.LVL206:
+ 1984              	.LFB166:
+ 371:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 1985              		.loc 1 371 1 is_stmt 1 view -0
+ 1986              		.cfi_startproc
+ 1987              		@ args = 0, pretend = 0, frame = 0
+ 1988              		@ frame_needed = 0, uses_anonymous_args = 0
+ 371:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 1989              		.loc 1 371 1 is_stmt 0 view .LVU595
+ 1990 0000 08B5     		push	{r3, lr}
+ 1991              	.LCFI30:
+ 1992              		.cfi_def_cfa_offset 8
+ 1993              		.cfi_offset 3, -8
+ 1994              		.cfi_offset 14, -4
+ 372:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 1995              		.loc 1 372 5 is_stmt 1 view .LVU596
+ 372:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 1996              		.loc 1 372 7 is_stmt 0 view .LVU597
+ 1997 0002 0346     		mov	r3, r0
+ 1998 0004 28B1     		cbz	r0, .L102
+ 1999              	.L99:
+ 373:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_disp_clean_dcache: no display registered");
+ 2000              		.loc 1 373 5 is_stmt 1 view .LVU598
+ 373:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_disp_clean_dcache: no display registered");
+ 2001              		.loc 1 373 7 is_stmt 0 view .LVU599
+ 2002 0006 1BB1     		cbz	r3, .L98
+ 378:Middlewares/lvgl/src/core/lv_disp.c ****         disp->driver->clean_dcache_cb(disp->driver);
+ 2003              		.loc 1 378 5 is_stmt 1 view .LVU600
+ 378:Middlewares/lvgl/src/core/lv_disp.c ****         disp->driver->clean_dcache_cb(disp->driver);
+ 2004              		.loc 1 378 12 is_stmt 0 view .LVU601
+ 2005 0008 1868     		ldr	r0, [r3]
+ 2006              	.LVL207:
+ 378:Middlewares/lvgl/src/core/lv_disp.c ****         disp->driver->clean_dcache_cb(disp->driver);
+ 2007              		.loc 1 378 20 view .LVU602
+ 2008 000a 036A     		ldr	r3, [r0, #32]
+ 2009              	.LVL208:
+ 378:Middlewares/lvgl/src/core/lv_disp.c ****         disp->driver->clean_dcache_cb(disp->driver);
+ 2010              		.loc 1 378 7 view .LVU603
+ 2011 000c 03B1     		cbz	r3, .L98
+ 379:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 2012              		.loc 1 379 9 is_stmt 1 view .LVU604
+ 2013 000e 9847     		blx	r3
+ 2014              	.LVL209:
+ 2015              	.L98:
+ARM GAS  /tmp/ccun8SuT.s 			page 60
+
+
+ 380:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 2016              		.loc 1 380 1 is_stmt 0 view .LVU605
+ 2017 0010 08BD     		pop	{r3, pc}
+ 2018              	.LVL210:
+ 2019              	.L102:
+ 372:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 2020              		.loc 1 372 15 is_stmt 1 discriminator 1 view .LVU606
+ 372:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 2021              		.loc 1 372 22 is_stmt 0 discriminator 1 view .LVU607
+ 2022 0012 FFF7FEFF 		bl	lv_disp_get_default
+ 2023              	.LVL211:
+ 372:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 2024              		.loc 1 372 22 discriminator 1 view .LVU608
+ 2025 0016 0346     		mov	r3, r0
+ 2026              	.LVL212:
+ 372:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 2027              		.loc 1 372 22 discriminator 1 view .LVU609
+ 2028 0018 F5E7     		b	.L99
+ 2029              		.cfi_endproc
+ 2030              	.LFE166:
+ 2032              		.section	.text._lv_disp_get_refr_timer,"ax",%progbits
+ 2033              		.align	1
+ 2034              		.global	_lv_disp_get_refr_timer
+ 2035              		.syntax unified
+ 2036              		.thumb
+ 2037              		.thumb_func
+ 2038              		.fpu softvfp
+ 2040              	_lv_disp_get_refr_timer:
+ 2041              	.LVL213:
+ 2042              	.LFB167:
+ 389:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 2043              		.loc 1 389 1 is_stmt 1 view -0
+ 2044              		.cfi_startproc
+ 2045              		@ args = 0, pretend = 0, frame = 0
+ 2046              		@ frame_needed = 0, uses_anonymous_args = 0
+ 389:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) disp = lv_disp_get_default();
+ 2047              		.loc 1 389 1 is_stmt 0 view .LVU611
+ 2048 0000 08B5     		push	{r3, lr}
+ 2049              	.LCFI31:
+ 2050              		.cfi_def_cfa_offset 8
+ 2051              		.cfi_offset 3, -8
+ 2052              		.cfi_offset 14, -4
+ 390:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 2053              		.loc 1 390 5 is_stmt 1 view .LVU612
+ 390:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 2054              		.loc 1 390 7 is_stmt 0 view .LVU613
+ 2055 0002 0346     		mov	r3, r0
+ 2056 0004 10B1     		cbz	r0, .L108
+ 2057              	.L104:
+ 391:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_disp_get_refr_timer: no display registered");
+ 2058              		.loc 1 391 5 is_stmt 1 view .LVU614
+ 391:Middlewares/lvgl/src/core/lv_disp.c ****         LV_LOG_WARN("lv_disp_get_refr_timer: no display registered");
+ 2059              		.loc 1 391 7 is_stmt 0 view .LVU615
+ 2060 0006 2BB1     		cbz	r3, .L106
+ 396:Middlewares/lvgl/src/core/lv_disp.c **** }
+ 2061              		.loc 1 396 5 is_stmt 1 view .LVU616
+ 396:Middlewares/lvgl/src/core/lv_disp.c **** }
+ARM GAS  /tmp/ccun8SuT.s 			page 61
+
+
+ 2062              		.loc 1 396 16 is_stmt 0 view .LVU617
+ 2063 0008 5868     		ldr	r0, [r3, #4]
+ 2064              	.LVL214:
+ 2065              	.L103:
+ 397:Middlewares/lvgl/src/core/lv_disp.c **** 
+ 2066              		.loc 1 397 1 view .LVU618
+ 2067 000a 08BD     		pop	{r3, pc}
+ 2068              	.LVL215:
+ 2069              	.L108:
+ 390:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 2070              		.loc 1 390 15 is_stmt 1 discriminator 1 view .LVU619
+ 390:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 2071              		.loc 1 390 22 is_stmt 0 discriminator 1 view .LVU620
+ 2072 000c FFF7FEFF 		bl	lv_disp_get_default
+ 2073              	.LVL216:
+ 390:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 2074              		.loc 1 390 22 discriminator 1 view .LVU621
+ 2075 0010 0346     		mov	r3, r0
+ 2076              	.LVL217:
+ 390:Middlewares/lvgl/src/core/lv_disp.c ****     if(!disp) {
+ 2077              		.loc 1 390 22 discriminator 1 view .LVU622
+ 2078 0012 F8E7     		b	.L104
+ 2079              	.L106:
+ 393:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 2080              		.loc 1 393 16 view .LVU623
+ 2081 0014 1846     		mov	r0, r3
+ 2082              	.LVL218:
+ 393:Middlewares/lvgl/src/core/lv_disp.c ****     }
+ 2083              		.loc 1 393 16 view .LVU624
+ 2084 0016 F8E7     		b	.L103
+ 2085              		.cfi_endproc
+ 2086              	.LFE167:
+ 2088              		.text
+ 2089              	.Letext0:
+ 2090              		.file 4 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 2091              		.file 5 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ 2092              		.file 6 "Middlewares/lvgl/src/core/../hal/../misc/lv_color.h"
+ 2093              		.file 7 "Middlewares/lvgl/src/core/../hal/../misc/lv_area.h"
+ 2094              		.file 8 "Middlewares/lvgl/src/core/../hal/../misc/lv_ll.h"
+ 2095              		.file 9 "Middlewares/lvgl/src/core/../hal/../misc/lv_timer.h"
+ 2096              		.file 10 "Middlewares/lvgl/src/core/../hal/lv_hal_disp.h"
+ 2097              		.file 11 "Middlewares/lvgl/src/core/lv_theme.h"
+ 2098              		.file 12 "Middlewares/lvgl/src/core/lv_obj.h"
+ 2099              		.file 13 "Middlewares/lvgl/src/core/lv_group.h"
+ 2100              		.file 14 "Middlewares/lvgl/src/core/../misc/../font/lv_font.h"
+ 2101              		.file 15 "Middlewares/lvgl/src/core/../misc/lv_style.h"
+ 2102              		.file 16 "Middlewares/lvgl/src/core/lv_obj_scroll.h"
+ 2103              		.file 17 "Middlewares/lvgl/src/core/lv_obj_style.h"
+ 2104              		.file 18 "Middlewares/lvgl/src/core/lv_obj_class.h"
+ 2105              		.file 19 "Middlewares/lvgl/src/core/lv_event.h"
+ 2106              		.file 20 "Middlewares/lvgl/src/core/lv_obj_tree.h"
+ 2107              		.file 21 "Middlewares/lvgl/src/core/lv_obj_pos.h"
+ 2108              		.file 22 "Middlewares/lvgl/src/core/lv_obj_style_gen.h"
+ 2109              		.file 23 "Middlewares/lvgl/src/core/../hal/lv_hal_tick.h"
+ 2110              		.file 24 "Middlewares/lvgl/src/core/../core/lv_refr.h"
+ARM GAS  /tmp/ccun8SuT.s 			page 62
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 lv_disp.c
+     /tmp/ccun8SuT.s:16     .text.scr_anim_ready:0000000000000000 $t
+     /tmp/ccun8SuT.s:23     .text.scr_anim_ready:0000000000000000 scr_anim_ready
+     /tmp/ccun8SuT.s:84     .text.opa_scale_anim:0000000000000000 $t
+     /tmp/ccun8SuT.s:90     .text.opa_scale_anim:0000000000000000 opa_scale_anim
+     /tmp/ccun8SuT.s:116    .text.set_y_anim:0000000000000000 $t
+     /tmp/ccun8SuT.s:122    .text.set_y_anim:0000000000000000 set_y_anim
+     /tmp/ccun8SuT.s:147    .text.set_x_anim:0000000000000000 $t
+     /tmp/ccun8SuT.s:153    .text.set_x_anim:0000000000000000 set_x_anim
+     /tmp/ccun8SuT.s:178    .text.lv_disp_get_scr_act:0000000000000000 $t
+     /tmp/ccun8SuT.s:185    .text.lv_disp_get_scr_act:0000000000000000 lv_disp_get_scr_act
+     /tmp/ccun8SuT.s:234    .text.lv_disp_get_scr_prev:0000000000000000 $t
+     /tmp/ccun8SuT.s:241    .text.lv_disp_get_scr_prev:0000000000000000 lv_disp_get_scr_prev
+     /tmp/ccun8SuT.s:290    .text.lv_disp_load_scr:0000000000000000 $t
+     /tmp/ccun8SuT.s:297    .text.lv_disp_load_scr:0000000000000000 lv_disp_load_scr
+     /tmp/ccun8SuT.s:335    .text.scr_load_anim_start:0000000000000000 $t
+     /tmp/ccun8SuT.s:341    .text.scr_load_anim_start:0000000000000000 scr_load_anim_start
+     /tmp/ccun8SuT.s:394    .text.lv_disp_get_layer_top:0000000000000000 $t
+     /tmp/ccun8SuT.s:401    .text.lv_disp_get_layer_top:0000000000000000 lv_disp_get_layer_top
+     /tmp/ccun8SuT.s:450    .text.lv_disp_get_layer_sys:0000000000000000 $t
+     /tmp/ccun8SuT.s:457    .text.lv_disp_get_layer_sys:0000000000000000 lv_disp_get_layer_sys
+     /tmp/ccun8SuT.s:506    .text.lv_disp_set_theme:0000000000000000 $t
+     /tmp/ccun8SuT.s:513    .text.lv_disp_set_theme:0000000000000000 lv_disp_set_theme
+     /tmp/ccun8SuT.s:602    .text.lv_disp_get_theme:0000000000000000 $t
+     /tmp/ccun8SuT.s:609    .text.lv_disp_get_theme:0000000000000000 lv_disp_get_theme
+     /tmp/ccun8SuT.s:648    .text.lv_disp_set_bg_color:0000000000000000 $t
+     /tmp/ccun8SuT.s:655    .text.lv_disp_set_bg_color:0000000000000000 lv_disp_set_bg_color
+     /tmp/ccun8SuT.s:745    .text.lv_disp_set_bg_image:0000000000000000 $t
+     /tmp/ccun8SuT.s:752    .text.lv_disp_set_bg_image:0000000000000000 lv_disp_set_bg_image
+     /tmp/ccun8SuT.s:841    .text.lv_disp_set_bg_opa:0000000000000000 $t
+     /tmp/ccun8SuT.s:848    .text.lv_disp_set_bg_opa:0000000000000000 lv_disp_set_bg_opa
+     /tmp/ccun8SuT.s:936    .text.lv_scr_load_anim:0000000000000000 $t
+     /tmp/ccun8SuT.s:943    .text.lv_scr_load_anim:0000000000000000 lv_scr_load_anim
+     /tmp/ccun8SuT.s:1237   .text.lv_scr_load_anim:00000000000000f4 $d
+     /tmp/ccun8SuT.s:1248   .text.lv_scr_load_anim:00000000000000fe $t
+     /tmp/ccun8SuT.s:1820   .text.lv_scr_load_anim:000000000000021c $d
+     /tmp/ccun8SuT.s:1831   .text.lv_disp_get_inactive_time:0000000000000000 $t
+     /tmp/ccun8SuT.s:1838   .text.lv_disp_get_inactive_time:0000000000000000 lv_disp_get_inactive_time
+     /tmp/ccun8SuT.s:1923   .text.lv_disp_trig_activity:0000000000000000 $t
+     /tmp/ccun8SuT.s:1930   .text.lv_disp_trig_activity:0000000000000000 lv_disp_trig_activity
+     /tmp/ccun8SuT.s:1975   .text.lv_disp_clean_dcache:0000000000000000 $t
+     /tmp/ccun8SuT.s:1982   .text.lv_disp_clean_dcache:0000000000000000 lv_disp_clean_dcache
+     /tmp/ccun8SuT.s:2033   .text._lv_disp_get_refr_timer:0000000000000000 $t
+     /tmp/ccun8SuT.s:2040   .text._lv_disp_get_refr_timer:0000000000000000 _lv_disp_get_refr_timer
+
+UNDEFINED SYMBOLS
+lv_obj_get_disp
+lv_obj_remove_local_style_prop
+lv_obj_del
+lv_obj_set_style_opa
+lv_obj_set_y
+lv_obj_set_x
+lv_disp_get_default
+lv_obj_invalidate
+lv_obj_get_child_cnt
+lv_theme_apply
+ARM GAS  /tmp/ccun8SuT.s 			page 63
+
+
+lv_disp_get_hor_res
+lv_disp_get_ver_res
+lv_area_set
+_lv_inv_area
+lv_anim_del
+lv_obj_set_pos
+lv_anim_init
+lv_anim_start
+lv_tick_elaps
+lv_disp_get_next
+lv_tick_get
