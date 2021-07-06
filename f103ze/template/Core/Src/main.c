@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "dac.h"
+#include "dma.h"
 #include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
@@ -117,24 +118,29 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_FSMC_Init();
   MX_USART1_UART_Init();
   MX_I2C2_Init();
   MX_DAC_Init();
   /* USER CODE BEGIN 2 */
+
   /* 初始化 LVGL */
   HAL_GPIO_WritePin(LCD_BL_GPIO_Port,LCD_BL_Pin,GPIO_PIN_SET);
   lv_init();
-
   lv_port_disp_init();        // 显示器初始化
-  
   lv_port_indev_init();       // 输入设备初始化（如果没有实现就注释掉）
   // lv_port_fs_init();          // 文件系统设备初始化（如果没有实现就注释掉）
   
   
   lv_example_btn_1();
-  lv_example_arc_2();
+  lv_example_label_1();
+  //lv_example_arc_2();
   //lv_example_keyboard_1();
+
+  uint32_t tick[5];
+  tick[0]=HAL_GetTick()+1;
+  uint8_t dat[] = "Hello, I am Mculover666.\r\n";
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -145,8 +151,14 @@ int main(void)
     lv_tick_inc(LVGL_TICK);
 		lv_task_handler();
     HAL_Delay(LVGL_TICK);
-    //printf("alive\r\n");
-    //HAL_GPIO_TogglePin(LED1_GPIO_Port,LED1_Pin);
+    if((HAL_GetTick()-tick[0])>1000){
+      tick[0]=HAL_GetTick();
+      //HAL_UART_Transmit_DMA(&huart1, (uint8_t*)ptr, len);
+      //HAL_UART_Transmit_DMA(&huart1, (uint8_t*)dat, sizeof(dat));
+      printf("alive\r\n");
+      HAL_GPIO_TogglePin(LED1_GPIO_Port,LED1_Pin);
+    }
+
     //
     /* USER CODE END WHILE */
 
