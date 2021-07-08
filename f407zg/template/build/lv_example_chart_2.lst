@@ -1,0 +1,1415 @@
+ARM GAS  /tmp/ccEKCY9y.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"lv_example_chart_2.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.add_data,"ax",%progbits
+  18              		.align	1
+  19              		.arch armv7e-m
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	add_data:
+  26              	.LVL0:
+  27              	.LFB185:
+  28              		.file 1 "Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c"
+   1:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** #include "../../lv_examples.h"
+   2:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** #if LV_USE_CHART && LV_DRAW_COMPLEX && LV_BUILD_EXAMPLES
+   3:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+   4:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** static lv_obj_t * chart1;
+   5:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** static lv_chart_series_t * ser1;
+   6:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** static lv_chart_series_t * ser2;
+   7:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+   8:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** static void draw_event_cb(lv_event_t * e)
+   9:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** {
+  10:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     lv_obj_t * obj = lv_event_get_target(e);
+  11:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+  12:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     /*Add the faded area before the lines are drawn*/
+  13:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     lv_obj_draw_part_dsc_t * dsc = lv_event_get_draw_part_dsc(e);
+  14:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     if(dsc->part == LV_PART_ITEMS) {
+  15:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         if(!dsc->p1 || !dsc->p2) return;
+  16:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+  17:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         /*Add  a line mask that keeps the area below the line*/
+  18:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_mask_line_param_t line_mask_param;
+  19:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_mask_line_points_init(&line_mask_param, dsc->p1->x, dsc->p1->y, dsc->p2->x, dsc->p2
+  20:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         int16_t line_mask_id = lv_draw_mask_add(&line_mask_param, NULL);
+  21:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+  22:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         /*Add a fade effect: transparent bottom covering top*/
+  23:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_coord_t h = lv_obj_get_height(obj);
+  24:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_mask_fade_param_t fade_mask_param;
+  25:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_mask_fade_init(&fade_mask_param, &obj->coords, LV_OPA_COVER, obj->coords.y1 + h / 8
+  26:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
+  27:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+  28:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         /*Draw a rectangle that will be affected by the mask*/
+  29:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_rect_dsc_t draw_rect_dsc;
+  30:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_rect_dsc_init(&draw_rect_dsc);
+ARM GAS  /tmp/ccEKCY9y.s 			page 2
+
+
+  31:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         draw_rect_dsc.bg_opa = LV_OPA_20;
+  32:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         draw_rect_dsc.bg_color = dsc->line_dsc->color;
+  33:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+  34:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_area_t a;
+  35:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.x1 = dsc->p1->x;
+  36:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.x2 = dsc->p2->x - 1;
+  37:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.y1 = LV_MIN(dsc->p1->y, dsc->p2->y);
+  38:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.y2 = obj->coords.y2;
+  39:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_rect(&a, dsc->clip_area, &draw_rect_dsc);
+  40:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+  41:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         /*Remove the masks*/
+  42:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_mask_remove_id(line_mask_id);
+  43:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_mask_remove_id(fade_mask_id);
+  44:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     }
+  45:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     /*Hook the division lines too*/
+  46:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     else if(dsc->part == LV_PART_MAIN) {
+  47:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         if(dsc->line_dsc == NULL) return;
+  48:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+  49:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         /*Vertical line*/
+  50:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         if(dsc->p1->x == dsc->p2->x) {
+  51:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             dsc->line_dsc->color  = lv_palette_lighten(LV_PALETTE_GREY, 1);
+  52:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             if(dsc->id == 3) {
+  53:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->width  = 2;
+  54:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_gap  = 0;
+  55:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 0;
+  56:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+  57:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             else {
+  58:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->width = 1;
+  59:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_gap  = 6;
+  60:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 6;
+  61:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+  62:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         }
+  63:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         /*Horizontal line*/
+  64:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         else {
+  65:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             if(dsc->id == 2) {
+  66:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->width  = 2;
+  67:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_gap  = 0;
+  68:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 0;
+  69:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+  70:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             else {
+  71:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->width = 2;
+  72:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_gap  = 6;
+  73:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 6;
+  74:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+  75:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+  76:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             if(dsc->id == 1  || dsc->id == 3) {
+  77:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->color  = lv_palette_main(LV_PALETTE_GREEN);
+  78:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             } else {
+  79:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->color  = lv_palette_lighten(LV_PALETTE_GREY, 1);
+  80:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+  81:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         }
+  82:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     }
+  83:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** }
+  84:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+  85:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** static void add_data(lv_timer_t * timer)
+  86:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** {
+  29              		.loc 1 86 1 view -0
+ARM GAS  /tmp/ccEKCY9y.s 			page 3
+
+
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 86 1 is_stmt 0 view .LVU1
+  34 0000 38B5     		push	{r3, r4, r5, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 16
+  37              		.cfi_offset 3, -16
+  38              		.cfi_offset 4, -12
+  39              		.cfi_offset 5, -8
+  40              		.cfi_offset 14, -4
+  87:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     LV_UNUSED(timer);
+  41              		.loc 1 87 5 is_stmt 1 view .LVU2
+  88:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     static uint32_t cnt = 0;
+  42              		.loc 1 88 5 view .LVU3
+  89:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     lv_chart_set_next_value(chart1, ser1, lv_rand(20, 90));
+  43              		.loc 1 89 5 view .LVU4
+  44 0002 124B     		ldr	r3, .L5
+  45 0004 1C68     		ldr	r4, [r3]
+  46 0006 124B     		ldr	r3, .L5+4
+  47 0008 1D68     		ldr	r5, [r3]
+  48              		.loc 1 89 43 is_stmt 0 view .LVU5
+  49 000a 5A21     		movs	r1, #90
+  50 000c 1420     		movs	r0, #20
+  51              	.LVL1:
+  52              		.loc 1 89 43 view .LVU6
+  53 000e FFF7FEFF 		bl	lv_rand
+  54              	.LVL2:
+  55              		.loc 1 89 5 view .LVU7
+  56 0012 02B2     		sxth	r2, r0
+  57 0014 2946     		mov	r1, r5
+  58 0016 2046     		mov	r0, r4
+  59 0018 FFF7FEFF 		bl	lv_chart_set_next_value
+  60              	.LVL3:
+  90:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+  91:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     if(cnt % 4 == 0) lv_chart_set_next_value(chart1, ser2, lv_rand(40, 60));
+  61              		.loc 1 91 5 is_stmt 1 view .LVU8
+  62              		.loc 1 91 12 is_stmt 0 view .LVU9
+  63 001c 0D4B     		ldr	r3, .L5+8
+  64 001e 1B68     		ldr	r3, [r3]
+  65              		.loc 1 91 7 view .LVU10
+  66 0020 13F0030F 		tst	r3, #3
+  67 0024 04D0     		beq	.L4
+  68              	.L2:
+  92:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+  93:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     cnt++;
+  69              		.loc 1 93 5 is_stmt 1 view .LVU11
+  70              		.loc 1 93 8 is_stmt 0 view .LVU12
+  71 0026 0B4A     		ldr	r2, .L5+8
+  72 0028 1368     		ldr	r3, [r2]
+  73 002a 0133     		adds	r3, r3, #1
+  74 002c 1360     		str	r3, [r2]
+  94:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** }
+  75              		.loc 1 94 1 view .LVU13
+  76 002e 38BD     		pop	{r3, r4, r5, pc}
+  77              	.L4:
+  91:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ARM GAS  /tmp/ccEKCY9y.s 			page 4
+
+
+  78              		.loc 1 91 22 is_stmt 1 discriminator 1 view .LVU14
+  79 0030 064B     		ldr	r3, .L5
+  80 0032 1C68     		ldr	r4, [r3]
+  81 0034 084B     		ldr	r3, .L5+12
+  82 0036 1D68     		ldr	r5, [r3]
+  91:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+  83              		.loc 1 91 60 is_stmt 0 discriminator 1 view .LVU15
+  84 0038 3C21     		movs	r1, #60
+  85 003a 2820     		movs	r0, #40
+  86 003c FFF7FEFF 		bl	lv_rand
+  87              	.LVL4:
+  91:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+  88              		.loc 1 91 22 discriminator 1 view .LVU16
+  89 0040 02B2     		sxth	r2, r0
+  90 0042 2946     		mov	r1, r5
+  91 0044 2046     		mov	r0, r4
+  92 0046 FFF7FEFF 		bl	lv_chart_set_next_value
+  93              	.LVL5:
+  94 004a ECE7     		b	.L2
+  95              	.L6:
+  96              		.align	2
+  97              	.L5:
+  98 004c 00000000 		.word	.LANCHOR0
+  99 0050 00000000 		.word	.LANCHOR1
+ 100 0054 00000000 		.word	.LANCHOR2
+ 101 0058 00000000 		.word	.LANCHOR3
+ 102              		.cfi_endproc
+ 103              	.LFE185:
+ 105              		.section	.text.draw_event_cb,"ax",%progbits
+ 106              		.align	1
+ 107              		.syntax unified
+ 108              		.thumb
+ 109              		.thumb_func
+ 110              		.fpu fpv4-sp-d16
+ 112              	draw_event_cb:
+ 113              	.LVL6:
+ 114              	.LFB184:
+   9:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     lv_obj_t * obj = lv_event_get_target(e);
+ 115              		.loc 1 9 1 is_stmt 1 view -0
+ 116              		.cfi_startproc
+ 117              		@ args = 0, pretend = 0, frame = 128
+ 118              		@ frame_needed = 0, uses_anonymous_args = 0
+   9:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     lv_obj_t * obj = lv_event_get_target(e);
+ 119              		.loc 1 9 1 is_stmt 0 view .LVU18
+ 120 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 121              	.LCFI1:
+ 122              		.cfi_def_cfa_offset 20
+ 123              		.cfi_offset 4, -20
+ 124              		.cfi_offset 5, -16
+ 125              		.cfi_offset 6, -12
+ 126              		.cfi_offset 7, -8
+ 127              		.cfi_offset 14, -4
+ 128 0002 A3B0     		sub	sp, sp, #140
+ 129              	.LCFI2:
+ 130              		.cfi_def_cfa_offset 160
+ 131 0004 0446     		mov	r4, r0
+  10:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ARM GAS  /tmp/ccEKCY9y.s 			page 5
+
+
+ 132              		.loc 1 10 5 is_stmt 1 view .LVU19
+  10:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 133              		.loc 1 10 22 is_stmt 0 view .LVU20
+ 134 0006 FFF7FEFF 		bl	lv_event_get_target
+ 135              	.LVL7:
+  10:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 136              		.loc 1 10 22 view .LVU21
+ 137 000a 0546     		mov	r5, r0
+ 138              	.LVL8:
+  13:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     if(dsc->part == LV_PART_ITEMS) {
+ 139              		.loc 1 13 5 is_stmt 1 view .LVU22
+  13:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     if(dsc->part == LV_PART_ITEMS) {
+ 140              		.loc 1 13 36 is_stmt 0 view .LVU23
+ 141 000c 2046     		mov	r0, r4
+ 142              	.LVL9:
+  13:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     if(dsc->part == LV_PART_ITEMS) {
+ 143              		.loc 1 13 36 view .LVU24
+ 144 000e FFF7FEFF 		bl	lv_event_get_draw_part_dsc
+ 145              	.LVL10:
+ 146 0012 0446     		mov	r4, r0
+ 147              	.LVL11:
+  14:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         if(!dsc->p1 || !dsc->p2) return;
+ 148              		.loc 1 14 5 is_stmt 1 view .LVU25
+  14:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         if(!dsc->p1 || !dsc->p2) return;
+ 149              		.loc 1 14 11 is_stmt 0 view .LVU26
+ 150 0014 436B     		ldr	r3, [r0, #52]
+  14:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         if(!dsc->p1 || !dsc->p2) return;
+ 151              		.loc 1 14 7 view .LVU27
+ 152 0016 B3F5A02F 		cmp	r3, #327680
+ 153 001a 24D0     		beq	.L20
+  46:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         if(dsc->line_dsc == NULL) return;
+ 154              		.loc 1 46 10 is_stmt 1 view .LVU28
+  46:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         if(dsc->line_dsc == NULL) return;
+ 155              		.loc 1 46 12 is_stmt 0 view .LVU29
+ 156 001c 002B     		cmp	r3, #0
+ 157 001e 40F08180 		bne	.L7
+  47:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 158              		.loc 1 47 9 is_stmt 1 view .LVU30
+  47:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 159              		.loc 1 47 15 is_stmt 0 view .LVU31
+ 160 0022 0569     		ldr	r5, [r0, #16]
+ 161              	.LVL12:
+  47:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 162              		.loc 1 47 11 view .LVU32
+ 163 0024 002D     		cmp	r5, #0
+ 164 0026 7DD0     		beq	.L7
+  50:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             dsc->line_dsc->color  = lv_palette_lighten(LV_PALETTE_GREY, 1);
+ 165              		.loc 1 50 9 is_stmt 1 view .LVU33
+  50:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             dsc->line_dsc->color  = lv_palette_lighten(LV_PALETTE_GREY, 1);
+ 166              		.loc 1 50 15 is_stmt 0 view .LVU34
+ 167 0028 C369     		ldr	r3, [r0, #28]
+  50:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             dsc->line_dsc->color  = lv_palette_lighten(LV_PALETTE_GREY, 1);
+ 168              		.loc 1 50 19 view .LVU35
+ 169 002a B3F90020 		ldrsh	r2, [r3]
+  50:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             dsc->line_dsc->color  = lv_palette_lighten(LV_PALETTE_GREY, 1);
+ 170              		.loc 1 50 29 view .LVU36
+ 171 002e 036A     		ldr	r3, [r0, #32]
+ARM GAS  /tmp/ccEKCY9y.s 			page 6
+
+
+  50:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             dsc->line_dsc->color  = lv_palette_lighten(LV_PALETTE_GREY, 1);
+ 172              		.loc 1 50 33 view .LVU37
+ 173 0030 B3F90030 		ldrsh	r3, [r3]
+  50:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             dsc->line_dsc->color  = lv_palette_lighten(LV_PALETTE_GREY, 1);
+ 174              		.loc 1 50 11 view .LVU38
+ 175 0034 9A42     		cmp	r2, r3
+ 176 0036 79D0     		beq	.L21
+  65:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->width  = 2;
+ 177              		.loc 1 65 13 is_stmt 1 view .LVU39
+  65:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->width  = 2;
+ 178              		.loc 1 65 19 is_stmt 0 view .LVU40
+ 179 0038 836B     		ldr	r3, [r0, #56]
+  65:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->width  = 2;
+ 180              		.loc 1 65 15 view .LVU41
+ 181 003a 022B     		cmp	r3, #2
+ 182 003c 00F09080 		beq	.L22
+  71:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_gap  = 6;
+ 183              		.loc 1 71 17 is_stmt 1 view .LVU42
+  71:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_gap  = 6;
+ 184              		.loc 1 71 38 is_stmt 0 view .LVU43
+ 185 0040 0223     		movs	r3, #2
+ 186 0042 6B80     		strh	r3, [r5, #2]	@ movhi
+  72:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 6;
+ 187              		.loc 1 72 17 is_stmt 1 view .LVU44
+  72:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 6;
+ 188              		.loc 1 72 20 is_stmt 0 view .LVU45
+ 189 0044 0269     		ldr	r2, [r0, #16]
+  72:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 6;
+ 190              		.loc 1 72 42 view .LVU46
+ 191 0046 0623     		movs	r3, #6
+ 192 0048 D380     		strh	r3, [r2, #6]	@ movhi
+  73:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 193              		.loc 1 73 17 is_stmt 1 view .LVU47
+  73:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 194              		.loc 1 73 20 is_stmt 0 view .LVU48
+ 195 004a 0269     		ldr	r2, [r0, #16]
+  73:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 196              		.loc 1 73 44 view .LVU49
+ 197 004c 9380     		strh	r3, [r2, #4]	@ movhi
+ 198              	.L16:
+  76:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->color  = lv_palette_main(LV_PALETTE_GREEN);
+ 199              		.loc 1 76 13 is_stmt 1 view .LVU50
+  76:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->color  = lv_palette_main(LV_PALETTE_GREEN);
+ 200              		.loc 1 76 19 is_stmt 0 view .LVU51
+ 201 004e A36B     		ldr	r3, [r4, #56]
+  76:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->color  = lv_palette_main(LV_PALETTE_GREEN);
+ 202              		.loc 1 76 15 view .LVU52
+ 203 0050 012B     		cmp	r3, #1
+ 204 0052 02D0     		beq	.L17
+  76:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->color  = lv_palette_main(LV_PALETTE_GREEN);
+ 205              		.loc 1 76 30 discriminator 1 view .LVU53
+ 206 0054 032B     		cmp	r3, #3
+ 207 0056 40F08A80 		bne	.L18
+ 208              	.L17:
+  77:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             } else {
+ 209              		.loc 1 77 17 is_stmt 1 view .LVU54
+  77:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             } else {
+ARM GAS  /tmp/ccEKCY9y.s 			page 7
+
+
+ 210              		.loc 1 77 20 is_stmt 0 view .LVU55
+ 211 005a 2469     		ldr	r4, [r4, #16]
+  77:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             } else {
+ 212              		.loc 1 77 41 view .LVU56
+ 213 005c 0920     		movs	r0, #9
+ 214              	.LVL13:
+  77:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             } else {
+ 215              		.loc 1 77 41 view .LVU57
+ 216 005e FFF7FEFF 		bl	lv_palette_main
+ 217              	.LVL14:
+ 218 0062 2080     		strh	r0, [r4]	@ movhi
+  77:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             } else {
+ 219              		.loc 1 77 39 view .LVU58
+ 220 0064 5EE0     		b	.L7
+ 221              	.LVL15:
+ 222              	.L20:
+ 223              	.LBB4:
+  15:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 224              		.loc 1 15 9 is_stmt 1 view .LVU59
+  15:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 225              		.loc 1 15 16 is_stmt 0 view .LVU60
+ 226 0066 C169     		ldr	r1, [r0, #28]
+  15:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 227              		.loc 1 15 11 view .LVU61
+ 228 0068 0029     		cmp	r1, #0
+ 229 006a 5BD0     		beq	.L7
+  15:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 230              		.loc 1 15 28 discriminator 2 view .LVU62
+ 231 006c 006A     		ldr	r0, [r0, #32]
+ 232              	.LVL16:
+  15:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 233              		.loc 1 15 21 discriminator 2 view .LVU63
+ 234 006e 0028     		cmp	r0, #0
+ 235 0070 58D0     		beq	.L7
+  18:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_mask_line_points_init(&line_mask_param, dsc->p1->x, dsc->p1->y, dsc->p2->x, dsc->p2
+ 236              		.loc 1 18 9 is_stmt 1 view .LVU64
+  19:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         int16_t line_mask_id = lv_draw_mask_add(&line_mask_param, NULL);
+ 237              		.loc 1 19 9 view .LVU65
+ 238 0072 B0F90030 		ldrsh	r3, [r0]
+ 239 0076 B1F90220 		ldrsh	r2, [r1, #2]
+ 240 007a B1F90010 		ldrsh	r1, [r1]
+ 241 007e 0326     		movs	r6, #3
+ 242 0080 0196     		str	r6, [sp, #4]
+ 243 0082 B0F90200 		ldrsh	r0, [r0, #2]
+ 244 0086 0090     		str	r0, [sp]
+ 245 0088 0AA8     		add	r0, sp, #40
+ 246 008a FFF7FEFF 		bl	lv_draw_mask_line_points_init
+ 247              	.LVL17:
+  20:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 248              		.loc 1 20 9 view .LVU66
+  20:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 249              		.loc 1 20 32 is_stmt 0 view .LVU67
+ 250 008e 0021     		movs	r1, #0
+ 251 0090 0AA8     		add	r0, sp, #40
+ 252 0092 FFF7FEFF 		bl	lv_draw_mask_add
+ 253              	.LVL18:
+ 254 0096 0746     		mov	r7, r0
+ARM GAS  /tmp/ccEKCY9y.s 			page 8
+
+
+ 255              	.LVL19:
+  23:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_mask_fade_param_t fade_mask_param;
+ 256              		.loc 1 23 9 is_stmt 1 view .LVU68
+  23:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_mask_fade_param_t fade_mask_param;
+ 257              		.loc 1 23 24 is_stmt 0 view .LVU69
+ 258 0098 2846     		mov	r0, r5
+ 259 009a FFF7FEFF 		bl	lv_obj_get_height
+ 260              	.LVL20:
+  24:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_mask_fade_init(&fade_mask_param, &obj->coords, LV_OPA_COVER, obj->coords.y1 + h / 8
+ 261              		.loc 1 24 9 is_stmt 1 view .LVU70
+  25:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
+ 262              		.loc 1 25 9 view .LVU71
+  25:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
+ 263              		.loc 1 25 50 is_stmt 0 view .LVU72
+ 264 009e 05F11401 		add	r1, r5, #20
+  25:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
+ 265              		.loc 1 25 89 view .LVU73
+ 266 00a2 EB8A     		ldrh	r3, [r5, #22]
+  25:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
+ 267              		.loc 1 25 93 view .LVU74
+ 268 00a4 0246     		mov	r2, r0
+ 269 00a6 0028     		cmp	r0, #0
+ 270 00a8 3EDB     		blt	.L23
+ 271              	.L12:
+ 272 00aa 03EBE203 		add	r3, r3, r2, asr #3
+  25:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
+ 273              		.loc 1 25 9 view .LVU75
+ 274 00ae B5F91A20 		ldrsh	r2, [r5, #26]
+ 275 00b2 0192     		str	r2, [sp, #4]
+ 276 00b4 0026     		movs	r6, #0
+ 277 00b6 0096     		str	r6, [sp]
+ 278 00b8 1BB2     		sxth	r3, r3
+ 279 00ba FF22     		movs	r2, #255
+ 280 00bc 04A8     		add	r0, sp, #16
+ 281              	.LVL21:
+  25:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
+ 282              		.loc 1 25 9 view .LVU76
+ 283 00be FFF7FEFF 		bl	lv_draw_mask_fade_init
+ 284              	.LVL22:
+  26:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 285              		.loc 1 26 9 is_stmt 1 view .LVU77
+  26:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 286              		.loc 1 26 32 is_stmt 0 view .LVU78
+ 287 00c2 3146     		mov	r1, r6
+ 288 00c4 04A8     		add	r0, sp, #16
+ 289 00c6 FFF7FEFF 		bl	lv_draw_mask_add
+ 290              	.LVL23:
+ 291 00ca 0646     		mov	r6, r0
+ 292              	.LVL24:
+  29:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_rect_dsc_init(&draw_rect_dsc);
+ 293              		.loc 1 29 9 is_stmt 1 view .LVU79
+  30:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         draw_rect_dsc.bg_opa = LV_OPA_20;
+ 294              		.loc 1 30 9 view .LVU80
+ 295 00cc 15A8     		add	r0, sp, #84
+ 296 00ce FFF7FEFF 		bl	lv_draw_rect_dsc_init
+ 297              	.LVL25:
+  31:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         draw_rect_dsc.bg_color = dsc->line_dsc->color;
+ARM GAS  /tmp/ccEKCY9y.s 			page 9
+
+
+ 298              		.loc 1 31 9 view .LVU81
+  31:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         draw_rect_dsc.bg_color = dsc->line_dsc->color;
+ 299              		.loc 1 31 30 is_stmt 0 view .LVU82
+ 300 00d2 3323     		movs	r3, #51
+ 301 00d4 8DF85E30 		strb	r3, [sp, #94]
+  32:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 302              		.loc 1 32 9 is_stmt 1 view .LVU83
+  32:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 303              		.loc 1 32 37 is_stmt 0 view .LVU84
+ 304 00d8 2369     		ldr	r3, [r4, #16]
+  32:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 305              		.loc 1 32 32 view .LVU85
+ 306 00da 1B88     		ldrh	r3, [r3]
+ 307 00dc ADF85830 		strh	r3, [sp, #88]	@ movhi
+  34:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.x1 = dsc->p1->x;
+ 308              		.loc 1 34 9 is_stmt 1 view .LVU86
+  35:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.x2 = dsc->p2->x - 1;
+ 309              		.loc 1 35 9 view .LVU87
+  35:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.x2 = dsc->p2->x - 1;
+ 310              		.loc 1 35 19 is_stmt 0 view .LVU88
+ 311 00e0 E269     		ldr	r2, [r4, #28]
+  35:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.x2 = dsc->p2->x - 1;
+ 312              		.loc 1 35 23 view .LVU89
+ 313 00e2 B2F90030 		ldrsh	r3, [r2]
+  35:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.x2 = dsc->p2->x - 1;
+ 314              		.loc 1 35 14 view .LVU90
+ 315 00e6 ADF80830 		strh	r3, [sp, #8]	@ movhi
+  36:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.y1 = LV_MIN(dsc->p1->y, dsc->p2->y);
+ 316              		.loc 1 36 9 is_stmt 1 view .LVU91
+  36:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.y1 = LV_MIN(dsc->p1->y, dsc->p2->y);
+ 317              		.loc 1 36 19 is_stmt 0 view .LVU92
+ 318 00ea 216A     		ldr	r1, [r4, #32]
+  36:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.y1 = LV_MIN(dsc->p1->y, dsc->p2->y);
+ 319              		.loc 1 36 23 view .LVU93
+ 320 00ec 0B88     		ldrh	r3, [r1]
+  36:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.y1 = LV_MIN(dsc->p1->y, dsc->p2->y);
+ 321              		.loc 1 36 27 view .LVU94
+ 322 00ee 013B     		subs	r3, r3, #1
+  36:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.y1 = LV_MIN(dsc->p1->y, dsc->p2->y);
+ 323              		.loc 1 36 14 view .LVU95
+ 324 00f0 ADF80C30 		strh	r3, [sp, #12]	@ movhi
+  37:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.y2 = obj->coords.y2;
+ 325              		.loc 1 37 9 is_stmt 1 view .LVU96
+  37:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.y2 = obj->coords.y2;
+ 326              		.loc 1 37 16 is_stmt 0 view .LVU97
+ 327 00f4 B1F90230 		ldrsh	r3, [r1, #2]
+ 328 00f8 B2F90220 		ldrsh	r2, [r2, #2]
+ 329 00fc 9342     		cmp	r3, r2
+ 330 00fe A8BF     		it	ge
+ 331 0100 1346     		movge	r3, r2
+  37:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         a.y2 = obj->coords.y2;
+ 332              		.loc 1 37 14 view .LVU98
+ 333 0102 ADF80A30 		strh	r3, [sp, #10]	@ movhi
+  38:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_rect(&a, dsc->clip_area, &draw_rect_dsc);
+ 334              		.loc 1 38 9 is_stmt 1 view .LVU99
+  38:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_rect(&a, dsc->clip_area, &draw_rect_dsc);
+ 335              		.loc 1 38 27 is_stmt 0 view .LVU100
+ARM GAS  /tmp/ccEKCY9y.s 			page 10
+
+
+ 336 0106 B5F91A30 		ldrsh	r3, [r5, #26]
+  38:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_rect(&a, dsc->clip_area, &draw_rect_dsc);
+ 337              		.loc 1 38 14 view .LVU101
+ 338 010a ADF80E30 		strh	r3, [sp, #14]	@ movhi
+  39:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 339              		.loc 1 39 9 is_stmt 1 view .LVU102
+ 340 010e 15AA     		add	r2, sp, #84
+ 341 0110 2168     		ldr	r1, [r4]
+ 342 0112 02A8     		add	r0, sp, #8
+ 343 0114 FFF7FEFF 		bl	lv_draw_rect
+ 344              	.LVL26:
+  42:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_draw_mask_remove_id(fade_mask_id);
+ 345              		.loc 1 42 9 view .LVU103
+ 346 0118 3846     		mov	r0, r7
+ 347 011a FFF7FEFF 		bl	lv_draw_mask_remove_id
+ 348              	.LVL27:
+  43:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     }
+ 349              		.loc 1 43 9 view .LVU104
+ 350 011e 3046     		mov	r0, r6
+ 351 0120 FFF7FEFF 		bl	lv_draw_mask_remove_id
+ 352              	.LVL28:
+ 353              	.L7:
+  43:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     }
+ 354              		.loc 1 43 9 is_stmt 0 view .LVU105
+ 355              	.LBE4:
+  83:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 356              		.loc 1 83 1 view .LVU106
+ 357 0124 23B0     		add	sp, sp, #140
+ 358              	.LCFI3:
+ 359              		.cfi_remember_state
+ 360              		.cfi_def_cfa_offset 20
+ 361              		@ sp needed
+ 362 0126 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 363              	.LVL29:
+ 364              	.L23:
+ 365              	.LCFI4:
+ 366              		.cfi_restore_state
+ 367              	.LBB5:
+  25:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
+ 368              		.loc 1 25 93 view .LVU107
+ 369 0128 C21D     		adds	r2, r0, #7
+ 370 012a BEE7     		b	.L12
+ 371              	.LVL30:
+ 372              	.L21:
+  25:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
+ 373              		.loc 1 25 93 view .LVU108
+ 374              	.LBE5:
+  51:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             if(dsc->id == 3) {
+ 375              		.loc 1 51 13 is_stmt 1 view .LVU109
+  51:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             if(dsc->id == 3) {
+ 376              		.loc 1 51 37 is_stmt 0 view .LVU110
+ 377 012c 0121     		movs	r1, #1
+ 378 012e 1220     		movs	r0, #18
+ 379              	.LVL31:
+  51:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             if(dsc->id == 3) {
+ 380              		.loc 1 51 37 view .LVU111
+ 381 0130 FFF7FEFF 		bl	lv_palette_lighten
+ARM GAS  /tmp/ccEKCY9y.s 			page 11
+
+
+ 382              	.LVL32:
+ 383 0134 2880     		strh	r0, [r5]	@ movhi
+  52:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->width  = 2;
+ 384              		.loc 1 52 13 is_stmt 1 view .LVU112
+  52:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->width  = 2;
+ 385              		.loc 1 52 19 is_stmt 0 view .LVU113
+ 386 0136 A36B     		ldr	r3, [r4, #56]
+  52:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->width  = 2;
+ 387              		.loc 1 52 15 view .LVU114
+ 388 0138 032B     		cmp	r3, #3
+ 389 013a 08D0     		beq	.L24
+  58:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_gap  = 6;
+ 390              		.loc 1 58 17 is_stmt 1 view .LVU115
+  58:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_gap  = 6;
+ 391              		.loc 1 58 20 is_stmt 0 view .LVU116
+ 392 013c 2369     		ldr	r3, [r4, #16]
+  58:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_gap  = 6;
+ 393              		.loc 1 58 38 view .LVU117
+ 394 013e 0122     		movs	r2, #1
+ 395 0140 5A80     		strh	r2, [r3, #2]	@ movhi
+  59:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 6;
+ 396              		.loc 1 59 17 is_stmt 1 view .LVU118
+  59:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 6;
+ 397              		.loc 1 59 20 is_stmt 0 view .LVU119
+ 398 0142 2269     		ldr	r2, [r4, #16]
+  59:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 6;
+ 399              		.loc 1 59 42 view .LVU120
+ 400 0144 0623     		movs	r3, #6
+ 401 0146 D380     		strh	r3, [r2, #6]	@ movhi
+  60:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 402              		.loc 1 60 17 is_stmt 1 view .LVU121
+  60:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 403              		.loc 1 60 20 is_stmt 0 view .LVU122
+ 404 0148 2269     		ldr	r2, [r4, #16]
+  60:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 405              		.loc 1 60 44 view .LVU123
+ 406 014a 9380     		strh	r3, [r2, #4]	@ movhi
+ 407 014c EAE7     		b	.L7
+ 408              	.L24:
+  53:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_gap  = 0;
+ 409              		.loc 1 53 17 is_stmt 1 view .LVU124
+  53:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_gap  = 0;
+ 410              		.loc 1 53 20 is_stmt 0 view .LVU125
+ 411 014e 2369     		ldr	r3, [r4, #16]
+  53:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_gap  = 0;
+ 412              		.loc 1 53 39 view .LVU126
+ 413 0150 0222     		movs	r2, #2
+ 414 0152 5A80     		strh	r2, [r3, #2]	@ movhi
+  54:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 0;
+ 415              		.loc 1 54 17 is_stmt 1 view .LVU127
+  54:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 0;
+ 416              		.loc 1 54 20 is_stmt 0 view .LVU128
+ 417 0154 2269     		ldr	r2, [r4, #16]
+  54:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 0;
+ 418              		.loc 1 54 42 view .LVU129
+ 419 0156 0023     		movs	r3, #0
+ 420 0158 D380     		strh	r3, [r2, #6]	@ movhi
+ARM GAS  /tmp/ccEKCY9y.s 			page 12
+
+
+  55:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 421              		.loc 1 55 17 is_stmt 1 view .LVU130
+  55:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 422              		.loc 1 55 20 is_stmt 0 view .LVU131
+ 423 015a 2269     		ldr	r2, [r4, #16]
+  55:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 424              		.loc 1 55 44 view .LVU132
+ 425 015c 9380     		strh	r3, [r2, #4]	@ movhi
+ 426 015e E1E7     		b	.L7
+ 427              	.LVL33:
+ 428              	.L22:
+  66:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_gap  = 0;
+ 429              		.loc 1 66 17 is_stmt 1 view .LVU133
+  66:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_gap  = 0;
+ 430              		.loc 1 66 39 is_stmt 0 view .LVU134
+ 431 0160 6B80     		strh	r3, [r5, #2]	@ movhi
+  67:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 0;
+ 432              		.loc 1 67 17 is_stmt 1 view .LVU135
+  67:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 0;
+ 433              		.loc 1 67 20 is_stmt 0 view .LVU136
+ 434 0162 0269     		ldr	r2, [r0, #16]
+  67:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****                 dsc->line_dsc->dash_width  = 0;
+ 435              		.loc 1 67 42 view .LVU137
+ 436 0164 0023     		movs	r3, #0
+ 437 0166 D380     		strh	r3, [r2, #6]	@ movhi
+  68:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 438              		.loc 1 68 17 is_stmt 1 view .LVU138
+  68:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 439              		.loc 1 68 20 is_stmt 0 view .LVU139
+ 440 0168 0269     		ldr	r2, [r0, #16]
+  68:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 441              		.loc 1 68 44 view .LVU140
+ 442 016a 9380     		strh	r3, [r2, #4]	@ movhi
+ 443 016c 6FE7     		b	.L16
+ 444              	.L18:
+  79:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 445              		.loc 1 79 17 is_stmt 1 view .LVU141
+  79:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 446              		.loc 1 79 20 is_stmt 0 view .LVU142
+ 447 016e 2469     		ldr	r4, [r4, #16]
+  79:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 448              		.loc 1 79 41 view .LVU143
+ 449 0170 0121     		movs	r1, #1
+ 450 0172 1220     		movs	r0, #18
+ 451              	.LVL34:
+  79:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****             }
+ 452              		.loc 1 79 41 view .LVU144
+ 453 0174 FFF7FEFF 		bl	lv_palette_lighten
+ 454              	.LVL35:
+ 455 0178 2080     		strh	r0, [r4]	@ movhi
+ 456 017a D3E7     		b	.L7
+ 457              		.cfi_endproc
+ 458              	.LFE184:
+ 460              		.section	.text.lv_example_chart_2,"ax",%progbits
+ 461              		.align	1
+ 462              		.global	lv_example_chart_2
+ 463              		.syntax unified
+ARM GAS  /tmp/ccEKCY9y.s 			page 13
+
+
+ 464              		.thumb
+ 465              		.thumb_func
+ 466              		.fpu fpv4-sp-d16
+ 468              	lv_example_chart_2:
+ 469              	.LFB186:
+  95:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+  96:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** /**
+  97:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****  * Add a faded area effect to the line chart and make some division lines ticker
+  98:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****  */
+  99:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** void lv_example_chart_2(void)
+ 100:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** {
+ 470              		.loc 1 100 1 is_stmt 1 view -0
+ 471              		.cfi_startproc
+ 472              		@ args = 0, pretend = 0, frame = 0
+ 473              		@ frame_needed = 0, uses_anonymous_args = 0
+ 474 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 475              	.LCFI5:
+ 476              		.cfi_def_cfa_offset 24
+ 477              		.cfi_offset 3, -24
+ 478              		.cfi_offset 4, -20
+ 479              		.cfi_offset 5, -16
+ 480              		.cfi_offset 6, -12
+ 481              		.cfi_offset 7, -8
+ 482              		.cfi_offset 14, -4
+ 101:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     /*Create a chart1*/
+ 102:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     chart1 = lv_chart_create(lv_scr_act());
+ 483              		.loc 1 102 5 view .LVU146
+ 484              	.LBB10:
+ 485              	.LBI10:
+ 486              		.file 2 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h"
+   1:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+   2:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @file lv_disp.h
+   3:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  *
+   4:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+   5:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+   6:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** #ifndef LV_DISP_H
+   7:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** #define LV_DISP_H
+   8:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+   9:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** #ifdef __cplusplus
+  10:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** extern "C" {
+  11:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** #endif
+  12:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  13:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /*********************
+  14:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  *      INCLUDES
+  15:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  *********************/
+  16:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** #include "../hal/lv_hal.h"
+  17:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** #include "lv_obj.h"
+  18:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** #include "lv_theme.h"
+  19:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  20:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /*********************
+  21:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  *      DEFINES
+  22:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  *********************/
+  23:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  24:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**********************
+  25:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  *      TYPEDEFS
+  26:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  **********************/
+  27:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ARM GAS  /tmp/ccEKCY9y.s 			page 14
+
+
+  28:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** typedef enum {
+  29:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_NONE,
+  30:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_LEFT,
+  31:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_RIGHT,
+  32:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_TOP,
+  33:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_BOTTOM,
+  34:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_LEFT,
+  35:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_RIGHT,
+  36:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_TOP,
+  37:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_BOTTOM,
+  38:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_FADE_ON,
+  39:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** } lv_scr_load_anim_t;
+  40:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  41:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**********************
+  42:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * GLOBAL PROTOTYPES
+  43:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  **********************/
+  44:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  45:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  46:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Return with a pointer to the active screen
+  47:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to display which active screen should be get. (NULL to use the default
+  48:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * screen)
+  49:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return pointer to the active screen object (loaded by 'lv_scr_load()')
+  50:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+  51:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** lv_obj_t * lv_disp_get_scr_act(lv_disp_t * disp);
+  52:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  53:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  54:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Return with a pointer to the previous screen. Only used during screen transitions.
+  55:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to display which previous screen should be get. (NULL to use the default
+  56:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * screen)
+  57:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return pointer to the previous screen object or NULL if not used now
+  58:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+  59:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** lv_obj_t * lv_disp_get_scr_prev(lv_disp_t * disp);
+  60:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  61:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  62:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Make a screen active
+  63:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param scr pointer to a screen
+  64:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+  65:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_disp_load_scr(lv_obj_t * scr);
+  66:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  67:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  68:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Return with the top layer. (Same on every screen and it is above the normal screen layer)
+  69:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to display which top layer should be get. (NULL to use the default screen)
+  70:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return pointer to the top layer object  (transparent screen sized lv_obj)
+  71:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+  72:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** lv_obj_t * lv_disp_get_layer_top(lv_disp_t * disp);
+  73:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  74:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  75:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Return with the sys. layer. (Same on every screen and it is above the normal screen and the top
+  76:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * layer)
+  77:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to display which sys. layer  should be get. (NULL to use the default screen)
+  78:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return pointer to the sys layer object  (transparent screen sized lv_obj)
+  79:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+  80:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** lv_obj_t * lv_disp_get_layer_sys(lv_disp_t * disp);
+  81:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  82:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  83:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Get the theme of a display
+  84:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+ARM GAS  /tmp/ccEKCY9y.s 			page 15
+
+
+  85:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return the display's theme (can be NULL)
+  86:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+  87:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_disp_set_theme(lv_disp_t * disp, lv_theme_t * th);
+  88:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  89:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  90:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Get the theme of a display
+  91:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+  92:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return the display's theme (can be NULL)
+  93:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+  94:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** lv_theme_t * lv_disp_get_theme(lv_disp_t * disp);
+  95:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  96:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  97:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Set the background color of a display
+  98:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+  99:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param color color of the background
+ 100:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 101:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_disp_set_bg_color(lv_disp_t * disp, lv_color_t color);
+ 102:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 103:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 104:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Set the background image of a display
+ 105:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+ 106:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param img_src path to file or pointer to an `lv_img_dsc_t` variable
+ 107:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 108:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_disp_set_bg_image(lv_disp_t * disp, const void  * img_src);
+ 109:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 110:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 111:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Opacity of the background
+ 112:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+ 113:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param opa opacity (0..255)
+ 114:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 115:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_disp_set_bg_opa(lv_disp_t * disp, lv_opa_t opa);
+ 116:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 117:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 118:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Switch screen with animation
+ 119:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param scr pointer to the new screen to load
+ 120:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param anim_type type of the animation from `lv_scr_load_anim_t`. E.g.  `LV_SCR_LOAD_ANIM_MOVE_L
+ 121:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param time time of the animation
+ 122:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param delay delay before the transition
+ 123:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param auto_del true: automatically delete the old screen
+ 124:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 125:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_scr_load_anim(lv_obj_t * scr, lv_scr_load_anim_t anim_type, uint32_t time, uint32_t delay, 
+ 126:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 127:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 128:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Get elapsed time since last user activity on a display (e.g. click)
+ 129:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to an display (NULL to get the overall smallest inactivity)
+ 130:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return elapsed ticks (milliseconds) since the last activity
+ 131:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 132:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** uint32_t lv_disp_get_inactive_time(const lv_disp_t * disp);
+ 133:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 134:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 135:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Manually trigger an activity on a display
+ 136:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to an display (NULL to use the default display)
+ 137:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 138:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_disp_trig_activity(lv_disp_t * disp);
+ 139:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 140:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 141:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Clean any CPU cache that is related to the display.
+ARM GAS  /tmp/ccEKCY9y.s 			page 16
+
+
+ 142:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to an display (NULL to use the default display)
+ 143:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 144:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_disp_clean_dcache(lv_disp_t * disp);
+ 145:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 146:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 147:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Get a pointer to the screen refresher timer to
+ 148:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * modify its parameters with `lv_timer_...` functions.
+ 149:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+ 150:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return pointer to the display refresher timer. (NULL on error)
+ 151:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 152:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** lv_timer_t * _lv_disp_get_refr_timer(lv_disp_t * disp);
+ 153:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 154:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /*------------------------------------------------
+ 155:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * To improve backward compatibility
+ 156:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Recommended only if you have one display
+ 157:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  *------------------------------------------------*/
+ 158:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 159:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 160:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Get the active screen of the default display
+ 161:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return pointer to the active screen
+ 162:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 163:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** static inline lv_obj_t * lv_scr_act(void)
+ 487              		.loc 2 163 26 view .LVU147
+ 488              	.LBB11:
+ 164:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** {
+ 165:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     return lv_disp_get_scr_act(lv_disp_get_default());
+ 489              		.loc 2 165 5 view .LVU148
+ 490              		.loc 2 165 12 is_stmt 0 view .LVU149
+ 491 0002 FFF7FEFF 		bl	lv_disp_get_default
+ 492              	.LVL36:
+ 493 0006 FFF7FEFF 		bl	lv_disp_get_scr_act
+ 494              	.LVL37:
+ 495              	.LBE11:
+ 496              	.LBE10:
+ 497              		.loc 1 102 14 view .LVU150
+ 498 000a FFF7FEFF 		bl	lv_chart_create
+ 499              	.LVL38:
+ 500              		.loc 1 102 12 view .LVU151
+ 501 000e 2C4C     		ldr	r4, .L29
+ 502 0010 2060     		str	r0, [r4]
+ 103:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     lv_obj_set_size(chart1, 200, 150);
+ 503              		.loc 1 103 5 is_stmt 1 view .LVU152
+ 504 0012 9622     		movs	r2, #150
+ 505 0014 C821     		movs	r1, #200
+ 506 0016 FFF7FEFF 		bl	lv_obj_set_size
+ 507              	.LVL39:
+ 104:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     lv_obj_center(chart1);
+ 508              		.loc 1 104 5 view .LVU153
+ 509              	.LBB12:
+ 510              	.LBI12:
+ 511              		.file 3 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h"
+   1:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+   2:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @file lv_obj_pos.h
+   3:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *
+   4:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+   5:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+   6:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** #ifndef LV_OBJ_POS_H
+ARM GAS  /tmp/ccEKCY9y.s 			page 17
+
+
+   7:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** #define LV_OBJ_POS_H
+   8:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+   9:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** #ifdef __cplusplus
+  10:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** extern "C" {
+  11:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** #endif
+  12:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+  13:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /*********************
+  14:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *      INCLUDES
+  15:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *********************/
+  16:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** #include "../misc/lv_area.h"
+  17:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+  18:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /*********************
+  19:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *      DEFINES
+  20:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *********************/
+  21:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+  22:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**********************
+  23:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *      TYPEDEFS
+  24:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  **********************/
+  25:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** struct _lv_obj_t;
+  26:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+  27:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** typedef void (*lv_layout_update_cb_t)(struct _lv_obj_t *, void * user_data);
+  28:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** typedef struct {
+  29:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****     lv_layout_update_cb_t cb;
+  30:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****     void * user_data;
+  31:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** }lv_layout_dsc_t;
+  32:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+  33:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**********************
+  34:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * GLOBAL PROTOTYPES
+  35:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  **********************/
+  36:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+  37:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+  38:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Set the relative the position of an object (relative to the parent's top left corner)
+  39:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object
+  40:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param x         new distance from the left side of the parent plus the parent's left padding
+  41:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param y         new distance from the top side of the parent  plus the parent's right padding
+  42:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+  43:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** void lv_obj_set_pos(struct _lv_obj_t * obj, lv_coord_t x, lv_coord_t y);
+  44:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+  45:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+  46:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Set the x coordinate of a object
+  47:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object
+  48:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param x         new distance from the left side from the parent plus the parent's left padding
+  49:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+  50:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** void lv_obj_set_x(struct _lv_obj_t * obj, lv_coord_t x);
+  51:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+  52:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+  53:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Set the y coordinate of a object
+  54:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object
+  55:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param y         new distance from the top of the parent  plus the parent's top padding
+  56:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+  57:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** void lv_obj_set_y(struct _lv_obj_t * obj, lv_coord_t y);
+  58:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+  59:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+  60:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Set the size of an object.
+  61:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object
+  62:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param w         the new width
+  63:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param h         the new height
+ARM GAS  /tmp/ccEKCY9y.s 			page 18
+
+
+  64:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @note            possible values are:
+  65:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *                  pixel               simple set the size accordingly
+  66:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *                  LV_SIZE_CONTENT     set the size to involve all children in the given direction
+  67:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *                  LV_SIZE_PCT(x)     to set size in percentage of the parent's content area size 
+  68:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *                                      x should be in [0..1000]% range
+  69:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+  70:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** void lv_obj_set_size(struct _lv_obj_t * obj, lv_coord_t w, lv_coord_t h);
+  71:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+  72:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+  73:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Recalculate the size of the object
+  74:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object
+  75:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @return          true: the size has been changed
+  76:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+  77:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** bool lv_obj_refr_size(struct _lv_obj_t * obj);
+  78:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+  79:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+  80:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Set the width of an object
+  81:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object
+  82:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param w         the new width
+  83:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @note            possible values are:
+  84:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *                  pixel               simple set the size accordingly
+  85:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *                  LV_SIZE_CONTENT     set the size to involve all children in the given direction
+  86:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *                  lv_pct(x)           to set size in percentage of the parent's content area size
+  87:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *                                      x should be in [0..1000]% range
+  88:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+  89:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** void lv_obj_set_width(struct _lv_obj_t * obj, lv_coord_t w);
+  90:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+  91:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+  92:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Set the height of an object
+  93:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object
+  94:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param h         the new height
+  95:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @note            possible values are:
+  96:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *                  pixel               simple set the size accordingly
+  97:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *                  LV_SIZE_CONTENT     set the size to involve all children in the given direction
+  98:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *                  lv_pct(x)           to set size in percentage of the parent's content area size
+  99:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  *                                      x should be in [0..1000]% range
+ 100:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+ 101:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** void lv_obj_set_height(struct _lv_obj_t * obj, lv_coord_t h);
+ 102:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+ 103:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+ 104:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Set the width reduced by the left and right padding and the border width.
+ 105:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object
+ 106:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param w         the width without paddings in pixels
+ 107:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+ 108:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** void lv_obj_set_content_width(struct _lv_obj_t * obj, lv_coord_t w);
+ 109:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+ 110:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+ 111:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Set the height reduced by the top and bottom padding and the border width.
+ 112:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object
+ 113:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param h         the height without paddings in pixels
+ 114:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+ 115:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** void lv_obj_set_content_height(struct _lv_obj_t * obj, lv_coord_t h);
+ 116:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+ 117:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+ 118:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Set a layout for an object
+ 119:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object
+ 120:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param layout    pointer to a layout descriptor to set
+ARM GAS  /tmp/ccEKCY9y.s 			page 19
+
+
+ 121:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+ 122:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** void lv_obj_set_layout(struct _lv_obj_t * obj, uint32_t layout);
+ 123:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+ 124:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+ 125:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Test whether the and object is positioned by a layout or not
+ 126:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object to test
+ 127:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @return true:    positioned by a layout; false: not positioned by a layout
+ 128:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+ 129:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** bool lv_obj_is_layout_positioned(const struct _lv_obj_t * obj);
+ 130:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+ 131:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+ 132:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Mark the object for layout update.
+ 133:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj      pointer to an object whose children needs to be updated
+ 134:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+ 135:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** void lv_obj_mark_layout_as_dirty(struct _lv_obj_t * obj);
+ 136:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+ 137:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+ 138:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Update the layout of an object.
+ 139:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj      pointer to an object whose children needs to be updated
+ 140:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+ 141:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** void lv_obj_update_layout(const struct _lv_obj_t * obj);
+ 142:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+ 143:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+ 144:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Regsiter a new layout
+ 145:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param cb        the layout update callback
+ 146:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param user_data custom data that will be passed to `cb`
+ 147:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @return          the ID of the new layout
+ 148:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+ 149:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** uint32_t lv_layout_register(lv_layout_update_cb_t cb, void * user_data);
+ 150:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+ 151:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+ 152:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Change the alignment of an object.
+ 153:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object to align
+ 154:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param align     type of alignment (see 'lv_align_t' enum) `LV_ALIGN_OUT_...` can't be used.
+ 155:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+ 156:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** void lv_obj_set_align(struct _lv_obj_t * obj, lv_align_t align);
+ 157:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+ 158:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+ 159:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Change the alignment of an object and set new coordinates.
+ 160:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Equivalent to:
+ 161:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * lv_obj_set_align(obj, align);
+ 162:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * lv_obj_set_pos(obj, x_ofs, y_ofs);
+ 163:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object to align
+ 164:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param align     type of alignment (see 'lv_align_t' enum) `LV_ALIGN_OUT_...` can't be used.
+ 165:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param x_ofs     x coordinate offset after alignment
+ 166:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param y_ofs     y coordinate offset after alignment
+ 167:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+ 168:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** void lv_obj_align(struct _lv_obj_t * obj, lv_align_t align, lv_coord_t x_ofs, lv_coord_t y_ofs);
+ 169:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+ 170:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+ 171:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Align an object to an other object.
+ 172:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object to align
+ 173:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param base      pointer to an other object (if NULL `obj`s parent is used). 'obj' will be align
+ 174:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param align     type of alignment (see 'lv_align_t' enum)
+ 175:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param x_ofs     x coordinate offset after alignment
+ 176:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param y_ofs     y coordinate offset after alignment
+ 177:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @note            if the position or size of `base` changes `obj` needs to be aligned manually ag
+ARM GAS  /tmp/ccEKCY9y.s 			page 20
+
+
+ 178:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+ 179:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** void lv_obj_align_to(struct _lv_obj_t * obj, const struct _lv_obj_t * base, lv_align_t align, lv_co
+ 180:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** 
+ 181:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** /**
+ 182:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * Align an object to the center on its parent.
+ 183:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @param obj       pointer to an object to align
+ 184:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  * @note            if the parent size changes `obj` needs to be aligned manually again
+ 185:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****  */
+ 186:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** static inline void lv_obj_center(struct _lv_obj_t * obj)
+ 512              		.loc 3 186 20 view .LVU154
+ 513              	.LBB13:
+ 187:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h **** {
+ 188:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h ****     lv_obj_align(obj, LV_ALIGN_CENTER, 0, 0);
+ 514              		.loc 3 188 5 view .LVU155
+ 515 001a 0023     		movs	r3, #0
+ 516 001c 1A46     		mov	r2, r3
+ 517 001e 0921     		movs	r1, #9
+ 518 0020 2068     		ldr	r0, [r4]
+ 519 0022 FFF7FEFF 		bl	lv_obj_align
+ 520              	.LVL40:
+ 521              		.loc 3 188 5 is_stmt 0 view .LVU156
+ 522              	.LBE13:
+ 523              	.LBE12:
+ 105:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     lv_chart_set_type(chart1, LV_CHART_TYPE_LINE);   /*Show lines and points too*/
+ 524              		.loc 1 105 5 is_stmt 1 view .LVU157
+ 525 0026 0121     		movs	r1, #1
+ 526 0028 2068     		ldr	r0, [r4]
+ 527 002a FFF7FEFF 		bl	lv_chart_set_type
+ 528              	.LVL41:
+ 106:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 107:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     lv_chart_set_div_line_count(chart1, 5, 7);
+ 529              		.loc 1 107 5 view .LVU158
+ 530 002e 0722     		movs	r2, #7
+ 531 0030 0521     		movs	r1, #5
+ 532 0032 2068     		ldr	r0, [r4]
+ 533 0034 FFF7FEFF 		bl	lv_chart_set_div_line_count
+ 534              	.LVL42:
+ 108:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 109:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     lv_obj_add_event_cb(chart1, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+ 535              		.loc 1 109 5 view .LVU159
+ 536 0038 0023     		movs	r3, #0
+ 537 003a 1A22     		movs	r2, #26
+ 538 003c 2149     		ldr	r1, .L29+4
+ 539 003e 2068     		ldr	r0, [r4]
+ 540 0040 FFF7FEFF 		bl	lv_obj_add_event_cb
+ 541              	.LVL43:
+ 110:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     lv_chart_set_update_mode(chart1, LV_CHART_UPDATE_MODE_CIRCULAR);
+ 542              		.loc 1 110 5 view .LVU160
+ 543 0044 0121     		movs	r1, #1
+ 544 0046 2068     		ldr	r0, [r4]
+ 545 0048 FFF7FEFF 		bl	lv_chart_set_update_mode
+ 546              	.LVL44:
+ 111:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 112:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     /*Add two data series*/
+ 113:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     ser1 = lv_chart_add_series(chart1, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
+ 547              		.loc 1 113 5 view .LVU161
+ 548              		.loc 1 113 12 is_stmt 0 view .LVU162
+ARM GAS  /tmp/ccEKCY9y.s 			page 21
+
+
+ 549 004c 2568     		ldr	r5, [r4]
+ 550 004e 0020     		movs	r0, #0
+ 551 0050 FFF7FEFF 		bl	lv_palette_main
+ 552              	.LVL45:
+ 553 0054 0146     		mov	r1, r0	@ movhi
+ 554 0056 0022     		movs	r2, #0
+ 555 0058 2846     		mov	r0, r5
+ 556 005a FFF7FEFF 		bl	lv_chart_add_series
+ 557              	.LVL46:
+ 558              		.loc 1 113 10 view .LVU163
+ 559 005e 1A4B     		ldr	r3, .L29+8
+ 560 0060 1860     		str	r0, [r3]
+ 114:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     ser2 = lv_chart_add_series(chart1, lv_palette_main(LV_PALETTE_BLUE), LV_CHART_AXIS_SECONDARY_Y)
+ 561              		.loc 1 114 5 is_stmt 1 view .LVU164
+ 562              		.loc 1 114 12 is_stmt 0 view .LVU165
+ 563 0062 2468     		ldr	r4, [r4]
+ 564 0064 0520     		movs	r0, #5
+ 565 0066 FFF7FEFF 		bl	lv_palette_main
+ 566              	.LVL47:
+ 567 006a 0146     		mov	r1, r0	@ movhi
+ 568 006c 0122     		movs	r2, #1
+ 569 006e 2046     		mov	r0, r4
+ 570 0070 FFF7FEFF 		bl	lv_chart_add_series
+ 571              	.LVL48:
+ 572              		.loc 1 114 10 view .LVU166
+ 573 0074 154B     		ldr	r3, .L29+12
+ 574 0076 1860     		str	r0, [r3]
+ 115:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 116:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     uint32_t i;
+ 575              		.loc 1 116 5 is_stmt 1 view .LVU167
+ 117:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     for(i = 0; i < 10; i++) {
+ 576              		.loc 1 117 5 view .LVU168
+ 577              	.LVL49:
+ 578              		.loc 1 117 11 is_stmt 0 view .LVU169
+ 579 0078 0024     		movs	r4, #0
+ 580              		.loc 1 117 5 view .LVU170
+ 581 007a 19E0     		b	.L26
+ 582              	.LVL50:
+ 583              	.L27:
+ 118:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_chart_set_next_value(chart1, ser1, lv_rand(20, 90));
+ 584              		.loc 1 118 9 is_stmt 1 discriminator 3 view .LVU171
+ 585 007c 104D     		ldr	r5, .L29
+ 586 007e 2E68     		ldr	r6, [r5]
+ 587 0080 114B     		ldr	r3, .L29+8
+ 588 0082 1F68     		ldr	r7, [r3]
+ 589              		.loc 1 118 47 is_stmt 0 discriminator 3 view .LVU172
+ 590 0084 5A21     		movs	r1, #90
+ 591 0086 1420     		movs	r0, #20
+ 592 0088 FFF7FEFF 		bl	lv_rand
+ 593              	.LVL51:
+ 594              		.loc 1 118 9 discriminator 3 view .LVU173
+ 595 008c 02B2     		sxth	r2, r0
+ 596 008e 3946     		mov	r1, r7
+ 597 0090 3046     		mov	r0, r6
+ 598 0092 FFF7FEFF 		bl	lv_chart_set_next_value
+ 599              	.LVL52:
+ 119:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****         lv_chart_set_next_value(chart1, ser2, lv_rand(30, 70));
+ARM GAS  /tmp/ccEKCY9y.s 			page 22
+
+
+ 600              		.loc 1 119 9 is_stmt 1 discriminator 3 view .LVU174
+ 601 0096 2D68     		ldr	r5, [r5]
+ 602 0098 0C4B     		ldr	r3, .L29+12
+ 603 009a 1E68     		ldr	r6, [r3]
+ 604              		.loc 1 119 47 is_stmt 0 discriminator 3 view .LVU175
+ 605 009c 4621     		movs	r1, #70
+ 606 009e 1E20     		movs	r0, #30
+ 607 00a0 FFF7FEFF 		bl	lv_rand
+ 608              	.LVL53:
+ 609              		.loc 1 119 9 discriminator 3 view .LVU176
+ 610 00a4 02B2     		sxth	r2, r0
+ 611 00a6 3146     		mov	r1, r6
+ 612 00a8 2846     		mov	r0, r5
+ 613 00aa FFF7FEFF 		bl	lv_chart_set_next_value
+ 614              	.LVL54:
+ 117:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     for(i = 0; i < 10; i++) {
+ 615              		.loc 1 117 24 is_stmt 1 discriminator 3 view .LVU177
+ 117:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     for(i = 0; i < 10; i++) {
+ 616              		.loc 1 117 25 is_stmt 0 discriminator 3 view .LVU178
+ 617 00ae 0134     		adds	r4, r4, #1
+ 618              	.LVL55:
+ 619              	.L26:
+ 117:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     for(i = 0; i < 10; i++) {
+ 620              		.loc 1 117 16 is_stmt 1 discriminator 1 view .LVU179
+ 117:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     for(i = 0; i < 10; i++) {
+ 621              		.loc 1 117 5 is_stmt 0 discriminator 1 view .LVU180
+ 622 00b0 092C     		cmp	r4, #9
+ 623 00b2 E3D9     		bls	.L27
+ 120:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     }
+ 121:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** 
+ 122:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c ****     lv_timer_create(add_data, 200, NULL);
+ 624              		.loc 1 122 5 is_stmt 1 view .LVU181
+ 625 00b4 0022     		movs	r2, #0
+ 626 00b6 C821     		movs	r1, #200
+ 627 00b8 0548     		ldr	r0, .L29+16
+ 628 00ba FFF7FEFF 		bl	lv_timer_create
+ 629              	.LVL56:
+ 123:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_2.c **** }
+ 630              		.loc 1 123 1 is_stmt 0 view .LVU182
+ 631 00be F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 632              	.LVL57:
+ 633              	.L30:
+ 634              		.loc 1 123 1 view .LVU183
+ 635              		.align	2
+ 636              	.L29:
+ 637 00c0 00000000 		.word	.LANCHOR0
+ 638 00c4 00000000 		.word	draw_event_cb
+ 639 00c8 00000000 		.word	.LANCHOR1
+ 640 00cc 00000000 		.word	.LANCHOR3
+ 641 00d0 00000000 		.word	add_data
+ 642              		.cfi_endproc
+ 643              	.LFE186:
+ 645              		.section	.bss.chart1,"aw",%nobits
+ 646              		.align	2
+ 647              		.set	.LANCHOR0,. + 0
+ 650              	chart1:
+ 651 0000 00000000 		.space	4
+ARM GAS  /tmp/ccEKCY9y.s 			page 23
+
+
+ 652              		.section	.bss.cnt.0,"aw",%nobits
+ 653              		.align	2
+ 654              		.set	.LANCHOR2,. + 0
+ 657              	cnt.0:
+ 658 0000 00000000 		.space	4
+ 659              		.section	.bss.ser1,"aw",%nobits
+ 660              		.align	2
+ 661              		.set	.LANCHOR1,. + 0
+ 664              	ser1:
+ 665 0000 00000000 		.space	4
+ 666              		.section	.bss.ser2,"aw",%nobits
+ 667              		.align	2
+ 668              		.set	.LANCHOR3,. + 0
+ 671              	ser2:
+ 672 0000 00000000 		.space	4
+ 673              		.text
+ 674              	.Letext0:
+ 675              		.file 4 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 676              		.file 5 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ 677              		.file 6 "Middlewares/lvgl/examples/widgets/chart/../../../src/misc/lv_ll.h"
+ 678              		.file 7 "Middlewares/lvgl/examples/widgets/chart/../../../src/misc/lv_timer.h"
+ 679              		.file 8 "Middlewares/lvgl/examples/widgets/chart/../../../src/hal/../misc/lv_color.h"
+ 680              		.file 9 "Middlewares/lvgl/examples/widgets/chart/../../../src/hal/../misc/lv_area.h"
+ 681              		.file 10 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj.h"
+ 682              		.file 11 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_group.h"
+ 683              		.file 12 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/../misc/../font/lv_font.h"
+ 684              		.file 13 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/../misc/lv_txt.h"
+ 685              		.file 14 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/../misc/lv_bidi.h"
+ 686              		.file 15 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/../misc/lv_style.h"
+ 687              		.file 16 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_scroll.h"
+ 688              		.file 17 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h"
+ 689              		.file 18 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/../draw/lv_draw_mask.h"
+ 690              		.file 19 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/../draw/lv_draw_rect.h"
+ 691              		.file 20 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/../draw/lv_draw_label.h"
+ 692              		.file 21 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/../draw/lv_draw_img.h"
+ 693              		.file 22 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/../draw/lv_draw_line.h"
+ 694              		.file 23 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/../draw/lv_draw_arc.h"
+ 695              		.file 24 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_draw.h"
+ 696              		.file 25 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_class.h"
+ 697              		.file 26 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_event.h"
+ 698              		.file 27 "Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_bar.h"
+ 699              		.file 28 "Middlewares/lvgl/examples/widgets/chart/../../../src/extra/widgets/chart/lv_chart.h"
+ 700              		.file 29 "Middlewares/lvgl/examples/widgets/chart/../../../src/extra/widgets/imgbtn/lv_imgbtn.h"
+ 701              		.file 30 "Middlewares/lvgl/examples/widgets/chart/../../../src/hal/lv_hal_disp.h"
+ 702              		.file 31 "Middlewares/lvgl/examples/widgets/chart/../../../src/misc/lv_math.h"
+ARM GAS  /tmp/ccEKCY9y.s 			page 24
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 lv_example_chart_2.c
+     /tmp/ccEKCY9y.s:18     .text.add_data:0000000000000000 $t
+     /tmp/ccEKCY9y.s:25     .text.add_data:0000000000000000 add_data
+     /tmp/ccEKCY9y.s:98     .text.add_data:000000000000004c $d
+     /tmp/ccEKCY9y.s:106    .text.draw_event_cb:0000000000000000 $t
+     /tmp/ccEKCY9y.s:112    .text.draw_event_cb:0000000000000000 draw_event_cb
+     /tmp/ccEKCY9y.s:461    .text.lv_example_chart_2:0000000000000000 $t
+     /tmp/ccEKCY9y.s:468    .text.lv_example_chart_2:0000000000000000 lv_example_chart_2
+     /tmp/ccEKCY9y.s:637    .text.lv_example_chart_2:00000000000000c0 $d
+     /tmp/ccEKCY9y.s:646    .bss.chart1:0000000000000000 $d
+     /tmp/ccEKCY9y.s:650    .bss.chart1:0000000000000000 chart1
+     /tmp/ccEKCY9y.s:653    .bss.cnt.0:0000000000000000 $d
+     /tmp/ccEKCY9y.s:657    .bss.cnt.0:0000000000000000 cnt.0
+     /tmp/ccEKCY9y.s:660    .bss.ser1:0000000000000000 $d
+     /tmp/ccEKCY9y.s:664    .bss.ser1:0000000000000000 ser1
+     /tmp/ccEKCY9y.s:667    .bss.ser2:0000000000000000 $d
+     /tmp/ccEKCY9y.s:671    .bss.ser2:0000000000000000 ser2
+
+UNDEFINED SYMBOLS
+lv_rand
+lv_chart_set_next_value
+lv_event_get_target
+lv_event_get_draw_part_dsc
+lv_palette_main
+lv_draw_mask_line_points_init
+lv_draw_mask_add
+lv_obj_get_height
+lv_draw_mask_fade_init
+lv_draw_rect_dsc_init
+lv_draw_rect
+lv_draw_mask_remove_id
+lv_palette_lighten
+lv_disp_get_default
+lv_disp_get_scr_act
+lv_chart_create
+lv_obj_set_size
+lv_obj_align
+lv_chart_set_type
+lv_chart_set_div_line_count
+lv_obj_add_event_cb
+lv_chart_set_update_mode
+lv_chart_add_series
+lv_timer_create

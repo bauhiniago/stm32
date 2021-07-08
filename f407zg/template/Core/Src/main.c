@@ -19,11 +19,17 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
+#include "usart.h"
 #include "gpio.h"
+#include "fsmc.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include <string.h>
+#include "lvgl.h"
+#include "GT9147.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,6 +39,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define LVGL_TICK 	5
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -43,6 +50,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+uint8_t temp_1[5];
 
 /* USER CODE END PV */
 
@@ -85,16 +93,42 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_USART1_UART_Init();
+  MX_FSMC_Init();
   /* USER CODE BEGIN 2 */
 
+  /* 初始化 LVGL */
+  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_15,GPIO_PIN_SET);
+  lv_init();
+  lv_port_disp_init();        // 显示器初始化
+  lv_port_indev_init();       // 输入设备初始化（如果没有实现就注释掉）
+  //lv_port_fs_init();          // 文件系统设备初始化（如果没有实现就注释掉）
+  
+  lv_example_btn_1();
+  lv_example_label_1();
+  lv_example_keyboard_1();
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_Delay(1000);
-    HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
+    //HAL_Delay(1000);
+    lv_tick_inc(LVGL_TICK);
+		lv_task_handler();
+    HAL_Delay(LVGL_TICK);
+    //printf("CTP ID:%s\r\n",temp_1);		//打印ID
+    //printf(" LCD ID:%x\r\n",lcddev.id); //打印LCD ID
+    // for (size_t i = 0; i < 5; i++)
+    // {
+    //   /* code */
+    //   printf(" LCD ID:%x ",ids[i]); //打印LCD ID
+    // }
+    // printf("\r\n"); //打印LCD ID
+    
+    
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

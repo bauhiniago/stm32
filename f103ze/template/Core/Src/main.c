@@ -33,6 +33,7 @@
 #include "LCD.h"
 #include "GT9147.h"
 #include "lvgl.h"
+#include "SHT30.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,6 +55,11 @@
 
 /* USER CODE BEGIN PV */
 
+uint8_t recv_dat[6] = {0};
+float temperature = 0.0;
+float humidity = 0.0;
+char temp_str[10];
+char humi_str[10];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -125,6 +131,8 @@ int main(void)
   MX_DAC_Init();
   /* USER CODE BEGIN 2 */
 
+
+
   /* 初始化 LVGL */
   HAL_GPIO_WritePin(LCD_BL_GPIO_Port,LCD_BL_Pin,GPIO_PIN_SET);
   lv_init();
@@ -134,13 +142,20 @@ int main(void)
   
   
   lv_example_btn_1();
-  lv_example_label_1();
+  //lv_example_label_1();
+  SHT30_bar();
   //lv_example_arc_2();
   //lv_example_keyboard_1();
 
+    SHT30_Reset();
+  if(SHT30_Init() == HAL_OK)
+    printf("sht30 init ok.\r\n");
+  else
+    printf("sht30 init fail.\r\n");
+
   uint32_t tick[5];
   tick[0]=HAL_GetTick()+1;
-  uint8_t dat[] = "Hello, I am Mculover666.\r\n";
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -153,9 +168,27 @@ int main(void)
     HAL_Delay(LVGL_TICK);
     if((HAL_GetTick()-tick[0])>1000){
       tick[0]=HAL_GetTick();
-      //HAL_UART_Transmit_DMA(&huart1, (uint8_t*)ptr, len);
-      //HAL_UART_Transmit_DMA(&huart1, (uint8_t*)dat, sizeof(dat));
-      printf("alive\r\n");
+      //printf("alive\r\n");
+
+    if(SHT30_Read_Dat(recv_dat) == HAL_OK){
+        if(SHT30_Dat_To_Float(recv_dat, &temperature, &humidity)==0){
+          extern lv_obj_t * temp_bar;
+          extern lv_obj_t * temp_label;
+          extern lv_obj_t * humi_bar;
+          extern lv_obj_t * humi_label;
+          lv_bar_set_value(temp_bar, temperature, LV_ANIM_ON);  
+          lv_bar_set_value(humi_bar, humidity, LV_ANIM_ON);  
+          sprintf(temp_str,"%.2fC",temperature);
+          sprintf(humi_str,"%.2f%%",humidity);
+          lv_label_set_text(temp_label,temp_str);
+          lv_label_set_text(humi_label,humi_str);
+          //printf("Temp: %.2fC Humi: %.2f%%\r\n",temperature,humidity);
+        }else{
+          printf("crc check fail.\r\n");
+        }
+      }else{
+        printf("read data from sht30 fail.\r\n");
+      }
       HAL_GPIO_TogglePin(LED1_GPIO_Port,LED1_Pin);
     }
 

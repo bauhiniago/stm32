@@ -1,0 +1,3102 @@
+ARM GAS  /tmp/ccwADuP0.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"lv_hal_disp.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.invalidate_layout_cb,"ax",%progbits
+  18              		.align	1
+  19              		.arch armv7e-m
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	invalidate_layout_cb:
+  26              	.LVL0:
+  27              	.LFB164:
+  28              		.file 1 "Middlewares/lvgl/src/hal/lv_hal_disp.c"
+   1:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+   2:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @file lv_hal_disp.c
+   3:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *
+   4:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @description HAL layer for display driver
+   5:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *
+   6:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+   7:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+   8:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /*********************
+   9:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *      INCLUDES
+  10:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *********************/
+  11:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #include <stdint.h>
+  12:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #include <stddef.h>
+  13:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #include "lv_hal.h"
+  14:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #include "../misc/lv_mem.h"
+  15:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #include "../misc/lv_gc.h"
+  16:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #include "../misc/lv_assert.h"
+  17:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #include "../core/lv_obj.h"
+  18:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #include "../core/lv_refr.h"
+  19:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #include "../core/lv_theme.h"
+  20:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #if LV_USE_THEME_DEFAULT
+  21:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #include "../extra/themes/default/lv_theme_default.h"
+  22:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #endif
+  23:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+  24:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /*********************
+  25:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *      DEFINES
+  26:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *********************/
+  27:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+  28:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**********************
+  29:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *      TYPEDEFS
+  30:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  **********************/
+ARM GAS  /tmp/ccwADuP0.s 			page 2
+
+
+  31:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+  32:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**********************
+  33:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *  STATIC PROTOTYPES
+  34:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  **********************/
+  35:Middlewares/lvgl/src/hal/lv_hal_disp.c **** static lv_obj_tree_walk_res_t invalidate_layout_cb(lv_obj_t * obj, void * user_data);
+  36:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+  37:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**********************
+  38:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *  STATIC VARIABLES
+  39:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  **********************/
+  40:Middlewares/lvgl/src/hal/lv_hal_disp.c **** static lv_disp_t * disp_def;
+  41:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+  42:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**********************
+  43:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *      MACROS
+  44:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  **********************/
+  45:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+  46:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**********************
+  47:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *   GLOBAL FUNCTIONS
+  48:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  **********************/
+  49:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+  50:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+  51:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Initialize a display driver with default values.
+  52:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * It is used to surly have known values in the fields ant not memory junk.
+  53:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * After it you can set the fields.
+  54:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param driver pointer to driver variable to initialize
+  55:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+  56:Middlewares/lvgl/src/hal/lv_hal_disp.c **** void lv_disp_drv_init(lv_disp_drv_t * driver)
+  57:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+  58:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_memset_00(driver, sizeof(lv_disp_drv_t));
+  59:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+  60:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->hor_res          = 320;
+  61:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->ver_res          = 240;
+  62:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->antialiasing     = LV_COLOR_DEPTH > 8 ? 1: 0;
+  63:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->screen_transp    = LV_COLOR_SCREEN_TRANSP;
+  64:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->dpi              = LV_DPI_DEF;
+  65:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->color_chroma_key = LV_COLOR_CHROMA_KEY;
+  66:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+  67:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+  68:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+  69:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Initialize a display buffer
+  70:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param draw_buf pointer `lv_disp_draw_buf_t` variable to initialize
+  71:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param buf1 A buffer to be used by LVGL to draw the image.
+  72:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *             Always has to specified and can't be NULL.
+  73:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *             Can be an array allocated by the user. E.g. `static lv_color_t disp_buf1[1024 * 10]`
+  74:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *             Or a memory address e.g. in external SRAM
+  75:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param buf2 Optionally specify a second buffer to make image rendering and image flushing
+  76:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *             (sending to the display) parallel.
+  77:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *             In the `disp_drv->flush` you should use DMA or similar hardware to send
+  78:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *             the image to the display in the background.
+  79:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *             It lets LVGL to render next frame into the other buffer while previous is being
+  80:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * sent. Set to `NULL` if unused.
+  81:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param size_in_px_cnt size of the `buf1` and `buf2` in pixel count.
+  82:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+  83:Middlewares/lvgl/src/hal/lv_hal_disp.c **** void lv_disp_draw_buf_init(lv_disp_draw_buf_t * draw_buf, void * buf1, void * buf2, uint32_t size_i
+  84:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+  85:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_memset_00(draw_buf, sizeof(lv_disp_draw_buf_t));
+  86:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+  87:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     draw_buf->buf1    = buf1;
+ARM GAS  /tmp/ccwADuP0.s 			page 3
+
+
+  88:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     draw_buf->buf2    = buf2;
+  89:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     draw_buf->buf_act = draw_buf->buf1;
+  90:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     draw_buf->size    = size_in_px_cnt;
+  91:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+  92:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+  93:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+  94:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Register an initialized display driver.
+  95:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Automatically set the first display as active.
+  96:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param driver pointer to an initialized 'lv_disp_drv_t' variable. Only its pointer is saved!
+  97:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @return pointer to the new display or NULL on error
+  98:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+  99:Middlewares/lvgl/src/hal/lv_hal_disp.c **** lv_disp_t * lv_disp_drv_register(lv_disp_drv_t * driver)
+ 100:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ 101:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_disp_t * disp = _lv_ll_ins_head(&LV_GC_ROOT(_lv_disp_ll));
+ 102:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(!disp) {
+ 103:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         LV_ASSERT_MALLOC(disp);
+ 104:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return NULL;
+ 105:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 106:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 107:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_memset_00(disp, sizeof(lv_disp_t));
+ 108:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 109:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->driver = driver;
+ 110:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 111:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_disp_t * disp_def_tmp = disp_def;
+ 112:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp_def                 = disp; /*Temporarily change the default screen to create the default 
+ 113:Middlewares/lvgl/src/hal/lv_hal_disp.c ****                                         new display*/
+ 114:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     /*Create a refresh timer*/
+ 115:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->refr_timer = lv_timer_create(_lv_disp_refr_timer, LV_DISP_DEF_REFR_PERIOD, disp);
+ 116:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     LV_ASSERT_MALLOC(disp->refr_timer);
+ 117:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp->refr_timer == NULL) {
+ 118:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_mem_free(disp);
+ 119:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return NULL;
+ 120:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 121:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 122:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(driver->full_refresh && driver->draw_buf->size < (uint32_t)driver->hor_res * driver->ver_res
+ 123:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         driver->full_refresh = 0;
+ 124:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         LV_LOG_WARN("full_refresh requires at least screen sized draw buffer(s)")
+ 125:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 126:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 127:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->bg_color = lv_color_white();
+ 128:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #if LV_COLOR_SCREEN_TRANSP
+ 129:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->bg_opa = LV_OPA_TRANSP;
+ 130:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #else
+ 131:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->bg_opa = LV_OPA_COVER;
+ 132:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #endif
+ 133:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 134:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #if LV_USE_THEME_DEFAULT
+ 135:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(lv_theme_default_is_inited() == false) {
+ 136:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         disp->theme = lv_theme_default_init(disp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main
+ 137:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 138:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #endif
+ 139:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 140:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->act_scr   = lv_obj_create(NULL); /*Create a default screen on the display*/
+ 141:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->top_layer = lv_obj_create(NULL); /*Create top layer on the display*/
+ 142:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->sys_layer = lv_obj_create(NULL); /*Create sys layer on the display*/
+ 143:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_remove_style_all(disp->top_layer);
+ 144:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_remove_style_all(disp->sys_layer);
+ARM GAS  /tmp/ccwADuP0.s 			page 4
+
+
+ 145:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_clear_flag(disp->top_layer, LV_OBJ_FLAG_CLICKABLE);
+ 146:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_clear_flag(disp->sys_layer, LV_OBJ_FLAG_CLICKABLE);
+ 147:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 148:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_set_scrollbar_mode(disp->top_layer, LV_SCROLLBAR_MODE_OFF);
+ 149:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_set_scrollbar_mode(disp->sys_layer, LV_SCROLLBAR_MODE_OFF);
+ 150:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 151:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_invalidate(disp->act_scr);
+ 152:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 153:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp_def = disp_def_tmp; /*Revert the default display*/
+ 154:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp_def == NULL) disp_def = disp; /*Initialize the default display*/
+ 155:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 156:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_timer_ready(disp->refr_timer); /*Be sure the screen will be refreshed immediately on start u
+ 157:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 158:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp;
+ 159:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 160:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 161:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+ 162:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Update the driver in run time.
+ 163:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param disp pointer to a display. (return value of `lv_disp_drv_register`)
+ 164:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param new_drv pointer to the new driver
+ 165:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+ 166:Middlewares/lvgl/src/hal/lv_hal_disp.c **** void lv_disp_drv_update(lv_disp_t * disp, lv_disp_drv_t * new_drv)
+ 167:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ 168:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->driver = new_drv;
+ 169:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 170:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp->driver->full_refresh && disp->driver->draw_buf->size < (uint32_t)disp->driver->hor_res
+ 171:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         disp->driver->full_refresh = 0;
+ 172:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         LV_LOG_WARN("full_refresh requires at least screen sized draw buffer(s)")
+ 173:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 174:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 175:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_coord_t w = lv_disp_get_hor_res(disp);
+ 176:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_coord_t h = lv_disp_get_ver_res(disp);
+ 177:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     uint32_t i;
+ 178:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     for(i = 0; i < disp->screen_cnt; i++) {
+ 179:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_t prev_coords;
+ 180:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_obj_get_coords(disp->screens[i], &prev_coords);
+ 181:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_set_width(&disp->screens[i]->coords, w);
+ 182:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_set_height(&disp->screens[i]->coords, h);
+ 183:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_event_send(disp->screens[i], LV_EVENT_SIZE_CHANGED, &prev_coords);
+ 184:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 185:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 186:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     /*
+ 187:Middlewares/lvgl/src/hal/lv_hal_disp.c ****      * This method is usually called upon orientation change, thus the screen is now a
+ 188:Middlewares/lvgl/src/hal/lv_hal_disp.c ****      * different size.
+ 189:Middlewares/lvgl/src/hal/lv_hal_disp.c ****      * The object invalidated its previous area. That area is now out of the screen area
+ 190:Middlewares/lvgl/src/hal/lv_hal_disp.c ****      * so we reset all invalidated areas and invalidate the active screen's new area only.
+ 191:Middlewares/lvgl/src/hal/lv_hal_disp.c ****      */
+ 192:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_memset_00(disp->inv_areas, sizeof(disp->inv_areas));
+ 193:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_memset_00(disp->inv_area_joined, sizeof(disp->inv_area_joined));
+ 194:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->inv_p = 0;
+ 195:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp->act_scr != NULL) lv_obj_invalidate(disp->act_scr);
+ 196:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 197:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_tree_walk(NULL, invalidate_layout_cb, NULL);
+ 198:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 199:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp->driver->drv_update_cb) disp->driver->drv_update_cb(disp->driver);
+ 200:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 201:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ARM GAS  /tmp/ccwADuP0.s 			page 5
+
+
+ 202:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+ 203:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Remove a display
+ 204:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param disp pointer to display
+ 205:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+ 206:Middlewares/lvgl/src/hal/lv_hal_disp.c **** void lv_disp_remove(lv_disp_t * disp)
+ 207:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ 208:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     bool was_default = false;
+ 209:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == lv_disp_get_default()) was_default = true;
+ 210:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 211:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     /*Detach the input devices*/
+ 212:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_indev_t * indev;
+ 213:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     indev = lv_indev_get_next(NULL);
+ 214:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     while(indev) {
+ 215:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         if(indev->driver->disp == disp) {
+ 216:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             indev->driver->disp = NULL;
+ 217:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         }
+ 218:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         indev = lv_indev_get_next(indev);
+ 219:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 220:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 221:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     _lv_ll_remove(&LV_GC_ROOT(_lv_disp_ll), disp);
+ 222:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_timer_del(disp->refr_timer);
+ 223:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_mem_free(disp);
+ 224:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 225:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(was_default) lv_disp_set_default(_lv_ll_get_head(&LV_GC_ROOT(_lv_disp_ll)));
+ 226:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 227:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 228:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+ 229:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Set a default display. The new screens will be created on it by default.
+ 230:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param disp pointer to a display
+ 231:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+ 232:Middlewares/lvgl/src/hal/lv_hal_disp.c **** void lv_disp_set_default(lv_disp_t * disp)
+ 233:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ 234:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp_def = disp;
+ 235:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 236:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 237:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+ 238:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Get the default display
+ 239:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @return pointer to the default display
+ 240:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+ 241:Middlewares/lvgl/src/hal/lv_hal_disp.c **** lv_disp_t * lv_disp_get_default(void)
+ 242:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ 243:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp_def;
+ 244:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 245:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 246:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+ 247:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Get the horizontal resolution of a display
+ 248:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param disp pointer to a display (NULL to use the default display)
+ 249:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @return the horizontal resolution of the display
+ 250:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+ 251:Middlewares/lvgl/src/hal/lv_hal_disp.c **** lv_coord_t lv_disp_get_hor_res(lv_disp_t * disp)
+ 252:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ 253:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 254:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 255:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) {
+ 256:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return 0;
+ 257:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     } else {
+ 258:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         switch(disp->driver->rotated) {
+ARM GAS  /tmp/ccwADuP0.s 			page 6
+
+
+ 259:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             case LV_DISP_ROT_90:
+ 260:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             case LV_DISP_ROT_270:
+ 261:Middlewares/lvgl/src/hal/lv_hal_disp.c ****                 return disp->driver->ver_res;
+ 262:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             default:
+ 263:Middlewares/lvgl/src/hal/lv_hal_disp.c ****                 return disp->driver->hor_res;
+ 264:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         }
+ 265:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 266:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 267:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 268:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+ 269:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Get the vertical resolution of a display
+ 270:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param disp pointer to a display (NULL to use the default display)
+ 271:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @return the vertical resolution of the display
+ 272:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+ 273:Middlewares/lvgl/src/hal/lv_hal_disp.c **** lv_coord_t lv_disp_get_ver_res(lv_disp_t * disp)
+ 274:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ 275:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 276:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 277:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) {
+ 278:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return 0;
+ 279:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     } else {
+ 280:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         switch(disp->driver->rotated) {
+ 281:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             case LV_DISP_ROT_90:
+ 282:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             case LV_DISP_ROT_270:
+ 283:Middlewares/lvgl/src/hal/lv_hal_disp.c ****                 return disp->driver->hor_res;
+ 284:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             default:
+ 285:Middlewares/lvgl/src/hal/lv_hal_disp.c ****                 return disp->driver->ver_res;
+ 286:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         }
+ 287:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 288:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 289:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 290:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+ 291:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Get if anti-aliasing is enabled for a display or not
+ 292:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param disp pointer to a display (NULL to use the default display)
+ 293:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @return true: anti-aliasing is enabled; false: disabled
+ 294:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+ 295:Middlewares/lvgl/src/hal/lv_hal_disp.c **** bool lv_disp_get_antialiasing(lv_disp_t * disp)
+ 296:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ 297:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 298:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return false;
+ 299:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 300:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp->driver->antialiasing ? true : false;
+ 301:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 302:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 303:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+ 304:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Get the DPI of the display
+ 305:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param disp pointer to a display (NULL to use the default display)
+ 306:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @return dpi of the display
+ 307:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+ 308:Middlewares/lvgl/src/hal/lv_hal_disp.c **** lv_coord_t lv_disp_get_dpi(const lv_disp_t * disp)
+ 309:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ 310:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 311:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return LV_DPI_DEF;  /*Do not return 0 because it might be a divider*/
+ 312:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp->driver->dpi;
+ 313:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 314:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 315:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+ARM GAS  /tmp/ccwADuP0.s 			page 7
+
+
+ 316:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Call in the display driver's `flush_cb` function when the flushing is finished
+ 317:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param disp_drv pointer to display driver in `flush_cb` where this function is called
+ 318:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+ 319:Middlewares/lvgl/src/hal/lv_hal_disp.c **** LV_ATTRIBUTE_FLUSH_READY void lv_disp_flush_ready(lv_disp_drv_t * disp_drv)
+ 320:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ 321:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     /*If the screen is transparent initialize it when the flushing is ready*/
+ 322:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #if LV_COLOR_SCREEN_TRANSP
+ 323:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp_drv->screen_transp) {
+ 324:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_memset_00(disp_drv->draw_buf->buf_act, disp_drv->draw_buf->size * sizeof(lv_color32_t));
+ 325:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 326:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #endif
+ 327:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 328:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp_drv->draw_buf->flushing = 0;
+ 329:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp_drv->draw_buf->flushing_last = 0;
+ 330:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 331:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 332:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+ 333:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Tell if it's the last area of the refreshing process.
+ 334:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Can be called from `flush_cb` to execute some special display refreshing if needed when all area
+ 335:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param disp_drv pointer to display driver
+ 336:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @return true: it's the last area to flush; false: there are other areas too which will be refres
+ 337:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+ 338:Middlewares/lvgl/src/hal/lv_hal_disp.c **** LV_ATTRIBUTE_FLUSH_READY bool lv_disp_flush_is_last(lv_disp_drv_t * disp_drv)
+ 339:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ 340:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp_drv->draw_buf->flushing_last;
+ 341:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 342:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 343:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+ 344:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Get the next display.
+ 345:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param disp pointer to the current display. NULL to initialize.
+ 346:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @return the next display or NULL if no more. Give the first display when the parameter is NULL
+ 347:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+ 348:Middlewares/lvgl/src/hal/lv_hal_disp.c **** lv_disp_t * lv_disp_get_next(lv_disp_t * disp)
+ 349:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ 350:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL)
+ 351:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return _lv_ll_get_head(&LV_GC_ROOT(_lv_disp_ll));
+ 352:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     else
+ 353:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return _lv_ll_get_next(&LV_GC_ROOT(_lv_disp_ll), disp);
+ 354:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 355:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 356:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+ 357:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Get the internal buffer of a display
+ 358:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param disp pointer to a display
+ 359:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @return pointer to the internal buffers
+ 360:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+ 361:Middlewares/lvgl/src/hal/lv_hal_disp.c **** lv_disp_draw_buf_t * lv_disp_get_draw_buf(lv_disp_t * disp)
+ 362:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ 363:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp->driver->draw_buf;
+ 364:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 365:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 366:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+ 367:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Set the rotation of this display.
+ 368:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param disp pointer to a display (NULL to use the default display)
+ 369:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param rotation rotation angle
+ 370:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+ 371:Middlewares/lvgl/src/hal/lv_hal_disp.c **** void lv_disp_set_rotation(lv_disp_t * disp, lv_disp_rot_t rotation)
+ 372:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ARM GAS  /tmp/ccwADuP0.s 			page 8
+
+
+ 373:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 374:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return;
+ 375:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 376:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->driver->rotated = rotation;
+ 377:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_disp_drv_update(disp, disp->driver);
+ 378:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 379:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 380:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**
+ 381:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * Get the current rotation of this display.
+ 382:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @param disp pointer to a display (NULL to use the default display)
+ 383:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  * @return rotation angle
+ 384:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  */
+ 385:Middlewares/lvgl/src/hal/lv_hal_disp.c **** lv_disp_rot_t lv_disp_get_rotation(lv_disp_t * disp)
+ 386:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+ 387:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 388:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return LV_DISP_ROT_NONE;
+ 389:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp->driver->rotated;
+ 390:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 391:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 392:Middlewares/lvgl/src/hal/lv_hal_disp.c **** /**********************
+ 393:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  *   STATIC FUNCTIONS
+ 394:Middlewares/lvgl/src/hal/lv_hal_disp.c ****  **********************/
+ 395:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 396:Middlewares/lvgl/src/hal/lv_hal_disp.c **** static lv_obj_tree_walk_res_t invalidate_layout_cb(lv_obj_t * obj, void * user_data)
+ 397:Middlewares/lvgl/src/hal/lv_hal_disp.c **** {
+  29              		.loc 1 397 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 397 1 is_stmt 0 view .LVU1
+  34 0000 08B5     		push	{r3, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 8
+  37              		.cfi_offset 3, -8
+  38              		.cfi_offset 14, -4
+ 398:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     LV_UNUSED(user_data);
+  39              		.loc 1 398 5 is_stmt 1 view .LVU2
+ 399:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_mark_layout_as_dirty(obj);
+  40              		.loc 1 399 5 view .LVU3
+  41 0002 FFF7FEFF 		bl	lv_obj_mark_layout_as_dirty
+  42              	.LVL1:
+ 400:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return LV_OBJ_TREE_WALK_NEXT;
+  43              		.loc 1 400 5 view .LVU4
+ 401:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+  44              		.loc 1 401 1 is_stmt 0 view .LVU5
+  45 0006 0020     		movs	r0, #0
+  46 0008 08BD     		pop	{r3, pc}
+  47              		.cfi_endproc
+  48              	.LFE164:
+  50              		.section	.text.lv_disp_drv_init,"ax",%progbits
+  51              		.align	1
+  52              		.global	lv_disp_drv_init
+  53              		.syntax unified
+  54              		.thumb
+  55              		.thumb_func
+  56              		.fpu fpv4-sp-d16
+  58              	lv_disp_drv_init:
+ARM GAS  /tmp/ccwADuP0.s 			page 9
+
+
+  59              	.LVL2:
+  60              	.LFB147:
+  57:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_memset_00(driver, sizeof(lv_disp_drv_t));
+  61              		.loc 1 57 1 is_stmt 1 view -0
+  62              		.cfi_startproc
+  63              		@ args = 0, pretend = 0, frame = 0
+  64              		@ frame_needed = 0, uses_anonymous_args = 0
+  57:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_memset_00(driver, sizeof(lv_disp_drv_t));
+  65              		.loc 1 57 1 is_stmt 0 view .LVU7
+  66 0000 10B5     		push	{r4, lr}
+  67              	.LCFI1:
+  68              		.cfi_def_cfa_offset 8
+  69              		.cfi_offset 4, -8
+  70              		.cfi_offset 14, -4
+  71 0002 0446     		mov	r4, r0
+  58:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+  72              		.loc 1 58 5 is_stmt 1 view .LVU8
+  73 0004 3821     		movs	r1, #56
+  74 0006 FFF7FEFF 		bl	lv_memset_00
+  75              	.LVL3:
+  60:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->ver_res          = 240;
+  76              		.loc 1 60 5 view .LVU9
+  60:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->ver_res          = 240;
+  77              		.loc 1 60 30 is_stmt 0 view .LVU10
+  78 000a 4FF4A073 		mov	r3, #320
+  79 000e 2380     		strh	r3, [r4]	@ movhi
+  61:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->antialiasing     = LV_COLOR_DEPTH > 8 ? 1: 0;
+  80              		.loc 1 61 5 is_stmt 1 view .LVU11
+  61:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->antialiasing     = LV_COLOR_DEPTH > 8 ? 1: 0;
+  81              		.loc 1 61 30 is_stmt 0 view .LVU12
+  82 0010 F023     		movs	r3, #240
+  83 0012 6380     		strh	r3, [r4, #2]	@ movhi
+  62:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->screen_transp    = LV_COLOR_SCREEN_TRANSP;
+  84              		.loc 1 62 5 is_stmt 1 view .LVU13
+  62:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->screen_transp    = LV_COLOR_SCREEN_TRANSP;
+  85              		.loc 1 62 30 is_stmt 0 view .LVU14
+  86 0014 237A     		ldrb	r3, [r4, #8]	@ zero_extendqisi2
+  87 0016 43F00403 		orr	r3, r3, #4
+  88 001a 2372     		strb	r3, [r4, #8]
+  63:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->dpi              = LV_DPI_DEF;
+  89              		.loc 1 63 5 is_stmt 1 view .LVU15
+  63:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->dpi              = LV_DPI_DEF;
+  90              		.loc 1 63 30 is_stmt 0 view .LVU16
+  91 001c DBB2     		uxtb	r3, r3
+  92 001e 6FF34513 		bfc	r3, #5, #1
+  93 0022 2372     		strb	r3, [r4, #8]
+  64:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->color_chroma_key = LV_COLOR_CHROMA_KEY;
+  94              		.loc 1 64 5 is_stmt 1 view .LVU17
+  64:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     driver->color_chroma_key = LV_COLOR_CHROMA_KEY;
+  95              		.loc 1 64 30 is_stmt 0 view .LVU18
+  96 0024 2389     		ldrh	r3, [r4, #8]
+  97 0026 8222     		movs	r2, #130
+  98 0028 62F38F13 		bfi	r3, r2, #6, #10
+  99 002c 2381     		strh	r3, [r4, #8]	@ movhi
+  65:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 100              		.loc 1 65 5 is_stmt 1 view .LVU19
+ 101              	.LVL4:
+ARM GAS  /tmp/ccwADuP0.s 			page 10
+
+
+ 102              	.LBB18:
+ 103              	.LBI18:
+ 104              		.file 2 "Middlewares/lvgl/src/hal/../misc/lv_color.h"
+   1:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**
+   2:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @file lv_color.h
+   3:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *
+   4:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  */
+   5:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+   6:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #ifndef LV_COLOR_H
+   7:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_H
+   8:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+   9:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #ifdef __cplusplus
+  10:Middlewares/lvgl/src/hal/../misc/lv_color.h **** extern "C" {
+  11:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+  12:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+  13:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /*********************
+  14:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *      INCLUDES
+  15:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *********************/
+  16:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #include "../lv_conf_internal.h"
+  17:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #include "lv_math.h"
+  18:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #include "lv_types.h"
+  19:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+  20:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /*Error checking*/
+  21:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH == 24
+  22:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #error "LV_COLOR_DEPTH 24 is deprecated. Use LV_COLOR_DEPTH 32 instead (lv_conf.h)"
+  23:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+  24:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+  25:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH != 32 && LV_COLOR_SCREEN_TRANSP != 0
+  26:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #error "LV_COLOR_SCREEN_TRANSP requires LV_COLOR_DEPTH == 32. Set it in lv_conf.h"
+  27:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+  28:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+  29:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH != 16 && LV_COLOR_16_SWAP != 0
+  30:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #error "LV_COLOR_16_SWAP requires LV_COLOR_DEPTH == 16. Set it in lv_conf.h"
+  31:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+  32:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+  33:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #include <stdint.h>
+  34:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+  35:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /*********************
+  36:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *      DEFINES
+  37:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *********************/
+  38:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+  39:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**
+  40:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * Opacity percentages.
+  41:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  */
+  42:Middlewares/lvgl/src/hal/../misc/lv_color.h **** enum {
+  43:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_OPA_TRANSP = 0,
+  44:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_OPA_0      = 0,
+  45:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_OPA_10     = 25,
+  46:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_OPA_20     = 51,
+  47:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_OPA_30     = 76,
+  48:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_OPA_40     = 102,
+  49:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_OPA_50     = 127,
+  50:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_OPA_60     = 153,
+  51:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_OPA_70     = 178,
+  52:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_OPA_80     = 204,
+  53:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_OPA_90     = 229,
+  54:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_OPA_100    = 255,
+ARM GAS  /tmp/ccwADuP0.s 			page 11
+
+
+  55:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_OPA_COVER  = 255,
+  56:Middlewares/lvgl/src/hal/../misc/lv_color.h **** };
+  57:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+  58:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_OPA_MIN 2    /*Opacities below this will be transparent*/
+  59:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_OPA_MAX 253  /*Opacities above this will fully cover*/
+  60:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+  61:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH == 1
+  62:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_SIZE 8
+  63:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 8
+  64:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_SIZE 8
+  65:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 16
+  66:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_SIZE 16
+  67:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 32
+  68:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_SIZE 32
+  69:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #else
+  70:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #error "Invalid LV_COLOR_DEPTH in lv_conf.h! Set it to 1, 8, 16 or 32!"
+  71:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+  72:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+  73:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**
+  74:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * Adjust color mix functions rounding.
+  75:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * GPUs might calculate color mix (blending) differently.
+  76:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * Should be in range of 0..254
+  77:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * 0: no adjustment, get the integer part of the result (round down)
+  78:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * 64: round up from x.75
+  79:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * 128: round up from half
+  80:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * 192: round up from x.25
+  81:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * 254: round up*/
+  82:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #ifndef LV_COLOR_MIX_ROUND_OFS
+  83:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH == 32
+  84:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_MIX_ROUND_OFS 0
+  85:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #else
+  86:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_MIX_ROUND_OFS 128
+  87:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+  88:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+  89:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+  90:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if defined(__cplusplus) && !defined(_LV_COLOR_HAS_MODERN_CPP)
+  91:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**
+  92:Middlewares/lvgl/src/hal/../misc/lv_color.h **** * MSVC compiler's definition of the __cplusplus indicating 199711L regardless to C++ standard versi
+  93:Middlewares/lvgl/src/hal/../misc/lv_color.h **** * see https://devblogs.microsoft.com/cppblog/msvc-now-correctly-reports-cplusplus
+  94:Middlewares/lvgl/src/hal/../misc/lv_color.h **** * so we use _MSC_VER macro instead of __cplusplus
+  95:Middlewares/lvgl/src/hal/../misc/lv_color.h **** */
+  96:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #ifdef _MSC_VER
+  97:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if _MSC_VER >= 1900 /*Visual Studio 2015*/
+  98:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define _LV_COLOR_HAS_MODERN_CPP 1
+  99:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 100:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #else
+ 101:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if __cplusplus >= 201103L
+ 102:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define _LV_COLOR_HAS_MODERN_CPP 1
+ 103:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 104:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 105:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif /*__cplusplus*/
+ 106:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 107:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #ifndef _LV_COLOR_HAS_MODERN_CPP
+ 108:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define _LV_COLOR_HAS_MODERN_CPP 0
+ 109:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 110:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 111:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if _LV_COLOR_HAS_MODERN_CPP
+ARM GAS  /tmp/ccwADuP0.s 			page 12
+
+
+ 112:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /*Fix msvc compiler error C4576 inside C++ code*/
+ 113:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define _LV_COLOR_MAKE_TYPE_HELPER lv_color_t
+ 114:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #else
+ 115:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define _LV_COLOR_MAKE_TYPE_HELPER (lv_color_t)
+ 116:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 117:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 118:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /*---------------------------------------
+ 119:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * Macros for all existing color depths
+ 120:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * to set/get values of the color channels
+ 121:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *------------------------------------------*/
+ 122:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_R1(c, v) (c).ch.red = (uint8_t)((v) & 0x1)
+ 123:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_G1(c, v) (c).ch.green = (uint8_t)((v) & 0x1)
+ 124:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_B1(c, v) (c).ch.blue = (uint8_t)((v) & 0x1)
+ 125:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_A1(c, v) do {} while(0)
+ 126:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 127:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_R1(c) (c).ch.red
+ 128:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_G1(c) (c).ch.green
+ 129:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_B1(c) (c).ch.blue
+ 130:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_A1(c) 0xFF
+ 131:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 132:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define _LV_COLOR_ZERO_INITIALIZER1 {0x00}
+ 133:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_MAKE1(r8, g8, b8)  {(uint8_t)((b8 >> 7) | (g8 >> 7) | (r8 >> 7))}
+ 134:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 135:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_R8(c, v) (c).ch.red = (uint8_t)((v) & 0x7U)
+ 136:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_G8(c, v) (c).ch.green = (uint8_t)((v) & 0x7U)
+ 137:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_B8(c, v) (c).ch.blue = (uint8_t)((v) & 0x3U)
+ 138:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_A8(c, v) do {} while(0)
+ 139:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 140:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_R8(c) (c).ch.red
+ 141:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_G8(c) (c).ch.green
+ 142:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_B8(c) (c).ch.blue
+ 143:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_A8(c) 0xFF
+ 144:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 145:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define _LV_COLOR_ZERO_INITIALIZER8 _LV_COLOR_MAKE_TYPE_HELPER {{0x00, 0x00, 0x00}}
+ 146:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_MAKE8(r8, g8, b8) _LV_COLOR_MAKE_TYPE_HELPER  {{(uint8_t)((b8 >> 6) & 0x3U), (uin
+ 147:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 148:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_R16(c, v) (c).ch.red = (uint8_t)((v) & 0x1FU)
+ 149:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_16_SWAP == 0
+ 150:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_G16(c, v) (c).ch.green = (uint8_t)((v) & 0x3FU)
+ 151:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #else
+ 152:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_G16(c, v) {(c).ch.green_h = (uint8_t)(((v) >> 3) & 0x7); (c).ch.green_l = (ui
+ 153:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 154:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_B16(c, v) (c).ch.blue = (uint8_t)((v) & 0x1FU)
+ 155:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_A16(c, v) do {} while(0)
+ 156:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 157:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_R16(c) (c).ch.red
+ 158:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_16_SWAP == 0
+ 159:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_G16(c) (c).ch.green
+ 160:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #else
+ 161:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_G16(c) (((c).ch.green_h << 3) + (c).ch.green_l)
+ 162:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 163:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_B16(c) (c).ch.blue
+ 164:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_A16(c) 0xFF
+ 165:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 166:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_16_SWAP == 0
+ 167:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define _LV_COLOR_ZERO_INITIALIZER16  {{0x00, 0x00, 0x00}}
+ 168:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_MAKE16(r8, g8, b8) {{(uint8_t)((b8 >> 3) & 0x1FU), (uint8_t)((g8 >> 2) & 0x3FU), 
+ARM GAS  /tmp/ccwADuP0.s 			page 13
+
+
+ 169:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #else
+ 170:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define _LV_COLOR_ZERO_INITIALIZER16 {{0x00, 0x00, 0x00, 0x00}}
+ 171:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_MAKE16(r8, g8, b8) {{(uint8_t)((g8 >> 5) & 0x7U), (uint8_t)((r8 >> 3) & 0x1FU), (
+ 172:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 173:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 174:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_R32(c, v) (c).ch.red = (uint8_t)((v) & 0xFF)
+ 175:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_G32(c, v) (c).ch.green = (uint8_t)((v) & 0xFF)
+ 176:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_B32(c, v) (c).ch.blue = (uint8_t)((v) & 0xFF)
+ 177:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_A32(c, v) (c).ch.alpha = (uint8_t)((v) & 0xFF)
+ 178:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 179:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_R32(c) (c).ch.red
+ 180:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_G32(c) (c).ch.green
+ 181:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_B32(c) (c).ch.blue
+ 182:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_A32(c) (c).ch.alpha
+ 183:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 184:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define _LV_COLOR_ZERO_INITIALIZER32  {{0x00, 0x00, 0x00, 0x00}}
+ 185:Middlewares/lvgl/src/hal/../misc/lv_color.h **** # define LV_COLOR_MAKE32(r8, g8, b8) {{b8, g8, r8, 0xff}} /*Fix 0xff alpha*/
+ 186:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 187:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /*---------------------------------------
+ 188:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * Macros for the current color depth
+ 189:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * to set/get values of the color channels
+ 190:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *------------------------------------------*/
+ 191:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_SET_R(c, v) LV_CONCAT(LV_COLOR_SET_R, LV_COLOR_DEPTH)(c, v)
+ 192:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_SET_G(c, v) LV_CONCAT(LV_COLOR_SET_G, LV_COLOR_DEPTH)(c, v)
+ 193:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_SET_B(c, v) LV_CONCAT(LV_COLOR_SET_B, LV_COLOR_DEPTH)(c, v)
+ 194:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_SET_A(c, v) LV_CONCAT(LV_COLOR_SET_A, LV_COLOR_DEPTH)(c, v)
+ 195:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 196:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_GET_R(c) LV_CONCAT(LV_COLOR_GET_R, LV_COLOR_DEPTH)(c)
+ 197:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_GET_G(c) LV_CONCAT(LV_COLOR_GET_G, LV_COLOR_DEPTH)(c)
+ 198:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_GET_B(c) LV_CONCAT(LV_COLOR_GET_B, LV_COLOR_DEPTH)(c)
+ 199:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_GET_A(c) LV_CONCAT(LV_COLOR_GET_A, LV_COLOR_DEPTH)(c)
+ 200:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 201:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define _LV_COLOR_ZERO_INITIALIZER LV_CONCAT(_LV_COLOR_ZERO_INITIALIZER, LV_COLOR_DEPTH)
+ 202:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_COLOR_MAKE(r8, g8, b8) LV_CONCAT(LV_COLOR_MAKE, LV_COLOR_DEPTH)(r8, g8, b8)
+ 203:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 204:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #define LV_UDIV255(x) ((uint32_t)((uint32_t) (x) * 0x8081) >> 0x17)
+ 205:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 206:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**********************
+ 207:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *      TYPEDEFS
+ 208:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  **********************/
+ 209:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 210:Middlewares/lvgl/src/hal/../misc/lv_color.h **** typedef union {
+ 211:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     uint8_t full; /*must be declared first to set all bits of byte via initializer list*/
+ 212:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     union {
+ 213:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint8_t blue : 1;
+ 214:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint8_t green : 1;
+ 215:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint8_t red : 1;
+ 216:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     } ch;
+ 217:Middlewares/lvgl/src/hal/../misc/lv_color.h **** } lv_color1_t;
+ 218:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 219:Middlewares/lvgl/src/hal/../misc/lv_color.h **** typedef union {
+ 220:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     struct {
+ 221:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint8_t blue : 2;
+ 222:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint8_t green : 3;
+ 223:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint8_t red : 3;
+ 224:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     } ch;
+ 225:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     uint8_t full;
+ARM GAS  /tmp/ccwADuP0.s 			page 14
+
+
+ 226:Middlewares/lvgl/src/hal/../misc/lv_color.h **** } lv_color8_t;
+ 227:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 228:Middlewares/lvgl/src/hal/../misc/lv_color.h **** typedef union {
+ 229:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     struct {
+ 230:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_16_SWAP == 0
+ 231:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint16_t blue : 5;
+ 232:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint16_t green : 6;
+ 233:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint16_t red : 5;
+ 234:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #else
+ 235:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint16_t green_h : 3;
+ 236:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint16_t red : 5;
+ 237:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint16_t blue : 5;
+ 238:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint16_t green_l : 3;
+ 239:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 240:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     } ch;
+ 241:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     uint16_t full;
+ 242:Middlewares/lvgl/src/hal/../misc/lv_color.h **** } lv_color16_t;
+ 243:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 244:Middlewares/lvgl/src/hal/../misc/lv_color.h **** typedef union {
+ 245:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     struct {
+ 246:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint8_t blue;
+ 247:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint8_t green;
+ 248:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint8_t red;
+ 249:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         uint8_t alpha;
+ 250:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     } ch;
+ 251:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     uint32_t full;
+ 252:Middlewares/lvgl/src/hal/../misc/lv_color.h **** } lv_color32_t;
+ 253:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 254:Middlewares/lvgl/src/hal/../misc/lv_color.h **** typedef LV_CONCAT3(uint, LV_COLOR_SIZE, _t) lv_color_int_t;
+ 255:Middlewares/lvgl/src/hal/../misc/lv_color.h **** typedef LV_CONCAT3(lv_color, LV_COLOR_DEPTH, _t) lv_color_t;
+ 256:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 257:Middlewares/lvgl/src/hal/../misc/lv_color.h **** typedef struct {
+ 258:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     uint16_t h;
+ 259:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     uint8_t s;
+ 260:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     uint8_t v;
+ 261:Middlewares/lvgl/src/hal/../misc/lv_color.h **** } lv_color_hsv_t;
+ 262:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 263:Middlewares/lvgl/src/hal/../misc/lv_color.h **** //! @cond Doxygen_Suppress
+ 264:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /*No idea where the guard is required but else throws warnings in the docs*/
+ 265:Middlewares/lvgl/src/hal/../misc/lv_color.h **** typedef uint8_t lv_opa_t;
+ 266:Middlewares/lvgl/src/hal/../misc/lv_color.h **** //! @endcond
+ 267:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 268:Middlewares/lvgl/src/hal/../misc/lv_color.h **** struct _lv_color_filter_dsc_t;
+ 269:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 270:Middlewares/lvgl/src/hal/../misc/lv_color.h **** typedef lv_color_t (*lv_color_filter_cb_t)(const struct _lv_color_filter_dsc_t *, lv_color_t, lv_op
+ 271:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 272:Middlewares/lvgl/src/hal/../misc/lv_color.h **** typedef struct _lv_color_filter_dsc_t {
+ 273:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     lv_color_filter_cb_t filter_cb;
+ 274:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     void * user_data;
+ 275:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }lv_color_filter_dsc_t;
+ 276:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 277:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 278:Middlewares/lvgl/src/hal/../misc/lv_color.h **** typedef enum {
+ 279:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_RED,
+ 280:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_PINK,
+ 281:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_PURPLE,
+ 282:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_DEEP_PURPLE,
+ARM GAS  /tmp/ccwADuP0.s 			page 15
+
+
+ 283:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_INDIGO,
+ 284:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_BLUE,
+ 285:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_LIGHT_BLUE,
+ 286:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_CYAN,
+ 287:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_TEAL,
+ 288:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_GREEN,
+ 289:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_LIGHT_GREEN,
+ 290:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_LIME,
+ 291:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_YELLOW,
+ 292:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_AMBER,
+ 293:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_ORANGE,
+ 294:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_DEEP_ORANGE,
+ 295:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_BROWN,
+ 296:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_BLUE_GREY,
+ 297:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_GREY,
+ 298:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     _LV_PALETTE_LAST,
+ 299:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_PALETTE_NONE = 0xff,
+ 300:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }lv_palette_t;
+ 301:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 302:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**********************
+ 303:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * GLOBAL PROTOTYPES
+ 304:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  **********************/
+ 305:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 306:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /*In color conversations:
+ 307:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * - When converting to bigger color type the LSB weight of 1 LSB is calculated
+ 308:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *   E.g. 16 bit Red has 5 bits
+ 309:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *         8 bit Red has 3 bits
+ 310:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *        ----------------------
+ 311:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *        8 bit red LSB = (2^5 - 1) / (2^3 - 1) = 31 / 7 = 4
+ 312:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *
+ 313:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * - When calculating to smaller color type simply shift out the LSBs
+ 314:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *   E.g.  8 bit Red has 3 bits
+ 315:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *        16 bit Red has 5 bits
+ 316:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *        ----------------------
+ 317:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *         Shift right with 5 - 3 = 2
+ 318:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  */
+ 319:Middlewares/lvgl/src/hal/../misc/lv_color.h **** static inline uint8_t lv_color_to1(lv_color_t color)
+ 320:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 321:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH == 1
+ 322:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return color.full;
+ 323:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 8
+ 324:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     if((LV_COLOR_GET_R(color) & 0x4) || (LV_COLOR_GET_G(color) & 0x4) || (LV_COLOR_GET_B(color) & 0
+ 325:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         return 1;
+ 326:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     }
+ 327:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     else {
+ 328:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         return 0;
+ 329:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     }
+ 330:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 16
+ 331:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     if((LV_COLOR_GET_R(color) & 0x10) || (LV_COLOR_GET_G(color) & 0x20) || (LV_COLOR_GET_B(color) &
+ 332:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         return 1;
+ 333:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     }
+ 334:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     else {
+ 335:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         return 0;
+ 336:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     }
+ 337:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 32
+ 338:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     if((LV_COLOR_GET_R(color) & 0x80) || (LV_COLOR_GET_G(color) & 0x80) || (LV_COLOR_GET_B(color) &
+ 339:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         return 1;
+ARM GAS  /tmp/ccwADuP0.s 			page 16
+
+
+ 340:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     }
+ 341:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     else {
+ 342:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         return 0;
+ 343:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     }
+ 344:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 345:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 346:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 347:Middlewares/lvgl/src/hal/../misc/lv_color.h **** static inline uint8_t lv_color_to8(lv_color_t color)
+ 348:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 349:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH == 1
+ 350:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     if(color.full == 0)
+ 351:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         return 0;
+ 352:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     else
+ 353:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         return 0xFF;
+ 354:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 8
+ 355:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return color.full;
+ 356:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 16
+ 357:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     lv_color8_t ret;
+ 358:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R8(ret, LV_COLOR_GET_R(color) >> 2); /*5 - 3  = 2*/
+ 359:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G8(ret, LV_COLOR_GET_G(color) >> 3); /*6 - 3  = 3*/
+ 360:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B8(ret, LV_COLOR_GET_B(color) >> 3); /*5 - 2  = 3*/
+ 361:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return ret.full;
+ 362:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 32
+ 363:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     lv_color8_t ret;
+ 364:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R8(ret, LV_COLOR_GET_R(color) >> 5); /*8 - 3  = 5*/
+ 365:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G8(ret, LV_COLOR_GET_G(color) >> 5); /*8 - 3  = 5*/
+ 366:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B8(ret, LV_COLOR_GET_B(color) >> 6); /*8 - 2  = 6*/
+ 367:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return ret.full;
+ 368:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 369:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 370:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 371:Middlewares/lvgl/src/hal/../misc/lv_color.h **** static inline uint16_t lv_color_to16(lv_color_t color)
+ 372:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 373:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH == 1
+ 374:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     if(color.full == 0)
+ 375:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         return 0;
+ 376:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     else
+ 377:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         return 0xFFFF;
+ 378:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 8
+ 379:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     lv_color16_t ret;
+ 380:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R16(ret, LV_COLOR_GET_R(color) * 4);  /*(2^5 - 1)/(2^3 - 1) = 31/7 = 4*/
+ 381:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G16(ret, LV_COLOR_GET_G(color) * 9);  /*(2^6 - 1)/(2^3 - 1) = 63/7 = 9*/
+ 382:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B16(ret, LV_COLOR_GET_B(color) * 10); /*(2^5 - 1)/(2^2 - 1) = 31/3 = 10*/
+ 383:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return ret.full;
+ 384:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 16
+ 385:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return color.full;
+ 386:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 32
+ 387:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     lv_color16_t ret;
+ 388:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R16(ret, LV_COLOR_GET_R(color) >> 3); /*8 - 5  = 3*/
+ 389:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G16(ret, LV_COLOR_GET_G(color) >> 2); /*8 - 6  = 2*/
+ 390:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B16(ret, LV_COLOR_GET_B(color) >> 3); /*8 - 5  = 3*/
+ 391:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return ret.full;
+ 392:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 393:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 394:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 395:Middlewares/lvgl/src/hal/../misc/lv_color.h **** static inline uint32_t lv_color_to32(lv_color_t color)
+ 396:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ARM GAS  /tmp/ccwADuP0.s 			page 17
+
+
+ 397:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH == 1
+ 398:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     if(color.full == 0)
+ 399:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         return 0xFF000000;
+ 400:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     else
+ 401:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         return 0xFFFFFFFF;
+ 402:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 8
+ 403:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     lv_color32_t ret;
+ 404:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R32(ret, LV_COLOR_GET_R(color) * 36); /*(2^8 - 1)/(2^3 - 1) = 255/7 = 36*/
+ 405:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G32(ret, LV_COLOR_GET_G(color) * 36); /*(2^8 - 1)/(2^3 - 1) = 255/7 = 36*/
+ 406:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B32(ret, LV_COLOR_GET_B(color) * 85); /*(2^8 - 1)/(2^2 - 1) = 255/3 = 85*/
+ 407:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_A32(ret, 0xFF);
+ 408:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return ret.full;
+ 409:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 16
+ 410:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     /**
+ 411:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      * The floating point math for conversion is:
+ 412:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *  valueto = valuefrom * ( (2^bitsto - 1) / (float)(2^bitsfrom - 1) )
+ 413:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      * The faster integer math for conversion is:
+ 414:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *  valueto = ( valuefrom * multiplier + adder ) >> divisor
+ 415:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *   multiplier = FLOOR( ( (2^bitsto - 1) << divisor ) / (float)(2^bitsfrom - 1) )
+ 416:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *
+ 417:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      * Find the first divisor where ( adder >> divisor ) <= 0
+ 418:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *
+ 419:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      * 5-bit to 8-bit: ( 31 * multiplier + adder ) >> divisor = 255
+ 420:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      * divisor  multiplier  adder  min (0)  max (31)
+ 421:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *       0           8      7        7       255
+ 422:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *       1          16     14        7       255
+ 423:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *       2          32     28        7       255
+ 424:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *       3          65     25        3       255
+ 425:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *       4         131     19        1       255
+ 426:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *       5         263      7        0       255
+ 427:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *
+ 428:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      * 6-bit to 8-bit: 255 = ( 63 * multiplier + adder ) >> divisor
+ 429:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      * divisor  multiplier  adder  min (0)  max (63)
+ 430:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *       0           4      3        3       255
+ 431:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *       1           8      6        3       255
+ 432:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *       2          16     12        3       255
+ 433:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *       3          32     24        3       255
+ 434:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *       4          64     48        3       255
+ 435:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *       5         129     33        1       255
+ 436:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      *       6         259      3        0       255
+ 437:Middlewares/lvgl/src/hal/../misc/lv_color.h ****      */
+ 438:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 439:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     lv_color32_t ret;
+ 440:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R32(ret, (LV_COLOR_GET_R(color) * 263 + 7) >> 5);
+ 441:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G32(ret, (LV_COLOR_GET_G(color) * 259 + 3) >> 6);
+ 442:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B32(ret, (LV_COLOR_GET_B(color) * 263 + 7) >> 5);
+ 443:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_A32(ret, 0xFF);
+ 444:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return ret.full;
+ 445:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 32
+ 446:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return color.full;
+ 447:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 448:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 449:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 450:Middlewares/lvgl/src/hal/../misc/lv_color.h **** //! @cond Doxygen_Suppress
+ 451:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 452:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**
+ 453:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * Mix two colors with a given ratio.
+ARM GAS  /tmp/ccwADuP0.s 			page 18
+
+
+ 454:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param c1 the first color to mix (usually the foreground)
+ 455:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param c2 the second color to mix (usually the background)
+ 456:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param mix The ratio of the colors. 0: full `c2`, 255: full `c1`, 127: half `c1` and half`c2`
+ 457:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @return the mixed color
+ 458:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  */
+ 459:Middlewares/lvgl/src/hal/../misc/lv_color.h **** LV_ATTRIBUTE_FAST_MEM static inline lv_color_t lv_color_mix(lv_color_t c1, lv_color_t c2, uint8_t m
+ 460:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 461:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     lv_color_t ret;
+ 462:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH != 1
+ 463:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     /*LV_COLOR_DEPTH == 8, 16 or 32*/
+ 464:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R(ret, LV_UDIV255((uint16_t) LV_COLOR_GET_R(c1) * mix + LV_COLOR_GET_R(c2) *
+ 465:Middlewares/lvgl/src/hal/../misc/lv_color.h ****                                         (255 - mix) + LV_COLOR_MIX_ROUND_OFS));
+ 466:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G(ret, LV_UDIV255((uint16_t) LV_COLOR_GET_G(c1) * mix + LV_COLOR_GET_G(c2) *
+ 467:Middlewares/lvgl/src/hal/../misc/lv_color.h ****                                         (255 - mix) + LV_COLOR_MIX_ROUND_OFS));
+ 468:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B(ret, LV_UDIV255((uint16_t) LV_COLOR_GET_B(c1) * mix + LV_COLOR_GET_B(c2) *
+ 469:Middlewares/lvgl/src/hal/../misc/lv_color.h ****                                         (255 - mix) + LV_COLOR_MIX_ROUND_OFS));
+ 470:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_A(ret, 0xFF);
+ 471:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #else
+ 472:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     /*LV_COLOR_DEPTH == 1*/
+ 473:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     ret.full = mix > LV_OPA_50 ? c1.full : c2.full;
+ 474:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 475:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 476:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return ret;
+ 477:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 478:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 479:Middlewares/lvgl/src/hal/../misc/lv_color.h **** LV_ATTRIBUTE_FAST_MEM static inline void lv_color_premult(lv_color_t c, uint8_t mix, uint16_t * out
+ 480:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 481:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH != 1
+ 482:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     out[0] = (uint16_t) LV_COLOR_GET_R(c) * mix;
+ 483:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     out[1] = (uint16_t) LV_COLOR_GET_G(c) * mix;
+ 484:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     out[2] = (uint16_t) LV_COLOR_GET_B(c) * mix;
+ 485:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #else
+ 486:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     (void) mix;
+ 487:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     /*Pre-multiplication can't be used with 1 bpp*/
+ 488:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     out[0] = LV_COLOR_GET_R(c);
+ 489:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     out[1] = LV_COLOR_GET_G(c);
+ 490:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     out[2] = LV_COLOR_GET_B(c);
+ 491:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 492:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 493:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 494:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 495:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**
+ 496:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * Mix two colors with a given ratio. It runs faster then `lv_color_mix` but requires some pre comp
+ 497:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param premult_c1 The first color. Should be preprocessed with `lv_color_premult(c1)`
+ 498:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param c2 The second color. As it is no pre computation required on it
+ 499:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param mix The ratio of the colors. 0: full `c1`, 255: full `c2`, 127: half `c1` and half `c2`.
+ 500:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *            Should be modified like mix = `255 - mix`
+ 501:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @return the mixed color
+ 502:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @note 255 won't give clearly `c1`.
+ 503:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  */
+ 504:Middlewares/lvgl/src/hal/../misc/lv_color.h **** LV_ATTRIBUTE_FAST_MEM static inline lv_color_t lv_color_mix_premult(uint16_t * premult_c1, lv_color
+ 505:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 506:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     lv_color_t ret;
+ 507:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH != 1
+ 508:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     /*LV_COLOR_DEPTH == 8, 16 or 32*/
+ 509:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R(ret, LV_UDIV255(premult_c1[0] + LV_COLOR_GET_R(c2) * mix + LV_COLOR_MIX_ROUND_OF
+ 510:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G(ret, LV_UDIV255(premult_c1[1] + LV_COLOR_GET_G(c2) * mix + LV_COLOR_MIX_ROUND_OF
+ARM GAS  /tmp/ccwADuP0.s 			page 19
+
+
+ 511:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B(ret, LV_UDIV255(premult_c1[2] + LV_COLOR_GET_B(c2) * mix + LV_COLOR_MIX_ROUND_OF
+ 512:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_A(ret, 0xFF);
+ 513:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #else
+ 514:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     /*LV_COLOR_DEPTH == 1*/
+ 515:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     /*Restore color1*/
+ 516:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     lv_color_t c1;
+ 517:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R(c1, premult_c1[0]);
+ 518:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G(c1, premult_c1[1]);
+ 519:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B(c1, premult_c1[2]);
+ 520:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     ret.full = mix > LV_OPA_50 ? c2.full : c1.full;
+ 521:Middlewares/lvgl/src/hal/../misc/lv_color.h **** #endif
+ 522:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 523:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return ret;
+ 524:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 525:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 526:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**
+ 527:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * Mix two colors. Both color can have alpha value.
+ 528:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param bg_color background color
+ 529:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param bg_opa alpha of the background color
+ 530:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param fg_color foreground color
+ 531:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param fg_opa alpha of the foreground color
+ 532:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param res_color the result color
+ 533:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param res_opa the result opacity
+ 534:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  */
+ 535:Middlewares/lvgl/src/hal/../misc/lv_color.h **** LV_ATTRIBUTE_FAST_MEM static inline void lv_color_mix_with_alpha(lv_color_t bg_color, lv_opa_t bg_o
+ 536:Middlewares/lvgl/src/hal/../misc/lv_color.h ****                                                                  lv_color_t fg_color, lv_opa_t fg_o
+ 537:Middlewares/lvgl/src/hal/../misc/lv_color.h ****                                                                  lv_color_t * res_color, lv_opa_t *
+ 538:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 539:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     /*Pick the foreground if it's fully opaque or the Background is fully transparent*/
+ 540:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     if(fg_opa >= LV_OPA_MAX || bg_opa <= LV_OPA_MIN) {
+ 541:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         res_color->full = fg_color.full;
+ 542:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         *res_opa = fg_opa;
+ 543:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     }
+ 544:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     /*Transparent foreground: use the Background*/
+ 545:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     else if(fg_opa <= LV_OPA_MIN) {
+ 546:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         res_color->full = bg_color.full;
+ 547:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         *res_opa = bg_opa;
+ 548:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     }
+ 549:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     /*Opaque background: use simple mix*/
+ 550:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     else if(bg_opa >= LV_OPA_MAX) {
+ 551:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         *res_color = lv_color_mix(fg_color, bg_color, fg_opa);
+ 552:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         *res_opa = LV_OPA_COVER;
+ 553:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     }
+ 554:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     /*Both colors have alpha. Expensive calculation need to be applied*/
+ 555:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     else {
+ 556:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         /*Save the parameters and the result. If they will be asked again don't compute again*/
+ 557:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         static lv_opa_t fg_opa_save     = 0;
+ 558:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         static lv_opa_t bg_opa_save     = 0;
+ 559:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         static lv_color_t fg_color_save = _LV_COLOR_ZERO_INITIALIZER;
+ 560:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         static lv_color_t bg_color_save = _LV_COLOR_ZERO_INITIALIZER;
+ 561:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         static lv_color_t res_color_saved = _LV_COLOR_ZERO_INITIALIZER;
+ 562:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         static lv_opa_t res_opa_saved = 0;
+ 563:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 564:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         if(fg_opa != fg_opa_save || bg_opa != bg_opa_save || fg_color.full != fg_color_save.full ||
+ 565:Middlewares/lvgl/src/hal/../misc/lv_color.h ****            bg_color.full != bg_color_save.full) {
+ 566:Middlewares/lvgl/src/hal/../misc/lv_color.h ****             fg_opa_save        = fg_opa;
+ 567:Middlewares/lvgl/src/hal/../misc/lv_color.h ****             bg_opa_save        = bg_opa;
+ARM GAS  /tmp/ccwADuP0.s 			page 20
+
+
+ 568:Middlewares/lvgl/src/hal/../misc/lv_color.h ****             fg_color_save.full = fg_color.full;
+ 569:Middlewares/lvgl/src/hal/../misc/lv_color.h ****             bg_color_save.full = bg_color.full;
+ 570:Middlewares/lvgl/src/hal/../misc/lv_color.h ****             /*Info:
+ 571:Middlewares/lvgl/src/hal/../misc/lv_color.h ****              * https://en.wikipedia.org/wiki/Alpha_compositing#Analytical_derivation_of_the_over_op
+ 572:Middlewares/lvgl/src/hal/../misc/lv_color.h ****             res_opa_saved = 255 - ((uint16_t)((uint16_t)(255 - fg_opa) * (255 - bg_opa)) >> 8);
+ 573:Middlewares/lvgl/src/hal/../misc/lv_color.h ****             if(res_opa_saved == 0) {
+ 574:Middlewares/lvgl/src/hal/../misc/lv_color.h ****                 while(1)
+ 575:Middlewares/lvgl/src/hal/../misc/lv_color.h ****                     ;
+ 576:Middlewares/lvgl/src/hal/../misc/lv_color.h ****             }
+ 577:Middlewares/lvgl/src/hal/../misc/lv_color.h ****             lv_opa_t ratio = (uint16_t)((uint16_t)fg_opa * 255) / res_opa_saved;
+ 578:Middlewares/lvgl/src/hal/../misc/lv_color.h ****             res_color_saved = lv_color_mix(fg_color, bg_color, ratio);
+ 579:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 580:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         }
+ 581:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 582:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         res_color->full = res_color_saved.full;
+ 583:Middlewares/lvgl/src/hal/../misc/lv_color.h ****         *res_opa = res_opa_saved;
+ 584:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     }
+ 585:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 586:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 587:Middlewares/lvgl/src/hal/../misc/lv_color.h **** //! @endcond
+ 588:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 589:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**
+ 590:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * Get the brightness of a color
+ 591:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param color a color
+ 592:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @return the brightness [0..255]
+ 593:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  */
+ 594:Middlewares/lvgl/src/hal/../misc/lv_color.h **** static inline uint8_t lv_color_brightness(lv_color_t color)
+ 595:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 596:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     lv_color32_t c32;
+ 597:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     c32.full        = lv_color_to32(color);
+ 598:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     uint16_t bright = (uint16_t)(3u * LV_COLOR_GET_R32(c32) + LV_COLOR_GET_B32(c32) + 4u * LV_COLOR
+ 599:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return (uint8_t)(bright >> 3);
+ 600:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 601:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 602:Middlewares/lvgl/src/hal/../misc/lv_color.h **** static inline lv_color_t lv_color_make(uint8_t r, uint8_t g, uint8_t b)
+ 603:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 604:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return _LV_COLOR_MAKE_TYPE_HELPER LV_COLOR_MAKE(r, g, b);
+ 605:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 606:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 607:Middlewares/lvgl/src/hal/../misc/lv_color.h **** static inline lv_color_t lv_color_hex(uint32_t c)
+ 105              		.loc 2 607 26 view .LVU20
+ 106              	.LBE18:
+ 608:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 609:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return lv_color_make((uint8_t)((c >> 16) & 0xFF), (uint8_t)((c >> 8) & 0xFF), (uint8_t)(c & 0xF
+ 107              		.loc 2 609 5 view .LVU21
+ 108              	.LBB21:
+ 109              	.LBB19:
+ 110              	.LBI19:
+ 602:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 111              		.loc 2 602 26 view .LVU22
+ 112              	.LBB20:
+ 604:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 113              		.loc 2 604 5 view .LVU23
+ 604:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 114              		.loc 2 604 12 is_stmt 0 view .LVU24
+ 115 002e 4FF4FC63 		mov	r3, #2016	@ movhi
+ 116              	.LVL5:
+ARM GAS  /tmp/ccwADuP0.s 			page 21
+
+
+ 604:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 117              		.loc 2 604 12 view .LVU25
+ 118              	.LBE20:
+ 119              	.LBE19:
+ 120              	.LBE21:
+  65:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 121              		.loc 1 65 32 view .LVU26
+ 122 0032 2386     		strh	r3, [r4, #48]	@ movhi
+  66:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 123              		.loc 1 66 1 view .LVU27
+ 124 0034 10BD     		pop	{r4, pc}
+  66:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 125              		.loc 1 66 1 view .LVU28
+ 126              		.cfi_endproc
+ 127              	.LFE147:
+ 129              		.section	.text.lv_disp_draw_buf_init,"ax",%progbits
+ 130              		.align	1
+ 131              		.global	lv_disp_draw_buf_init
+ 132              		.syntax unified
+ 133              		.thumb
+ 134              		.thumb_func
+ 135              		.fpu fpv4-sp-d16
+ 137              	lv_disp_draw_buf_init:
+ 138              	.LVL6:
+ 139              	.LFB148:
+  84:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_memset_00(draw_buf, sizeof(lv_disp_draw_buf_t));
+ 140              		.loc 1 84 1 is_stmt 1 view -0
+ 141              		.cfi_startproc
+ 142              		@ args = 0, pretend = 0, frame = 0
+ 143              		@ frame_needed = 0, uses_anonymous_args = 0
+  84:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_memset_00(draw_buf, sizeof(lv_disp_draw_buf_t));
+ 144              		.loc 1 84 1 is_stmt 0 view .LVU30
+ 145 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 146              	.LCFI2:
+ 147              		.cfi_def_cfa_offset 24
+ 148              		.cfi_offset 3, -24
+ 149              		.cfi_offset 4, -20
+ 150              		.cfi_offset 5, -16
+ 151              		.cfi_offset 6, -12
+ 152              		.cfi_offset 7, -8
+ 153              		.cfi_offset 14, -4
+ 154 0002 0446     		mov	r4, r0
+ 155 0004 0D46     		mov	r5, r1
+ 156 0006 1746     		mov	r7, r2
+ 157 0008 1E46     		mov	r6, r3
+  85:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 158              		.loc 1 85 5 is_stmt 1 view .LVU31
+ 159 000a 2421     		movs	r1, #36
+ 160              	.LVL7:
+  85:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 161              		.loc 1 85 5 is_stmt 0 view .LVU32
+ 162 000c FFF7FEFF 		bl	lv_memset_00
+ 163              	.LVL8:
+  87:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     draw_buf->buf2    = buf2;
+ 164              		.loc 1 87 5 is_stmt 1 view .LVU33
+  87:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     draw_buf->buf2    = buf2;
+ 165              		.loc 1 87 23 is_stmt 0 view .LVU34
+ARM GAS  /tmp/ccwADuP0.s 			page 22
+
+
+ 166 0010 2560     		str	r5, [r4]
+  88:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     draw_buf->buf_act = draw_buf->buf1;
+ 167              		.loc 1 88 5 is_stmt 1 view .LVU35
+  88:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     draw_buf->buf_act = draw_buf->buf1;
+ 168              		.loc 1 88 23 is_stmt 0 view .LVU36
+ 169 0012 6760     		str	r7, [r4, #4]
+  89:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     draw_buf->size    = size_in_px_cnt;
+ 170              		.loc 1 89 5 is_stmt 1 view .LVU37
+  89:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     draw_buf->size    = size_in_px_cnt;
+ 171              		.loc 1 89 23 is_stmt 0 view .LVU38
+ 172 0014 A560     		str	r5, [r4, #8]
+  90:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 173              		.loc 1 90 5 is_stmt 1 view .LVU39
+  90:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 174              		.loc 1 90 23 is_stmt 0 view .LVU40
+ 175 0016 E660     		str	r6, [r4, #12]
+  91:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 176              		.loc 1 91 1 view .LVU41
+ 177 0018 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+  91:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 178              		.loc 1 91 1 view .LVU42
+ 179              		.cfi_endproc
+ 180              	.LFE148:
+ 182              		.section	.text.lv_disp_drv_register,"ax",%progbits
+ 183              		.align	1
+ 184              		.global	lv_disp_drv_register
+ 185              		.syntax unified
+ 186              		.thumb
+ 187              		.thumb_func
+ 188              		.fpu fpv4-sp-d16
+ 190              	lv_disp_drv_register:
+ 191              	.LVL9:
+ 192              	.LFB149:
+ 100:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_disp_t * disp = _lv_ll_ins_head(&LV_GC_ROOT(_lv_disp_ll));
+ 193              		.loc 1 100 1 is_stmt 1 view -0
+ 194              		.cfi_startproc
+ 195              		@ args = 0, pretend = 0, frame = 0
+ 196              		@ frame_needed = 0, uses_anonymous_args = 0
+ 100:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_disp_t * disp = _lv_ll_ins_head(&LV_GC_ROOT(_lv_disp_ll));
+ 197              		.loc 1 100 1 is_stmt 0 view .LVU44
+ 198 0000 70B5     		push	{r4, r5, r6, lr}
+ 199              	.LCFI3:
+ 200              		.cfi_def_cfa_offset 16
+ 201              		.cfi_offset 4, -16
+ 202              		.cfi_offset 5, -12
+ 203              		.cfi_offset 6, -8
+ 204              		.cfi_offset 14, -4
+ 205 0002 82B0     		sub	sp, sp, #8
+ 206              	.LCFI4:
+ 207              		.cfi_def_cfa_offset 24
+ 208 0004 0546     		mov	r5, r0
+ 101:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(!disp) {
+ 209              		.loc 1 101 5 is_stmt 1 view .LVU45
+ 101:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(!disp) {
+ 210              		.loc 1 101 24 is_stmt 0 view .LVU46
+ 211 0006 3D48     		ldr	r0, .L18
+ 212              	.LVL10:
+ARM GAS  /tmp/ccwADuP0.s 			page 23
+
+
+ 101:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(!disp) {
+ 213              		.loc 1 101 24 view .LVU47
+ 214 0008 FFF7FEFF 		bl	_lv_ll_ins_head
+ 215              	.LVL11:
+ 102:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         LV_ASSERT_MALLOC(disp);
+ 216              		.loc 1 102 5 is_stmt 1 view .LVU48
+ 102:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         LV_ASSERT_MALLOC(disp);
+ 217              		.loc 1 102 7 is_stmt 0 view .LVU49
+ 218 000c 0028     		cmp	r0, #0
+ 219 000e 5FD0     		beq	.L9
+ 220 0010 0446     		mov	r4, r0
+ 107:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 221              		.loc 1 107 5 is_stmt 1 view .LVU50
+ 222 0012 4FF4AC71 		mov	r1, #344
+ 223 0016 FFF7FEFF 		bl	lv_memset_00
+ 224              	.LVL12:
+ 109:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 225              		.loc 1 109 5 view .LVU51
+ 109:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 226              		.loc 1 109 18 is_stmt 0 view .LVU52
+ 227 001a 2560     		str	r5, [r4]
+ 111:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp_def                 = disp; /*Temporarily change the default screen to create the default 
+ 228              		.loc 1 111 5 is_stmt 1 view .LVU53
+ 111:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp_def                 = disp; /*Temporarily change the default screen to create the default 
+ 229              		.loc 1 111 17 is_stmt 0 view .LVU54
+ 230 001c 384B     		ldr	r3, .L18+4
+ 231 001e 1E68     		ldr	r6, [r3]
+ 232              	.LVL13:
+ 112:Middlewares/lvgl/src/hal/lv_hal_disp.c ****                                         new display*/
+ 233              		.loc 1 112 5 is_stmt 1 view .LVU55
+ 112:Middlewares/lvgl/src/hal/lv_hal_disp.c ****                                         new display*/
+ 234              		.loc 1 112 30 is_stmt 0 view .LVU56
+ 235 0020 1C60     		str	r4, [r3]
+ 115:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     LV_ASSERT_MALLOC(disp->refr_timer);
+ 236              		.loc 1 115 5 is_stmt 1 view .LVU57
+ 115:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     LV_ASSERT_MALLOC(disp->refr_timer);
+ 237              		.loc 1 115 24 is_stmt 0 view .LVU58
+ 238 0022 2246     		mov	r2, r4
+ 239 0024 1E21     		movs	r1, #30
+ 240 0026 3748     		ldr	r0, .L18+8
+ 241 0028 FFF7FEFF 		bl	lv_timer_create
+ 242              	.LVL14:
+ 115:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     LV_ASSERT_MALLOC(disp->refr_timer);
+ 243              		.loc 1 115 22 view .LVU59
+ 244 002c 6060     		str	r0, [r4, #4]
+ 116:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp->refr_timer == NULL) {
+ 245              		.loc 1 116 5 is_stmt 1 view .LVU60
+ 116:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp->refr_timer == NULL) {
+ 246              		.loc 1 116 5 view .LVU61
+ 247 002e 0028     		cmp	r0, #0
+ 248 0030 4FD0     		beq	.L11
+ 116:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp->refr_timer == NULL) {
+ 249              		.loc 1 116 5 view .LVU62
+ 116:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp->refr_timer == NULL) {
+ 250              		.loc 1 116 39 view .LVU63
+ 117:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_mem_free(disp);
+ 251              		.loc 1 117 5 view .LVU64
+ARM GAS  /tmp/ccwADuP0.s 			page 24
+
+
+ 122:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         driver->full_refresh = 0;
+ 252              		.loc 1 122 5 view .LVU65
+ 122:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         driver->full_refresh = 0;
+ 253              		.loc 1 122 8 is_stmt 0 view .LVU66
+ 254 0032 2B7A     		ldrb	r3, [r5, #8]	@ zero_extendqisi2
+ 122:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         driver->full_refresh = 0;
+ 255              		.loc 1 122 7 view .LVU67
+ 256 0034 13F0010F 		tst	r3, #1
+ 257 0038 0DD0     		beq	.L12
+ 122:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         driver->full_refresh = 0;
+ 258              		.loc 1 122 38 discriminator 1 view .LVU68
+ 259 003a 6B68     		ldr	r3, [r5, #4]
+ 122:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         driver->full_refresh = 0;
+ 260              		.loc 1 122 48 discriminator 1 view .LVU69
+ 261 003c DA68     		ldr	r2, [r3, #12]
+ 122:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         driver->full_refresh = 0;
+ 262              		.loc 1 122 73 discriminator 1 view .LVU70
+ 263 003e B5F90030 		ldrsh	r3, [r5]
+ 122:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         driver->full_refresh = 0;
+ 264              		.loc 1 122 91 discriminator 1 view .LVU71
+ 265 0042 B5F90210 		ldrsh	r1, [r5, #2]
+ 122:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         driver->full_refresh = 0;
+ 266              		.loc 1 122 83 discriminator 1 view .LVU72
+ 267 0046 01FB03F3 		mul	r3, r1, r3
+ 122:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         driver->full_refresh = 0;
+ 268              		.loc 1 122 29 discriminator 1 view .LVU73
+ 269 004a 9A42     		cmp	r2, r3
+ 270 004c 03D2     		bcs	.L12
+ 123:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         LV_LOG_WARN("full_refresh requires at least screen sized draw buffer(s)")
+ 271              		.loc 1 123 9 is_stmt 1 view .LVU74
+ 123:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         LV_LOG_WARN("full_refresh requires at least screen sized draw buffer(s)")
+ 272              		.loc 1 123 30 is_stmt 0 view .LVU75
+ 273 004e 2B7A     		ldrb	r3, [r5, #8]	@ zero_extendqisi2
+ 274 0050 6FF30003 		bfc	r3, #0, #1
+ 275 0054 2B72     		strb	r3, [r5, #8]
+ 276              	.L12:
+ 127:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #if LV_COLOR_SCREEN_TRANSP
+ 277              		.loc 1 127 5 is_stmt 1 view .LVU76
+ 278              	.LBB22:
+ 279              	.LBI22:
+ 610:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 611:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 612:Middlewares/lvgl/src/hal/../misc/lv_color.h **** static inline lv_color_t lv_color_hex3(uint32_t c)
+ 613:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 614:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return lv_color_make((uint8_t)(((c >> 4) & 0xF0) | ((c >> 8) & 0xF)), (uint8_t)((c & 0xF0) | ((
+ 615:Middlewares/lvgl/src/hal/../misc/lv_color.h ****                          (uint8_t)((c & 0xF) | ((c & 0xF) << 4)));
+ 616:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 617:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 618:Middlewares/lvgl/src/hal/../misc/lv_color.h **** static inline void lv_color_filter_dsc_init(lv_color_filter_dsc_t * dsc, lv_color_filter_cb_t cb)
+ 619:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 620:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     dsc->filter_cb = cb;
+ 621:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 622:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 623:Middlewares/lvgl/src/hal/../misc/lv_color.h **** //! @cond Doxygen_Suppress
+ 624:Middlewares/lvgl/src/hal/../misc/lv_color.h **** //!
+ 625:Middlewares/lvgl/src/hal/../misc/lv_color.h **** LV_ATTRIBUTE_FAST_MEM void lv_color_fill(lv_color_t * buf, lv_color_t color, uint32_t px_num);
+ 626:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ARM GAS  /tmp/ccwADuP0.s 			page 25
+
+
+ 627:Middlewares/lvgl/src/hal/../misc/lv_color.h **** //! @endcond
+ 628:Middlewares/lvgl/src/hal/../misc/lv_color.h **** lv_color_t lv_color_lighten(lv_color_t c, lv_opa_t lvl);
+ 629:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 630:Middlewares/lvgl/src/hal/../misc/lv_color.h **** lv_color_t lv_color_darken(lv_color_t c, lv_opa_t lvl);
+ 631:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 632:Middlewares/lvgl/src/hal/../misc/lv_color.h **** lv_color_t lv_color_change_lightness(lv_color_t c, lv_opa_t lvl);
+ 633:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 634:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**
+ 635:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * Convert a HSV color to RGB
+ 636:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param h hue [0..359]
+ 637:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param s saturation [0..100]
+ 638:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param v value [0..100]
+ 639:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @return the given RGB color in RGB (with LV_COLOR_DEPTH depth)
+ 640:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  */
+ 641:Middlewares/lvgl/src/hal/../misc/lv_color.h **** lv_color_t lv_color_hsv_to_rgb(uint16_t h, uint8_t s, uint8_t v);
+ 642:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 643:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**
+ 644:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * Convert a 32-bit RGB color to HSV
+ 645:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param r8 8-bit red
+ 646:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param g8 8-bit green
+ 647:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param b8 8-bit blue
+ 648:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @return the given RGB color in HSV
+ 649:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  */
+ 650:Middlewares/lvgl/src/hal/../misc/lv_color.h **** lv_color_hsv_t lv_color_rgb_to_hsv(uint8_t r8, uint8_t g8, uint8_t b8);
+ 651:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 652:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**
+ 653:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * Convert a color to HSV
+ 654:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @param color color
+ 655:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @return the given color in HSV
+ 656:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  */
+ 657:Middlewares/lvgl/src/hal/../misc/lv_color.h **** lv_color_hsv_t lv_color_to_hsv(lv_color_t color);
+ 658:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 659:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**
+ 660:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * Just a wrapper around LV_COLOR_CHROMA_KEY because it might be more convenient to use a function 
+ 661:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  * @return LV_COLOR_CHROMA_KEY
+ 662:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  */
+ 663:Middlewares/lvgl/src/hal/../misc/lv_color.h **** static inline lv_color_t lv_color_chroma_key(void)
+ 664:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 665:Middlewares/lvgl/src/hal/../misc/lv_color.h ****     return LV_COLOR_CHROMA_KEY;
+ 666:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 667:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 668:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /**********************
+ 669:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  *  PREDEFINED COLORS
+ 670:Middlewares/lvgl/src/hal/../misc/lv_color.h ****  **********************/
+ 671:Middlewares/lvgl/src/hal/../misc/lv_color.h **** /*Source: https://vuetifyjs.com/en/styles/colors/#material-colors*/
+ 672:Middlewares/lvgl/src/hal/../misc/lv_color.h **** 
+ 673:Middlewares/lvgl/src/hal/../misc/lv_color.h **** lv_color_t lv_palette_main(lv_palette_t p);
+ 674:Middlewares/lvgl/src/hal/../misc/lv_color.h **** static inline lv_color_t lv_color_white(void) { return lv_color_make(0xff, 0xff, 0xff);}
+ 280              		.loc 2 674 26 view .LVU77
+ 281              	.LBE22:
+ 282              		.loc 2 674 49 view .LVU78
+ 283              	.LVL15:
+ 284              	.LBB25:
+ 285              	.LBB23:
+ 286              	.LBI23:
+ 602:Middlewares/lvgl/src/hal/../misc/lv_color.h **** {
+ 287              		.loc 2 602 26 view .LVU79
+ARM GAS  /tmp/ccwADuP0.s 			page 26
+
+
+ 288              	.LBB24:
+ 604:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 289              		.loc 2 604 5 view .LVU80
+ 604:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 290              		.loc 2 604 12 is_stmt 0 view .LVU81
+ 291 0056 4FF6FF73 		movw	r3, #65535
+ 292              	.LVL16:
+ 604:Middlewares/lvgl/src/hal/../misc/lv_color.h **** }
+ 293              		.loc 2 604 12 view .LVU82
+ 294              	.LBE24:
+ 295              	.LBE23:
+ 296              	.LBE25:
+ 127:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #if LV_COLOR_SCREEN_TRANSP
+ 297              		.loc 1 127 22 view .LVU83
+ 298 005a 6385     		strh	r3, [r4, #42]	@ movhi
+ 131:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #endif
+ 299              		.loc 1 131 5 is_stmt 1 view .LVU84
+ 131:Middlewares/lvgl/src/hal/lv_hal_disp.c **** #endif
+ 300              		.loc 1 131 18 is_stmt 0 view .LVU85
+ 301 005c FF23     		movs	r3, #255
+ 302 005e 84F82930 		strb	r3, [r4, #41]
+ 135:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         disp->theme = lv_theme_default_init(disp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main
+ 303              		.loc 1 135 5 is_stmt 1 view .LVU86
+ 135:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         disp->theme = lv_theme_default_init(disp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main
+ 304              		.loc 1 135 8 is_stmt 0 view .LVU87
+ 305 0062 FFF7FEFF 		bl	lv_theme_default_is_inited
+ 306              	.LVL17:
+ 135:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         disp->theme = lv_theme_default_init(disp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main
+ 307              		.loc 1 135 7 view .LVU88
+ 308 0066 0028     		cmp	r0, #0
+ 309 0068 34D0     		beq	.L16
+ 310              	.LVL18:
+ 311              	.L13:
+ 140:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->top_layer = lv_obj_create(NULL); /*Create top layer on the display*/
+ 312              		.loc 1 140 5 is_stmt 1 view .LVU89
+ 140:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->top_layer = lv_obj_create(NULL); /*Create top layer on the display*/
+ 313              		.loc 1 140 23 is_stmt 0 view .LVU90
+ 314 006a 0020     		movs	r0, #0
+ 315 006c FFF7FEFF 		bl	lv_obj_create
+ 316              	.LVL19:
+ 140:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->top_layer = lv_obj_create(NULL); /*Create top layer on the display*/
+ 317              		.loc 1 140 21 view .LVU91
+ 318 0070 2061     		str	r0, [r4, #16]
+ 141:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->sys_layer = lv_obj_create(NULL); /*Create sys layer on the display*/
+ 319              		.loc 1 141 5 is_stmt 1 view .LVU92
+ 141:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->sys_layer = lv_obj_create(NULL); /*Create sys layer on the display*/
+ 320              		.loc 1 141 23 is_stmt 0 view .LVU93
+ 321 0072 0020     		movs	r0, #0
+ 322 0074 FFF7FEFF 		bl	lv_obj_create
+ 323              	.LVL20:
+ 141:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->sys_layer = lv_obj_create(NULL); /*Create sys layer on the display*/
+ 324              		.loc 1 141 21 view .LVU94
+ 325 0078 E061     		str	r0, [r4, #28]
+ 142:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_remove_style_all(disp->top_layer);
+ 326              		.loc 1 142 5 is_stmt 1 view .LVU95
+ 142:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_remove_style_all(disp->top_layer);
+ 327              		.loc 1 142 23 is_stmt 0 view .LVU96
+ARM GAS  /tmp/ccwADuP0.s 			page 27
+
+
+ 328 007a 0020     		movs	r0, #0
+ 329 007c FFF7FEFF 		bl	lv_obj_create
+ 330              	.LVL21:
+ 142:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_remove_style_all(disp->top_layer);
+ 331              		.loc 1 142 21 view .LVU97
+ 332 0080 2062     		str	r0, [r4, #32]
+ 143:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_remove_style_all(disp->sys_layer);
+ 333              		.loc 1 143 5 is_stmt 1 view .LVU98
+ 334              	.LVL22:
+ 335              	.LBB26:
+ 336              	.LBI26:
+ 337              		.file 3 "Middlewares/lvgl/src/hal/../core/lv_obj_style.h"
+   1:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** /**
+   2:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * @file lv_obj_style.h
+   3:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  *
+   4:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  */
+   5:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** 
+   6:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** #ifndef LV_OBJ_STYLE_H
+   7:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** #define LV_OBJ_STYLE_H
+   8:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** 
+   9:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** #ifdef __cplusplus
+  10:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** extern "C" {
+  11:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** #endif
+  12:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** 
+  13:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** /*********************
+  14:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  *      INCLUDES
+  15:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  *********************/
+  16:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** #include <stdint.h>
+  17:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** #include <stdbool.h>
+  18:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** #include "../misc/lv_bidi.h"
+  19:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** 
+  20:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** /*********************
+  21:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  *      DEFINES
+  22:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  *********************/
+  23:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** 
+  24:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** /**********************
+  25:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  *      TYPEDEFS
+  26:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  **********************/
+  27:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** /*Can't include lv_obj.h because it includes this header file*/
+  28:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** struct _lv_obj_t;
+  29:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** 
+  30:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** typedef enum {
+  31:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     _LV_STYLE_STATE_CMP_SAME,           /*The style properties in the 2 states are identical*/
+  32:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     _LV_STYLE_STATE_CMP_DIFF_REDRAW,    /*The differences can be shown with a simple redraw*/
+  33:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     _LV_STYLE_STATE_CMP_DIFF_DRAW_PAD,  /*The differences can be shown with a simple redraw*/
+  34:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     _LV_STYLE_STATE_CMP_DIFF_LAYOUT,    /*The differences can be shown with a simple redraw*/
+  35:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** } _lv_style_state_cmp_t;
+  36:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** 
+  37:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** typedef uint32_t lv_style_selector_t;
+  38:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** 
+  39:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** typedef struct {
+  40:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     lv_style_t * style;
+  41:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     uint32_t selector :24;
+  42:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     uint32_t is_local :1;
+  43:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     uint32_t is_trans :1;
+  44:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** }_lv_obj_style_t;
+  45:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** 
+ARM GAS  /tmp/ccwADuP0.s 			page 28
+
+
+  46:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** typedef struct {
+  47:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     uint16_t time;
+  48:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     uint16_t delay;
+  49:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     lv_style_selector_t selector;
+  50:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     lv_style_prop_t prop;
+  51:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     lv_anim_path_cb_t path_cb;
+  52:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** #if LV_USE_USER_DATA
+  53:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     void * user_data;
+  54:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** #endif
+  55:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** }_lv_obj_style_transition_dsc_t;
+  56:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** 
+  57:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** /**********************
+  58:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * GLOBAL PROTOTYPES
+  59:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  **********************/
+  60:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** 
+  61:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** /**
+  62:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * Initialize the object related style manager module.
+  63:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * Called by LVGL in `lv_init()`
+  64:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  */
+  65:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** void _lv_obj_style_init(void);
+  66:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** 
+  67:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** /**
+  68:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * Add a style to an object.
+  69:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * @param obj       pointer to an object
+  70:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * @param style     pointer to a style to add
+  71:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * @param selector  OR-ed value of parts and state to which the style should be added
+  72:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * @example         lv_obj_add_style(btn, &style_btn, 0); //Default button style
+  73:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * @example         lv_obj_add_style(btn, &btn_red, LV_STATE_PRESSED); //Overwrite only some colors
+  74:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  */
+  75:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** void lv_obj_add_style(struct _lv_obj_t * obj, lv_style_t * style, lv_style_selector_t selector);
+  76:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** 
+  77:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** /**
+  78:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * Add a style to an object.
+  79:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * @param obj       pointer to an object
+  80:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * @param style     pointer to a style to remove. Can be NULL to check only the selector
+  81:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * @param selector  OR-ed values of states and a part to remove only styles with matching selectors
+  82:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * @example lv_obj_remove_style(obj, &style, LV_PART_ANY | LV_STATE_ANY); //Remove a specific style
+  83:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * @example lv_obj_remove_style(obj, NULL, LV_PART_MAIN | LV_STATE_ANY); //Remove all styles from t
+  84:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * @example lv_obj_remove_style(obj, NULL, LV_PART_ANY | LV_STATE_ANY); //Remove all styles
+  85:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  */
+  86:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** void lv_obj_remove_style(struct _lv_obj_t * obj, lv_style_t * style, lv_style_selector_t selector);
+  87:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** 
+  88:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** /**
+  89:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * Remove all styles from an object
+  90:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  * @param obj       pointer to an object
+  91:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****  */
+  92:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** static inline void lv_obj_remove_style_all(struct _lv_obj_t * obj)
+ 338              		.loc 3 92 20 view .LVU99
+ 339              	.LBB27:
+  93:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** {
+  94:Middlewares/lvgl/src/hal/../core/lv_obj_style.h ****     lv_obj_remove_style(obj, NULL, LV_PART_ANY | LV_STATE_ANY);
+ 340              		.loc 3 94 5 view .LVU100
+ 341 0082 214D     		ldr	r5, .L18+12
+ 342 0084 2A46     		mov	r2, r5
+ 343 0086 0021     		movs	r1, #0
+ 344 0088 E069     		ldr	r0, [r4, #28]
+ 345 008a FFF7FEFF 		bl	lv_obj_remove_style
+ARM GAS  /tmp/ccwADuP0.s 			page 29
+
+
+ 346              	.LVL23:
+ 347              		.loc 3 94 5 is_stmt 0 view .LVU101
+ 348              	.LBE27:
+ 349              	.LBE26:
+ 144:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_clear_flag(disp->top_layer, LV_OBJ_FLAG_CLICKABLE);
+ 350              		.loc 1 144 5 is_stmt 1 view .LVU102
+ 351              	.LBB28:
+ 352              	.LBI28:
+  92:Middlewares/lvgl/src/hal/../core/lv_obj_style.h **** {
+ 353              		.loc 3 92 20 view .LVU103
+ 354              	.LBB29:
+ 355              		.loc 3 94 5 view .LVU104
+ 356 008e 2A46     		mov	r2, r5
+ 357 0090 0021     		movs	r1, #0
+ 358 0092 206A     		ldr	r0, [r4, #32]
+ 359 0094 FFF7FEFF 		bl	lv_obj_remove_style
+ 360              	.LVL24:
+ 361              		.loc 3 94 5 is_stmt 0 view .LVU105
+ 362              	.LBE29:
+ 363              	.LBE28:
+ 145:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_clear_flag(disp->sys_layer, LV_OBJ_FLAG_CLICKABLE);
+ 364              		.loc 1 145 5 is_stmt 1 view .LVU106
+ 365 0098 0221     		movs	r1, #2
+ 366 009a E069     		ldr	r0, [r4, #28]
+ 367 009c FFF7FEFF 		bl	lv_obj_clear_flag
+ 368              	.LVL25:
+ 146:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 369              		.loc 1 146 5 view .LVU107
+ 370 00a0 0221     		movs	r1, #2
+ 371 00a2 206A     		ldr	r0, [r4, #32]
+ 372 00a4 FFF7FEFF 		bl	lv_obj_clear_flag
+ 373              	.LVL26:
+ 148:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_obj_set_scrollbar_mode(disp->sys_layer, LV_SCROLLBAR_MODE_OFF);
+ 374              		.loc 1 148 5 view .LVU108
+ 375 00a8 0021     		movs	r1, #0
+ 376 00aa E069     		ldr	r0, [r4, #28]
+ 377 00ac FFF7FEFF 		bl	lv_obj_set_scrollbar_mode
+ 378              	.LVL27:
+ 149:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 379              		.loc 1 149 5 view .LVU109
+ 380 00b0 0021     		movs	r1, #0
+ 381 00b2 206A     		ldr	r0, [r4, #32]
+ 382 00b4 FFF7FEFF 		bl	lv_obj_set_scrollbar_mode
+ 383              	.LVL28:
+ 151:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 384              		.loc 1 151 5 view .LVU110
+ 385 00b8 2069     		ldr	r0, [r4, #16]
+ 386 00ba FFF7FEFF 		bl	lv_obj_invalidate
+ 387              	.LVL29:
+ 153:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp_def == NULL) disp_def = disp; /*Initialize the default display*/
+ 388              		.loc 1 153 5 view .LVU111
+ 153:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp_def == NULL) disp_def = disp; /*Initialize the default display*/
+ 389              		.loc 1 153 14 is_stmt 0 view .LVU112
+ 390 00be 104B     		ldr	r3, .L18+4
+ 391 00c0 1E60     		str	r6, [r3]
+ 154:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 392              		.loc 1 154 5 is_stmt 1 view .LVU113
+ARM GAS  /tmp/ccwADuP0.s 			page 30
+
+
+ 154:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 393              		.loc 1 154 7 is_stmt 0 view .LVU114
+ 394 00c2 C6B1     		cbz	r6, .L17
+ 395              	.L14:
+ 156:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 396              		.loc 1 156 5 is_stmt 1 view .LVU115
+ 397 00c4 6068     		ldr	r0, [r4, #4]
+ 398 00c6 FFF7FEFF 		bl	lv_timer_ready
+ 399              	.LVL30:
+ 158:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 400              		.loc 1 158 5 view .LVU116
+ 159:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 401              		.loc 1 159 1 is_stmt 0 view .LVU117
+ 402 00ca 2046     		mov	r0, r4
+ 403 00cc 02B0     		add	sp, sp, #8
+ 404              	.LCFI5:
+ 405              		.cfi_remember_state
+ 406              		.cfi_def_cfa_offset 16
+ 407              		@ sp needed
+ 408 00ce 70BD     		pop	{r4, r5, r6, pc}
+ 409              	.LVL31:
+ 410              	.L9:
+ 411              	.LCFI6:
+ 412              		.cfi_restore_state
+ 103:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return NULL;
+ 413              		.loc 1 103 9 is_stmt 1 discriminator 1 view .LVU118
+ 103:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return NULL;
+ 414              		.loc 1 103 9 discriminator 1 view .LVU119
+ 103:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return NULL;
+ 415              		.loc 1 103 9 discriminator 1 view .LVU120
+ 103:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return NULL;
+ 416              		.loc 1 103 9 discriminator 1 view .LVU121
+ 417 00d0 FEE7     		b	.L9
+ 418              	.LVL32:
+ 419              	.L11:
+ 116:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp->refr_timer == NULL) {
+ 420              		.loc 1 116 5 discriminator 2 view .LVU122
+ 116:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp->refr_timer == NULL) {
+ 421              		.loc 1 116 5 discriminator 2 view .LVU123
+ 116:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp->refr_timer == NULL) {
+ 422              		.loc 1 116 5 discriminator 2 view .LVU124
+ 116:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp->refr_timer == NULL) {
+ 423              		.loc 1 116 5 discriminator 2 view .LVU125
+ 424 00d2 FEE7     		b	.L11
+ 425              	.L16:
+ 136:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 426              		.loc 1 136 9 view .LVU126
+ 136:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 427              		.loc 1 136 23 is_stmt 0 view .LVU127
+ 428 00d4 0520     		movs	r0, #5
+ 429 00d6 FFF7FEFF 		bl	lv_palette_main
+ 430              	.LVL33:
+ 431 00da 0546     		mov	r5, r0	@ movhi
+ 432              	.LVL34:
+ 136:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 433              		.loc 1 136 23 view .LVU128
+ 434 00dc 0020     		movs	r0, #0
+ARM GAS  /tmp/ccwADuP0.s 			page 31
+
+
+ 435 00de FFF7FEFF 		bl	lv_palette_main
+ 436              	.LVL35:
+ 437 00e2 0246     		mov	r2, r0	@ movhi
+ 438 00e4 094B     		ldr	r3, .L18+16
+ 439 00e6 0093     		str	r3, [sp]
+ 440 00e8 0023     		movs	r3, #0
+ 441 00ea 2946     		mov	r1, r5	@ movhi
+ 442 00ec 2046     		mov	r0, r4
+ 443 00ee FFF7FEFF 		bl	lv_theme_default_init
+ 444              	.LVL36:
+ 136:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 445              		.loc 1 136 21 view .LVU129
+ 446 00f2 A060     		str	r0, [r4, #8]
+ 447 00f4 B9E7     		b	.L13
+ 448              	.L17:
+ 154:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 449              		.loc 1 154 26 is_stmt 1 discriminator 1 view .LVU130
+ 154:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 450              		.loc 1 154 35 is_stmt 0 discriminator 1 view .LVU131
+ 451 00f6 1C60     		str	r4, [r3]
+ 452 00f8 E4E7     		b	.L14
+ 453              	.L19:
+ 454 00fa 00BF     		.align	2
+ 455              	.L18:
+ 456 00fc 00000000 		.word	_lv_disp_ll
+ 457 0100 00000000 		.word	.LANCHOR0
+ 458 0104 00000000 		.word	_lv_disp_refr_timer
+ 459 0108 FFFF0F00 		.word	1048575
+ 460 010c 00000000 		.word	lv_font_montserrat_14
+ 461              		.cfi_endproc
+ 462              	.LFE149:
+ 464              		.section	.text.lv_disp_set_default,"ax",%progbits
+ 465              		.align	1
+ 466              		.global	lv_disp_set_default
+ 467              		.syntax unified
+ 468              		.thumb
+ 469              		.thumb_func
+ 470              		.fpu fpv4-sp-d16
+ 472              	lv_disp_set_default:
+ 473              	.LVL37:
+ 474              	.LFB152:
+ 233:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp_def = disp;
+ 475              		.loc 1 233 1 is_stmt 1 view -0
+ 476              		.cfi_startproc
+ 477              		@ args = 0, pretend = 0, frame = 0
+ 478              		@ frame_needed = 0, uses_anonymous_args = 0
+ 479              		@ link register save eliminated.
+ 234:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 480              		.loc 1 234 5 view .LVU133
+ 234:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 481              		.loc 1 234 14 is_stmt 0 view .LVU134
+ 482 0000 014B     		ldr	r3, .L21
+ 483 0002 1860     		str	r0, [r3]
+ 235:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 484              		.loc 1 235 1 view .LVU135
+ 485 0004 7047     		bx	lr
+ 486              	.L22:
+ARM GAS  /tmp/ccwADuP0.s 			page 32
+
+
+ 487 0006 00BF     		.align	2
+ 488              	.L21:
+ 489 0008 00000000 		.word	.LANCHOR0
+ 490              		.cfi_endproc
+ 491              	.LFE152:
+ 493              		.section	.text.lv_disp_get_default,"ax",%progbits
+ 494              		.align	1
+ 495              		.global	lv_disp_get_default
+ 496              		.syntax unified
+ 497              		.thumb
+ 498              		.thumb_func
+ 499              		.fpu fpv4-sp-d16
+ 501              	lv_disp_get_default:
+ 502              	.LFB153:
+ 242:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp_def;
+ 503              		.loc 1 242 1 is_stmt 1 view -0
+ 504              		.cfi_startproc
+ 505              		@ args = 0, pretend = 0, frame = 0
+ 506              		@ frame_needed = 0, uses_anonymous_args = 0
+ 507              		@ link register save eliminated.
+ 243:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 508              		.loc 1 243 5 view .LVU137
+ 244:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 509              		.loc 1 244 1 is_stmt 0 view .LVU138
+ 510 0000 014B     		ldr	r3, .L24
+ 511 0002 1868     		ldr	r0, [r3]
+ 512 0004 7047     		bx	lr
+ 513              	.L25:
+ 514 0006 00BF     		.align	2
+ 515              	.L24:
+ 516 0008 00000000 		.word	.LANCHOR0
+ 517              		.cfi_endproc
+ 518              	.LFE153:
+ 520              		.section	.text.lv_disp_remove,"ax",%progbits
+ 521              		.align	1
+ 522              		.global	lv_disp_remove
+ 523              		.syntax unified
+ 524              		.thumb
+ 525              		.thumb_func
+ 526              		.fpu fpv4-sp-d16
+ 528              	lv_disp_remove:
+ 529              	.LVL38:
+ 530              	.LFB151:
+ 207:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     bool was_default = false;
+ 531              		.loc 1 207 1 is_stmt 1 view -0
+ 532              		.cfi_startproc
+ 533              		@ args = 0, pretend = 0, frame = 0
+ 534              		@ frame_needed = 0, uses_anonymous_args = 0
+ 207:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     bool was_default = false;
+ 535              		.loc 1 207 1 is_stmt 0 view .LVU140
+ 536 0000 38B5     		push	{r3, r4, r5, lr}
+ 537              	.LCFI7:
+ 538              		.cfi_def_cfa_offset 16
+ 539              		.cfi_offset 3, -16
+ 540              		.cfi_offset 4, -12
+ 541              		.cfi_offset 5, -8
+ 542              		.cfi_offset 14, -4
+ARM GAS  /tmp/ccwADuP0.s 			page 33
+
+
+ 543 0002 0446     		mov	r4, r0
+ 208:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == lv_disp_get_default()) was_default = true;
+ 544              		.loc 1 208 5 is_stmt 1 view .LVU141
+ 545              	.LVL39:
+ 209:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 546              		.loc 1 209 5 view .LVU142
+ 209:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 547              		.loc 1 209 16 is_stmt 0 view .LVU143
+ 548 0004 FFF7FEFF 		bl	lv_disp_get_default
+ 549              	.LVL40:
+ 209:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 550              		.loc 1 209 7 view .LVU144
+ 551 0008 8442     		cmp	r4, r0
+ 552 000a 04D0     		beq	.L32
+ 208:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == lv_disp_get_default()) was_default = true;
+ 553              		.loc 1 208 10 view .LVU145
+ 554 000c 0025     		movs	r5, #0
+ 555              	.L27:
+ 556              	.LVL41:
+ 212:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     indev = lv_indev_get_next(NULL);
+ 557              		.loc 1 212 5 is_stmt 1 view .LVU146
+ 213:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     while(indev) {
+ 558              		.loc 1 213 5 view .LVU147
+ 213:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     while(indev) {
+ 559              		.loc 1 213 13 is_stmt 0 view .LVU148
+ 560 000e 0020     		movs	r0, #0
+ 561 0010 FFF7FEFF 		bl	lv_indev_get_next
+ 562              	.LVL42:
+ 214:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         if(indev->driver->disp == disp) {
+ 563              		.loc 1 214 5 is_stmt 1 view .LVU149
+ 214:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         if(indev->driver->disp == disp) {
+ 564              		.loc 1 214 10 is_stmt 0 view .LVU150
+ 565 0014 03E0     		b	.L28
+ 566              	.LVL43:
+ 567              	.L32:
+ 209:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 568              		.loc 1 209 51 view .LVU151
+ 569 0016 0125     		movs	r5, #1
+ 570 0018 F9E7     		b	.L27
+ 571              	.LVL44:
+ 572              	.L29:
+ 218:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 573              		.loc 1 218 9 is_stmt 1 view .LVU152
+ 218:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 574              		.loc 1 218 17 is_stmt 0 view .LVU153
+ 575 001a FFF7FEFF 		bl	lv_indev_get_next
+ 576              	.LVL45:
+ 577              	.L28:
+ 214:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         if(indev->driver->disp == disp) {
+ 578              		.loc 1 214 10 is_stmt 1 view .LVU154
+ 579 001e 30B1     		cbz	r0, .L34
+ 215:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             indev->driver->disp = NULL;
+ 580              		.loc 1 215 9 view .LVU155
+ 215:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             indev->driver->disp = NULL;
+ 581              		.loc 1 215 17 is_stmt 0 view .LVU156
+ 582 0020 0368     		ldr	r3, [r0]
+ 215:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             indev->driver->disp = NULL;
+ARM GAS  /tmp/ccwADuP0.s 			page 34
+
+
+ 583              		.loc 1 215 25 view .LVU157
+ 584 0022 1A69     		ldr	r2, [r3, #16]
+ 215:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             indev->driver->disp = NULL;
+ 585              		.loc 1 215 11 view .LVU158
+ 586 0024 A242     		cmp	r2, r4
+ 587 0026 F8D1     		bne	.L29
+ 216:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         }
+ 588              		.loc 1 216 13 is_stmt 1 view .LVU159
+ 216:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         }
+ 589              		.loc 1 216 33 is_stmt 0 view .LVU160
+ 590 0028 0022     		movs	r2, #0
+ 591 002a 1A61     		str	r2, [r3, #16]
+ 592 002c F5E7     		b	.L29
+ 593              	.L34:
+ 221:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_timer_del(disp->refr_timer);
+ 594              		.loc 1 221 5 is_stmt 1 view .LVU161
+ 595 002e 2146     		mov	r1, r4
+ 596 0030 0848     		ldr	r0, .L36
+ 597              	.LVL46:
+ 221:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_timer_del(disp->refr_timer);
+ 598              		.loc 1 221 5 is_stmt 0 view .LVU162
+ 599 0032 FFF7FEFF 		bl	_lv_ll_remove
+ 600              	.LVL47:
+ 222:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_mem_free(disp);
+ 601              		.loc 1 222 5 is_stmt 1 view .LVU163
+ 602 0036 6068     		ldr	r0, [r4, #4]
+ 603 0038 FFF7FEFF 		bl	lv_timer_del
+ 604              	.LVL48:
+ 223:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 605              		.loc 1 223 5 view .LVU164
+ 606 003c 2046     		mov	r0, r4
+ 607 003e FFF7FEFF 		bl	lv_mem_free
+ 608              	.LVL49:
+ 225:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 609              		.loc 1 225 5 view .LVU165
+ 225:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 610              		.loc 1 225 7 is_stmt 0 view .LVU166
+ 611 0042 05B9     		cbnz	r5, .L35
+ 612              	.L26:
+ 226:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 613              		.loc 1 226 1 view .LVU167
+ 614 0044 38BD     		pop	{r3, r4, r5, pc}
+ 615              	.LVL50:
+ 616              	.L35:
+ 225:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 617              		.loc 1 225 21 is_stmt 1 discriminator 1 view .LVU168
+ 225:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 618              		.loc 1 225 41 is_stmt 0 discriminator 1 view .LVU169
+ 619 0046 0348     		ldr	r0, .L36
+ 620 0048 FFF7FEFF 		bl	_lv_ll_get_head
+ 621              	.LVL51:
+ 225:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 622              		.loc 1 225 21 discriminator 1 view .LVU170
+ 623 004c FFF7FEFF 		bl	lv_disp_set_default
+ 624              	.LVL52:
+ 226:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 625              		.loc 1 226 1 discriminator 1 view .LVU171
+ARM GAS  /tmp/ccwADuP0.s 			page 35
+
+
+ 626 0050 F8E7     		b	.L26
+ 627              	.L37:
+ 628 0052 00BF     		.align	2
+ 629              	.L36:
+ 630 0054 00000000 		.word	_lv_disp_ll
+ 631              		.cfi_endproc
+ 632              	.LFE151:
+ 634              		.section	.text.lv_disp_get_hor_res,"ax",%progbits
+ 635              		.align	1
+ 636              		.global	lv_disp_get_hor_res
+ 637              		.syntax unified
+ 638              		.thumb
+ 639              		.thumb_func
+ 640              		.fpu fpv4-sp-d16
+ 642              	lv_disp_get_hor_res:
+ 643              	.LVL53:
+ 644              	.LFB154:
+ 252:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 645              		.loc 1 252 1 is_stmt 1 view -0
+ 646              		.cfi_startproc
+ 647              		@ args = 0, pretend = 0, frame = 0
+ 648              		@ frame_needed = 0, uses_anonymous_args = 0
+ 252:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 649              		.loc 1 252 1 is_stmt 0 view .LVU173
+ 650 0000 08B5     		push	{r3, lr}
+ 651              	.LCFI8:
+ 652              		.cfi_def_cfa_offset 8
+ 653              		.cfi_offset 3, -8
+ 654              		.cfi_offset 14, -4
+ 253:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 655              		.loc 1 253 5 is_stmt 1 view .LVU174
+ 253:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 656              		.loc 1 253 7 is_stmt 0 view .LVU175
+ 657 0002 0346     		mov	r3, r0
+ 658 0004 58B1     		cbz	r0, .L45
+ 659              	.L39:
+ 255:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return 0;
+ 660              		.loc 1 255 5 is_stmt 1 view .LVU176
+ 255:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return 0;
+ 661              		.loc 1 255 7 is_stmt 0 view .LVU177
+ 662 0006 8BB1     		cbz	r3, .L43
+ 258:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             case LV_DISP_ROT_90:
+ 663              		.loc 1 258 9 is_stmt 1 view .LVU178
+ 258:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             case LV_DISP_ROT_90:
+ 664              		.loc 1 258 20 is_stmt 0 view .LVU179
+ 665 0008 1A68     		ldr	r2, [r3]
+ 258:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             case LV_DISP_ROT_90:
+ 666              		.loc 1 258 28 view .LVU180
+ 667 000a 137A     		ldrb	r3, [r2, #8]	@ zero_extendqisi2
+ 668 000c C3F3C103 		ubfx	r3, r3, #3, #2
+ 258:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             case LV_DISP_ROT_90:
+ 669              		.loc 1 258 9 view .LVU181
+ 670 0010 012B     		cmp	r3, #1
+ 671 0012 08D0     		beq	.L41
+ 672 0014 032B     		cmp	r3, #3
+ 673 0016 06D0     		beq	.L41
+ 263:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         }
+ARM GAS  /tmp/ccwADuP0.s 			page 36
+
+
+ 674              		.loc 1 263 17 is_stmt 1 view .LVU182
+ 263:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         }
+ 675              		.loc 1 263 36 is_stmt 0 view .LVU183
+ 676 0018 B2F90000 		ldrsh	r0, [r2]
+ 677              	.LVL54:
+ 263:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         }
+ 678              		.loc 1 263 36 view .LVU184
+ 679 001c 05E0     		b	.L40
+ 680              	.LVL55:
+ 681              	.L45:
+ 253:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 682              		.loc 1 253 22 is_stmt 1 discriminator 1 view .LVU185
+ 253:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 683              		.loc 1 253 29 is_stmt 0 discriminator 1 view .LVU186
+ 684 001e FFF7FEFF 		bl	lv_disp_get_default
+ 685              	.LVL56:
+ 253:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 686              		.loc 1 253 29 discriminator 1 view .LVU187
+ 687 0022 0346     		mov	r3, r0
+ 688              	.LVL57:
+ 253:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 689              		.loc 1 253 29 discriminator 1 view .LVU188
+ 690 0024 EFE7     		b	.L39
+ 691              	.L41:
+ 261:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             default:
+ 692              		.loc 1 261 17 is_stmt 1 view .LVU189
+ 261:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             default:
+ 693              		.loc 1 261 36 is_stmt 0 view .LVU190
+ 694 0026 B2F90200 		ldrsh	r0, [r2, #2]
+ 695              	.LVL58:
+ 696              	.L40:
+ 266:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 697              		.loc 1 266 1 view .LVU191
+ 698 002a 08BD     		pop	{r3, pc}
+ 699              	.LVL59:
+ 700              	.L43:
+ 256:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     } else {
+ 701              		.loc 1 256 16 view .LVU192
+ 702 002c 0020     		movs	r0, #0
+ 703              	.LVL60:
+ 256:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     } else {
+ 704              		.loc 1 256 16 view .LVU193
+ 705 002e FCE7     		b	.L40
+ 706              		.cfi_endproc
+ 707              	.LFE154:
+ 709              		.section	.text.lv_disp_get_ver_res,"ax",%progbits
+ 710              		.align	1
+ 711              		.global	lv_disp_get_ver_res
+ 712              		.syntax unified
+ 713              		.thumb
+ 714              		.thumb_func
+ 715              		.fpu fpv4-sp-d16
+ 717              	lv_disp_get_ver_res:
+ 718              	.LVL61:
+ 719              	.LFB155:
+ 274:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 720              		.loc 1 274 1 is_stmt 1 view -0
+ARM GAS  /tmp/ccwADuP0.s 			page 37
+
+
+ 721              		.cfi_startproc
+ 722              		@ args = 0, pretend = 0, frame = 0
+ 723              		@ frame_needed = 0, uses_anonymous_args = 0
+ 274:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 724              		.loc 1 274 1 is_stmt 0 view .LVU195
+ 725 0000 08B5     		push	{r3, lr}
+ 726              	.LCFI9:
+ 727              		.cfi_def_cfa_offset 8
+ 728              		.cfi_offset 3, -8
+ 729              		.cfi_offset 14, -4
+ 275:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 730              		.loc 1 275 5 is_stmt 1 view .LVU196
+ 275:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 731              		.loc 1 275 7 is_stmt 0 view .LVU197
+ 732 0002 0346     		mov	r3, r0
+ 733 0004 58B1     		cbz	r0, .L53
+ 734              	.L47:
+ 277:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return 0;
+ 735              		.loc 1 277 5 is_stmt 1 view .LVU198
+ 277:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return 0;
+ 736              		.loc 1 277 7 is_stmt 0 view .LVU199
+ 737 0006 8BB1     		cbz	r3, .L51
+ 280:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             case LV_DISP_ROT_90:
+ 738              		.loc 1 280 9 is_stmt 1 view .LVU200
+ 280:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             case LV_DISP_ROT_90:
+ 739              		.loc 1 280 20 is_stmt 0 view .LVU201
+ 740 0008 1A68     		ldr	r2, [r3]
+ 280:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             case LV_DISP_ROT_90:
+ 741              		.loc 1 280 28 view .LVU202
+ 742 000a 137A     		ldrb	r3, [r2, #8]	@ zero_extendqisi2
+ 743 000c C3F3C103 		ubfx	r3, r3, #3, #2
+ 280:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             case LV_DISP_ROT_90:
+ 744              		.loc 1 280 9 view .LVU203
+ 745 0010 012B     		cmp	r3, #1
+ 746 0012 08D0     		beq	.L49
+ 747 0014 032B     		cmp	r3, #3
+ 748 0016 06D0     		beq	.L49
+ 285:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         }
+ 749              		.loc 1 285 17 is_stmt 1 view .LVU204
+ 285:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         }
+ 750              		.loc 1 285 36 is_stmt 0 view .LVU205
+ 751 0018 B2F90200 		ldrsh	r0, [r2, #2]
+ 752              	.LVL62:
+ 285:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         }
+ 753              		.loc 1 285 36 view .LVU206
+ 754 001c 05E0     		b	.L48
+ 755              	.LVL63:
+ 756              	.L53:
+ 275:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 757              		.loc 1 275 22 is_stmt 1 discriminator 1 view .LVU207
+ 275:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 758              		.loc 1 275 29 is_stmt 0 discriminator 1 view .LVU208
+ 759 001e FFF7FEFF 		bl	lv_disp_get_default
+ 760              	.LVL64:
+ 275:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 761              		.loc 1 275 29 discriminator 1 view .LVU209
+ 762 0022 0346     		mov	r3, r0
+ARM GAS  /tmp/ccwADuP0.s 			page 38
+
+
+ 763              	.LVL65:
+ 275:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 764              		.loc 1 275 29 discriminator 1 view .LVU210
+ 765 0024 EFE7     		b	.L47
+ 766              	.L49:
+ 283:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             default:
+ 767              		.loc 1 283 17 is_stmt 1 view .LVU211
+ 283:Middlewares/lvgl/src/hal/lv_hal_disp.c ****             default:
+ 768              		.loc 1 283 36 is_stmt 0 view .LVU212
+ 769 0026 B2F90000 		ldrsh	r0, [r2]
+ 770              	.LVL66:
+ 771              	.L48:
+ 288:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 772              		.loc 1 288 1 view .LVU213
+ 773 002a 08BD     		pop	{r3, pc}
+ 774              	.LVL67:
+ 775              	.L51:
+ 278:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     } else {
+ 776              		.loc 1 278 16 view .LVU214
+ 777 002c 0020     		movs	r0, #0
+ 778              	.LVL68:
+ 278:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     } else {
+ 779              		.loc 1 278 16 view .LVU215
+ 780 002e FCE7     		b	.L48
+ 781              		.cfi_endproc
+ 782              	.LFE155:
+ 784              		.section	.text.lv_disp_drv_update,"ax",%progbits
+ 785              		.align	1
+ 786              		.global	lv_disp_drv_update
+ 787              		.syntax unified
+ 788              		.thumb
+ 789              		.thumb_func
+ 790              		.fpu fpv4-sp-d16
+ 792              	lv_disp_drv_update:
+ 793              	.LVL69:
+ 794              	.LFB150:
+ 167:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->driver = new_drv;
+ 795              		.loc 1 167 1 is_stmt 1 view -0
+ 796              		.cfi_startproc
+ 797              		@ args = 0, pretend = 0, frame = 8
+ 798              		@ frame_needed = 0, uses_anonymous_args = 0
+ 167:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->driver = new_drv;
+ 799              		.loc 1 167 1 is_stmt 0 view .LVU217
+ 800 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 801              	.LCFI10:
+ 802              		.cfi_def_cfa_offset 20
+ 803              		.cfi_offset 4, -20
+ 804              		.cfi_offset 5, -16
+ 805              		.cfi_offset 6, -12
+ 806              		.cfi_offset 7, -8
+ 807              		.cfi_offset 14, -4
+ 808 0002 83B0     		sub	sp, sp, #12
+ 809              	.LCFI11:
+ 810              		.cfi_def_cfa_offset 32
+ 811 0004 0546     		mov	r5, r0
+ 168:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 812              		.loc 1 168 5 is_stmt 1 view .LVU218
+ARM GAS  /tmp/ccwADuP0.s 			page 39
+
+
+ 168:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 813              		.loc 1 168 18 is_stmt 0 view .LVU219
+ 814 0006 0160     		str	r1, [r0]
+ 170:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         disp->driver->full_refresh = 0;
+ 815              		.loc 1 170 5 is_stmt 1 view .LVU220
+ 170:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         disp->driver->full_refresh = 0;
+ 816              		.loc 1 170 8 is_stmt 0 view .LVU221
+ 817 0008 0B7A     		ldrb	r3, [r1, #8]	@ zero_extendqisi2
+ 170:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         disp->driver->full_refresh = 0;
+ 818              		.loc 1 170 7 view .LVU222
+ 819 000a 13F0010F 		tst	r3, #1
+ 820 000e 0DD0     		beq	.L55
+ 170:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         disp->driver->full_refresh = 0;
+ 821              		.loc 1 170 50 discriminator 1 view .LVU223
+ 822 0010 4B68     		ldr	r3, [r1, #4]
+ 170:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         disp->driver->full_refresh = 0;
+ 823              		.loc 1 170 60 discriminator 1 view .LVU224
+ 824 0012 DA68     		ldr	r2, [r3, #12]
+ 170:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         disp->driver->full_refresh = 0;
+ 825              		.loc 1 170 91 discriminator 1 view .LVU225
+ 826 0014 B1F90030 		ldrsh	r3, [r1]
+ 170:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         disp->driver->full_refresh = 0;
+ 827              		.loc 1 170 115 discriminator 1 view .LVU226
+ 828 0018 B1F90200 		ldrsh	r0, [r1, #2]
+ 829              	.LVL70:
+ 170:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         disp->driver->full_refresh = 0;
+ 830              		.loc 1 170 101 discriminator 1 view .LVU227
+ 831 001c 00FB03F3 		mul	r3, r0, r3
+ 170:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         disp->driver->full_refresh = 0;
+ 832              		.loc 1 170 35 discriminator 1 view .LVU228
+ 833 0020 9A42     		cmp	r2, r3
+ 834 0022 03D2     		bcs	.L55
+ 171:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         LV_LOG_WARN("full_refresh requires at least screen sized draw buffer(s)")
+ 835              		.loc 1 171 9 is_stmt 1 view .LVU229
+ 171:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         LV_LOG_WARN("full_refresh requires at least screen sized draw buffer(s)")
+ 836              		.loc 1 171 36 is_stmt 0 view .LVU230
+ 837 0024 0B7A     		ldrb	r3, [r1, #8]	@ zero_extendqisi2
+ 838 0026 6FF30003 		bfc	r3, #0, #1
+ 839 002a 0B72     		strb	r3, [r1, #8]
+ 840              	.L55:
+ 175:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_coord_t h = lv_disp_get_ver_res(disp);
+ 841              		.loc 1 175 5 is_stmt 1 view .LVU231
+ 175:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_coord_t h = lv_disp_get_ver_res(disp);
+ 842              		.loc 1 175 20 is_stmt 0 view .LVU232
+ 843 002c 2846     		mov	r0, r5
+ 844 002e FFF7FEFF 		bl	lv_disp_get_hor_res
+ 845              	.LVL71:
+ 175:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_coord_t h = lv_disp_get_ver_res(disp);
+ 846              		.loc 1 175 20 view .LVU233
+ 847 0032 0746     		mov	r7, r0
+ 848              	.LVL72:
+ 176:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     uint32_t i;
+ 849              		.loc 1 176 5 is_stmt 1 view .LVU234
+ 176:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     uint32_t i;
+ 850              		.loc 1 176 20 is_stmt 0 view .LVU235
+ 851 0034 2846     		mov	r0, r5
+ 852 0036 FFF7FEFF 		bl	lv_disp_get_ver_res
+ARM GAS  /tmp/ccwADuP0.s 			page 40
+
+
+ 853              	.LVL73:
+ 854 003a 0646     		mov	r6, r0
+ 855              	.LVL74:
+ 177:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     for(i = 0; i < disp->screen_cnt; i++) {
+ 856              		.loc 1 177 5 is_stmt 1 view .LVU236
+ 178:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_t prev_coords;
+ 857              		.loc 1 178 5 view .LVU237
+ 178:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_t prev_coords;
+ 858              		.loc 1 178 11 is_stmt 0 view .LVU238
+ 859 003c 0024     		movs	r4, #0
+ 178:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_t prev_coords;
+ 860              		.loc 1 178 5 view .LVU239
+ 861 003e 1BE0     		b	.L56
+ 862              	.LVL75:
+ 863              	.L57:
+ 864              	.LBB30:
+ 179:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_obj_get_coords(disp->screens[i], &prev_coords);
+ 865              		.loc 1 179 9 is_stmt 1 discriminator 3 view .LVU240
+ 180:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_set_width(&disp->screens[i]->coords, w);
+ 866              		.loc 1 180 9 discriminator 3 view .LVU241
+ 180:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_set_width(&disp->screens[i]->coords, w);
+ 867              		.loc 1 180 31 is_stmt 0 discriminator 3 view .LVU242
+ 868 0040 EB68     		ldr	r3, [r5, #12]
+ 180:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_set_width(&disp->screens[i]->coords, w);
+ 869              		.loc 1 180 9 discriminator 3 view .LVU243
+ 870 0042 6946     		mov	r1, sp
+ 871 0044 53F82400 		ldr	r0, [r3, r4, lsl #2]
+ 872 0048 FFF7FEFF 		bl	lv_obj_get_coords
+ 873              	.LVL76:
+ 181:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_set_height(&disp->screens[i]->coords, h);
+ 874              		.loc 1 181 9 is_stmt 1 discriminator 3 view .LVU244
+ 181:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_set_height(&disp->screens[i]->coords, h);
+ 875              		.loc 1 181 32 is_stmt 0 discriminator 3 view .LVU245
+ 876 004c EB68     		ldr	r3, [r5, #12]
+ 181:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_set_height(&disp->screens[i]->coords, h);
+ 877              		.loc 1 181 41 discriminator 3 view .LVU246
+ 878 004e 53F82400 		ldr	r0, [r3, r4, lsl #2]
+ 181:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_set_height(&disp->screens[i]->coords, h);
+ 879              		.loc 1 181 9 discriminator 3 view .LVU247
+ 880 0052 3946     		mov	r1, r7
+ 881 0054 1430     		adds	r0, r0, #20
+ 882 0056 FFF7FEFF 		bl	lv_area_set_width
+ 883              	.LVL77:
+ 182:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_event_send(disp->screens[i], LV_EVENT_SIZE_CHANGED, &prev_coords);
+ 884              		.loc 1 182 9 is_stmt 1 discriminator 3 view .LVU248
+ 182:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_event_send(disp->screens[i], LV_EVENT_SIZE_CHANGED, &prev_coords);
+ 885              		.loc 1 182 33 is_stmt 0 discriminator 3 view .LVU249
+ 886 005a EB68     		ldr	r3, [r5, #12]
+ 182:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_event_send(disp->screens[i], LV_EVENT_SIZE_CHANGED, &prev_coords);
+ 887              		.loc 1 182 42 discriminator 3 view .LVU250
+ 888 005c 53F82400 		ldr	r0, [r3, r4, lsl #2]
+ 182:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_event_send(disp->screens[i], LV_EVENT_SIZE_CHANGED, &prev_coords);
+ 889              		.loc 1 182 9 discriminator 3 view .LVU251
+ 890 0060 3146     		mov	r1, r6
+ 891 0062 1430     		adds	r0, r0, #20
+ 892 0064 FFF7FEFF 		bl	lv_area_set_height
+ 893              	.LVL78:
+ARM GAS  /tmp/ccwADuP0.s 			page 41
+
+
+ 183:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 894              		.loc 1 183 9 is_stmt 1 discriminator 3 view .LVU252
+ 183:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 895              		.loc 1 183 27 is_stmt 0 discriminator 3 view .LVU253
+ 896 0068 EB68     		ldr	r3, [r5, #12]
+ 183:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     }
+ 897              		.loc 1 183 9 discriminator 3 view .LVU254
+ 898 006a 6A46     		mov	r2, sp
+ 899 006c 2321     		movs	r1, #35
+ 900 006e 53F82400 		ldr	r0, [r3, r4, lsl #2]
+ 901 0072 FFF7FEFF 		bl	lv_event_send
+ 902              	.LVL79:
+ 903              	.LBE30:
+ 178:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_t prev_coords;
+ 904              		.loc 1 178 38 is_stmt 1 discriminator 3 view .LVU255
+ 178:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_t prev_coords;
+ 905              		.loc 1 178 39 is_stmt 0 discriminator 3 view .LVU256
+ 906 0076 0134     		adds	r4, r4, #1
+ 907              	.LVL80:
+ 908              	.L56:
+ 178:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_t prev_coords;
+ 909              		.loc 1 178 16 is_stmt 1 discriminator 1 view .LVU257
+ 178:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_t prev_coords;
+ 910              		.loc 1 178 24 is_stmt 0 discriminator 1 view .LVU258
+ 911 0078 6B6A     		ldr	r3, [r5, #36]
+ 178:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         lv_area_t prev_coords;
+ 912              		.loc 1 178 5 discriminator 1 view .LVU259
+ 913 007a A342     		cmp	r3, r4
+ 914 007c E0D8     		bhi	.L57
+ 192:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_memset_00(disp->inv_area_joined, sizeof(disp->inv_area_joined));
+ 915              		.loc 1 192 5 is_stmt 1 view .LVU260
+ 916 007e 4FF48071 		mov	r1, #256
+ 917 0082 05F13000 		add	r0, r5, #48
+ 918 0086 FFF7FEFF 		bl	lv_memset_00
+ 919              	.LVL81:
+ 193:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp->inv_p = 0;
+ 920              		.loc 1 193 5 view .LVU261
+ 921 008a 2021     		movs	r1, #32
+ 922 008c 05F59870 		add	r0, r5, #304
+ 923 0090 FFF7FEFF 		bl	lv_memset_00
+ 924              	.LVL82:
+ 194:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp->act_scr != NULL) lv_obj_invalidate(disp->act_scr);
+ 925              		.loc 1 194 5 view .LVU262
+ 194:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp->act_scr != NULL) lv_obj_invalidate(disp->act_scr);
+ 926              		.loc 1 194 17 is_stmt 0 view .LVU263
+ 927 0094 0023     		movs	r3, #0
+ 928 0096 A5F85031 		strh	r3, [r5, #336]	@ movhi
+ 195:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 929              		.loc 1 195 5 is_stmt 1 view .LVU264
+ 195:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 930              		.loc 1 195 12 is_stmt 0 view .LVU265
+ 931 009a 2869     		ldr	r0, [r5, #16]
+ 195:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 932              		.loc 1 195 7 view .LVU266
+ 933 009c 08B1     		cbz	r0, .L58
+ 195:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 934              		.loc 1 195 31 is_stmt 1 discriminator 1 view .LVU267
+ARM GAS  /tmp/ccwADuP0.s 			page 42
+
+
+ 935 009e FFF7FEFF 		bl	lv_obj_invalidate
+ 936              	.LVL83:
+ 937              	.L58:
+ 197:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 938              		.loc 1 197 5 view .LVU268
+ 939 00a2 0022     		movs	r2, #0
+ 940 00a4 0449     		ldr	r1, .L61
+ 941 00a6 1046     		mov	r0, r2
+ 942 00a8 FFF7FEFF 		bl	lv_obj_tree_walk
+ 943              	.LVL84:
+ 199:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 944              		.loc 1 199 5 view .LVU269
+ 199:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 945              		.loc 1 199 12 is_stmt 0 view .LVU270
+ 946 00ac 2868     		ldr	r0, [r5]
+ 199:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 947              		.loc 1 199 20 view .LVU271
+ 948 00ae 836A     		ldr	r3, [r0, #40]
+ 199:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 949              		.loc 1 199 7 view .LVU272
+ 950 00b0 03B1     		cbz	r3, .L54
+ 199:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 951              		.loc 1 199 37 is_stmt 1 discriminator 1 view .LVU273
+ 952 00b2 9847     		blx	r3
+ 953              	.LVL85:
+ 954              	.L54:
+ 200:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 955              		.loc 1 200 1 is_stmt 0 view .LVU274
+ 956 00b4 03B0     		add	sp, sp, #12
+ 957              	.LCFI12:
+ 958              		.cfi_def_cfa_offset 20
+ 959              		@ sp needed
+ 960 00b6 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 961              	.LVL86:
+ 962              	.L62:
+ 200:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 963              		.loc 1 200 1 view .LVU275
+ 964              		.align	2
+ 965              	.L61:
+ 966 00b8 00000000 		.word	invalidate_layout_cb
+ 967              		.cfi_endproc
+ 968              	.LFE150:
+ 970              		.section	.text.lv_disp_get_antialiasing,"ax",%progbits
+ 971              		.align	1
+ 972              		.global	lv_disp_get_antialiasing
+ 973              		.syntax unified
+ 974              		.thumb
+ 975              		.thumb_func
+ 976              		.fpu fpv4-sp-d16
+ 978              	lv_disp_get_antialiasing:
+ 979              	.LVL87:
+ 980              	.LFB156:
+ 296:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 981              		.loc 1 296 1 is_stmt 1 view -0
+ 982              		.cfi_startproc
+ 983              		@ args = 0, pretend = 0, frame = 0
+ 984              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  /tmp/ccwADuP0.s 			page 43
+
+
+ 296:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 985              		.loc 1 296 1 is_stmt 0 view .LVU277
+ 986 0000 08B5     		push	{r3, lr}
+ 987              	.LCFI13:
+ 988              		.cfi_def_cfa_offset 8
+ 989              		.cfi_offset 3, -8
+ 990              		.cfi_offset 14, -4
+ 297:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return false;
+ 991              		.loc 1 297 5 is_stmt 1 view .LVU278
+ 297:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return false;
+ 992              		.loc 1 297 7 is_stmt 0 view .LVU279
+ 993 0002 0346     		mov	r3, r0
+ 994 0004 28B1     		cbz	r0, .L68
+ 995              	.L64:
+ 298:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 996              		.loc 1 298 5 is_stmt 1 view .LVU280
+ 298:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 997              		.loc 1 298 7 is_stmt 0 view .LVU281
+ 998 0006 43B1     		cbz	r3, .L66
+ 300:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 999              		.loc 1 300 5 is_stmt 1 view .LVU282
+ 300:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1000              		.loc 1 300 16 is_stmt 0 view .LVU283
+ 1001 0008 1B68     		ldr	r3, [r3]
+ 300:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1002              		.loc 1 300 39 view .LVU284
+ 1003 000a 187A     		ldrb	r0, [r3, #8]	@ zero_extendqisi2
+ 1004              	.LVL88:
+ 300:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1005              		.loc 1 300 46 view .LVU285
+ 1006 000c C0F38000 		ubfx	r0, r0, #2, #1
+ 1007              	.L65:
+ 301:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 1008              		.loc 1 301 1 view .LVU286
+ 1009 0010 08BD     		pop	{r3, pc}
+ 1010              	.LVL89:
+ 1011              	.L68:
+ 297:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return false;
+ 1012              		.loc 1 297 22 is_stmt 1 discriminator 1 view .LVU287
+ 297:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return false;
+ 1013              		.loc 1 297 29 is_stmt 0 discriminator 1 view .LVU288
+ 1014 0012 FFF7FEFF 		bl	lv_disp_get_default
+ 1015              	.LVL90:
+ 297:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return false;
+ 1016              		.loc 1 297 29 discriminator 1 view .LVU289
+ 1017 0016 0346     		mov	r3, r0
+ 1018              	.LVL91:
+ 297:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return false;
+ 1019              		.loc 1 297 29 discriminator 1 view .LVU290
+ 1020 0018 F5E7     		b	.L64
+ 1021              	.L66:
+ 298:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 1022              		.loc 1 298 29 view .LVU291
+ 1023 001a 0020     		movs	r0, #0
+ 1024              	.LVL92:
+ 298:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 1025              		.loc 1 298 29 view .LVU292
+ARM GAS  /tmp/ccwADuP0.s 			page 44
+
+
+ 1026 001c F8E7     		b	.L65
+ 1027              		.cfi_endproc
+ 1028              	.LFE156:
+ 1030              		.section	.text.lv_disp_get_dpi,"ax",%progbits
+ 1031              		.align	1
+ 1032              		.global	lv_disp_get_dpi
+ 1033              		.syntax unified
+ 1034              		.thumb
+ 1035              		.thumb_func
+ 1036              		.fpu fpv4-sp-d16
+ 1038              	lv_disp_get_dpi:
+ 1039              	.LVL93:
+ 1040              	.LFB157:
+ 309:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 1041              		.loc 1 309 1 is_stmt 1 view -0
+ 1042              		.cfi_startproc
+ 1043              		@ args = 0, pretend = 0, frame = 0
+ 1044              		@ frame_needed = 0, uses_anonymous_args = 0
+ 309:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 1045              		.loc 1 309 1 is_stmt 0 view .LVU294
+ 1046 0000 08B5     		push	{r3, lr}
+ 1047              	.LCFI14:
+ 1048              		.cfi_def_cfa_offset 8
+ 1049              		.cfi_offset 3, -8
+ 1050              		.cfi_offset 14, -4
+ 310:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return LV_DPI_DEF;  /*Do not return 0 because it might be a divider*/
+ 1051              		.loc 1 310 5 is_stmt 1 view .LVU295
+ 310:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return LV_DPI_DEF;  /*Do not return 0 because it might be a divider*/
+ 1052              		.loc 1 310 7 is_stmt 0 view .LVU296
+ 1053 0002 0346     		mov	r3, r0
+ 1054 0004 28B1     		cbz	r0, .L74
+ 1055              	.L70:
+ 311:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp->driver->dpi;
+ 1056              		.loc 1 311 5 is_stmt 1 view .LVU297
+ 311:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp->driver->dpi;
+ 1057              		.loc 1 311 7 is_stmt 0 view .LVU298
+ 1058 0006 43B1     		cbz	r3, .L72
+ 312:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1059              		.loc 1 312 5 is_stmt 1 view .LVU299
+ 312:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1060              		.loc 1 312 16 is_stmt 0 view .LVU300
+ 1061 0008 1B68     		ldr	r3, [r3]
+ 312:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1062              		.loc 1 312 24 view .LVU301
+ 1063 000a 1889     		ldrh	r0, [r3, #8]
+ 1064              	.LVL94:
+ 312:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1065              		.loc 1 312 24 view .LVU302
+ 1066 000c C0F38910 		ubfx	r0, r0, #6, #10
+ 1067              	.L71:
+ 313:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 1068              		.loc 1 313 1 view .LVU303
+ 1069 0010 08BD     		pop	{r3, pc}
+ 1070              	.LVL95:
+ 1071              	.L74:
+ 310:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return LV_DPI_DEF;  /*Do not return 0 because it might be a divider*/
+ 1072              		.loc 1 310 22 is_stmt 1 discriminator 1 view .LVU304
+ARM GAS  /tmp/ccwADuP0.s 			page 45
+
+
+ 310:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return LV_DPI_DEF;  /*Do not return 0 because it might be a divider*/
+ 1073              		.loc 1 310 29 is_stmt 0 discriminator 1 view .LVU305
+ 1074 0012 FFF7FEFF 		bl	lv_disp_get_default
+ 1075              	.LVL96:
+ 310:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return LV_DPI_DEF;  /*Do not return 0 because it might be a divider*/
+ 1076              		.loc 1 310 29 discriminator 1 view .LVU306
+ 1077 0016 0346     		mov	r3, r0
+ 1078              	.LVL97:
+ 310:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return LV_DPI_DEF;  /*Do not return 0 because it might be a divider*/
+ 1079              		.loc 1 310 29 discriminator 1 view .LVU307
+ 1080 0018 F5E7     		b	.L70
+ 1081              	.L72:
+ 311:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp->driver->dpi;
+ 1082              		.loc 1 311 29 view .LVU308
+ 1083 001a 8220     		movs	r0, #130
+ 1084              	.LVL98:
+ 311:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp->driver->dpi;
+ 1085              		.loc 1 311 29 view .LVU309
+ 1086 001c F8E7     		b	.L71
+ 1087              		.cfi_endproc
+ 1088              	.LFE157:
+ 1090              		.section	.text.lv_disp_flush_ready,"ax",%progbits
+ 1091              		.align	1
+ 1092              		.global	lv_disp_flush_ready
+ 1093              		.syntax unified
+ 1094              		.thumb
+ 1095              		.thumb_func
+ 1096              		.fpu fpv4-sp-d16
+ 1098              	lv_disp_flush_ready:
+ 1099              	.LVL99:
+ 1100              	.LFB158:
+ 320:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     /*If the screen is transparent initialize it when the flushing is ready*/
+ 1101              		.loc 1 320 1 is_stmt 1 view -0
+ 1102              		.cfi_startproc
+ 1103              		@ args = 0, pretend = 0, frame = 0
+ 1104              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1105              		@ link register save eliminated.
+ 328:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp_drv->draw_buf->flushing_last = 0;
+ 1106              		.loc 1 328 5 view .LVU311
+ 328:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp_drv->draw_buf->flushing_last = 0;
+ 1107              		.loc 1 328 13 is_stmt 0 view .LVU312
+ 1108 0000 4268     		ldr	r2, [r0, #4]
+ 328:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     disp_drv->draw_buf->flushing_last = 0;
+ 1109              		.loc 1 328 34 view .LVU313
+ 1110 0002 0023     		movs	r3, #0
+ 1111 0004 9361     		str	r3, [r2, #24]
+ 329:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1112              		.loc 1 329 5 is_stmt 1 view .LVU314
+ 329:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1113              		.loc 1 329 13 is_stmt 0 view .LVU315
+ 1114 0006 4268     		ldr	r2, [r0, #4]
+ 329:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1115              		.loc 1 329 39 view .LVU316
+ 1116 0008 D361     		str	r3, [r2, #28]
+ 330:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 1117              		.loc 1 330 1 view .LVU317
+ 1118 000a 7047     		bx	lr
+ARM GAS  /tmp/ccwADuP0.s 			page 46
+
+
+ 1119              		.cfi_endproc
+ 1120              	.LFE158:
+ 1122              		.section	.text.lv_disp_flush_is_last,"ax",%progbits
+ 1123              		.align	1
+ 1124              		.global	lv_disp_flush_is_last
+ 1125              		.syntax unified
+ 1126              		.thumb
+ 1127              		.thumb_func
+ 1128              		.fpu fpv4-sp-d16
+ 1130              	lv_disp_flush_is_last:
+ 1131              	.LVL100:
+ 1132              	.LFB159:
+ 339:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp_drv->draw_buf->flushing_last;
+ 1133              		.loc 1 339 1 is_stmt 1 view -0
+ 1134              		.cfi_startproc
+ 1135              		@ args = 0, pretend = 0, frame = 0
+ 1136              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1137              		@ link register save eliminated.
+ 340:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1138              		.loc 1 340 5 view .LVU319
+ 340:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1139              		.loc 1 340 20 is_stmt 0 view .LVU320
+ 1140 0000 4368     		ldr	r3, [r0, #4]
+ 340:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1141              		.loc 1 340 30 view .LVU321
+ 1142 0002 D869     		ldr	r0, [r3, #28]
+ 1143              	.LVL101:
+ 341:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 1144              		.loc 1 341 1 view .LVU322
+ 1145 0004 0038     		subs	r0, r0, #0
+ 1146 0006 18BF     		it	ne
+ 1147 0008 0120     		movne	r0, #1
+ 1148 000a 7047     		bx	lr
+ 1149              		.cfi_endproc
+ 1150              	.LFE159:
+ 1152              		.section	.text.lv_disp_get_next,"ax",%progbits
+ 1153              		.align	1
+ 1154              		.global	lv_disp_get_next
+ 1155              		.syntax unified
+ 1156              		.thumb
+ 1157              		.thumb_func
+ 1158              		.fpu fpv4-sp-d16
+ 1160              	lv_disp_get_next:
+ 1161              	.LVL102:
+ 1162              	.LFB160:
+ 349:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL)
+ 1163              		.loc 1 349 1 is_stmt 1 view -0
+ 1164              		.cfi_startproc
+ 1165              		@ args = 0, pretend = 0, frame = 0
+ 1166              		@ frame_needed = 0, uses_anonymous_args = 0
+ 349:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL)
+ 1167              		.loc 1 349 1 is_stmt 0 view .LVU324
+ 1168 0000 08B5     		push	{r3, lr}
+ 1169              	.LCFI15:
+ 1170              		.cfi_def_cfa_offset 8
+ 1171              		.cfi_offset 3, -8
+ 1172              		.cfi_offset 14, -4
+ARM GAS  /tmp/ccwADuP0.s 			page 47
+
+
+ 350:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return _lv_ll_get_head(&LV_GC_ROOT(_lv_disp_ll));
+ 1173              		.loc 1 350 5 is_stmt 1 view .LVU325
+ 350:Middlewares/lvgl/src/hal/lv_hal_disp.c ****         return _lv_ll_get_head(&LV_GC_ROOT(_lv_disp_ll));
+ 1174              		.loc 1 350 7 is_stmt 0 view .LVU326
+ 1175 0002 20B1     		cbz	r0, .L81
+ 1176 0004 0146     		mov	r1, r0
+ 353:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1177              		.loc 1 353 9 is_stmt 1 view .LVU327
+ 353:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1178              		.loc 1 353 16 is_stmt 0 view .LVU328
+ 1179 0006 0448     		ldr	r0, .L82
+ 1180              	.LVL103:
+ 353:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1181              		.loc 1 353 16 view .LVU329
+ 1182 0008 FFF7FEFF 		bl	_lv_ll_get_next
+ 1183              	.LVL104:
+ 1184              	.L77:
+ 354:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 1185              		.loc 1 354 1 view .LVU330
+ 1186 000c 08BD     		pop	{r3, pc}
+ 1187              	.LVL105:
+ 1188              	.L81:
+ 351:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     else
+ 1189              		.loc 1 351 9 is_stmt 1 view .LVU331
+ 351:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     else
+ 1190              		.loc 1 351 16 is_stmt 0 view .LVU332
+ 1191 000e 0248     		ldr	r0, .L82
+ 1192              	.LVL106:
+ 351:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     else
+ 1193              		.loc 1 351 16 view .LVU333
+ 1194 0010 FFF7FEFF 		bl	_lv_ll_get_head
+ 1195              	.LVL107:
+ 1196 0014 FAE7     		b	.L77
+ 1197              	.L83:
+ 1198 0016 00BF     		.align	2
+ 1199              	.L82:
+ 1200 0018 00000000 		.word	_lv_disp_ll
+ 1201              		.cfi_endproc
+ 1202              	.LFE160:
+ 1204              		.section	.text.lv_disp_get_draw_buf,"ax",%progbits
+ 1205              		.align	1
+ 1206              		.global	lv_disp_get_draw_buf
+ 1207              		.syntax unified
+ 1208              		.thumb
+ 1209              		.thumb_func
+ 1210              		.fpu fpv4-sp-d16
+ 1212              	lv_disp_get_draw_buf:
+ 1213              	.LVL108:
+ 1214              	.LFB161:
+ 362:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp->driver->draw_buf;
+ 1215              		.loc 1 362 1 is_stmt 1 view -0
+ 1216              		.cfi_startproc
+ 1217              		@ args = 0, pretend = 0, frame = 0
+ 1218              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1219              		@ link register save eliminated.
+ 363:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1220              		.loc 1 363 5 view .LVU335
+ARM GAS  /tmp/ccwADuP0.s 			page 48
+
+
+ 363:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1221              		.loc 1 363 16 is_stmt 0 view .LVU336
+ 1222 0000 0368     		ldr	r3, [r0]
+ 364:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 1223              		.loc 1 364 1 view .LVU337
+ 1224 0002 5868     		ldr	r0, [r3, #4]
+ 1225              	.LVL109:
+ 364:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 1226              		.loc 1 364 1 view .LVU338
+ 1227 0004 7047     		bx	lr
+ 1228              		.cfi_endproc
+ 1229              	.LFE161:
+ 1231              		.section	.text.lv_disp_set_rotation,"ax",%progbits
+ 1232              		.align	1
+ 1233              		.global	lv_disp_set_rotation
+ 1234              		.syntax unified
+ 1235              		.thumb
+ 1236              		.thumb_func
+ 1237              		.fpu fpv4-sp-d16
+ 1239              	lv_disp_set_rotation:
+ 1240              	.LVL110:
+ 1241              	.LFB162:
+ 372:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 1242              		.loc 1 372 1 is_stmt 1 view -0
+ 1243              		.cfi_startproc
+ 1244              		@ args = 0, pretend = 0, frame = 0
+ 1245              		@ frame_needed = 0, uses_anonymous_args = 0
+ 372:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 1246              		.loc 1 372 1 is_stmt 0 view .LVU340
+ 1247 0000 10B5     		push	{r4, lr}
+ 1248              	.LCFI16:
+ 1249              		.cfi_def_cfa_offset 8
+ 1250              		.cfi_offset 4, -8
+ 1251              		.cfi_offset 14, -4
+ 1252 0002 0C46     		mov	r4, r1
+ 373:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return;
+ 1253              		.loc 1 373 5 is_stmt 1 view .LVU341
+ 373:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return;
+ 1254              		.loc 1 373 7 is_stmt 0 view .LVU342
+ 1255 0004 0346     		mov	r3, r0
+ 1256 0006 50B1     		cbz	r0, .L89
+ 1257              	.LVL111:
+ 1258              	.L86:
+ 374:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 1259              		.loc 1 374 5 is_stmt 1 view .LVU343
+ 374:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 1260              		.loc 1 374 7 is_stmt 0 view .LVU344
+ 1261 0008 43B1     		cbz	r3, .L85
+ 376:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_disp_drv_update(disp, disp->driver);
+ 1262              		.loc 1 376 5 is_stmt 1 view .LVU345
+ 376:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_disp_drv_update(disp, disp->driver);
+ 1263              		.loc 1 376 9 is_stmt 0 view .LVU346
+ 1264 000a 1A68     		ldr	r2, [r3]
+ 376:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     lv_disp_drv_update(disp, disp->driver);
+ 1265              		.loc 1 376 27 view .LVU347
+ 1266 000c 117A     		ldrb	r1, [r2, #8]	@ zero_extendqisi2
+ 1267 000e 64F3C401 		bfi	r1, r4, #3, #2
+ARM GAS  /tmp/ccwADuP0.s 			page 49
+
+
+ 1268 0012 1172     		strb	r1, [r2, #8]
+ 377:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1269              		.loc 1 377 5 is_stmt 1 view .LVU348
+ 1270 0014 1968     		ldr	r1, [r3]
+ 1271 0016 1846     		mov	r0, r3
+ 377:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1272              		.loc 1 377 5 is_stmt 0 view .LVU349
+ 1273 0018 FFF7FEFF 		bl	lv_disp_drv_update
+ 1274              	.LVL112:
+ 1275              	.L85:
+ 378:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 1276              		.loc 1 378 1 view .LVU350
+ 1277 001c 10BD     		pop	{r4, pc}
+ 1278              	.LVL113:
+ 1279              	.L89:
+ 373:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return;
+ 1280              		.loc 1 373 22 is_stmt 1 discriminator 1 view .LVU351
+ 373:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return;
+ 1281              		.loc 1 373 29 is_stmt 0 discriminator 1 view .LVU352
+ 1282 001e FFF7FEFF 		bl	lv_disp_get_default
+ 1283              	.LVL114:
+ 373:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return;
+ 1284              		.loc 1 373 29 discriminator 1 view .LVU353
+ 1285 0022 0346     		mov	r3, r0
+ 1286              	.LVL115:
+ 373:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return;
+ 1287              		.loc 1 373 29 discriminator 1 view .LVU354
+ 1288 0024 F0E7     		b	.L86
+ 1289              		.cfi_endproc
+ 1290              	.LFE162:
+ 1292              		.section	.text.lv_disp_get_rotation,"ax",%progbits
+ 1293              		.align	1
+ 1294              		.global	lv_disp_get_rotation
+ 1295              		.syntax unified
+ 1296              		.thumb
+ 1297              		.thumb_func
+ 1298              		.fpu fpv4-sp-d16
+ 1300              	lv_disp_get_rotation:
+ 1301              	.LVL116:
+ 1302              	.LFB163:
+ 386:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 1303              		.loc 1 386 1 is_stmt 1 view -0
+ 1304              		.cfi_startproc
+ 1305              		@ args = 0, pretend = 0, frame = 0
+ 1306              		@ frame_needed = 0, uses_anonymous_args = 0
+ 386:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) disp = lv_disp_get_default();
+ 1307              		.loc 1 386 1 is_stmt 0 view .LVU356
+ 1308 0000 08B5     		push	{r3, lr}
+ 1309              	.LCFI17:
+ 1310              		.cfi_def_cfa_offset 8
+ 1311              		.cfi_offset 3, -8
+ 1312              		.cfi_offset 14, -4
+ 387:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return LV_DISP_ROT_NONE;
+ 1313              		.loc 1 387 5 is_stmt 1 view .LVU357
+ 387:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return LV_DISP_ROT_NONE;
+ 1314              		.loc 1 387 7 is_stmt 0 view .LVU358
+ 1315 0002 0346     		mov	r3, r0
+ARM GAS  /tmp/ccwADuP0.s 			page 50
+
+
+ 1316 0004 28B1     		cbz	r0, .L95
+ 1317              	.L91:
+ 388:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp->driver->rotated;
+ 1318              		.loc 1 388 5 is_stmt 1 view .LVU359
+ 388:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp->driver->rotated;
+ 1319              		.loc 1 388 7 is_stmt 0 view .LVU360
+ 1320 0006 43B1     		cbz	r3, .L93
+ 389:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1321              		.loc 1 389 5 is_stmt 1 view .LVU361
+ 389:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1322              		.loc 1 389 16 is_stmt 0 view .LVU362
+ 1323 0008 1B68     		ldr	r3, [r3]
+ 389:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1324              		.loc 1 389 24 view .LVU363
+ 1325 000a 187A     		ldrb	r0, [r3, #8]	@ zero_extendqisi2
+ 1326              	.LVL117:
+ 389:Middlewares/lvgl/src/hal/lv_hal_disp.c **** }
+ 1327              		.loc 1 389 24 view .LVU364
+ 1328 000c C0F3C100 		ubfx	r0, r0, #3, #2
+ 1329              	.L92:
+ 390:Middlewares/lvgl/src/hal/lv_hal_disp.c **** 
+ 1330              		.loc 1 390 1 view .LVU365
+ 1331 0010 08BD     		pop	{r3, pc}
+ 1332              	.LVL118:
+ 1333              	.L95:
+ 387:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return LV_DISP_ROT_NONE;
+ 1334              		.loc 1 387 22 is_stmt 1 discriminator 1 view .LVU366
+ 387:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return LV_DISP_ROT_NONE;
+ 1335              		.loc 1 387 29 is_stmt 0 discriminator 1 view .LVU367
+ 1336 0012 FFF7FEFF 		bl	lv_disp_get_default
+ 1337              	.LVL119:
+ 387:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return LV_DISP_ROT_NONE;
+ 1338              		.loc 1 387 29 discriminator 1 view .LVU368
+ 1339 0016 0346     		mov	r3, r0
+ 1340              	.LVL120:
+ 387:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     if(disp == NULL) return LV_DISP_ROT_NONE;
+ 1341              		.loc 1 387 29 discriminator 1 view .LVU369
+ 1342 0018 F5E7     		b	.L91
+ 1343              	.L93:
+ 388:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp->driver->rotated;
+ 1344              		.loc 1 388 29 view .LVU370
+ 1345 001a 0020     		movs	r0, #0
+ 1346              	.LVL121:
+ 388:Middlewares/lvgl/src/hal/lv_hal_disp.c ****     return disp->driver->rotated;
+ 1347              		.loc 1 388 29 view .LVU371
+ 1348 001c F8E7     		b	.L92
+ 1349              		.cfi_endproc
+ 1350              	.LFE163:
+ 1352              		.section	.bss.disp_def,"aw",%nobits
+ 1353              		.align	2
+ 1354              		.set	.LANCHOR0,. + 0
+ 1357              	disp_def:
+ 1358 0000 00000000 		.space	4
+ 1359              		.text
+ 1360              	.Letext0:
+ 1361              		.file 4 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 1362              		.file 5 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ARM GAS  /tmp/ccwADuP0.s 			page 51
+
+
+ 1363              		.file 6 "Middlewares/lvgl/src/hal/../misc/lv_area.h"
+ 1364              		.file 7 "Middlewares/lvgl/src/hal/../misc/lv_ll.h"
+ 1365              		.file 8 "Middlewares/lvgl/src/hal/../misc/lv_timer.h"
+ 1366              		.file 9 "Middlewares/lvgl/src/hal/lv_hal_disp.h"
+ 1367              		.file 10 "Middlewares/lvgl/src/hal/../core/lv_theme.h"
+ 1368              		.file 11 "Middlewares/lvgl/src/hal/../core/lv_obj.h"
+ 1369              		.file 12 "Middlewares/lvgl/src/hal/lv_hal_indev.h"
+ 1370              		.file 13 "Middlewares/lvgl/src/hal/../core/lv_group.h"
+ 1371              		.file 14 "Middlewares/lvgl/src/hal/../core/../misc/../font/lv_font.h"
+ 1372              		.file 15 "Middlewares/lvgl/src/hal/../misc/lv_gc.h"
+ 1373              		.file 16 "Middlewares/lvgl/src/hal/../core/../misc/lv_style.h"
+ 1374              		.file 17 "Middlewares/lvgl/src/hal/../core/lv_obj_tree.h"
+ 1375              		.file 18 "Middlewares/lvgl/src/hal/../core/lv_obj_scroll.h"
+ 1376              		.file 19 "Middlewares/lvgl/src/hal/../core/lv_obj_class.h"
+ 1377              		.file 20 "Middlewares/lvgl/src/hal/../core/lv_event.h"
+ 1378              		.file 21 "Middlewares/lvgl/src/hal/../misc/../core/lv_obj_pos.h"
+ 1379              		.file 22 "Middlewares/lvgl/src/hal/../misc/lv_mem.h"
+ 1380              		.file 23 "Middlewares/lvgl/src/hal/../extra/themes/default/lv_theme_default.h"
+ARM GAS  /tmp/ccwADuP0.s 			page 52
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 lv_hal_disp.c
+     /tmp/ccwADuP0.s:18     .text.invalidate_layout_cb:0000000000000000 $t
+     /tmp/ccwADuP0.s:25     .text.invalidate_layout_cb:0000000000000000 invalidate_layout_cb
+     /tmp/ccwADuP0.s:51     .text.lv_disp_drv_init:0000000000000000 $t
+     /tmp/ccwADuP0.s:58     .text.lv_disp_drv_init:0000000000000000 lv_disp_drv_init
+     /tmp/ccwADuP0.s:130    .text.lv_disp_draw_buf_init:0000000000000000 $t
+     /tmp/ccwADuP0.s:137    .text.lv_disp_draw_buf_init:0000000000000000 lv_disp_draw_buf_init
+     /tmp/ccwADuP0.s:183    .text.lv_disp_drv_register:0000000000000000 $t
+     /tmp/ccwADuP0.s:190    .text.lv_disp_drv_register:0000000000000000 lv_disp_drv_register
+     /tmp/ccwADuP0.s:456    .text.lv_disp_drv_register:00000000000000fc $d
+     /tmp/ccwADuP0.s:465    .text.lv_disp_set_default:0000000000000000 $t
+     /tmp/ccwADuP0.s:472    .text.lv_disp_set_default:0000000000000000 lv_disp_set_default
+     /tmp/ccwADuP0.s:489    .text.lv_disp_set_default:0000000000000008 $d
+     /tmp/ccwADuP0.s:494    .text.lv_disp_get_default:0000000000000000 $t
+     /tmp/ccwADuP0.s:501    .text.lv_disp_get_default:0000000000000000 lv_disp_get_default
+     /tmp/ccwADuP0.s:516    .text.lv_disp_get_default:0000000000000008 $d
+     /tmp/ccwADuP0.s:521    .text.lv_disp_remove:0000000000000000 $t
+     /tmp/ccwADuP0.s:528    .text.lv_disp_remove:0000000000000000 lv_disp_remove
+     /tmp/ccwADuP0.s:630    .text.lv_disp_remove:0000000000000054 $d
+     /tmp/ccwADuP0.s:635    .text.lv_disp_get_hor_res:0000000000000000 $t
+     /tmp/ccwADuP0.s:642    .text.lv_disp_get_hor_res:0000000000000000 lv_disp_get_hor_res
+     /tmp/ccwADuP0.s:710    .text.lv_disp_get_ver_res:0000000000000000 $t
+     /tmp/ccwADuP0.s:717    .text.lv_disp_get_ver_res:0000000000000000 lv_disp_get_ver_res
+     /tmp/ccwADuP0.s:785    .text.lv_disp_drv_update:0000000000000000 $t
+     /tmp/ccwADuP0.s:792    .text.lv_disp_drv_update:0000000000000000 lv_disp_drv_update
+     /tmp/ccwADuP0.s:966    .text.lv_disp_drv_update:00000000000000b8 $d
+     /tmp/ccwADuP0.s:971    .text.lv_disp_get_antialiasing:0000000000000000 $t
+     /tmp/ccwADuP0.s:978    .text.lv_disp_get_antialiasing:0000000000000000 lv_disp_get_antialiasing
+     /tmp/ccwADuP0.s:1031   .text.lv_disp_get_dpi:0000000000000000 $t
+     /tmp/ccwADuP0.s:1038   .text.lv_disp_get_dpi:0000000000000000 lv_disp_get_dpi
+     /tmp/ccwADuP0.s:1091   .text.lv_disp_flush_ready:0000000000000000 $t
+     /tmp/ccwADuP0.s:1098   .text.lv_disp_flush_ready:0000000000000000 lv_disp_flush_ready
+     /tmp/ccwADuP0.s:1123   .text.lv_disp_flush_is_last:0000000000000000 $t
+     /tmp/ccwADuP0.s:1130   .text.lv_disp_flush_is_last:0000000000000000 lv_disp_flush_is_last
+     /tmp/ccwADuP0.s:1153   .text.lv_disp_get_next:0000000000000000 $t
+     /tmp/ccwADuP0.s:1160   .text.lv_disp_get_next:0000000000000000 lv_disp_get_next
+     /tmp/ccwADuP0.s:1200   .text.lv_disp_get_next:0000000000000018 $d
+     /tmp/ccwADuP0.s:1205   .text.lv_disp_get_draw_buf:0000000000000000 $t
+     /tmp/ccwADuP0.s:1212   .text.lv_disp_get_draw_buf:0000000000000000 lv_disp_get_draw_buf
+     /tmp/ccwADuP0.s:1232   .text.lv_disp_set_rotation:0000000000000000 $t
+     /tmp/ccwADuP0.s:1239   .text.lv_disp_set_rotation:0000000000000000 lv_disp_set_rotation
+     /tmp/ccwADuP0.s:1293   .text.lv_disp_get_rotation:0000000000000000 $t
+     /tmp/ccwADuP0.s:1300   .text.lv_disp_get_rotation:0000000000000000 lv_disp_get_rotation
+     /tmp/ccwADuP0.s:1353   .bss.disp_def:0000000000000000 $d
+     /tmp/ccwADuP0.s:1357   .bss.disp_def:0000000000000000 disp_def
+
+UNDEFINED SYMBOLS
+lv_obj_mark_layout_as_dirty
+lv_memset_00
+_lv_ll_ins_head
+lv_timer_create
+lv_theme_default_is_inited
+lv_obj_create
+lv_obj_remove_style
+lv_obj_clear_flag
+lv_obj_set_scrollbar_mode
+ARM GAS  /tmp/ccwADuP0.s 			page 53
+
+
+lv_obj_invalidate
+lv_timer_ready
+lv_palette_main
+lv_theme_default_init
+_lv_disp_ll
+_lv_disp_refr_timer
+lv_font_montserrat_14
+lv_indev_get_next
+_lv_ll_remove
+lv_timer_del
+lv_mem_free
+_lv_ll_get_head
+lv_obj_get_coords
+lv_area_set_width
+lv_area_set_height
+lv_event_send
+lv_obj_tree_walk
+_lv_ll_get_next

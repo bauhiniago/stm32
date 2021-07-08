@@ -1,0 +1,674 @@
+ARM GAS  /tmp/ccUEtWAf.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"SHT30.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.SHT30_Send_Cmd,"ax",%progbits
+  16              		.align	1
+  17              		.arch armv7-m
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	SHT30_Send_Cmd:
+  24              	.LVL0:
+  25              	.LFB65:
+  26              		.file 1 "Core/Inc/SHT30.h"
+   1:Core/Inc/SHT30.h **** //
+   2:Core/Inc/SHT30.h **** // Created by wbh on 2021/2/5.
+   3:Core/Inc/SHT30.h **** //
+   4:Core/Inc/SHT30.h **** 
+   5:Core/Inc/SHT30.h **** #ifndef __SHT30_H__
+   6:Core/Inc/SHT30.h **** #define __SHT30_H__
+   7:Core/Inc/SHT30.h **** #include "main.h"
+   8:Core/Inc/SHT30.h **** #include "i2c.h"
+   9:Core/Inc/SHT30.h **** #define    SHT30_ADDR_WRITE    0x44<<1         //10001000
+  10:Core/Inc/SHT30.h **** #define    SHT30_ADDR_READ        (0x44<<1)+1        //10001011
+  11:Core/Inc/SHT30.h **** 
+  12:Core/Inc/SHT30.h **** typedef enum
+  13:Core/Inc/SHT30.h **** {
+  14:Core/Inc/SHT30.h ****     /* 软件复位命令 */
+  15:Core/Inc/SHT30.h **** 
+  16:Core/Inc/SHT30.h ****     SOFT_RESET_CMD = 0x30A2,
+  17:Core/Inc/SHT30.h ****     /*
+  18:Core/Inc/SHT30.h ****     单次测量模式
+  19:Core/Inc/SHT30.h ****     命名格式：Repeatability_CS_CMD
+  20:Core/Inc/SHT30.h ****     CS： Clock stretching
+  21:Core/Inc/SHT30.h ****     */
+  22:Core/Inc/SHT30.h ****     HIGH_ENABLED_CMD    = 0x2C06,
+  23:Core/Inc/SHT30.h ****     MEDIUM_ENABLED_CMD  = 0x2C0D,
+  24:Core/Inc/SHT30.h ****     LOW_ENABLED_CMD     = 0x2C10,
+  25:Core/Inc/SHT30.h ****     HIGH_DISABLED_CMD   = 0x2400,
+  26:Core/Inc/SHT30.h ****     MEDIUM_DISABLED_CMD = 0x240B,
+  27:Core/Inc/SHT30.h ****     LOW_DISABLED_CMD    = 0x2416,
+  28:Core/Inc/SHT30.h **** 
+  29:Core/Inc/SHT30.h ****     /*
+  30:Core/Inc/SHT30.h ****     周期测量模式
+  31:Core/Inc/SHT30.h ****     命名格式：Repeatability_MPS_CMD
+  32:Core/Inc/SHT30.h ****     MPS：measurement per second
+ARM GAS  /tmp/ccUEtWAf.s 			page 2
+
+
+  33:Core/Inc/SHT30.h ****     */
+  34:Core/Inc/SHT30.h ****     HIGH_0_5_CMD   = 0x2032,
+  35:Core/Inc/SHT30.h ****     MEDIUM_0_5_CMD = 0x2024,
+  36:Core/Inc/SHT30.h ****     LOW_0_5_CMD    = 0x202F,
+  37:Core/Inc/SHT30.h ****     HIGH_1_CMD     = 0x2130,
+  38:Core/Inc/SHT30.h ****     MEDIUM_1_CMD   = 0x2126,
+  39:Core/Inc/SHT30.h ****     LOW_1_CMD      = 0x212D,
+  40:Core/Inc/SHT30.h ****     HIGH_2_CMD     = 0x2236,
+  41:Core/Inc/SHT30.h ****     MEDIUM_2_CMD   = 0x2220,
+  42:Core/Inc/SHT30.h ****     LOW_2_CMD      = 0x222B,
+  43:Core/Inc/SHT30.h ****     HIGH_4_CMD     = 0x2334,
+  44:Core/Inc/SHT30.h ****     MEDIUM_4_CMD   = 0x2322,
+  45:Core/Inc/SHT30.h ****     LOW_4_CMD      = 0x2329,
+  46:Core/Inc/SHT30.h ****     HIGH_10_CMD    = 0x2737,
+  47:Core/Inc/SHT30.h ****     MEDIUM_10_CMD  = 0x2721,
+  48:Core/Inc/SHT30.h ****     LOW_10_CMD     = 0x272A,
+  49:Core/Inc/SHT30.h ****     /* 周期测量模式读取数据命令 */
+  50:Core/Inc/SHT30.h ****     READOUT_FOR_PERIODIC_MODE = 0xE000,
+  51:Core/Inc/SHT30.h **** } SHT30_CMD;
+  52:Core/Inc/SHT30.h **** 
+  53:Core/Inc/SHT30.h **** /**
+  54:Core/Inc/SHT30.h ****  * @brief    向SHT30发送一条指令(16bit)
+  55:Core/Inc/SHT30.h ****  * @param    cmd —— SHT30指令（在SHT30_MODE中枚举定义）
+  56:Core/Inc/SHT30.h ****  * @retval    成功返回HAL_OK
+  57:Core/Inc/SHT30.h **** */
+  58:Core/Inc/SHT30.h **** static uint8_t    SHT30_Send_Cmd(SHT30_CMD cmd)
+  59:Core/Inc/SHT30.h **** {
+  27              		.loc 1 59 1 view -0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 8
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		.loc 1 59 1 is_stmt 0 view .LVU1
+  32 0000 00B5     		push	{lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 4
+  35              		.cfi_offset 14, -4
+  36 0002 85B0     		sub	sp, sp, #20
+  37              	.LCFI1:
+  38              		.cfi_def_cfa_offset 24
+  60:Core/Inc/SHT30.h ****   uint8_t cmd_buffer[2];
+  39              		.loc 1 60 3 is_stmt 1 view .LVU2
+  61:Core/Inc/SHT30.h ****   cmd_buffer[0] = cmd >> 8;
+  40              		.loc 1 61 3 view .LVU3
+  41              		.loc 1 61 17 is_stmt 0 view .LVU4
+  42 0004 030A     		lsrs	r3, r0, #8
+  43 0006 8DF80C30 		strb	r3, [sp, #12]
+  62:Core/Inc/SHT30.h ****   cmd_buffer[1] = cmd;
+  44              		.loc 1 62 3 is_stmt 1 view .LVU5
+  45              		.loc 1 62 17 is_stmt 0 view .LVU6
+  46 000a 8DF80D00 		strb	r0, [sp, #13]
+  63:Core/Inc/SHT30.h ****   return HAL_I2C_Master_Transmit(&hi2c2, SHT30_ADDR_WRITE, (uint8_t*)cmd_buffer, 2, 0xFFFF);
+  47              		.loc 1 63 3 is_stmt 1 view .LVU7
+  48              		.loc 1 63 10 is_stmt 0 view .LVU8
+  49 000e 4FF6FF73 		movw	r3, #65535
+  50 0012 0093     		str	r3, [sp]
+  51 0014 0223     		movs	r3, #2
+  52 0016 03AA     		add	r2, sp, #12
+ARM GAS  /tmp/ccUEtWAf.s 			page 3
+
+
+  53 0018 8821     		movs	r1, #136
+  54 001a 0348     		ldr	r0, .L3
+  55              	.LVL1:
+  56              		.loc 1 63 10 view .LVU9
+  57 001c FFF7FEFF 		bl	HAL_I2C_Master_Transmit
+  58              	.LVL2:
+  64:Core/Inc/SHT30.h **** }
+  59              		.loc 1 64 1 view .LVU10
+  60 0020 05B0     		add	sp, sp, #20
+  61              	.LCFI2:
+  62              		.cfi_def_cfa_offset 4
+  63              		@ sp needed
+  64 0022 5DF804FB 		ldr	pc, [sp], #4
+  65              	.L4:
+  66 0026 00BF     		.align	2
+  67              	.L3:
+  68 0028 00000000 		.word	hi2c2
+  69              		.cfi_endproc
+  70              	.LFE65:
+  72              		.section	.text.SHT30_Reset,"ax",%progbits
+  73              		.align	1
+  74              		.global	SHT30_Reset
+  75              		.syntax unified
+  76              		.thumb
+  77              		.thumb_func
+  78              		.fpu softvfp
+  80              	SHT30_Reset:
+  81              	.LFB69:
+  82              		.file 2 "Core/Src/SHT30.c"
+   1:Core/Src/SHT30.c **** //
+   2:Core/Src/SHT30.c **** // Created by wbh on 2021/2/5.
+   3:Core/Src/SHT30.c **** //
+   4:Core/Src/SHT30.c **** 
+   5:Core/Src/SHT30.c **** #include "SHT30.h"
+   6:Core/Src/SHT30.c **** #include <stdio.h>
+   7:Core/Src/SHT30.c **** /**
+   8:Core/Src/SHT30.c ****  * @brief    复位SHT30
+   9:Core/Src/SHT30.c ****  * @param    none
+  10:Core/Src/SHT30.c ****  * @retval    none
+  11:Core/Src/SHT30.c **** */
+  12:Core/Src/SHT30.c **** void SHT30_Reset(void)
+  13:Core/Src/SHT30.c **** {
+  83              		.loc 2 13 1 is_stmt 1 view -0
+  84              		.cfi_startproc
+  85              		@ args = 0, pretend = 0, frame = 0
+  86              		@ frame_needed = 0, uses_anonymous_args = 0
+  87 0000 08B5     		push	{r3, lr}
+  88              	.LCFI3:
+  89              		.cfi_def_cfa_offset 8
+  90              		.cfi_offset 3, -8
+  91              		.cfi_offset 14, -4
+  14:Core/Src/SHT30.c ****   SHT30_Send_Cmd(SOFT_RESET_CMD);
+  92              		.loc 2 14 3 view .LVU12
+  93 0002 43F2A200 		movw	r0, #12450
+  94 0006 FFF7FEFF 		bl	SHT30_Send_Cmd
+  95              	.LVL3:
+  15:Core/Src/SHT30.c ****   HAL_Delay(20);
+ARM GAS  /tmp/ccUEtWAf.s 			page 4
+
+
+  96              		.loc 2 15 3 view .LVU13
+  97 000a 1420     		movs	r0, #20
+  98 000c FFF7FEFF 		bl	HAL_Delay
+  99              	.LVL4:
+  16:Core/Src/SHT30.c **** }
+ 100              		.loc 2 16 1 is_stmt 0 view .LVU14
+ 101 0010 08BD     		pop	{r3, pc}
+ 102              		.cfi_endproc
+ 103              	.LFE69:
+ 105              		.section	.text.SHT30_Init,"ax",%progbits
+ 106              		.align	1
+ 107              		.global	SHT30_Init
+ 108              		.syntax unified
+ 109              		.thumb
+ 110              		.thumb_func
+ 111              		.fpu softvfp
+ 113              	SHT30_Init:
+ 114              	.LFB70:
+  17:Core/Src/SHT30.c **** 
+  18:Core/Src/SHT30.c **** /**
+  19:Core/Src/SHT30.c ****  * @brief    初始化SHT30
+  20:Core/Src/SHT30.c ****  * @param    none
+  21:Core/Src/SHT30.c ****  * @retval    成功返回HAL_OK
+  22:Core/Src/SHT30.c ****  * @note    周期测量模式
+  23:Core/Src/SHT30.c **** */
+  24:Core/Src/SHT30.c **** uint8_t SHT30_Init(void)
+  25:Core/Src/SHT30.c **** {
+ 115              		.loc 2 25 1 is_stmt 1 view -0
+ 116              		.cfi_startproc
+ 117              		@ args = 0, pretend = 0, frame = 0
+ 118              		@ frame_needed = 0, uses_anonymous_args = 0
+ 119 0000 08B5     		push	{r3, lr}
+ 120              	.LCFI4:
+ 121              		.cfi_def_cfa_offset 8
+ 122              		.cfi_offset 3, -8
+ 123              		.cfi_offset 14, -4
+  26:Core/Src/SHT30.c ****   return SHT30_Send_Cmd(MEDIUM_2_CMD);
+ 124              		.loc 2 26 3 view .LVU16
+ 125              		.loc 2 26 10 is_stmt 0 view .LVU17
+ 126 0002 42F22020 		movw	r0, #8736
+ 127 0006 FFF7FEFF 		bl	SHT30_Send_Cmd
+ 128              	.LVL5:
+  27:Core/Src/SHT30.c **** }
+ 129              		.loc 2 27 1 view .LVU18
+ 130 000a 08BD     		pop	{r3, pc}
+ 131              		.cfi_endproc
+ 132              	.LFE70:
+ 134              		.section	.text.SHT30_Read_Dat,"ax",%progbits
+ 135              		.align	1
+ 136              		.global	SHT30_Read_Dat
+ 137              		.syntax unified
+ 138              		.thumb
+ 139              		.thumb_func
+ 140              		.fpu softvfp
+ 142              	SHT30_Read_Dat:
+ 143              	.LVL6:
+ 144              	.LFB71:
+ARM GAS  /tmp/ccUEtWAf.s 			page 5
+
+
+  28:Core/Src/SHT30.c **** 
+  29:Core/Src/SHT30.c **** /**
+  30:Core/Src/SHT30.c **** * @brief    从SHT30读取一次数据
+  31:Core/Src/SHT30.c **** * @param    dat —— 存储读取数据的地址（6个字节数组）
+  32:Core/Src/SHT30.c **** * @retval    成功 —— 返回HAL_OK
+  33:Core/Src/SHT30.c **** */
+  34:Core/Src/SHT30.c **** uint8_t SHT30_Read_Dat(uint8_t* dat)
+  35:Core/Src/SHT30.c **** {
+ 145              		.loc 2 35 1 is_stmt 1 view -0
+ 146              		.cfi_startproc
+ 147              		@ args = 0, pretend = 0, frame = 0
+ 148              		@ frame_needed = 0, uses_anonymous_args = 0
+ 149              		.loc 2 35 1 is_stmt 0 view .LVU20
+ 150 0000 10B5     		push	{r4, lr}
+ 151              	.LCFI5:
+ 152              		.cfi_def_cfa_offset 8
+ 153              		.cfi_offset 4, -8
+ 154              		.cfi_offset 14, -4
+ 155 0002 82B0     		sub	sp, sp, #8
+ 156              	.LCFI6:
+ 157              		.cfi_def_cfa_offset 16
+ 158 0004 0446     		mov	r4, r0
+  36:Core/Src/SHT30.c ****   SHT30_Send_Cmd(READOUT_FOR_PERIODIC_MODE);
+ 159              		.loc 2 36 3 is_stmt 1 view .LVU21
+ 160 0006 4FF46040 		mov	r0, #57344
+ 161              	.LVL7:
+ 162              		.loc 2 36 3 is_stmt 0 view .LVU22
+ 163 000a FFF7FEFF 		bl	SHT30_Send_Cmd
+ 164              	.LVL8:
+  37:Core/Src/SHT30.c ****   return HAL_I2C_Master_Receive(&hi2c2, SHT30_ADDR_READ, dat, 6, 0xFFFF);
+ 165              		.loc 2 37 3 is_stmt 1 view .LVU23
+ 166              		.loc 2 37 10 is_stmt 0 view .LVU24
+ 167 000e 4FF6FF73 		movw	r3, #65535
+ 168 0012 0093     		str	r3, [sp]
+ 169 0014 0623     		movs	r3, #6
+ 170 0016 2246     		mov	r2, r4
+ 171 0018 8921     		movs	r1, #137
+ 172 001a 0248     		ldr	r0, .L11
+ 173 001c FFF7FEFF 		bl	HAL_I2C_Master_Receive
+ 174              	.LVL9:
+  38:Core/Src/SHT30.c **** }
+ 175              		.loc 2 38 1 view .LVU25
+ 176 0020 02B0     		add	sp, sp, #8
+ 177              	.LCFI7:
+ 178              		.cfi_def_cfa_offset 8
+ 179              		@ sp needed
+ 180 0022 10BD     		pop	{r4, pc}
+ 181              	.LVL10:
+ 182              	.L12:
+ 183              		.loc 2 38 1 view .LVU26
+ 184              		.align	2
+ 185              	.L11:
+ 186 0024 00000000 		.word	hi2c2
+ 187              		.cfi_endproc
+ 188              	.LFE71:
+ 190              		.section	.text.CheckCrc8,"ax",%progbits
+ 191              		.align	1
+ARM GAS  /tmp/ccUEtWAf.s 			page 6
+
+
+ 192              		.global	CheckCrc8
+ 193              		.syntax unified
+ 194              		.thumb
+ 195              		.thumb_func
+ 196              		.fpu softvfp
+ 198              	CheckCrc8:
+ 199              	.LVL11:
+ 200              	.LFB72:
+  39:Core/Src/SHT30.c **** 
+  40:Core/Src/SHT30.c **** #define CRC8_POLYNOMIAL 0x31
+  41:Core/Src/SHT30.c **** 
+  42:Core/Src/SHT30.c **** uint8_t CheckCrc8(uint8_t* const message, uint8_t initial_value)
+  43:Core/Src/SHT30.c **** {
+ 201              		.loc 2 43 1 is_stmt 1 view -0
+ 202              		.cfi_startproc
+ 203              		@ args = 0, pretend = 0, frame = 0
+ 204              		@ frame_needed = 0, uses_anonymous_args = 0
+ 205              		@ link register save eliminated.
+ 206              		.loc 2 43 1 is_stmt 0 view .LVU28
+ 207 0000 8446     		mov	ip, r0
+ 208 0002 0846     		mov	r0, r1
+ 209              	.LVL12:
+  44:Core/Src/SHT30.c ****   uint8_t  remainder;        //余数
+ 210              		.loc 2 44 3 is_stmt 1 view .LVU29
+  45:Core/Src/SHT30.c ****   uint8_t  i = 0, j = 0;  //循环变量
+ 211              		.loc 2 45 3 view .LVU30
+  46:Core/Src/SHT30.c **** 
+  47:Core/Src/SHT30.c ****   /* 初始化 */
+  48:Core/Src/SHT30.c ****   remainder = initial_value;
+ 212              		.loc 2 48 3 view .LVU31
+  49:Core/Src/SHT30.c **** 
+  50:Core/Src/SHT30.c ****   for(j = 0; j < 2;j++)
+ 213              		.loc 2 50 3 view .LVU32
+ 214              		.loc 2 50 9 is_stmt 0 view .LVU33
+ 215 0004 0022     		movs	r2, #0
+ 216              		.loc 2 50 3 view .LVU34
+ 217 0006 0FE0     		b	.L14
+ 218              	.LVL13:
+ 219              	.L21:
+  51:Core/Src/SHT30.c ****   {
+  52:Core/Src/SHT30.c ****     remainder ^= message[j];
+  53:Core/Src/SHT30.c **** 
+  54:Core/Src/SHT30.c ****     /* 从最高位开始依次计算  */
+  55:Core/Src/SHT30.c ****     for (i = 0; i < 8; i++)
+  56:Core/Src/SHT30.c ****     {
+  57:Core/Src/SHT30.c ****       if (remainder & 0x80)
+  58:Core/Src/SHT30.c ****       {
+  59:Core/Src/SHT30.c ****         remainder = (remainder << 1)^CRC8_POLYNOMIAL;
+ 220              		.loc 2 59 9 is_stmt 1 view .LVU35
+ 221              		.loc 2 59 32 is_stmt 0 view .LVU36
+ 222 0008 4000     		lsls	r0, r0, #1
+ 223              	.LVL14:
+ 224              		.loc 2 59 37 view .LVU37
+ 225 000a 80F03100 		eor	r0, r0, #49
+ 226              		.loc 2 59 19 view .LVU38
+ 227 000e C0B2     		uxtb	r0, r0
+ 228              	.LVL15:
+ARM GAS  /tmp/ccUEtWAf.s 			page 7
+
+
+ 229              	.L17:
+  55:Core/Src/SHT30.c ****     {
+ 230              		.loc 2 55 24 is_stmt 1 discriminator 2 view .LVU39
+  55:Core/Src/SHT30.c ****     {
+ 231              		.loc 2 55 25 is_stmt 0 discriminator 2 view .LVU40
+ 232 0010 0133     		adds	r3, r3, #1
+ 233              	.LVL16:
+  55:Core/Src/SHT30.c ****     {
+ 234              		.loc 2 55 25 discriminator 2 view .LVU41
+ 235 0012 DBB2     		uxtb	r3, r3
+ 236              	.LVL17:
+ 237              	.L15:
+  55:Core/Src/SHT30.c ****     {
+ 238              		.loc 2 55 17 is_stmt 1 discriminator 1 view .LVU42
+  55:Core/Src/SHT30.c ****     {
+ 239              		.loc 2 55 5 is_stmt 0 discriminator 1 view .LVU43
+ 240 0014 072B     		cmp	r3, #7
+ 241 0016 05D8     		bhi	.L20
+  57:Core/Src/SHT30.c ****       {
+ 242              		.loc 2 57 7 is_stmt 1 view .LVU44
+  57:Core/Src/SHT30.c ****       {
+ 243              		.loc 2 57 10 is_stmt 0 view .LVU45
+ 244 0018 10F0800F 		tst	r0, #128
+ 245 001c F4D1     		bne	.L21
+  60:Core/Src/SHT30.c ****       }
+  61:Core/Src/SHT30.c ****       else
+  62:Core/Src/SHT30.c ****       {
+  63:Core/Src/SHT30.c ****         remainder = (remainder << 1);
+ 246              		.loc 2 63 9 is_stmt 1 view .LVU46
+ 247              		.loc 2 63 19 is_stmt 0 view .LVU47
+ 248 001e 4000     		lsls	r0, r0, #1
+ 249              	.LVL18:
+ 250              		.loc 2 63 19 view .LVU48
+ 251 0020 C0B2     		uxtb	r0, r0
+ 252              	.LVL19:
+ 253              		.loc 2 63 19 view .LVU49
+ 254 0022 F5E7     		b	.L17
+ 255              	.L20:
+  50:Core/Src/SHT30.c ****   {
+ 256              		.loc 2 50 20 is_stmt 1 discriminator 2 view .LVU50
+  50:Core/Src/SHT30.c ****   {
+ 257              		.loc 2 50 21 is_stmt 0 discriminator 2 view .LVU51
+ 258 0024 0132     		adds	r2, r2, #1
+ 259              	.LVL20:
+  50:Core/Src/SHT30.c ****   {
+ 260              		.loc 2 50 21 discriminator 2 view .LVU52
+ 261 0026 D2B2     		uxtb	r2, r2
+ 262              	.LVL21:
+ 263              	.L14:
+  50:Core/Src/SHT30.c ****   {
+ 264              		.loc 2 50 14 is_stmt 1 discriminator 1 view .LVU53
+  50:Core/Src/SHT30.c ****   {
+ 265              		.loc 2 50 3 is_stmt 0 discriminator 1 view .LVU54
+ 266 0028 012A     		cmp	r2, #1
+ 267 002a 04D8     		bhi	.L22
+  52:Core/Src/SHT30.c **** 
+ 268              		.loc 2 52 5 is_stmt 1 view .LVU55
+ARM GAS  /tmp/ccUEtWAf.s 			page 8
+
+
+  52:Core/Src/SHT30.c **** 
+ 269              		.loc 2 52 25 is_stmt 0 view .LVU56
+ 270 002c 1CF80230 		ldrb	r3, [ip, r2]	@ zero_extendqisi2
+  52:Core/Src/SHT30.c **** 
+ 271              		.loc 2 52 15 view .LVU57
+ 272 0030 5840     		eors	r0, r0, r3
+ 273              	.LVL22:
+  55:Core/Src/SHT30.c ****     {
+ 274              		.loc 2 55 5 is_stmt 1 view .LVU58
+  55:Core/Src/SHT30.c ****     {
+ 275              		.loc 2 55 12 is_stmt 0 view .LVU59
+ 276 0032 0023     		movs	r3, #0
+  55:Core/Src/SHT30.c ****     {
+ 277              		.loc 2 55 5 view .LVU60
+ 278 0034 EEE7     		b	.L15
+ 279              	.LVL23:
+ 280              	.L22:
+  64:Core/Src/SHT30.c ****       }
+  65:Core/Src/SHT30.c ****     }
+  66:Core/Src/SHT30.c ****   }
+  67:Core/Src/SHT30.c **** 
+  68:Core/Src/SHT30.c ****   /* 返回计算的CRC码 */
+  69:Core/Src/SHT30.c ****   return remainder;
+ 281              		.loc 2 69 3 is_stmt 1 view .LVU61
+  70:Core/Src/SHT30.c **** }
+ 282              		.loc 2 70 1 is_stmt 0 view .LVU62
+ 283 0036 7047     		bx	lr
+ 284              		.cfi_endproc
+ 285              	.LFE72:
+ 287              		.global	__aeabi_ui2f
+ 288              		.global	__aeabi_fdiv
+ 289              		.global	__aeabi_f2d
+ 290              		.global	__aeabi_dmul
+ 291              		.global	__aeabi_dsub
+ 292              		.global	__aeabi_d2f
+ 293              		.global	__aeabi_fmul
+ 294              		.section	.text.SHT30_Dat_To_Float,"ax",%progbits
+ 295              		.align	1
+ 296              		.global	SHT30_Dat_To_Float
+ 297              		.syntax unified
+ 298              		.thumb
+ 299              		.thumb_func
+ 300              		.fpu softvfp
+ 302              	SHT30_Dat_To_Float:
+ 303              	.LVL24:
+ 304              	.LFB73:
+  71:Core/Src/SHT30.c **** 
+  72:Core/Src/SHT30.c **** /**
+  73:Core/Src/SHT30.c ****  * @brief    将SHT30接收的6个字节数据进行CRC校验，并转换为温度值和湿度值
+  74:Core/Src/SHT30.c ****  * @param    dat  —— 存储接收数据的地址（6个字节数组）
+  75:Core/Src/SHT30.c ****  * @retval    校验成功  —— 返回0
+  76:Core/Src/SHT30.c ****  *             校验失败  —— 返回1，并设置温度值和湿度值为0
+  77:Core/Src/SHT30.c **** */
+  78:Core/Src/SHT30.c **** uint8_t SHT30_Dat_To_Float(uint8_t* const dat, float* temperature, float* humidity)
+  79:Core/Src/SHT30.c **** {
+ 305              		.loc 2 79 1 is_stmt 1 view -0
+ 306              		.cfi_startproc
+ARM GAS  /tmp/ccUEtWAf.s 			page 9
+
+
+ 307              		@ args = 0, pretend = 0, frame = 0
+ 308              		@ frame_needed = 0, uses_anonymous_args = 0
+ 309              		.loc 2 79 1 is_stmt 0 view .LVU64
+ 310 0000 70B5     		push	{r4, r5, r6, lr}
+ 311              	.LCFI8:
+ 312              		.cfi_def_cfa_offset 16
+ 313              		.cfi_offset 4, -16
+ 314              		.cfi_offset 5, -12
+ 315              		.cfi_offset 6, -8
+ 316              		.cfi_offset 14, -4
+ 317 0002 0446     		mov	r4, r0
+ 318 0004 0E46     		mov	r6, r1
+ 319 0006 1546     		mov	r5, r2
+  80:Core/Src/SHT30.c ****   uint16_t recv_temperature = 0;
+ 320              		.loc 2 80 3 is_stmt 1 view .LVU65
+ 321              	.LVL25:
+  81:Core/Src/SHT30.c ****   uint16_t recv_humidity = 0;
+ 322              		.loc 2 81 3 view .LVU66
+  82:Core/Src/SHT30.c **** 
+  83:Core/Src/SHT30.c ****   
+  84:Core/Src/SHT30.c ****   /* 校验温度数据和湿度数据是否接收正确 */
+  85:Core/Src/SHT30.c ****   if(CheckCrc8(dat, 0xFF) != dat[2] || CheckCrc8(&dat[3], 0xFF) != dat[5])
+ 323              		.loc 2 85 3 view .LVU67
+ 324              		.loc 2 85 6 is_stmt 0 view .LVU68
+ 325 0008 FF21     		movs	r1, #255
+ 326              	.LVL26:
+ 327              		.loc 2 85 6 view .LVU69
+ 328 000a FFF7FEFF 		bl	CheckCrc8
+ 329              	.LVL27:
+ 330              		.loc 2 85 33 view .LVU70
+ 331 000e A378     		ldrb	r3, [r4, #2]	@ zero_extendqisi2
+ 332              		.loc 2 85 5 view .LVU71
+ 333 0010 9842     		cmp	r0, r3
+ 334 0012 2CD1     		bne	.L25
+ 335              		.loc 2 85 40 discriminator 1 view .LVU72
+ 336 0014 FF21     		movs	r1, #255
+ 337 0016 E01C     		adds	r0, r4, #3
+ 338 0018 FFF7FEFF 		bl	CheckCrc8
+ 339              	.LVL28:
+ 340              		.loc 2 85 71 discriminator 1 view .LVU73
+ 341 001c 6379     		ldrb	r3, [r4, #5]	@ zero_extendqisi2
+ 342              		.loc 2 85 37 discriminator 1 view .LVU74
+ 343 001e 9842     		cmp	r0, r3
+ 344 0020 27D1     		bne	.L26
+  86:Core/Src/SHT30.c ****     return 1;
+  87:Core/Src/SHT30.c **** 
+  88:Core/Src/SHT30.c ****   /* 转换温度数据 */
+  89:Core/Src/SHT30.c ****   recv_temperature = ((uint16_t)dat[0]<<8)|dat[1];
+ 345              		.loc 2 89 3 is_stmt 1 view .LVU75
+ 346              		.loc 2 89 36 is_stmt 0 view .LVU76
+ 347 0022 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 348              		.loc 2 89 47 view .LVU77
+ 349 0024 6378     		ldrb	r3, [r4, #1]	@ zero_extendqisi2
+ 350              	.LVL29:
+  90:Core/Src/SHT30.c ****   
+  91:Core/Src/SHT30.c ****   *temperature = -45.0 + 175.0*((float)recv_temperature/65535);
+ 351              		.loc 2 91 3 is_stmt 1 view .LVU78
+ARM GAS  /tmp/ccUEtWAf.s 			page 10
+
+
+ 352              		.loc 2 91 33 is_stmt 0 view .LVU79
+ 353 0026 43EA0020 		orr	r0, r3, r0, lsl #8
+ 354              	.LVL30:
+ 355              		.loc 2 91 33 view .LVU80
+ 356 002a FFF7FEFF 		bl	__aeabi_ui2f
+ 357              	.LVL31:
+ 358              		.loc 2 91 56 view .LVU81
+ 359 002e 1449     		ldr	r1, .L28+8
+ 360 0030 FFF7FEFF 		bl	__aeabi_fdiv
+ 361              	.LVL32:
+ 362 0034 FFF7FEFF 		bl	__aeabi_f2d
+ 363              	.LVL33:
+ 364              		.loc 2 91 31 view .LVU82
+ 365 0038 0FA3     		adr	r3, .L28
+ 366 003a D3E90023 		ldrd	r2, [r3]
+ 367 003e FFF7FEFF 		bl	__aeabi_dmul
+ 368              	.LVL34:
+ 369              		.loc 2 91 24 view .LVU83
+ 370 0042 0022     		movs	r2, #0
+ 371 0044 0F4B     		ldr	r3, .L28+12
+ 372 0046 FFF7FEFF 		bl	__aeabi_dsub
+ 373              	.LVL35:
+ 374 004a FFF7FEFF 		bl	__aeabi_d2f
+ 375              	.LVL36:
+ 376              		.loc 2 91 16 view .LVU84
+ 377 004e 3060     		str	r0, [r6]	@ float
+  92:Core/Src/SHT30.c **** 
+  93:Core/Src/SHT30.c ****   /* 转换湿度数据 */
+  94:Core/Src/SHT30.c ****   recv_humidity = ((uint16_t)dat[3]<<8)|dat[4];
+ 378              		.loc 2 94 3 is_stmt 1 view .LVU85
+ 379              		.loc 2 94 33 is_stmt 0 view .LVU86
+ 380 0050 E078     		ldrb	r0, [r4, #3]	@ zero_extendqisi2
+ 381              		.loc 2 94 44 view .LVU87
+ 382 0052 2379     		ldrb	r3, [r4, #4]	@ zero_extendqisi2
+ 383              	.LVL37:
+  95:Core/Src/SHT30.c ****   *humidity = 100 * ((float)recv_humidity / 65535);
+ 384              		.loc 2 95 3 is_stmt 1 view .LVU88
+ 385              		.loc 2 95 22 is_stmt 0 view .LVU89
+ 386 0054 43EA0020 		orr	r0, r3, r0, lsl #8
+ 387              	.LVL38:
+ 388              		.loc 2 95 22 view .LVU90
+ 389 0058 FFF7FEFF 		bl	__aeabi_ui2f
+ 390              	.LVL39:
+ 391              		.loc 2 95 43 view .LVU91
+ 392 005c 0849     		ldr	r1, .L28+8
+ 393 005e FFF7FEFF 		bl	__aeabi_fdiv
+ 394              	.LVL40:
+ 395              		.loc 2 95 19 view .LVU92
+ 396 0062 0949     		ldr	r1, .L28+16
+ 397 0064 FFF7FEFF 		bl	__aeabi_fmul
+ 398              	.LVL41:
+ 399              		.loc 2 95 13 view .LVU93
+ 400 0068 2860     		str	r0, [r5]	@ float
+  96:Core/Src/SHT30.c **** 
+  97:Core/Src/SHT30.c ****   return 0;
+ 401              		.loc 2 97 3 is_stmt 1 view .LVU94
+ 402              		.loc 2 97 10 is_stmt 0 view .LVU95
+ARM GAS  /tmp/ccUEtWAf.s 			page 11
+
+
+ 403 006a 0020     		movs	r0, #0
+ 404 006c 00E0     		b	.L24
+ 405              	.LVL42:
+ 406              	.L25:
+  86:Core/Src/SHT30.c **** 
+ 407              		.loc 2 86 12 view .LVU96
+ 408 006e 0120     		movs	r0, #1
+ 409              	.LVL43:
+ 410              	.L24:
+  98:Core/Src/SHT30.c **** }
+ 411              		.loc 2 98 1 view .LVU97
+ 412 0070 70BD     		pop	{r4, r5, r6, pc}
+ 413              	.LVL44:
+ 414              	.L26:
+  86:Core/Src/SHT30.c **** 
+ 415              		.loc 2 86 12 view .LVU98
+ 416 0072 0120     		movs	r0, #1
+ 417 0074 FCE7     		b	.L24
+ 418              	.L29:
+ 419 0076 00BF     		.align	3
+ 420              	.L28:
+ 421 0078 00000000 		.word	0
+ 422 007c 00E06540 		.word	1080418304
+ 423 0080 00FF7F47 		.word	1199570688
+ 424 0084 00804640 		.word	1078362112
+ 425 0088 0000C842 		.word	1120403456
+ 426              		.cfi_endproc
+ 427              	.LFE73:
+ 429              		.text
+ 430              	.Letext0:
+ 431              		.file 3 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 432              		.file 4 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ 433              		.file 5 "Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xe.h"
+ 434              		.file 6 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def.h"
+ 435              		.file 7 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_dma.h"
+ 436              		.file 8 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h"
+ 437              		.file 9 "Core/Inc/i2c.h"
+ 438              		.file 10 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h"
+ARM GAS  /tmp/ccUEtWAf.s 			page 12
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 SHT30.c
+     /tmp/ccUEtWAf.s:16     .text.SHT30_Send_Cmd:0000000000000000 $t
+     /tmp/ccUEtWAf.s:23     .text.SHT30_Send_Cmd:0000000000000000 SHT30_Send_Cmd
+     /tmp/ccUEtWAf.s:68     .text.SHT30_Send_Cmd:0000000000000028 $d
+     /tmp/ccUEtWAf.s:73     .text.SHT30_Reset:0000000000000000 $t
+     /tmp/ccUEtWAf.s:80     .text.SHT30_Reset:0000000000000000 SHT30_Reset
+     /tmp/ccUEtWAf.s:106    .text.SHT30_Init:0000000000000000 $t
+     /tmp/ccUEtWAf.s:113    .text.SHT30_Init:0000000000000000 SHT30_Init
+     /tmp/ccUEtWAf.s:135    .text.SHT30_Read_Dat:0000000000000000 $t
+     /tmp/ccUEtWAf.s:142    .text.SHT30_Read_Dat:0000000000000000 SHT30_Read_Dat
+     /tmp/ccUEtWAf.s:186    .text.SHT30_Read_Dat:0000000000000024 $d
+     /tmp/ccUEtWAf.s:191    .text.CheckCrc8:0000000000000000 $t
+     /tmp/ccUEtWAf.s:198    .text.CheckCrc8:0000000000000000 CheckCrc8
+     /tmp/ccUEtWAf.s:295    .text.SHT30_Dat_To_Float:0000000000000000 $t
+     /tmp/ccUEtWAf.s:302    .text.SHT30_Dat_To_Float:0000000000000000 SHT30_Dat_To_Float
+     /tmp/ccUEtWAf.s:421    .text.SHT30_Dat_To_Float:0000000000000078 $d
+
+UNDEFINED SYMBOLS
+HAL_I2C_Master_Transmit
+hi2c2
+HAL_Delay
+HAL_I2C_Master_Receive
+__aeabi_ui2f
+__aeabi_fdiv
+__aeabi_f2d
+__aeabi_dmul
+__aeabi_dsub
+__aeabi_d2f
+__aeabi_fmul

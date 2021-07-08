@@ -20,7 +20,7 @@ typedef struct
     uint16_t height;			//LCD 高度
     uint16_t id;				//LCD ID
     uint8_t  dir;			//横屏还是竖屏控制：0，竖屏；1，横屏。
-    uint16_t	wramcmd;		//开始写gram指令
+    uint16_t wramcmd;		//开始写gram指令
     uint16_t setxcmd;		//设置x坐标指令
     uint16_t setycmd;		//设置y坐标指令
 }_lcd_dev;
@@ -148,4 +148,4 @@ void LCD_Set_Window(uint16_t sx,uint16_t sy,uint16_t width,uint16_t height);
 #else
 #define LCD_LOG(format,...)
 #endif
-#endif //LCD_ATK4_3_H
+#endif //LCD_H

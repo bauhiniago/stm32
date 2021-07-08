@@ -429,6 +429,7 @@ void LCD_Init(){
     lcddev.id=LCD_RD_DATA();//读回0X53
     lcddev.id<<=8;
     lcddev.id|=LCD_RD_DATA();	//这里读回0X10
+    
     if(lcddev.id!=0X5310)		//也不是NT35310,尝试看看是不是NT35510
     {
       LCD_WR_REG(0XDA00);
@@ -438,7 +439,9 @@ void LCD_Init(){
       lcddev.id<<=8;
       LCD_WR_REG(0XDC00);
       lcddev.id|=LCD_RD_DATA();		//读回0X00
+      
       if(lcddev.id==0x8000)lcddev.id=0x5510;//NT35510读回的ID是8000H,为方便区分,我们强制设置为5510
+      
       if(lcddev.id!=0X5510)			//也不是NT5510,尝试看看是不是SSD1963
       {
         LCD_WR_REG(0XA1);
@@ -446,6 +449,7 @@ void LCD_Init(){
         lcddev.id=LCD_RD_DATA();	//读回0X57
         lcddev.id<<=8;
         lcddev.id|=LCD_RD_DATA();	//读回0X61
+        
         if(lcddev.id==0X5761)lcddev.id=0X1963;//SSD1963读回的ID是5761H,为方便区分,我们强制设置为1963
       }
     }

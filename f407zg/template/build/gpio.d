@@ -20,8 +20,11 @@ build/gpio.o: Core/Src/gpio.c Core/Inc/gpio.h Core/Inc/main.h \
  Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h \
  Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h \
  Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_sram.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_fsmc.h \
  Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 Core/Inc/gpio.h:
 Core/Inc/main.h:
 Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
@@ -47,5 +50,8 @@ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_cortex.h:
 Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h:
 Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h:
 Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_sram.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_fsmc.h:
 Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h:
 Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:

@@ -196,7 +196,8 @@ build/main.o: Core/Src/main.c Core/Inc/main.h \
  Middlewares/lvgl/src/extra/themes/mono/lv_theme_mono.h \
  Middlewares/lvgl/src/extra/themes/mono/../../../core/lv_obj.h \
  Middlewares/lvgl/src/extra/themes/basic/lv_theme_basic.h \
- Middlewares/lvgl/src/extra/themes/basic/../../../core/lv_obj.h
+ Middlewares/lvgl/src/extra/themes/basic/../../../core/lv_obj.h \
+ Core/Inc/SHT30.h Core/Inc/i2c.h
 Core/Inc/main.h:
 Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:
 Core/Inc/stm32f1xx_hal_conf.h:
@@ -416,3 +417,5 @@ Middlewares/lvgl/src/extra/themes/mono/lv_theme_mono.h:
 Middlewares/lvgl/src/extra/themes/mono/../../../core/lv_obj.h:
 Middlewares/lvgl/src/extra/themes/basic/lv_theme_basic.h:
 Middlewares/lvgl/src/extra/themes/basic/../../../core/lv_obj.h:
+Core/Inc/SHT30.h:
+Core/Inc/i2c.h:
