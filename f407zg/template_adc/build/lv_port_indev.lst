@@ -1,0 +1,683 @@
+ARM GAS  /tmp/ccwUbgSl.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"lv_port_indev.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.touchpad_init,"ax",%progbits
+  18              		.align	1
+  19              		.arch armv7e-m
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	touchpad_init:
+  26              	.LFB423:
+  27              		.file 1 "Middlewares/lvgl/porting/lv_port_indev.c"
+   1:Middlewares/lvgl/porting/lv_port_indev.c **** /**
+   2:Middlewares/lvgl/porting/lv_port_indev.c ****  * @file lv_port_indev_templ.c
+   3:Middlewares/lvgl/porting/lv_port_indev.c ****  *
+   4:Middlewares/lvgl/porting/lv_port_indev.c ****  */
+   5:Middlewares/lvgl/porting/lv_port_indev.c **** 
+   6:Middlewares/lvgl/porting/lv_port_indev.c ****  /*Copy this file as "lv_port_indev.c" and set this value to "1" to enable content*/
+   7:Middlewares/lvgl/porting/lv_port_indev.c **** #if 1
+   8:Middlewares/lvgl/porting/lv_port_indev.c **** 
+   9:Middlewares/lvgl/porting/lv_port_indev.c **** /*********************
+  10:Middlewares/lvgl/porting/lv_port_indev.c ****  *      INCLUDES
+  11:Middlewares/lvgl/porting/lv_port_indev.c ****  *********************/
+  12:Middlewares/lvgl/porting/lv_port_indev.c **** #include "lv_port_indev.h"
+  13:Middlewares/lvgl/porting/lv_port_indev.c **** #include "GT9147.h"
+  14:Middlewares/lvgl/porting/lv_port_indev.c **** #include <stdio.h>
+  15:Middlewares/lvgl/porting/lv_port_indev.c **** /*********************
+  16:Middlewares/lvgl/porting/lv_port_indev.c ****  *      DEFINES
+  17:Middlewares/lvgl/porting/lv_port_indev.c ****  *********************/
+  18:Middlewares/lvgl/porting/lv_port_indev.c **** #define LV_USE_INDEV_TOUCHPAD 	 0x1u
+  19:Middlewares/lvgl/porting/lv_port_indev.c **** #define LV_USE_INDEV_MOUSE	 	 0x2u
+  20:Middlewares/lvgl/porting/lv_port_indev.c **** #define LV_USE_INDEV_KEYPAD 	 0x4u
+  21:Middlewares/lvgl/porting/lv_port_indev.c **** #define LV_USE_INDEV_ENCODER 	 0x8u
+  22:Middlewares/lvgl/porting/lv_port_indev.c **** #define LV_USE_INDEV_BUTTON 	0x10u
+  23:Middlewares/lvgl/porting/lv_port_indev.c **** #define LV_USE_INDEV    LV_USE_INDEV_TOUCHPAD
+  24:Middlewares/lvgl/porting/lv_port_indev.c **** /**********************
+  25:Middlewares/lvgl/porting/lv_port_indev.c ****  *      TYPEDEFS
+  26:Middlewares/lvgl/porting/lv_port_indev.c ****  **********************/
+  27:Middlewares/lvgl/porting/lv_port_indev.c **** 
+  28:Middlewares/lvgl/porting/lv_port_indev.c **** /**********************
+  29:Middlewares/lvgl/porting/lv_port_indev.c ****  *  STATIC PROTOTYPES
+  30:Middlewares/lvgl/porting/lv_port_indev.c ****  **********************/
+  31:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ARM GAS  /tmp/ccwUbgSl.s 			page 2
+
+
+  32:Middlewares/lvgl/porting/lv_port_indev.c **** static void touchpad_init(void);
+  33:Middlewares/lvgl/porting/lv_port_indev.c **** static void touchpad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
+  34:Middlewares/lvgl/porting/lv_port_indev.c **** static bool touchpad_is_pressed(void);
+  35:Middlewares/lvgl/porting/lv_port_indev.c **** static void touchpad_get_xy(lv_coord_t * x, lv_coord_t * y);
+  36:Middlewares/lvgl/porting/lv_port_indev.c **** 
+  37:Middlewares/lvgl/porting/lv_port_indev.c **** static void mouse_init(void);
+  38:Middlewares/lvgl/porting/lv_port_indev.c **** static void mouse_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
+  39:Middlewares/lvgl/porting/lv_port_indev.c **** static bool mouse_is_pressed(void);
+  40:Middlewares/lvgl/porting/lv_port_indev.c **** static void mouse_get_xy(lv_coord_t * x, lv_coord_t * y);
+  41:Middlewares/lvgl/porting/lv_port_indev.c **** 
+  42:Middlewares/lvgl/porting/lv_port_indev.c **** static void keypad_init(void);
+  43:Middlewares/lvgl/porting/lv_port_indev.c **** static void keypad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
+  44:Middlewares/lvgl/porting/lv_port_indev.c **** static uint32_t keypad_get_key(void);
+  45:Middlewares/lvgl/porting/lv_port_indev.c **** 
+  46:Middlewares/lvgl/porting/lv_port_indev.c **** static void encoder_init(void);
+  47:Middlewares/lvgl/porting/lv_port_indev.c **** static bool encoder_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
+  48:Middlewares/lvgl/porting/lv_port_indev.c **** static void encoder_handler(void);
+  49:Middlewares/lvgl/porting/lv_port_indev.c **** 
+  50:Middlewares/lvgl/porting/lv_port_indev.c **** static void button_init(void);
+  51:Middlewares/lvgl/porting/lv_port_indev.c **** static void button_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
+  52:Middlewares/lvgl/porting/lv_port_indev.c **** static int8_t button_get_pressed_id(void);
+  53:Middlewares/lvgl/porting/lv_port_indev.c **** static bool button_is_pressed(uint8_t id);
+  54:Middlewares/lvgl/porting/lv_port_indev.c **** 
+  55:Middlewares/lvgl/porting/lv_port_indev.c **** /**********************
+  56:Middlewares/lvgl/porting/lv_port_indev.c ****  *  STATIC VARIABLES
+  57:Middlewares/lvgl/porting/lv_port_indev.c ****  **********************/
+  58:Middlewares/lvgl/porting/lv_port_indev.c **** lv_indev_t * indev_touchpad;
+  59:Middlewares/lvgl/porting/lv_port_indev.c **** lv_indev_t * indev_mouse;
+  60:Middlewares/lvgl/porting/lv_port_indev.c **** lv_indev_t * indev_keypad;
+  61:Middlewares/lvgl/porting/lv_port_indev.c **** lv_indev_t * indev_encoder;
+  62:Middlewares/lvgl/porting/lv_port_indev.c **** lv_indev_t * indev_button;
+  63:Middlewares/lvgl/porting/lv_port_indev.c **** 
+  64:Middlewares/lvgl/porting/lv_port_indev.c **** static int32_t encoder_diff;
+  65:Middlewares/lvgl/porting/lv_port_indev.c **** static lv_indev_state_t encoder_state;
+  66:Middlewares/lvgl/porting/lv_port_indev.c **** 
+  67:Middlewares/lvgl/porting/lv_port_indev.c **** /**********************
+  68:Middlewares/lvgl/porting/lv_port_indev.c ****  *      MACROS
+  69:Middlewares/lvgl/porting/lv_port_indev.c ****  **********************/
+  70:Middlewares/lvgl/porting/lv_port_indev.c **** 
+  71:Middlewares/lvgl/porting/lv_port_indev.c **** /**********************
+  72:Middlewares/lvgl/porting/lv_port_indev.c ****  *   GLOBAL FUNCTIONS
+  73:Middlewares/lvgl/porting/lv_port_indev.c ****  **********************/
+  74:Middlewares/lvgl/porting/lv_port_indev.c **** 
+  75:Middlewares/lvgl/porting/lv_port_indev.c **** void lv_port_indev_init(void)
+  76:Middlewares/lvgl/porting/lv_port_indev.c **** {
+  77:Middlewares/lvgl/porting/lv_port_indev.c ****     /**
+  78:Middlewares/lvgl/porting/lv_port_indev.c ****      * Here you will find example implementation of input devices supported by LittelvGL:
+  79:Middlewares/lvgl/porting/lv_port_indev.c ****      *  - Touchpad
+  80:Middlewares/lvgl/porting/lv_port_indev.c ****      *  - Mouse (with cursor support)
+  81:Middlewares/lvgl/porting/lv_port_indev.c ****      *  - Keypad (supports GUI usage only with key)
+  82:Middlewares/lvgl/porting/lv_port_indev.c ****      *  - Encoder (supports GUI usage only with: left, right, push)
+  83:Middlewares/lvgl/porting/lv_port_indev.c ****      *  - Button (external buttons to press points on the screen)
+  84:Middlewares/lvgl/porting/lv_port_indev.c ****      *
+  85:Middlewares/lvgl/porting/lv_port_indev.c ****      *  The `..._read()` function are only examples.
+  86:Middlewares/lvgl/porting/lv_port_indev.c ****      *  You should shape them according to your hardware
+  87:Middlewares/lvgl/porting/lv_port_indev.c ****      */
+  88:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ARM GAS  /tmp/ccwUbgSl.s 			page 3
+
+
+  89:Middlewares/lvgl/porting/lv_port_indev.c ****     static lv_indev_drv_t indev_drv;
+  90:Middlewares/lvgl/porting/lv_port_indev.c ****     #if ( LV_USE_INDEV & LV_USE_INDEV_TOUCHPAD ) == LV_USE_INDEV_TOUCHPAD
+  91:Middlewares/lvgl/porting/lv_port_indev.c ****     /*------------------
+  92:Middlewares/lvgl/porting/lv_port_indev.c ****      * Touchpad
+  93:Middlewares/lvgl/porting/lv_port_indev.c ****      * -----------------*/
+  94:Middlewares/lvgl/porting/lv_port_indev.c **** 
+  95:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Initialize your touchpad if you have*/
+  96:Middlewares/lvgl/porting/lv_port_indev.c ****     touchpad_init();
+  97:Middlewares/lvgl/porting/lv_port_indev.c **** 
+  98:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Register a touchpad input device*/
+  99:Middlewares/lvgl/porting/lv_port_indev.c ****     lv_indev_drv_init(&indev_drv);
+ 100:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_drv.type = LV_INDEV_TYPE_POINTER;
+ 101:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_drv.read_cb = touchpad_read;
+ 102:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_touchpad = lv_indev_drv_register(&indev_drv);
+ 103:Middlewares/lvgl/porting/lv_port_indev.c ****     #endif
+ 104:Middlewares/lvgl/porting/lv_port_indev.c ****     #if ( LV_USE_INDEV & LV_USE_INDEV_MOUSE ) == LV_USE_INDEV_MOUSE
+ 105:Middlewares/lvgl/porting/lv_port_indev.c ****     /*------------------
+ 106:Middlewares/lvgl/porting/lv_port_indev.c ****      * Mouse
+ 107:Middlewares/lvgl/porting/lv_port_indev.c ****      * -----------------*/
+ 108:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 109:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Initialize your touchpad if you have*/
+ 110:Middlewares/lvgl/porting/lv_port_indev.c ****     mouse_init();
+ 111:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Register a mouse input device*/
+ 112:Middlewares/lvgl/porting/lv_port_indev.c ****     lv_indev_drv_init(&indev_drv);
+ 113:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_drv.type = LV_INDEV_TYPE_POINTER;
+ 114:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_drv.read_cb = mouse_read;
+ 115:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_mouse = lv_indev_drv_register(&indev_drv);
+ 116:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 117:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Set cursor. For simplicity set a HOME symbol now.*/
+ 118:Middlewares/lvgl/porting/lv_port_indev.c ****     lv_obj_t * mouse_cursor = lv_img_create(lv_disp_get_scr_act(NULL), NULL);
+ 119:Middlewares/lvgl/porting/lv_port_indev.c ****     lv_img_set_src(mouse_cursor, LV_SYMBOL_HOME);
+ 120:Middlewares/lvgl/porting/lv_port_indev.c ****     lv_indev_set_cursor(indev_mouse, mouse_cursor);
+ 121:Middlewares/lvgl/porting/lv_port_indev.c ****     #endif
+ 122:Middlewares/lvgl/porting/lv_port_indev.c ****     #if ( LV_USE_INDEV & LV_USE_INDEV_KEYPAD ) == LV_USE_INDEV_KEYPAD
+ 123:Middlewares/lvgl/porting/lv_port_indev.c ****     /*------------------
+ 124:Middlewares/lvgl/porting/lv_port_indev.c ****      * Keypad
+ 125:Middlewares/lvgl/porting/lv_port_indev.c ****      * -----------------*/
+ 126:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 127:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Initialize your keypad or keyboard if you have*/
+ 128:Middlewares/lvgl/porting/lv_port_indev.c ****     keypad_init();
+ 129:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 130:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Register a keypad input device*/
+ 131:Middlewares/lvgl/porting/lv_port_indev.c ****     lv_indev_drv_init(&indev_drv);
+ 132:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_drv.type = LV_INDEV_TYPE_KEYPAD;
+ 133:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_drv.read_cb = keypad_read;
+ 134:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_keypad = lv_indev_drv_register(&indev_drv);
+ 135:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 136:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Later you should create group(s) with `lv_group_t * group = lv_group_create()`,
+ 137:Middlewares/lvgl/porting/lv_port_indev.c ****      *add objects to the group with `lv_group_add_obj(group, obj)`
+ 138:Middlewares/lvgl/porting/lv_port_indev.c ****      *and assign this input device to group to navigate in it:
+ 139:Middlewares/lvgl/porting/lv_port_indev.c ****      *`lv_indev_set_group(indev_keypad, group);`*/
+ 140:Middlewares/lvgl/porting/lv_port_indev.c ****     #endif
+ 141:Middlewares/lvgl/porting/lv_port_indev.c ****     #if ( LV_USE_INDEV & LV_USE_INDEV_ENCODER ) == LV_USE_INDEV_ENCODER
+ 142:Middlewares/lvgl/porting/lv_port_indev.c ****     /*------------------
+ 143:Middlewares/lvgl/porting/lv_port_indev.c ****      * Encoder
+ 144:Middlewares/lvgl/porting/lv_port_indev.c ****      * -----------------*/
+ 145:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ARM GAS  /tmp/ccwUbgSl.s 			page 4
+
+
+ 146:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Initialize your encoder if you have*/
+ 147:Middlewares/lvgl/porting/lv_port_indev.c ****     encoder_init();
+ 148:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 149:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Register a encoder input device*/
+ 150:Middlewares/lvgl/porting/lv_port_indev.c ****     lv_indev_drv_init(&indev_drv);
+ 151:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_drv.type = LV_INDEV_TYPE_ENCODER;
+ 152:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_drv.read_cb = encoder_read;
+ 153:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_encoder = lv_indev_drv_register(&indev_drv);
+ 154:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 155:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Later you should create group(s) with `lv_group_t * group = lv_group_create()`,
+ 156:Middlewares/lvgl/porting/lv_port_indev.c ****      *add objects to the group with `lv_group_add_obj(group, obj)`
+ 157:Middlewares/lvgl/porting/lv_port_indev.c ****      *and assign this input device to group to navigate in it:
+ 158:Middlewares/lvgl/porting/lv_port_indev.c ****      *`lv_indev_set_group(indev_encoder, group);`*/
+ 159:Middlewares/lvgl/porting/lv_port_indev.c ****     #endif
+ 160:Middlewares/lvgl/porting/lv_port_indev.c ****     #if ( LV_USE_INDEV & LV_USE_INDEV_BUTTON ) == LV_USE_INDEV_BUTTON
+ 161:Middlewares/lvgl/porting/lv_port_indev.c ****     /*------------------
+ 162:Middlewares/lvgl/porting/lv_port_indev.c ****      * Button
+ 163:Middlewares/lvgl/porting/lv_port_indev.c ****      * -----------------*/
+ 164:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 165:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Initialize your button if you have*/
+ 166:Middlewares/lvgl/porting/lv_port_indev.c ****     button_init();
+ 167:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 168:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Register a button input device*/
+ 169:Middlewares/lvgl/porting/lv_port_indev.c ****     lv_indev_drv_init(&indev_drv);
+ 170:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_drv.type = LV_INDEV_TYPE_BUTTON;
+ 171:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_drv.read_cb = button_read;
+ 172:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_button = lv_indev_drv_register(&indev_drv);
+ 173:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 174:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Assign buttons to points on the screen*/
+ 175:Middlewares/lvgl/porting/lv_port_indev.c ****     static const lv_point_t btn_points[2] = {
+ 176:Middlewares/lvgl/porting/lv_port_indev.c ****             {10, 10},   /*Button 0 -> x:10; y:10*/
+ 177:Middlewares/lvgl/porting/lv_port_indev.c ****             {40, 100},  /*Button 1 -> x:40; y:100*/
+ 178:Middlewares/lvgl/porting/lv_port_indev.c ****     };
+ 179:Middlewares/lvgl/porting/lv_port_indev.c ****     lv_indev_set_button_points(indev_button, btn_points);
+ 180:Middlewares/lvgl/porting/lv_port_indev.c ****     #endif
+ 181:Middlewares/lvgl/porting/lv_port_indev.c **** }
+ 182:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 183:Middlewares/lvgl/porting/lv_port_indev.c **** /**********************
+ 184:Middlewares/lvgl/porting/lv_port_indev.c ****  *   STATIC FUNCTIONS
+ 185:Middlewares/lvgl/porting/lv_port_indev.c ****  **********************/
+ 186:Middlewares/lvgl/porting/lv_port_indev.c **** #if ( LV_USE_INDEV & LV_USE_INDEV_TOUCHPAD ) == LV_USE_INDEV_TOUCHPAD
+ 187:Middlewares/lvgl/porting/lv_port_indev.c **** /*------------------
+ 188:Middlewares/lvgl/porting/lv_port_indev.c ****  * Touchpad
+ 189:Middlewares/lvgl/porting/lv_port_indev.c ****  * -----------------*/
+ 190:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 191:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 192:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 193:Middlewares/lvgl/porting/lv_port_indev.c **** /*Initialize your touchpad*/
+ 194:Middlewares/lvgl/porting/lv_port_indev.c **** static void touchpad_init(void)
+ 195:Middlewares/lvgl/porting/lv_port_indev.c **** {
+  28              		.loc 1 195 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 08B5     		push	{r3, lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 8
+ARM GAS  /tmp/ccwUbgSl.s 			page 5
+
+
+  35              		.cfi_offset 3, -8
+  36              		.cfi_offset 14, -4
+ 196:Middlewares/lvgl/porting/lv_port_indev.c ****     
+ 197:Middlewares/lvgl/porting/lv_port_indev.c ****     touchdev.init();
+  37              		.loc 1 197 5 view .LVU1
+  38              		.loc 1 197 13 is_stmt 0 view .LVU2
+  39 0002 024B     		ldr	r3, .L3
+  40 0004 1B68     		ldr	r3, [r3]
+  41              		.loc 1 197 5 view .LVU3
+  42 0006 9847     		blx	r3
+  43              	.LVL0:
+ 198:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Your code comes here*/
+ 199:Middlewares/lvgl/porting/lv_port_indev.c **** }
+  44              		.loc 1 199 1 view .LVU4
+  45 0008 08BD     		pop	{r3, pc}
+  46              	.L4:
+  47 000a 00BF     		.align	2
+  48              	.L3:
+  49 000c 00000000 		.word	touchdev
+  50              		.cfi_endproc
+  51              	.LFE423:
+  53              		.section	.text.touchpad_is_pressed,"ax",%progbits
+  54              		.align	1
+  55              		.syntax unified
+  56              		.thumb
+  57              		.thumb_func
+  58              		.fpu fpv4-sp-d16
+  60              	touchpad_is_pressed:
+  61              	.LFB425:
+ 200:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 201:Middlewares/lvgl/porting/lv_port_indev.c **** /*Will be called by the library to read the touchpad*/
+ 202:Middlewares/lvgl/porting/lv_port_indev.c **** static void touchpad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
+ 203:Middlewares/lvgl/porting/lv_port_indev.c **** {
+ 204:Middlewares/lvgl/porting/lv_port_indev.c ****     static lv_coord_t last_x = 0;
+ 205:Middlewares/lvgl/porting/lv_port_indev.c ****     static lv_coord_t last_y = 0;
+ 206:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 207:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Save the pressed coordinates and the state*/
+ 208:Middlewares/lvgl/porting/lv_port_indev.c ****     if(touchpad_is_pressed()) {
+ 209:Middlewares/lvgl/porting/lv_port_indev.c ****         touchpad_get_xy(&last_x, &last_y);
+ 210:Middlewares/lvgl/porting/lv_port_indev.c ****         data->state = LV_INDEV_STATE_PR;
+ 211:Middlewares/lvgl/porting/lv_port_indev.c ****     } else {
+ 212:Middlewares/lvgl/porting/lv_port_indev.c ****         data->state = LV_INDEV_STATE_REL;
+ 213:Middlewares/lvgl/porting/lv_port_indev.c ****     }
+ 214:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 215:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Set the last pressed coordinates*/
+ 216:Middlewares/lvgl/porting/lv_port_indev.c ****     data->point.x = last_x;
+ 217:Middlewares/lvgl/porting/lv_port_indev.c ****     data->point.y = last_y;
+ 218:Middlewares/lvgl/porting/lv_port_indev.c **** }
+ 219:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 220:Middlewares/lvgl/porting/lv_port_indev.c **** /*Return true is the touchpad is pressed*/
+ 221:Middlewares/lvgl/porting/lv_port_indev.c **** static bool touchpad_is_pressed(void)
+ 222:Middlewares/lvgl/porting/lv_port_indev.c **** {
+  62              		.loc 1 222 1 is_stmt 1 view -0
+  63              		.cfi_startproc
+  64              		@ args = 0, pretend = 0, frame = 0
+  65              		@ frame_needed = 0, uses_anonymous_args = 0
+  66 0000 10B5     		push	{r4, lr}
+ARM GAS  /tmp/ccwUbgSl.s 			page 6
+
+
+  67              	.LCFI1:
+  68              		.cfi_def_cfa_offset 8
+  69              		.cfi_offset 4, -8
+  70              		.cfi_offset 14, -4
+ 223:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Your code comes here*/
+ 224:Middlewares/lvgl/porting/lv_port_indev.c ****     touchdev.scan(0);
+  71              		.loc 1 224 5 view .LVU6
+  72              		.loc 1 224 13 is_stmt 0 view .LVU7
+  73 0002 064C     		ldr	r4, .L10
+  74 0004 6368     		ldr	r3, [r4, #4]
+  75              		.loc 1 224 5 view .LVU8
+  76 0006 0020     		movs	r0, #0
+  77 0008 9847     		blx	r3
+  78              	.LVL1:
+ 225:Middlewares/lvgl/porting/lv_port_indev.c ****     //printf("%o\r\n",touchdev.sta);
+ 226:Middlewares/lvgl/porting/lv_port_indev.c ****     if((touchdev.sta)&(1<<7))
+  79              		.loc 1 226 5 is_stmt 1 view .LVU9
+  80              		.loc 1 226 8 is_stmt 0 view .LVU10
+  81 000a 94F92030 		ldrsb	r3, [r4, #32]
+  82              		.loc 1 226 7 view .LVU11
+  83 000e 002B     		cmp	r3, #0
+  84 0010 01DB     		blt	.L9
+ 227:Middlewares/lvgl/porting/lv_port_indev.c ****         return true;
+ 228:Middlewares/lvgl/porting/lv_port_indev.c ****     else
+ 229:Middlewares/lvgl/porting/lv_port_indev.c ****         return false;
+  85              		.loc 1 229 16 view .LVU12
+  86 0012 0020     		movs	r0, #0
+  87              	.L6:
+ 230:Middlewares/lvgl/porting/lv_port_indev.c ****     
+ 231:Middlewares/lvgl/porting/lv_port_indev.c **** }
+  88              		.loc 1 231 1 view .LVU13
+  89 0014 10BD     		pop	{r4, pc}
+  90              	.L9:
+ 227:Middlewares/lvgl/porting/lv_port_indev.c ****         return true;
+  91              		.loc 1 227 16 view .LVU14
+  92 0016 0120     		movs	r0, #1
+  93 0018 FCE7     		b	.L6
+  94              	.L11:
+  95 001a 00BF     		.align	2
+  96              	.L10:
+  97 001c 00000000 		.word	touchdev
+  98              		.cfi_endproc
+  99              	.LFE425:
+ 101              		.section	.text.touchpad_get_xy,"ax",%progbits
+ 102              		.align	1
+ 103              		.syntax unified
+ 104              		.thumb
+ 105              		.thumb_func
+ 106              		.fpu fpv4-sp-d16
+ 108              	touchpad_get_xy:
+ 109              	.LVL2:
+ 110              	.LFB426:
+ 232:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 233:Middlewares/lvgl/porting/lv_port_indev.c **** /*Get the x and y coordinates if the touchpad is pressed*/
+ 234:Middlewares/lvgl/porting/lv_port_indev.c **** static void touchpad_get_xy(lv_coord_t * x, lv_coord_t * y)
+ 235:Middlewares/lvgl/porting/lv_port_indev.c **** {
+ 111              		.loc 1 235 1 is_stmt 1 view -0
+ARM GAS  /tmp/ccwUbgSl.s 			page 7
+
+
+ 112              		.cfi_startproc
+ 113              		@ args = 0, pretend = 0, frame = 0
+ 114              		@ frame_needed = 0, uses_anonymous_args = 0
+ 115              		.loc 1 235 1 is_stmt 0 view .LVU16
+ 116 0000 70B5     		push	{r4, r5, r6, lr}
+ 117              	.LCFI2:
+ 118              		.cfi_def_cfa_offset 16
+ 119              		.cfi_offset 4, -16
+ 120              		.cfi_offset 5, -12
+ 121              		.cfi_offset 6, -8
+ 122              		.cfi_offset 14, -4
+ 123 0002 0646     		mov	r6, r0
+ 124 0004 0C46     		mov	r4, r1
+ 236:Middlewares/lvgl/porting/lv_port_indev.c ****     /*Your code comes here*/
+ 237:Middlewares/lvgl/porting/lv_port_indev.c ****     
+ 238:Middlewares/lvgl/porting/lv_port_indev.c ****   	    
+ 239:Middlewares/lvgl/porting/lv_port_indev.c ****     touchdev.scan(0);
+ 125              		.loc 1 239 5 is_stmt 1 view .LVU17
+ 126              		.loc 1 239 13 is_stmt 0 view .LVU18
+ 127 0006 054D     		ldr	r5, .L14
+ 128 0008 6B68     		ldr	r3, [r5, #4]
+ 129              		.loc 1 239 5 view .LVU19
+ 130 000a 0020     		movs	r0, #0
+ 131              	.LVL3:
+ 132              		.loc 1 239 5 view .LVU20
+ 133 000c 9847     		blx	r3
+ 134              	.LVL4:
+ 240:Middlewares/lvgl/porting/lv_port_indev.c ****     //printf("x:%d y:%d\r\n",touchdev.x[0],touchdev.y[0]);
+ 241:Middlewares/lvgl/porting/lv_port_indev.c ****     (*x) = touchdev.x[0];
+ 135              		.loc 1 241 5 is_stmt 1 view .LVU21
+ 136              		.loc 1 241 22 is_stmt 0 view .LVU22
+ 137 000e B5F90C30 		ldrsh	r3, [r5, #12]
+ 138              		.loc 1 241 10 view .LVU23
+ 139 0012 3380     		strh	r3, [r6]	@ movhi
+ 242:Middlewares/lvgl/porting/lv_port_indev.c ****     (*y) = touchdev.y[0];
+ 140              		.loc 1 242 5 is_stmt 1 view .LVU24
+ 141              		.loc 1 242 22 is_stmt 0 view .LVU25
+ 142 0014 B5F91630 		ldrsh	r3, [r5, #22]
+ 143              		.loc 1 242 10 view .LVU26
+ 144 0018 2380     		strh	r3, [r4]	@ movhi
+ 243:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 244:Middlewares/lvgl/porting/lv_port_indev.c ****     //printf("OUT!!!\r\n");
+ 245:Middlewares/lvgl/porting/lv_port_indev.c ****     
+ 246:Middlewares/lvgl/porting/lv_port_indev.c **** }
+ 145              		.loc 1 246 1 view .LVU27
+ 146 001a 70BD     		pop	{r4, r5, r6, pc}
+ 147              	.LVL5:
+ 148              	.L15:
+ 149              		.loc 1 246 1 view .LVU28
+ 150              		.align	2
+ 151              	.L14:
+ 152 001c 00000000 		.word	touchdev
+ 153              		.cfi_endproc
+ 154              	.LFE426:
+ 156              		.section	.text.touchpad_read,"ax",%progbits
+ 157              		.align	1
+ 158              		.syntax unified
+ARM GAS  /tmp/ccwUbgSl.s 			page 8
+
+
+ 159              		.thumb
+ 160              		.thumb_func
+ 161              		.fpu fpv4-sp-d16
+ 163              	touchpad_read:
+ 164              	.LVL6:
+ 165              	.LFB424:
+ 203:Middlewares/lvgl/porting/lv_port_indev.c ****     static lv_coord_t last_x = 0;
+ 166              		.loc 1 203 1 is_stmt 1 view -0
+ 167              		.cfi_startproc
+ 168              		@ args = 0, pretend = 0, frame = 0
+ 169              		@ frame_needed = 0, uses_anonymous_args = 0
+ 203:Middlewares/lvgl/porting/lv_port_indev.c ****     static lv_coord_t last_x = 0;
+ 170              		.loc 1 203 1 is_stmt 0 view .LVU30
+ 171 0000 10B5     		push	{r4, lr}
+ 172              	.LCFI3:
+ 173              		.cfi_def_cfa_offset 8
+ 174              		.cfi_offset 4, -8
+ 175              		.cfi_offset 14, -4
+ 176 0002 0C46     		mov	r4, r1
+ 204:Middlewares/lvgl/porting/lv_port_indev.c ****     static lv_coord_t last_y = 0;
+ 177              		.loc 1 204 5 is_stmt 1 view .LVU31
+ 205:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 178              		.loc 1 205 5 view .LVU32
+ 208:Middlewares/lvgl/porting/lv_port_indev.c ****         touchpad_get_xy(&last_x, &last_y);
+ 179              		.loc 1 208 5 view .LVU33
+ 208:Middlewares/lvgl/porting/lv_port_indev.c ****         touchpad_get_xy(&last_x, &last_y);
+ 180              		.loc 1 208 8 is_stmt 0 view .LVU34
+ 181 0004 FFF7FEFF 		bl	touchpad_is_pressed
+ 182              	.LVL7:
+ 208:Middlewares/lvgl/porting/lv_port_indev.c ****         touchpad_get_xy(&last_x, &last_y);
+ 183              		.loc 1 208 7 view .LVU35
+ 184 0008 48B9     		cbnz	r0, .L20
+ 212:Middlewares/lvgl/porting/lv_port_indev.c ****     }
+ 185              		.loc 1 212 9 is_stmt 1 view .LVU36
+ 212:Middlewares/lvgl/porting/lv_port_indev.c ****     }
+ 186              		.loc 1 212 21 is_stmt 0 view .LVU37
+ 187 000a 0023     		movs	r3, #0
+ 188 000c A373     		strb	r3, [r4, #14]
+ 189              	.L18:
+ 216:Middlewares/lvgl/porting/lv_port_indev.c ****     data->point.y = last_y;
+ 190              		.loc 1 216 5 is_stmt 1 view .LVU38
+ 216:Middlewares/lvgl/porting/lv_port_indev.c ****     data->point.y = last_y;
+ 191              		.loc 1 216 19 is_stmt 0 view .LVU39
+ 192 000e 074B     		ldr	r3, .L21
+ 193 0010 B3F90030 		ldrsh	r3, [r3]
+ 194 0014 2380     		strh	r3, [r4]	@ movhi
+ 217:Middlewares/lvgl/porting/lv_port_indev.c **** }
+ 195              		.loc 1 217 5 is_stmt 1 view .LVU40
+ 217:Middlewares/lvgl/porting/lv_port_indev.c **** }
+ 196              		.loc 1 217 19 is_stmt 0 view .LVU41
+ 197 0016 064B     		ldr	r3, .L21+4
+ 198 0018 1B88     		ldrh	r3, [r3]
+ 199 001a 6380     		strh	r3, [r4, #2]	@ movhi
+ 218:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 200              		.loc 1 218 1 view .LVU42
+ 201 001c 10BD     		pop	{r4, pc}
+ 202              	.LVL8:
+ARM GAS  /tmp/ccwUbgSl.s 			page 9
+
+
+ 203              	.L20:
+ 209:Middlewares/lvgl/porting/lv_port_indev.c ****         data->state = LV_INDEV_STATE_PR;
+ 204              		.loc 1 209 9 is_stmt 1 view .LVU43
+ 205 001e 0449     		ldr	r1, .L21+4
+ 206 0020 0248     		ldr	r0, .L21
+ 207 0022 FFF7FEFF 		bl	touchpad_get_xy
+ 208              	.LVL9:
+ 210:Middlewares/lvgl/porting/lv_port_indev.c ****     } else {
+ 209              		.loc 1 210 9 view .LVU44
+ 210:Middlewares/lvgl/porting/lv_port_indev.c ****     } else {
+ 210              		.loc 1 210 21 is_stmt 0 view .LVU45
+ 211 0026 0123     		movs	r3, #1
+ 212 0028 A373     		strb	r3, [r4, #14]
+ 213 002a F0E7     		b	.L18
+ 214              	.L22:
+ 215              		.align	2
+ 216              	.L21:
+ 217 002c 00000000 		.word	.LANCHOR1
+ 218 0030 00000000 		.word	.LANCHOR0
+ 219              		.cfi_endproc
+ 220              	.LFE424:
+ 222              		.section	.text.lv_port_indev_init,"ax",%progbits
+ 223              		.align	1
+ 224              		.global	lv_port_indev_init
+ 225              		.syntax unified
+ 226              		.thumb
+ 227              		.thumb_func
+ 228              		.fpu fpv4-sp-d16
+ 230              	lv_port_indev_init:
+ 231              	.LFB422:
+  76:Middlewares/lvgl/porting/lv_port_indev.c ****     /**
+ 232              		.loc 1 76 1 is_stmt 1 view -0
+ 233              		.cfi_startproc
+ 234              		@ args = 0, pretend = 0, frame = 0
+ 235              		@ frame_needed = 0, uses_anonymous_args = 0
+ 236 0000 10B5     		push	{r4, lr}
+ 237              	.LCFI4:
+ 238              		.cfi_def_cfa_offset 8
+ 239              		.cfi_offset 4, -8
+ 240              		.cfi_offset 14, -4
+  89:Middlewares/lvgl/porting/lv_port_indev.c ****     #if ( LV_USE_INDEV & LV_USE_INDEV_TOUCHPAD ) == LV_USE_INDEV_TOUCHPAD
+ 241              		.loc 1 89 5 view .LVU47
+  96:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 242              		.loc 1 96 5 view .LVU48
+ 243 0002 FFF7FEFF 		bl	touchpad_init
+ 244              	.LVL10:
+  99:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_drv.type = LV_INDEV_TYPE_POINTER;
+ 245              		.loc 1 99 5 view .LVU49
+ 246 0006 074C     		ldr	r4, .L25
+ 247 0008 2046     		mov	r0, r4
+ 248 000a FFF7FEFF 		bl	lv_indev_drv_init
+ 249              	.LVL11:
+ 100:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_drv.read_cb = touchpad_read;
+ 250              		.loc 1 100 5 view .LVU50
+ 100:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_drv.read_cb = touchpad_read;
+ 251              		.loc 1 100 20 is_stmt 0 view .LVU51
+ 252 000e 0123     		movs	r3, #1
+ARM GAS  /tmp/ccwUbgSl.s 			page 10
+
+
+ 253 0010 2370     		strb	r3, [r4]
+ 101:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_touchpad = lv_indev_drv_register(&indev_drv);
+ 254              		.loc 1 101 5 is_stmt 1 view .LVU52
+ 101:Middlewares/lvgl/porting/lv_port_indev.c ****     indev_touchpad = lv_indev_drv_register(&indev_drv);
+ 255              		.loc 1 101 23 is_stmt 0 view .LVU53
+ 256 0012 054B     		ldr	r3, .L25+4
+ 257 0014 6360     		str	r3, [r4, #4]
+ 102:Middlewares/lvgl/porting/lv_port_indev.c ****     #endif
+ 258              		.loc 1 102 5 is_stmt 1 view .LVU54
+ 102:Middlewares/lvgl/porting/lv_port_indev.c ****     #endif
+ 259              		.loc 1 102 22 is_stmt 0 view .LVU55
+ 260 0016 2046     		mov	r0, r4
+ 261 0018 FFF7FEFF 		bl	lv_indev_drv_register
+ 262              	.LVL12:
+ 102:Middlewares/lvgl/porting/lv_port_indev.c ****     #endif
+ 263              		.loc 1 102 20 view .LVU56
+ 264 001c 034B     		ldr	r3, .L25+8
+ 265 001e 1860     		str	r0, [r3]
+ 181:Middlewares/lvgl/porting/lv_port_indev.c **** 
+ 266              		.loc 1 181 1 view .LVU57
+ 267 0020 10BD     		pop	{r4, pc}
+ 268              	.L26:
+ 269 0022 00BF     		.align	2
+ 270              	.L25:
+ 271 0024 00000000 		.word	.LANCHOR2
+ 272 0028 00000000 		.word	touchpad_read
+ 273 002c 00000000 		.word	.LANCHOR3
+ 274              		.cfi_endproc
+ 275              	.LFE422:
+ 277              		.global	indev_button
+ 278              		.global	indev_encoder
+ 279              		.global	indev_keypad
+ 280              		.global	indev_mouse
+ 281              		.global	indev_touchpad
+ 282              		.section	.bss.indev_button,"aw",%nobits
+ 283              		.align	2
+ 286              	indev_button:
+ 287 0000 00000000 		.space	4
+ 288              		.section	.bss.indev_drv.2,"aw",%nobits
+ 289              		.align	2
+ 290              		.set	.LANCHOR2,. + 0
+ 293              	indev_drv.2:
+ 294 0000 00000000 		.space	32
+ 294      00000000 
+ 294      00000000 
+ 294      00000000 
+ 294      00000000 
+ 295              		.section	.bss.indev_encoder,"aw",%nobits
+ 296              		.align	2
+ 299              	indev_encoder:
+ 300 0000 00000000 		.space	4
+ 301              		.section	.bss.indev_keypad,"aw",%nobits
+ 302              		.align	2
+ 305              	indev_keypad:
+ 306 0000 00000000 		.space	4
+ 307              		.section	.bss.indev_mouse,"aw",%nobits
+ 308              		.align	2
+ARM GAS  /tmp/ccwUbgSl.s 			page 11
+
+
+ 311              	indev_mouse:
+ 312 0000 00000000 		.space	4
+ 313              		.section	.bss.indev_touchpad,"aw",%nobits
+ 314              		.align	2
+ 315              		.set	.LANCHOR3,. + 0
+ 318              	indev_touchpad:
+ 319 0000 00000000 		.space	4
+ 320              		.section	.bss.last_x.1,"aw",%nobits
+ 321              		.align	1
+ 322              		.set	.LANCHOR1,. + 0
+ 325              	last_x.1:
+ 326 0000 0000     		.space	2
+ 327              		.section	.bss.last_y.0,"aw",%nobits
+ 328              		.align	1
+ 329              		.set	.LANCHOR0,. + 0
+ 332              	last_y.0:
+ 333 0000 0000     		.space	2
+ 334              		.text
+ 335              	.Letext0:
+ 336              		.file 2 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 337              		.file 3 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ 338              		.file 4 "Middlewares/lvgl/src/misc/lv_ll.h"
+ 339              		.file 5 "Middlewares/lvgl/src/misc/lv_timer.h"
+ 340              		.file 6 "Middlewares/lvgl/src/hal/../misc/lv_color.h"
+ 341              		.file 7 "Middlewares/lvgl/src/hal/../misc/lv_area.h"
+ 342              		.file 8 "Middlewares/lvgl/src/hal/lv_hal_disp.h"
+ 343              		.file 9 "Middlewares/lvgl/src/core/lv_theme.h"
+ 344              		.file 10 "Middlewares/lvgl/src/core/lv_obj.h"
+ 345              		.file 11 "Middlewares/lvgl/src/hal/lv_hal_indev.h"
+ 346              		.file 12 "Middlewares/lvgl/src/core/lv_group.h"
+ 347              		.file 13 "Middlewares/lvgl/src/core/../misc/../font/lv_font.h"
+ 348              		.file 14 "Middlewares/lvgl/src/core/../misc/lv_style.h"
+ 349              		.file 15 "Middlewares/lvgl/src/core/lv_obj_scroll.h"
+ 350              		.file 16 "Middlewares/lvgl/src/core/lv_obj_style.h"
+ 351              		.file 17 "Middlewares/lvgl/src/core/lv_obj_class.h"
+ 352              		.file 18 "Middlewares/lvgl/src/core/lv_event.h"
+ 353              		.file 19 "Middlewares/lvgl/src/widgets/lv_bar.h"
+ 354              		.file 20 "Middlewares/lvgl/src/extra/widgets/imgbtn/lv_imgbtn.h"
+ 355              		.file 21 "Core/Inc/GT9147.h"
+ARM GAS  /tmp/ccwUbgSl.s 			page 12
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 lv_port_indev.c
+     /tmp/ccwUbgSl.s:18     .text.touchpad_init:0000000000000000 $t
+     /tmp/ccwUbgSl.s:25     .text.touchpad_init:0000000000000000 touchpad_init
+     /tmp/ccwUbgSl.s:49     .text.touchpad_init:000000000000000c $d
+     /tmp/ccwUbgSl.s:54     .text.touchpad_is_pressed:0000000000000000 $t
+     /tmp/ccwUbgSl.s:60     .text.touchpad_is_pressed:0000000000000000 touchpad_is_pressed
+     /tmp/ccwUbgSl.s:97     .text.touchpad_is_pressed:000000000000001c $d
+     /tmp/ccwUbgSl.s:102    .text.touchpad_get_xy:0000000000000000 $t
+     /tmp/ccwUbgSl.s:108    .text.touchpad_get_xy:0000000000000000 touchpad_get_xy
+     /tmp/ccwUbgSl.s:152    .text.touchpad_get_xy:000000000000001c $d
+     /tmp/ccwUbgSl.s:157    .text.touchpad_read:0000000000000000 $t
+     /tmp/ccwUbgSl.s:163    .text.touchpad_read:0000000000000000 touchpad_read
+     /tmp/ccwUbgSl.s:217    .text.touchpad_read:000000000000002c $d
+     /tmp/ccwUbgSl.s:223    .text.lv_port_indev_init:0000000000000000 $t
+     /tmp/ccwUbgSl.s:230    .text.lv_port_indev_init:0000000000000000 lv_port_indev_init
+     /tmp/ccwUbgSl.s:271    .text.lv_port_indev_init:0000000000000024 $d
+     /tmp/ccwUbgSl.s:286    .bss.indev_button:0000000000000000 indev_button
+     /tmp/ccwUbgSl.s:299    .bss.indev_encoder:0000000000000000 indev_encoder
+     /tmp/ccwUbgSl.s:305    .bss.indev_keypad:0000000000000000 indev_keypad
+     /tmp/ccwUbgSl.s:311    .bss.indev_mouse:0000000000000000 indev_mouse
+     /tmp/ccwUbgSl.s:318    .bss.indev_touchpad:0000000000000000 indev_touchpad
+     /tmp/ccwUbgSl.s:283    .bss.indev_button:0000000000000000 $d
+     /tmp/ccwUbgSl.s:289    .bss.indev_drv.2:0000000000000000 $d
+     /tmp/ccwUbgSl.s:293    .bss.indev_drv.2:0000000000000000 indev_drv.2
+     /tmp/ccwUbgSl.s:296    .bss.indev_encoder:0000000000000000 $d
+     /tmp/ccwUbgSl.s:302    .bss.indev_keypad:0000000000000000 $d
+     /tmp/ccwUbgSl.s:308    .bss.indev_mouse:0000000000000000 $d
+     /tmp/ccwUbgSl.s:314    .bss.indev_touchpad:0000000000000000 $d
+     /tmp/ccwUbgSl.s:321    .bss.last_x.1:0000000000000000 $d
+     /tmp/ccwUbgSl.s:325    .bss.last_x.1:0000000000000000 last_x.1
+     /tmp/ccwUbgSl.s:328    .bss.last_y.0:0000000000000000 $d
+     /tmp/ccwUbgSl.s:332    .bss.last_y.0:0000000000000000 last_y.0
+
+UNDEFINED SYMBOLS
+touchdev
+lv_indev_drv_init
+lv_indev_drv_register
