@@ -28,6 +28,8 @@
 /* USER CODE BEGIN Includes */
 #include "lvgl.h"
 #include "lvgl_app.h"
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,12 +49,57 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-
+osThreadId BlinkTaskHandle;
+osThreadId HelloTaskHandle;
+osThreadId lvglTaskHandle;
+osThreadId counterTaskHandle;
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
+void lvgl_init(void){
+  /* lvgl init */
+  lv_init();
+  lv_port_disp_init();        // 显示器初始化
+  lv_port_indev_init();       // 输入设备初始化（如果没有实现就注释掉）
+  // lv_port_fs_init();          // 文件系统设备初始化（如果没有实现就注释掉）
+  lv_example_btn_1();
+  counter_label();
+  uint32_t ticks=HAL_GetTick()+1;
+  char text[5];
+  uint32_t i=0;
+  extern lv_obj_t * label1;
+  for (;;)
+  {
+    lv_tick_inc(LVGL_TICK);
+    lv_task_handler();
+    osDelay(LVGL_TICK);
+    if((HAL_GetTick()-ticks)>100){
+      ticks=HAL_GetTick();
+      sprintf(text,"%d",i);
+      //printf("%s %d\r\n",text,i);
+      lv_label_set_text(label1, text);
+      i++;
+    }
+  }
+}
+void LED_Blinks(void){
+  for(;;)
+  {
+    
+    //printf("hello world\r\n");
+    osDelay(500);
+  }
+}
+void Helloworld(void){
+  for(;;)
+  {
+    HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
+    printf("hello world\r\n");
+    osDelay(500);
+  }
+}
 
 /* USER CODE END FunctionPrototypes */
 
@@ -84,13 +131,6 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackTy
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
-  /* lvgl init */
-  // lv_init();
-  // lv_port_disp_init();        // 显示器初始化
-  // lv_port_indev_init();       // 输入设备初始化（如果没有实现就注释掉）
-  //lv_port_fs_init();          // 文件系统设备初始化（如果没有实现就注释掉）
-  osThreadId Task1Handle;
-  osThreadId Task2Handle;
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -116,8 +156,14 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  osThreadDef(blink, LED_Blinks, osPriorityNormal, 0, 2048);
-  Task1Handle = osThreadCreate(osThread(blink), NULL);
+
+  osThreadDef(blink, LED_Blinks, osPriorityNormal, 0, 128);
+  BlinkTaskHandle = osThreadCreate(osThread(blink), NULL);
+  osThreadDef(hello, Helloworld, osPriorityNormal, 0, 128);
+  HelloTaskHandle = osThreadCreate(osThread(hello), NULL);
+  osThreadDef(lvgl, lvgl_init, osPriorityNormal , 0, 2048);
+  lvglTaskHandle = osThreadCreate(osThread(lvgl), NULL);
+  
   /* USER CODE END RTOS_THREADS */
 
 }
@@ -135,9 +181,7 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    // lv_tick_inc(LVGL_TICK);
-		// lv_task_handler();
-    // osDelay(LVGL_TICK);
+    osDelay(1);
   }
   /* USER CODE END StartDefaultTask */
 }

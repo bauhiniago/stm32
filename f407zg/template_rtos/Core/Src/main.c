@@ -55,28 +55,7 @@
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-void LED_Blinks(void){
-  for(;;)
-  {
-    HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
-    osDelay(500);
-  }
-}
 
-void LCD_COUNTER(void){
-  
-  uint32_t i=0;
-  char text[20];
-  counter_label();
-  while (1)
-  {
-    osDelay(500);
-    sprintf("%d",text);
-    extern lv_obj_t * label1;
-    lv_label_set_text(label1, text);
-    i++;
-  }
-}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
