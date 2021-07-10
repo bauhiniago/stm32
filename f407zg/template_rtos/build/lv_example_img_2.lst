@@ -1,0 +1,1634 @@
+ARM GAS  /tmp/ccax10uq.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"lv_example_img_2.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.slider_event_cb,"ax",%progbits
+  18              		.align	1
+  19              		.arch armv7e-m
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	slider_event_cb:
+  26              	.LVL0:
+  27              	.LFB185:
+  28              		.file 1 "Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c"
+   1:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** #include "../../lv_examples.h"
+   2:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** #if LV_USE_IMG && LV_USE_SLIDER && LV_BUILD_EXAMPLES
+   3:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+   4:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** static lv_obj_t * create_slider(lv_color_t color);
+   5:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** static void slider_event_cb(lv_event_t * e);
+   6:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+   7:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** static lv_obj_t * red_slider, * green_slider, * blue_slider, * intense_slider;
+   8:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** static lv_obj_t * img1;
+   9:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+  10:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+  11:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** /**
+  12:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****  * Demonstrate runtime image re-coloring
+  13:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****  */
+  14:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** void lv_example_img_2(void)
+  15:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** {
+  16:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     /*Create 4 sliders to adjust RGB color and re-color intensity*/
+  17:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     red_slider = create_slider(lv_palette_main(LV_PALETTE_RED));
+  18:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     green_slider = create_slider(lv_palette_main(LV_PALETTE_GREEN));
+  19:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     blue_slider = create_slider(lv_palette_main(LV_PALETTE_BLUE));
+  20:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     intense_slider = create_slider(lv_palette_main(LV_PALETTE_GREY));
+  21:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+  22:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_slider_set_value(red_slider, LV_OPA_20, LV_ANIM_OFF);
+  23:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_slider_set_value(green_slider, LV_OPA_90, LV_ANIM_OFF);
+  24:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_slider_set_value(blue_slider, LV_OPA_60, LV_ANIM_OFF);
+  25:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_slider_set_value(intense_slider, LV_OPA_50, LV_ANIM_OFF);
+  26:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+  27:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_align(red_slider, LV_ALIGN_LEFT_MID, 25, 0);
+  28:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_align_to(green_slider, red_slider, LV_ALIGN_OUT_RIGHT_MID, 25, 0);
+  29:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_align_to(blue_slider, green_slider, LV_ALIGN_OUT_RIGHT_MID, 25, 0);
+  30:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_align_to(intense_slider, blue_slider, LV_ALIGN_OUT_RIGHT_MID, 25, 0);
+ARM GAS  /tmp/ccax10uq.s 			page 2
+
+
+  31:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+  32:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     /*Now create the actual image*/
+  33:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     LV_IMG_DECLARE(img_cogwheel_argb)
+  34:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     img1 = lv_img_create(lv_scr_act());
+  35:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_img_set_src(img1, &img_cogwheel_argb);
+  36:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_align(img1, LV_ALIGN_RIGHT_MID, -20, 0);
+  37:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+  38:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_event_send(intense_slider, LV_EVENT_VALUE_CHANGED, NULL);
+  39:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** }
+  40:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+  41:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** static void slider_event_cb(lv_event_t * e)
+  42:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** {
+  29              		.loc 1 42 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 42 1 is_stmt 0 view .LVU1
+  34 0000 70B5     		push	{r4, r5, r6, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 16
+  37              		.cfi_offset 4, -16
+  38              		.cfi_offset 5, -12
+  39              		.cfi_offset 6, -8
+  40              		.cfi_offset 14, -4
+  43:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     LV_UNUSED(e);
+  41              		.loc 1 43 5 is_stmt 1 view .LVU2
+  44:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+  45:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     /*Recolor the image based on the sliders' values*/
+  46:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_color_t color  = lv_color_make(lv_slider_get_value(red_slider), lv_slider_get_value(green_sl
+  42              		.loc 1 46 5 view .LVU3
+  43              	.LVL1:
+  44              	.LBB22:
+  45              	.LBI22:
+  46              		.file 2 "Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h"
+   1:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** /**
+   2:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @file lv_slider.h
+   3:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  *
+   4:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  */
+   5:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+   6:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** #ifndef LV_SLIDER_H
+   7:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** #define LV_SLIDER_H
+   8:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+   9:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** #ifdef __cplusplus
+  10:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** extern "C" {
+  11:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** #endif
+  12:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  13:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** /*********************
+  14:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  *      INCLUDES
+  15:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  *********************/
+  16:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** #include "../lv_conf_internal.h"
+  17:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  18:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** #if LV_USE_SLIDER != 0
+  19:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  20:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** /*Testing of dependencies*/
+  21:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** #if LV_USE_BAR == 0
+  22:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** #error "lv_slider: lv_bar is required. Enable it in lv_conf.h (LV_USE_BAR 1)"
+  23:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** #endif
+ARM GAS  /tmp/ccax10uq.s 			page 3
+
+
+  24:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  25:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** #include "../core/lv_obj.h"
+  26:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** #include "lv_bar.h"
+  27:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  28:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** /*********************
+  29:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  *      DEFINES
+  30:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  *********************/
+  31:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  32:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** /**********************
+  33:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  *      TYPEDEFS
+  34:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  **********************/
+  35:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  36:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** enum {
+  37:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****     LV_SLIDER_MODE_NORMAL = LV_BAR_MODE_NORMAL,
+  38:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****     LV_SLIDER_MODE_SYMMETRICAL = LV_BAR_MODE_SYMMETRICAL,
+  39:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****     LV_SLIDER_MODE_RANGE = LV_BAR_MODE_RANGE
+  40:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** };
+  41:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** typedef uint8_t lv_slider_mode_t;
+  42:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  43:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** typedef struct {
+  44:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****     lv_bar_t bar;       /*Add the ancestor's type first*/
+  45:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****     lv_area_t left_knob_area;
+  46:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****     lv_area_t right_knob_area;
+  47:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****     int32_t * value_to_set; /*Which bar value to set*/
+  48:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****     uint8_t dragging : 1;       /*1: the slider is being dragged*/
+  49:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****     uint8_t left_knob_focus : 1; /*1: with encoder now the right knob can be adjusted*/
+  50:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }lv_slider_t;
+  51:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  52:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** extern const lv_obj_class_t lv_slider_class;
+  53:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  54:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** /**********************
+  55:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * GLOBAL PROTOTYPES
+  56:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  **********************/
+  57:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  58:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** /**
+  59:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * Create a slider objects
+  60:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @param parent    pointer to an object, it will be the parent of the new slider.
+  61:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @return          pointer to the created slider
+  62:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  */
+  63:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** lv_obj_t * lv_slider_create(lv_obj_t * parent);
+  64:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  65:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** /*=====================
+  66:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * Setter functions
+  67:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  *====================*/
+  68:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  69:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** /**
+  70:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * Set a new value on the slider
+  71:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @param obj       pointer to a slider object
+  72:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @param value     the new value
+  73:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @param anim      LV_ANIM_ON: set the value with an animation; LV_ANIM_OFF: change the value imme
+  74:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  */
+  75:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** static inline void lv_slider_set_value(lv_obj_t * obj, int32_t value, lv_anim_enable_t anim)
+  76:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** {
+  77:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****     lv_bar_set_value(obj, value, anim);
+  78:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }
+  79:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  80:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** /**
+ARM GAS  /tmp/ccax10uq.s 			page 4
+
+
+  81:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * Set a new value for the left knob of a slider
+  82:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @param obj       pointer to a slider object
+  83:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @param value     new value
+  84:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @param anim      LV_ANIM_ON: set the value with an animation; LV_ANIM_OFF: change the value imme
+  85:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  */
+  86:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** static inline void lv_slider_set_left_value(lv_obj_t * obj, int32_t value, lv_anim_enable_t anim)
+  87:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** {
+  88:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****     lv_bar_set_start_value(obj, value, anim);
+  89:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }
+  90:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+  91:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** /**
+  92:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * Set minimum and the maximum values of a bar
+  93:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @param obj       pointer to the slider object
+  94:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @param min       minimum value
+  95:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @param max       maximum value
+  96:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  */
+  97:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** static inline void lv_slider_set_range(lv_obj_t * obj, int32_t min, int32_t max)
+  98:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** {
+  99:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****     lv_bar_set_range(obj, min, max);
+ 100:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }
+ 101:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+ 102:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** /**
+ 103:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * Set the mode of slider.
+ 104:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @param obj       pointer to a slider object
+ 105:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @param mode      the mode of the slider. See ::lv_slider_mode_t
+ 106:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  */
+ 107:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** static inline void lv_slider_set_mode(lv_obj_t * obj, lv_slider_mode_t mode)
+ 108:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** {
+ 109:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****     lv_bar_set_mode(obj, (lv_bar_mode_t)mode);
+ 110:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }
+ 111:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+ 112:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** /*=====================
+ 113:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * Getter functions
+ 114:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  *====================*/
+ 115:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** 
+ 116:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** /**
+ 117:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * Get the value of the main knob of a slider
+ 118:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @param obj       pointer to a slider object
+ 119:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  * @return          the value of the main knob of the slider
+ 120:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****  */
+ 121:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** static inline int32_t lv_slider_get_value(const lv_obj_t * obj)
+  47              		.loc 2 121 23 view .LVU4
+  48              	.LBB23:
+ 122:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** {
+ 123:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h ****     return lv_bar_get_value(obj);
+  49              		.loc 2 123 5 view .LVU5
+  50              		.loc 2 123 12 is_stmt 0 view .LVU6
+  51 0002 154B     		ldr	r3, .L3
+  52 0004 1868     		ldr	r0, [r3]
+  53              	.LVL2:
+  54              		.loc 2 123 12 view .LVU7
+  55 0006 FFF7FEFF 		bl	lv_bar_get_value
+  56              	.LVL3:
+  57              		.loc 2 123 12 view .LVU8
+  58              	.LBE23:
+  59              	.LBE22:
+  60              		.loc 1 46 25 view .LVU9
+ARM GAS  /tmp/ccax10uq.s 			page 5
+
+
+  61 000a C4B2     		uxtb	r4, r0
+  62              	.LVL4:
+  63              	.LBB24:
+  64              	.LBI24:
+ 121:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** {
+  65              		.loc 2 121 23 is_stmt 1 view .LVU10
+  66              	.LBB25:
+  67              		.loc 2 123 5 view .LVU11
+  68              		.loc 2 123 12 is_stmt 0 view .LVU12
+  69 000c 134B     		ldr	r3, .L3+4
+  70 000e 1868     		ldr	r0, [r3]
+  71 0010 FFF7FEFF 		bl	lv_bar_get_value
+  72              	.LVL5:
+  73              		.loc 2 123 12 view .LVU13
+  74              	.LBE25:
+  75              	.LBE24:
+  76              		.loc 1 46 25 view .LVU14
+  77 0014 C5B2     		uxtb	r5, r0
+  78              	.LVL6:
+  79              	.LBB26:
+  80              	.LBI26:
+ 121:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** {
+  81              		.loc 2 121 23 is_stmt 1 view .LVU15
+  82              	.LBB27:
+  83              		.loc 2 123 5 view .LVU16
+  84              		.loc 2 123 12 is_stmt 0 view .LVU17
+  85 0016 124B     		ldr	r3, .L3+8
+  86 0018 1868     		ldr	r0, [r3]
+  87 001a FFF7FEFF 		bl	lv_bar_get_value
+  88              	.LVL7:
+  89              		.loc 2 123 12 view .LVU18
+  90              	.LBE27:
+  91              	.LBE26:
+  92              	.LBB28:
+  93              	.LBI28:
+  94              		.file 3 "Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h"
+   1:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /**
+   2:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @file lv_color.h
+   3:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *
+   4:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  */
+   5:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+   6:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #ifndef LV_COLOR_H
+   7:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_H
+   8:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+   9:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #ifdef __cplusplus
+  10:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** extern "C" {
+  11:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+  12:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+  13:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /*********************
+  14:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *      INCLUDES
+  15:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *********************/
+  16:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #include "../lv_conf_internal.h"
+  17:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #include "lv_math.h"
+  18:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #include "lv_types.h"
+  19:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+  20:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /*Error checking*/
+  21:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH == 24
+ARM GAS  /tmp/ccax10uq.s 			page 6
+
+
+  22:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #error "LV_COLOR_DEPTH 24 is deprecated. Use LV_COLOR_DEPTH 32 instead (lv_conf.h)"
+  23:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+  24:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+  25:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH != 32 && LV_COLOR_SCREEN_TRANSP != 0
+  26:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #error "LV_COLOR_SCREEN_TRANSP requires LV_COLOR_DEPTH == 32. Set it in lv_conf.h"
+  27:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+  28:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+  29:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH != 16 && LV_COLOR_16_SWAP != 0
+  30:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #error "LV_COLOR_16_SWAP requires LV_COLOR_DEPTH == 16. Set it in lv_conf.h"
+  31:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+  32:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+  33:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #include <stdint.h>
+  34:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+  35:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /*********************
+  36:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *      DEFINES
+  37:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *********************/
+  38:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+  39:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /**
+  40:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * Opacity percentages.
+  41:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  */
+  42:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** enum {
+  43:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_OPA_TRANSP = 0,
+  44:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_OPA_0      = 0,
+  45:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_OPA_10     = 25,
+  46:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_OPA_20     = 51,
+  47:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_OPA_30     = 76,
+  48:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_OPA_40     = 102,
+  49:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_OPA_50     = 127,
+  50:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_OPA_60     = 153,
+  51:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_OPA_70     = 178,
+  52:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_OPA_80     = 204,
+  53:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_OPA_90     = 229,
+  54:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_OPA_100    = 255,
+  55:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_OPA_COVER  = 255,
+  56:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** };
+  57:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+  58:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_OPA_MIN 2    /*Opacities below this will be transparent*/
+  59:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_OPA_MAX 253  /*Opacities above this will fully cover*/
+  60:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+  61:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH == 1
+  62:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_SIZE 8
+  63:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 8
+  64:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_SIZE 8
+  65:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 16
+  66:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_SIZE 16
+  67:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 32
+  68:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_SIZE 32
+  69:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #else
+  70:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #error "Invalid LV_COLOR_DEPTH in lv_conf.h! Set it to 1, 8, 16 or 32!"
+  71:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+  72:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+  73:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /**
+  74:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * Adjust color mix functions rounding.
+  75:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * GPUs might calculate color mix (blending) differently.
+  76:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * Should be in range of 0..254
+  77:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * 0: no adjustment, get the integer part of the result (round down)
+  78:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * 64: round up from x.75
+ARM GAS  /tmp/ccax10uq.s 			page 7
+
+
+  79:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * 128: round up from half
+  80:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * 192: round up from x.25
+  81:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * 254: round up*/
+  82:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #ifndef LV_COLOR_MIX_ROUND_OFS
+  83:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH == 32
+  84:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_MIX_ROUND_OFS 0
+  85:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #else
+  86:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_MIX_ROUND_OFS 128
+  87:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+  88:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+  89:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+  90:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if defined(__cplusplus) && !defined(_LV_COLOR_HAS_MODERN_CPP)
+  91:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /**
+  92:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** * MSVC compiler's definition of the __cplusplus indicating 199711L regardless to C++ standard versi
+  93:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** * see https://devblogs.microsoft.com/cppblog/msvc-now-correctly-reports-cplusplus
+  94:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** * so we use _MSC_VER macro instead of __cplusplus
+  95:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** */
+  96:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #ifdef _MSC_VER
+  97:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if _MSC_VER >= 1900 /*Visual Studio 2015*/
+  98:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define _LV_COLOR_HAS_MODERN_CPP 1
+  99:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 100:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #else
+ 101:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if __cplusplus >= 201103L
+ 102:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define _LV_COLOR_HAS_MODERN_CPP 1
+ 103:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 104:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 105:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif /*__cplusplus*/
+ 106:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 107:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #ifndef _LV_COLOR_HAS_MODERN_CPP
+ 108:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define _LV_COLOR_HAS_MODERN_CPP 0
+ 109:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 110:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 111:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if _LV_COLOR_HAS_MODERN_CPP
+ 112:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /*Fix msvc compiler error C4576 inside C++ code*/
+ 113:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define _LV_COLOR_MAKE_TYPE_HELPER lv_color_t
+ 114:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #else
+ 115:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define _LV_COLOR_MAKE_TYPE_HELPER (lv_color_t)
+ 116:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 117:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 118:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /*---------------------------------------
+ 119:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * Macros for all existing color depths
+ 120:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * to set/get values of the color channels
+ 121:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *------------------------------------------*/
+ 122:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_R1(c, v) (c).ch.red = (uint8_t)((v) & 0x1)
+ 123:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_G1(c, v) (c).ch.green = (uint8_t)((v) & 0x1)
+ 124:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_B1(c, v) (c).ch.blue = (uint8_t)((v) & 0x1)
+ 125:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_A1(c, v) do {} while(0)
+ 126:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 127:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_R1(c) (c).ch.red
+ 128:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_G1(c) (c).ch.green
+ 129:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_B1(c) (c).ch.blue
+ 130:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_A1(c) 0xFF
+ 131:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 132:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define _LV_COLOR_ZERO_INITIALIZER1 {0x00}
+ 133:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_MAKE1(r8, g8, b8)  {(uint8_t)((b8 >> 7) | (g8 >> 7) | (r8 >> 7))}
+ 134:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 135:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_R8(c, v) (c).ch.red = (uint8_t)((v) & 0x7U)
+ARM GAS  /tmp/ccax10uq.s 			page 8
+
+
+ 136:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_G8(c, v) (c).ch.green = (uint8_t)((v) & 0x7U)
+ 137:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_B8(c, v) (c).ch.blue = (uint8_t)((v) & 0x3U)
+ 138:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_A8(c, v) do {} while(0)
+ 139:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 140:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_R8(c) (c).ch.red
+ 141:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_G8(c) (c).ch.green
+ 142:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_B8(c) (c).ch.blue
+ 143:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_A8(c) 0xFF
+ 144:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 145:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define _LV_COLOR_ZERO_INITIALIZER8 _LV_COLOR_MAKE_TYPE_HELPER {{0x00, 0x00, 0x00}}
+ 146:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_MAKE8(r8, g8, b8) _LV_COLOR_MAKE_TYPE_HELPER  {{(uint8_t)((b8 >> 6) & 0x3U), (uin
+ 147:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 148:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_R16(c, v) (c).ch.red = (uint8_t)((v) & 0x1FU)
+ 149:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_16_SWAP == 0
+ 150:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_G16(c, v) (c).ch.green = (uint8_t)((v) & 0x3FU)
+ 151:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #else
+ 152:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_G16(c, v) {(c).ch.green_h = (uint8_t)(((v) >> 3) & 0x7); (c).ch.green_l = (ui
+ 153:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 154:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_B16(c, v) (c).ch.blue = (uint8_t)((v) & 0x1FU)
+ 155:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_A16(c, v) do {} while(0)
+ 156:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 157:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_R16(c) (c).ch.red
+ 158:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_16_SWAP == 0
+ 159:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_G16(c) (c).ch.green
+ 160:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #else
+ 161:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_G16(c) (((c).ch.green_h << 3) + (c).ch.green_l)
+ 162:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 163:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_B16(c) (c).ch.blue
+ 164:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_A16(c) 0xFF
+ 165:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 166:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_16_SWAP == 0
+ 167:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define _LV_COLOR_ZERO_INITIALIZER16  {{0x00, 0x00, 0x00}}
+ 168:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_MAKE16(r8, g8, b8) {{(uint8_t)((b8 >> 3) & 0x1FU), (uint8_t)((g8 >> 2) & 0x3FU), 
+ 169:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #else
+ 170:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define _LV_COLOR_ZERO_INITIALIZER16 {{0x00, 0x00, 0x00, 0x00}}
+ 171:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_MAKE16(r8, g8, b8) {{(uint8_t)((g8 >> 5) & 0x7U), (uint8_t)((r8 >> 3) & 0x1FU), (
+ 172:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 173:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 174:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_R32(c, v) (c).ch.red = (uint8_t)((v) & 0xFF)
+ 175:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_G32(c, v) (c).ch.green = (uint8_t)((v) & 0xFF)
+ 176:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_B32(c, v) (c).ch.blue = (uint8_t)((v) & 0xFF)
+ 177:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_SET_A32(c, v) (c).ch.alpha = (uint8_t)((v) & 0xFF)
+ 178:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 179:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_R32(c) (c).ch.red
+ 180:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_G32(c) (c).ch.green
+ 181:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_B32(c) (c).ch.blue
+ 182:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_GET_A32(c) (c).ch.alpha
+ 183:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 184:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define _LV_COLOR_ZERO_INITIALIZER32  {{0x00, 0x00, 0x00, 0x00}}
+ 185:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** # define LV_COLOR_MAKE32(r8, g8, b8) {{b8, g8, r8, 0xff}} /*Fix 0xff alpha*/
+ 186:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 187:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /*---------------------------------------
+ 188:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * Macros for the current color depth
+ 189:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * to set/get values of the color channels
+ 190:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *------------------------------------------*/
+ 191:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_SET_R(c, v) LV_CONCAT(LV_COLOR_SET_R, LV_COLOR_DEPTH)(c, v)
+ 192:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_SET_G(c, v) LV_CONCAT(LV_COLOR_SET_G, LV_COLOR_DEPTH)(c, v)
+ARM GAS  /tmp/ccax10uq.s 			page 9
+
+
+ 193:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_SET_B(c, v) LV_CONCAT(LV_COLOR_SET_B, LV_COLOR_DEPTH)(c, v)
+ 194:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_SET_A(c, v) LV_CONCAT(LV_COLOR_SET_A, LV_COLOR_DEPTH)(c, v)
+ 195:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 196:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_GET_R(c) LV_CONCAT(LV_COLOR_GET_R, LV_COLOR_DEPTH)(c)
+ 197:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_GET_G(c) LV_CONCAT(LV_COLOR_GET_G, LV_COLOR_DEPTH)(c)
+ 198:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_GET_B(c) LV_CONCAT(LV_COLOR_GET_B, LV_COLOR_DEPTH)(c)
+ 199:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_GET_A(c) LV_CONCAT(LV_COLOR_GET_A, LV_COLOR_DEPTH)(c)
+ 200:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 201:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define _LV_COLOR_ZERO_INITIALIZER LV_CONCAT(_LV_COLOR_ZERO_INITIALIZER, LV_COLOR_DEPTH)
+ 202:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_COLOR_MAKE(r8, g8, b8) LV_CONCAT(LV_COLOR_MAKE, LV_COLOR_DEPTH)(r8, g8, b8)
+ 203:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 204:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #define LV_UDIV255(x) ((uint32_t)((uint32_t) (x) * 0x8081) >> 0x17)
+ 205:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 206:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /**********************
+ 207:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *      TYPEDEFS
+ 208:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  **********************/
+ 209:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 210:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** typedef union {
+ 211:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     uint8_t full; /*must be declared first to set all bits of byte via initializer list*/
+ 212:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     union {
+ 213:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint8_t blue : 1;
+ 214:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint8_t green : 1;
+ 215:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint8_t red : 1;
+ 216:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     } ch;
+ 217:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** } lv_color1_t;
+ 218:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 219:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** typedef union {
+ 220:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     struct {
+ 221:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint8_t blue : 2;
+ 222:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint8_t green : 3;
+ 223:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint8_t red : 3;
+ 224:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     } ch;
+ 225:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     uint8_t full;
+ 226:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** } lv_color8_t;
+ 227:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 228:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** typedef union {
+ 229:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     struct {
+ 230:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_16_SWAP == 0
+ 231:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint16_t blue : 5;
+ 232:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint16_t green : 6;
+ 233:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint16_t red : 5;
+ 234:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #else
+ 235:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint16_t green_h : 3;
+ 236:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint16_t red : 5;
+ 237:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint16_t blue : 5;
+ 238:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint16_t green_l : 3;
+ 239:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 240:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     } ch;
+ 241:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     uint16_t full;
+ 242:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** } lv_color16_t;
+ 243:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 244:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** typedef union {
+ 245:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     struct {
+ 246:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint8_t blue;
+ 247:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint8_t green;
+ 248:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint8_t red;
+ 249:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         uint8_t alpha;
+ARM GAS  /tmp/ccax10uq.s 			page 10
+
+
+ 250:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     } ch;
+ 251:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     uint32_t full;
+ 252:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** } lv_color32_t;
+ 253:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 254:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** typedef LV_CONCAT3(uint, LV_COLOR_SIZE, _t) lv_color_int_t;
+ 255:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** typedef LV_CONCAT3(lv_color, LV_COLOR_DEPTH, _t) lv_color_t;
+ 256:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 257:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** typedef struct {
+ 258:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     uint16_t h;
+ 259:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     uint8_t s;
+ 260:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     uint8_t v;
+ 261:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** } lv_color_hsv_t;
+ 262:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 263:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** //! @cond Doxygen_Suppress
+ 264:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /*No idea where the guard is required but else throws warnings in the docs*/
+ 265:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** typedef uint8_t lv_opa_t;
+ 266:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** //! @endcond
+ 267:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 268:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** struct _lv_color_filter_dsc_t;
+ 269:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 270:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** typedef lv_color_t (*lv_color_filter_cb_t)(const struct _lv_color_filter_dsc_t *, lv_color_t, lv_op
+ 271:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 272:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** typedef struct _lv_color_filter_dsc_t {
+ 273:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     lv_color_filter_cb_t filter_cb;
+ 274:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     void * user_data;
+ 275:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** }lv_color_filter_dsc_t;
+ 276:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 277:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 278:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** typedef enum {
+ 279:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_RED,
+ 280:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_PINK,
+ 281:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_PURPLE,
+ 282:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_DEEP_PURPLE,
+ 283:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_INDIGO,
+ 284:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_BLUE,
+ 285:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_LIGHT_BLUE,
+ 286:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_CYAN,
+ 287:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_TEAL,
+ 288:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_GREEN,
+ 289:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_LIGHT_GREEN,
+ 290:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_LIME,
+ 291:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_YELLOW,
+ 292:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_AMBER,
+ 293:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_ORANGE,
+ 294:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_DEEP_ORANGE,
+ 295:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_BROWN,
+ 296:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_BLUE_GREY,
+ 297:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_GREY,
+ 298:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     _LV_PALETTE_LAST,
+ 299:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_PALETTE_NONE = 0xff,
+ 300:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** }lv_palette_t;
+ 301:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 302:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /**********************
+ 303:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * GLOBAL PROTOTYPES
+ 304:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  **********************/
+ 305:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 306:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /*In color conversations:
+ARM GAS  /tmp/ccax10uq.s 			page 11
+
+
+ 307:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * - When converting to bigger color type the LSB weight of 1 LSB is calculated
+ 308:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *   E.g. 16 bit Red has 5 bits
+ 309:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *         8 bit Red has 3 bits
+ 310:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *        ----------------------
+ 311:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *        8 bit red LSB = (2^5 - 1) / (2^3 - 1) = 31 / 7 = 4
+ 312:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *
+ 313:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * - When calculating to smaller color type simply shift out the LSBs
+ 314:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *   E.g.  8 bit Red has 3 bits
+ 315:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *        16 bit Red has 5 bits
+ 316:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *        ----------------------
+ 317:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *         Shift right with 5 - 3 = 2
+ 318:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  */
+ 319:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** static inline uint8_t lv_color_to1(lv_color_t color)
+ 320:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** {
+ 321:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH == 1
+ 322:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     return color.full;
+ 323:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 8
+ 324:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     if((LV_COLOR_GET_R(color) & 0x4) || (LV_COLOR_GET_G(color) & 0x4) || (LV_COLOR_GET_B(color) & 0
+ 325:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         return 1;
+ 326:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     }
+ 327:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     else {
+ 328:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         return 0;
+ 329:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     }
+ 330:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 16
+ 331:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     if((LV_COLOR_GET_R(color) & 0x10) || (LV_COLOR_GET_G(color) & 0x20) || (LV_COLOR_GET_B(color) &
+ 332:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         return 1;
+ 333:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     }
+ 334:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     else {
+ 335:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         return 0;
+ 336:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     }
+ 337:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 32
+ 338:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     if((LV_COLOR_GET_R(color) & 0x80) || (LV_COLOR_GET_G(color) & 0x80) || (LV_COLOR_GET_B(color) &
+ 339:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         return 1;
+ 340:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     }
+ 341:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     else {
+ 342:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         return 0;
+ 343:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     }
+ 344:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 345:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** }
+ 346:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 347:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** static inline uint8_t lv_color_to8(lv_color_t color)
+ 348:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** {
+ 349:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH == 1
+ 350:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     if(color.full == 0)
+ 351:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         return 0;
+ 352:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     else
+ 353:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         return 0xFF;
+ 354:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 8
+ 355:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     return color.full;
+ 356:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 16
+ 357:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     lv_color8_t ret;
+ 358:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R8(ret, LV_COLOR_GET_R(color) >> 2); /*5 - 3  = 2*/
+ 359:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G8(ret, LV_COLOR_GET_G(color) >> 3); /*6 - 3  = 3*/
+ 360:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B8(ret, LV_COLOR_GET_B(color) >> 3); /*5 - 2  = 3*/
+ 361:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     return ret.full;
+ 362:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 32
+ 363:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     lv_color8_t ret;
+ARM GAS  /tmp/ccax10uq.s 			page 12
+
+
+ 364:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R8(ret, LV_COLOR_GET_R(color) >> 5); /*8 - 3  = 5*/
+ 365:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G8(ret, LV_COLOR_GET_G(color) >> 5); /*8 - 3  = 5*/
+ 366:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B8(ret, LV_COLOR_GET_B(color) >> 6); /*8 - 2  = 6*/
+ 367:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     return ret.full;
+ 368:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 369:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** }
+ 370:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 371:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** static inline uint16_t lv_color_to16(lv_color_t color)
+ 372:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** {
+ 373:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH == 1
+ 374:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     if(color.full == 0)
+ 375:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         return 0;
+ 376:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     else
+ 377:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         return 0xFFFF;
+ 378:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 8
+ 379:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     lv_color16_t ret;
+ 380:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R16(ret, LV_COLOR_GET_R(color) * 4);  /*(2^5 - 1)/(2^3 - 1) = 31/7 = 4*/
+ 381:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G16(ret, LV_COLOR_GET_G(color) * 9);  /*(2^6 - 1)/(2^3 - 1) = 63/7 = 9*/
+ 382:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B16(ret, LV_COLOR_GET_B(color) * 10); /*(2^5 - 1)/(2^2 - 1) = 31/3 = 10*/
+ 383:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     return ret.full;
+ 384:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 16
+ 385:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     return color.full;
+ 386:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 32
+ 387:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     lv_color16_t ret;
+ 388:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R16(ret, LV_COLOR_GET_R(color) >> 3); /*8 - 5  = 3*/
+ 389:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G16(ret, LV_COLOR_GET_G(color) >> 2); /*8 - 6  = 2*/
+ 390:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B16(ret, LV_COLOR_GET_B(color) >> 3); /*8 - 5  = 3*/
+ 391:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     return ret.full;
+ 392:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 393:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** }
+ 394:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 395:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** static inline uint32_t lv_color_to32(lv_color_t color)
+ 396:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** {
+ 397:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH == 1
+ 398:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     if(color.full == 0)
+ 399:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         return 0xFF000000;
+ 400:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     else
+ 401:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         return 0xFFFFFFFF;
+ 402:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 8
+ 403:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     lv_color32_t ret;
+ 404:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R32(ret, LV_COLOR_GET_R(color) * 36); /*(2^8 - 1)/(2^3 - 1) = 255/7 = 36*/
+ 405:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G32(ret, LV_COLOR_GET_G(color) * 36); /*(2^8 - 1)/(2^3 - 1) = 255/7 = 36*/
+ 406:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B32(ret, LV_COLOR_GET_B(color) * 85); /*(2^8 - 1)/(2^2 - 1) = 255/3 = 85*/
+ 407:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_A32(ret, 0xFF);
+ 408:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     return ret.full;
+ 409:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 16
+ 410:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     /**
+ 411:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      * The floating point math for conversion is:
+ 412:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *  valueto = valuefrom * ( (2^bitsto - 1) / (float)(2^bitsfrom - 1) )
+ 413:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      * The faster integer math for conversion is:
+ 414:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *  valueto = ( valuefrom * multiplier + adder ) >> divisor
+ 415:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *   multiplier = FLOOR( ( (2^bitsto - 1) << divisor ) / (float)(2^bitsfrom - 1) )
+ 416:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *
+ 417:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      * Find the first divisor where ( adder >> divisor ) <= 0
+ 418:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *
+ 419:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      * 5-bit to 8-bit: ( 31 * multiplier + adder ) >> divisor = 255
+ 420:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      * divisor  multiplier  adder  min (0)  max (31)
+ARM GAS  /tmp/ccax10uq.s 			page 13
+
+
+ 421:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *       0           8      7        7       255
+ 422:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *       1          16     14        7       255
+ 423:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *       2          32     28        7       255
+ 424:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *       3          65     25        3       255
+ 425:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *       4         131     19        1       255
+ 426:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *       5         263      7        0       255
+ 427:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *
+ 428:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      * 6-bit to 8-bit: 255 = ( 63 * multiplier + adder ) >> divisor
+ 429:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      * divisor  multiplier  adder  min (0)  max (63)
+ 430:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *       0           4      3        3       255
+ 431:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *       1           8      6        3       255
+ 432:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *       2          16     12        3       255
+ 433:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *       3          32     24        3       255
+ 434:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *       4          64     48        3       255
+ 435:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *       5         129     33        1       255
+ 436:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      *       6         259      3        0       255
+ 437:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****      */
+ 438:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 439:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     lv_color32_t ret;
+ 440:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R32(ret, (LV_COLOR_GET_R(color) * 263 + 7) >> 5);
+ 441:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G32(ret, (LV_COLOR_GET_G(color) * 259 + 3) >> 6);
+ 442:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B32(ret, (LV_COLOR_GET_B(color) * 263 + 7) >> 5);
+ 443:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_A32(ret, 0xFF);
+ 444:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     return ret.full;
+ 445:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #elif LV_COLOR_DEPTH == 32
+ 446:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     return color.full;
+ 447:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 448:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** }
+ 449:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 450:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** //! @cond Doxygen_Suppress
+ 451:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 452:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /**
+ 453:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * Mix two colors with a given ratio.
+ 454:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @param c1 the first color to mix (usually the foreground)
+ 455:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @param c2 the second color to mix (usually the background)
+ 456:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @param mix The ratio of the colors. 0: full `c2`, 255: full `c1`, 127: half `c1` and half`c2`
+ 457:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @return the mixed color
+ 458:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  */
+ 459:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** LV_ATTRIBUTE_FAST_MEM static inline lv_color_t lv_color_mix(lv_color_t c1, lv_color_t c2, uint8_t m
+ 460:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** {
+ 461:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     lv_color_t ret;
+ 462:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH != 1
+ 463:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     /*LV_COLOR_DEPTH == 8, 16 or 32*/
+ 464:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R(ret, LV_UDIV255((uint16_t) LV_COLOR_GET_R(c1) * mix + LV_COLOR_GET_R(c2) *
+ 465:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****                                         (255 - mix) + LV_COLOR_MIX_ROUND_OFS));
+ 466:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G(ret, LV_UDIV255((uint16_t) LV_COLOR_GET_G(c1) * mix + LV_COLOR_GET_G(c2) *
+ 467:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****                                         (255 - mix) + LV_COLOR_MIX_ROUND_OFS));
+ 468:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B(ret, LV_UDIV255((uint16_t) LV_COLOR_GET_B(c1) * mix + LV_COLOR_GET_B(c2) *
+ 469:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****                                         (255 - mix) + LV_COLOR_MIX_ROUND_OFS));
+ 470:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_A(ret, 0xFF);
+ 471:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #else
+ 472:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     /*LV_COLOR_DEPTH == 1*/
+ 473:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     ret.full = mix > LV_OPA_50 ? c1.full : c2.full;
+ 474:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 475:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 476:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     return ret;
+ 477:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** }
+ARM GAS  /tmp/ccax10uq.s 			page 14
+
+
+ 478:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 479:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** LV_ATTRIBUTE_FAST_MEM static inline void lv_color_premult(lv_color_t c, uint8_t mix, uint16_t * out
+ 480:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** {
+ 481:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH != 1
+ 482:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     out[0] = (uint16_t) LV_COLOR_GET_R(c) * mix;
+ 483:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     out[1] = (uint16_t) LV_COLOR_GET_G(c) * mix;
+ 484:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     out[2] = (uint16_t) LV_COLOR_GET_B(c) * mix;
+ 485:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #else
+ 486:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     (void) mix;
+ 487:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     /*Pre-multiplication can't be used with 1 bpp*/
+ 488:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     out[0] = LV_COLOR_GET_R(c);
+ 489:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     out[1] = LV_COLOR_GET_G(c);
+ 490:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     out[2] = LV_COLOR_GET_B(c);
+ 491:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 492:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 493:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** }
+ 494:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 495:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /**
+ 496:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * Mix two colors with a given ratio. It runs faster then `lv_color_mix` but requires some pre comp
+ 497:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @param premult_c1 The first color. Should be preprocessed with `lv_color_premult(c1)`
+ 498:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @param c2 The second color. As it is no pre computation required on it
+ 499:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @param mix The ratio of the colors. 0: full `c1`, 255: full `c2`, 127: half `c1` and half `c2`.
+ 500:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  *            Should be modified like mix = `255 - mix`
+ 501:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @return the mixed color
+ 502:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @note 255 won't give clearly `c1`.
+ 503:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  */
+ 504:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** LV_ATTRIBUTE_FAST_MEM static inline lv_color_t lv_color_mix_premult(uint16_t * premult_c1, lv_color
+ 505:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** {
+ 506:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     lv_color_t ret;
+ 507:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #if LV_COLOR_DEPTH != 1
+ 508:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     /*LV_COLOR_DEPTH == 8, 16 or 32*/
+ 509:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R(ret, LV_UDIV255(premult_c1[0] + LV_COLOR_GET_R(c2) * mix + LV_COLOR_MIX_ROUND_OF
+ 510:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G(ret, LV_UDIV255(premult_c1[1] + LV_COLOR_GET_G(c2) * mix + LV_COLOR_MIX_ROUND_OF
+ 511:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B(ret, LV_UDIV255(premult_c1[2] + LV_COLOR_GET_B(c2) * mix + LV_COLOR_MIX_ROUND_OF
+ 512:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_A(ret, 0xFF);
+ 513:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #else
+ 514:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     /*LV_COLOR_DEPTH == 1*/
+ 515:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     /*Restore color1*/
+ 516:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     lv_color_t c1;
+ 517:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_R(c1, premult_c1[0]);
+ 518:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_G(c1, premult_c1[1]);
+ 519:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     LV_COLOR_SET_B(c1, premult_c1[2]);
+ 520:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     ret.full = mix > LV_OPA_50 ? c2.full : c1.full;
+ 521:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** #endif
+ 522:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 523:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     return ret;
+ 524:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** }
+ 525:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 526:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /**
+ 527:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * Mix two colors. Both color can have alpha value.
+ 528:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @param bg_color background color
+ 529:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @param bg_opa alpha of the background color
+ 530:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @param fg_color foreground color
+ 531:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @param fg_opa alpha of the foreground color
+ 532:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @param res_color the result color
+ 533:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @param res_opa the result opacity
+ 534:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  */
+ARM GAS  /tmp/ccax10uq.s 			page 15
+
+
+ 535:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** LV_ATTRIBUTE_FAST_MEM static inline void lv_color_mix_with_alpha(lv_color_t bg_color, lv_opa_t bg_o
+ 536:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****                                                                  lv_color_t fg_color, lv_opa_t fg_o
+ 537:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****                                                                  lv_color_t * res_color, lv_opa_t *
+ 538:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** {
+ 539:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     /*Pick the foreground if it's fully opaque or the Background is fully transparent*/
+ 540:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     if(fg_opa >= LV_OPA_MAX || bg_opa <= LV_OPA_MIN) {
+ 541:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         res_color->full = fg_color.full;
+ 542:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         *res_opa = fg_opa;
+ 543:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     }
+ 544:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     /*Transparent foreground: use the Background*/
+ 545:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     else if(fg_opa <= LV_OPA_MIN) {
+ 546:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         res_color->full = bg_color.full;
+ 547:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         *res_opa = bg_opa;
+ 548:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     }
+ 549:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     /*Opaque background: use simple mix*/
+ 550:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     else if(bg_opa >= LV_OPA_MAX) {
+ 551:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         *res_color = lv_color_mix(fg_color, bg_color, fg_opa);
+ 552:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         *res_opa = LV_OPA_COVER;
+ 553:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     }
+ 554:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     /*Both colors have alpha. Expensive calculation need to be applied*/
+ 555:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     else {
+ 556:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         /*Save the parameters and the result. If they will be asked again don't compute again*/
+ 557:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         static lv_opa_t fg_opa_save     = 0;
+ 558:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         static lv_opa_t bg_opa_save     = 0;
+ 559:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         static lv_color_t fg_color_save = _LV_COLOR_ZERO_INITIALIZER;
+ 560:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         static lv_color_t bg_color_save = _LV_COLOR_ZERO_INITIALIZER;
+ 561:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         static lv_color_t res_color_saved = _LV_COLOR_ZERO_INITIALIZER;
+ 562:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         static lv_opa_t res_opa_saved = 0;
+ 563:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 564:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         if(fg_opa != fg_opa_save || bg_opa != bg_opa_save || fg_color.full != fg_color_save.full ||
+ 565:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****            bg_color.full != bg_color_save.full) {
+ 566:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****             fg_opa_save        = fg_opa;
+ 567:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****             bg_opa_save        = bg_opa;
+ 568:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****             fg_color_save.full = fg_color.full;
+ 569:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****             bg_color_save.full = bg_color.full;
+ 570:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****             /*Info:
+ 571:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****              * https://en.wikipedia.org/wiki/Alpha_compositing#Analytical_derivation_of_the_over_op
+ 572:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****             res_opa_saved = 255 - ((uint16_t)((uint16_t)(255 - fg_opa) * (255 - bg_opa)) >> 8);
+ 573:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****             if(res_opa_saved == 0) {
+ 574:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****                 while(1)
+ 575:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****                     ;
+ 576:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****             }
+ 577:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****             lv_opa_t ratio = (uint16_t)((uint16_t)fg_opa * 255) / res_opa_saved;
+ 578:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****             res_color_saved = lv_color_mix(fg_color, bg_color, ratio);
+ 579:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 580:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         }
+ 581:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 582:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         res_color->full = res_color_saved.full;
+ 583:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****         *res_opa = res_opa_saved;
+ 584:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     }
+ 585:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** }
+ 586:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 587:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** //! @endcond
+ 588:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 589:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** /**
+ 590:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * Get the brightness of a color
+ 591:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @param color a color
+ARM GAS  /tmp/ccax10uq.s 			page 16
+
+
+ 592:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  * @return the brightness [0..255]
+ 593:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****  */
+ 594:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** static inline uint8_t lv_color_brightness(lv_color_t color)
+ 595:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** {
+ 596:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     lv_color32_t c32;
+ 597:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     c32.full        = lv_color_to32(color);
+ 598:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     uint16_t bright = (uint16_t)(3u * LV_COLOR_GET_R32(c32) + LV_COLOR_GET_B32(c32) + 4u * LV_COLOR
+ 599:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     return (uint8_t)(bright >> 3);
+ 600:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** }
+ 601:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** 
+ 602:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** static inline lv_color_t lv_color_make(uint8_t r, uint8_t g, uint8_t b)
+  95              		.loc 3 602 26 is_stmt 1 view .LVU19
+  96              	.LBB29:
+ 603:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h **** {
+ 604:Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_color.h ****     return _LV_COLOR_MAKE_TYPE_HELPER LV_COLOR_MAKE(r, g, b);
+  97              		.loc 3 604 5 view .LVU20
+  98              		.loc 3 604 39 is_stmt 0 view .LVU21
+  99 001e C0F3C400 		ubfx	r0, r0, #3, #5
+ 100              	.LVL8:
+ 101              		.loc 3 604 39 view .LVU22
+ 102 0022 AD08     		lsrs	r5, r5, #2
+ 103              	.LVL9:
+ 104              		.loc 3 604 39 view .LVU23
+ 105 0024 E408     		lsrs	r4, r4, #3
+ 106              	.LVL10:
+ 107              		.loc 3 604 12 view .LVU24
+ 108 0026 4FF00006 		mov	r6, #0	@ movhi
+ 109 002a 60F30406 		bfi	r6, r0, #0, #5
+ 110 002e 65F34A16 		bfi	r6, r5, #5, #6
+ 111 0032 64F3CF26 		bfi	r6, r4, #11, #5
+ 112              		.loc 3 604 12 view .LVU25
+ 113              	.LBE29:
+ 114              	.LBE28:
+  47:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_opa_t intense = lv_slider_get_value(intense_slider);
+ 115              		.loc 1 47 5 is_stmt 1 view .LVU26
+ 116              	.LVL11:
+ 117              	.LBB30:
+ 118              	.LBI30:
+ 121:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** {
+ 119              		.loc 2 121 23 view .LVU27
+ 120              	.LBB31:
+ 121              		.loc 2 123 5 view .LVU28
+ 122              		.loc 2 123 12 is_stmt 0 view .LVU29
+ 123 0036 0B4B     		ldr	r3, .L3+12
+ 124 0038 1868     		ldr	r0, [r3]
+ 125 003a FFF7FEFF 		bl	lv_bar_get_value
+ 126              	.LVL12:
+ 127              		.loc 2 123 12 view .LVU30
+ 128              	.LBE31:
+ 129              	.LBE30:
+  48:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_set_style_img_recolor_opa(img1, intense, 0);
+ 130              		.loc 1 48 5 is_stmt 1 view .LVU31
+ 131 003e 0A4C     		ldr	r4, .L3+16
+ 132 0040 0022     		movs	r2, #0
+ 133 0042 C1B2     		uxtb	r1, r0
+ 134 0044 2068     		ldr	r0, [r4]
+ 135              	.LVL13:
+ARM GAS  /tmp/ccax10uq.s 			page 17
+
+
+ 136              		.loc 1 48 5 is_stmt 0 view .LVU32
+ 137 0046 FFF7FEFF 		bl	lv_obj_set_style_img_recolor_opa
+ 138              	.LVL14:
+  49:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_set_style_img_recolor(img1, color, 0);
+ 139              		.loc 1 49 5 is_stmt 1 view .LVU33
+ 140 004a 0022     		movs	r2, #0
+ 141 004c 3146     		mov	r1, r6	@ movhi
+ 142 004e 2068     		ldr	r0, [r4]
+ 143 0050 FFF7FEFF 		bl	lv_obj_set_style_img_recolor
+ 144              	.LVL15:
+  50:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** }
+ 145              		.loc 1 50 1 is_stmt 0 view .LVU34
+ 146 0054 70BD     		pop	{r4, r5, r6, pc}
+ 147              	.L4:
+ 148 0056 00BF     		.align	2
+ 149              	.L3:
+ 150 0058 00000000 		.word	.LANCHOR0
+ 151 005c 00000000 		.word	.LANCHOR1
+ 152 0060 00000000 		.word	.LANCHOR2
+ 153 0064 00000000 		.word	.LANCHOR3
+ 154 0068 00000000 		.word	.LANCHOR4
+ 155              		.cfi_endproc
+ 156              	.LFE185:
+ 158              		.section	.text.create_slider,"ax",%progbits
+ 159              		.align	1
+ 160              		.syntax unified
+ 161              		.thumb
+ 162              		.thumb_func
+ 163              		.fpu fpv4-sp-d16
+ 165              	create_slider:
+ 166              	.LVL16:
+ 167              	.LFB186:
+  51:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+  52:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** static lv_obj_t * create_slider(lv_color_t color)
+  53:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** {
+ 168              		.loc 1 53 1 is_stmt 1 view -0
+ 169              		.cfi_startproc
+ 170              		@ args = 0, pretend = 0, frame = 0
+ 171              		@ frame_needed = 0, uses_anonymous_args = 0
+ 172              		.loc 1 53 1 is_stmt 0 view .LVU36
+ 173 0000 38B5     		push	{r3, r4, r5, lr}
+ 174              	.LCFI1:
+ 175              		.cfi_def_cfa_offset 16
+ 176              		.cfi_offset 3, -16
+ 177              		.cfi_offset 4, -12
+ 178              		.cfi_offset 5, -8
+ 179              		.cfi_offset 14, -4
+ 180 0002 0546     		mov	r5, r0	@ movhi
+ 181              	.LVL17:
+  54:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_t * slider = lv_slider_create(lv_scr_act());
+ 182              		.loc 1 54 5 is_stmt 1 view .LVU37
+ 183              	.LBB36:
+ 184              	.LBI36:
+ 185              		.file 4 "Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h"
+   1:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+   2:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @file lv_disp.h
+   3:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  *
+ARM GAS  /tmp/ccax10uq.s 			page 18
+
+
+   4:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+   5:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+   6:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** #ifndef LV_DISP_H
+   7:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** #define LV_DISP_H
+   8:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+   9:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** #ifdef __cplusplus
+  10:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** extern "C" {
+  11:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** #endif
+  12:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+  13:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /*********************
+  14:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  *      INCLUDES
+  15:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  *********************/
+  16:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** #include "../hal/lv_hal.h"
+  17:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** #include "lv_obj.h"
+  18:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** #include "lv_theme.h"
+  19:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+  20:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /*********************
+  21:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  *      DEFINES
+  22:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  *********************/
+  23:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+  24:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**********************
+  25:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  *      TYPEDEFS
+  26:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  **********************/
+  27:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+  28:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** typedef enum {
+  29:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_NONE,
+  30:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_LEFT,
+  31:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_RIGHT,
+  32:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_TOP,
+  33:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_BOTTOM,
+  34:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_LEFT,
+  35:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_RIGHT,
+  36:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_TOP,
+  37:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_BOTTOM,
+  38:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_FADE_ON,
+  39:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** } lv_scr_load_anim_t;
+  40:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+  41:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**********************
+  42:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * GLOBAL PROTOTYPES
+  43:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  **********************/
+  44:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+  45:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+  46:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Return with a pointer to the active screen
+  47:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param disp pointer to display which active screen should be get. (NULL to use the default
+  48:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * screen)
+  49:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @return pointer to the active screen object (loaded by 'lv_scr_load()')
+  50:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+  51:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** lv_obj_t * lv_disp_get_scr_act(lv_disp_t * disp);
+  52:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+  53:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+  54:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Return with a pointer to the previous screen. Only used during screen transitions.
+  55:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param disp pointer to display which previous screen should be get. (NULL to use the default
+  56:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * screen)
+  57:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @return pointer to the previous screen object or NULL if not used now
+  58:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+  59:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** lv_obj_t * lv_disp_get_scr_prev(lv_disp_t * disp);
+  60:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+ARM GAS  /tmp/ccax10uq.s 			page 19
+
+
+  61:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+  62:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Make a screen active
+  63:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param scr pointer to a screen
+  64:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+  65:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** void lv_disp_load_scr(lv_obj_t * scr);
+  66:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+  67:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+  68:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Return with the top layer. (Same on every screen and it is above the normal screen layer)
+  69:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param disp pointer to display which top layer should be get. (NULL to use the default screen)
+  70:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @return pointer to the top layer object  (transparent screen sized lv_obj)
+  71:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+  72:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** lv_obj_t * lv_disp_get_layer_top(lv_disp_t * disp);
+  73:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+  74:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+  75:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Return with the sys. layer. (Same on every screen and it is above the normal screen and the top
+  76:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * layer)
+  77:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param disp pointer to display which sys. layer  should be get. (NULL to use the default screen)
+  78:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @return pointer to the sys layer object  (transparent screen sized lv_obj)
+  79:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+  80:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** lv_obj_t * lv_disp_get_layer_sys(lv_disp_t * disp);
+  81:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+  82:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+  83:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Get the theme of a display
+  84:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+  85:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @return the display's theme (can be NULL)
+  86:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+  87:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** void lv_disp_set_theme(lv_disp_t * disp, lv_theme_t * th);
+  88:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+  89:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+  90:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Get the theme of a display
+  91:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+  92:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @return the display's theme (can be NULL)
+  93:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+  94:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** lv_theme_t * lv_disp_get_theme(lv_disp_t * disp);
+  95:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+  96:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+  97:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Set the background color of a display
+  98:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+  99:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param color color of the background
+ 100:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+ 101:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** void lv_disp_set_bg_color(lv_disp_t * disp, lv_color_t color);
+ 102:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+ 103:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+ 104:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Set the background image of a display
+ 105:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+ 106:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param img_src path to file or pointer to an `lv_img_dsc_t` variable
+ 107:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+ 108:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** void lv_disp_set_bg_image(lv_disp_t * disp, const void  * img_src);
+ 109:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+ 110:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+ 111:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Opacity of the background
+ 112:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+ 113:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param opa opacity (0..255)
+ 114:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+ 115:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** void lv_disp_set_bg_opa(lv_disp_t * disp, lv_opa_t opa);
+ 116:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+ 117:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+ARM GAS  /tmp/ccax10uq.s 			page 20
+
+
+ 118:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Switch screen with animation
+ 119:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param scr pointer to the new screen to load
+ 120:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param anim_type type of the animation from `lv_scr_load_anim_t`. E.g.  `LV_SCR_LOAD_ANIM_MOVE_L
+ 121:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param time time of the animation
+ 122:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param delay delay before the transition
+ 123:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param auto_del true: automatically delete the old screen
+ 124:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+ 125:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** void lv_scr_load_anim(lv_obj_t * scr, lv_scr_load_anim_t anim_type, uint32_t time, uint32_t delay, 
+ 126:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+ 127:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+ 128:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Get elapsed time since last user activity on a display (e.g. click)
+ 129:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param disp pointer to an display (NULL to get the overall smallest inactivity)
+ 130:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @return elapsed ticks (milliseconds) since the last activity
+ 131:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+ 132:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** uint32_t lv_disp_get_inactive_time(const lv_disp_t * disp);
+ 133:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+ 134:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+ 135:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Manually trigger an activity on a display
+ 136:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param disp pointer to an display (NULL to use the default display)
+ 137:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+ 138:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** void lv_disp_trig_activity(lv_disp_t * disp);
+ 139:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+ 140:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+ 141:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Clean any CPU cache that is related to the display.
+ 142:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param disp pointer to an display (NULL to use the default display)
+ 143:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+ 144:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** void lv_disp_clean_dcache(lv_disp_t * disp);
+ 145:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+ 146:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+ 147:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Get a pointer to the screen refresher timer to
+ 148:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * modify its parameters with `lv_timer_...` functions.
+ 149:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+ 150:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @return pointer to the display refresher timer. (NULL on error)
+ 151:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+ 152:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** lv_timer_t * _lv_disp_get_refr_timer(lv_disp_t * disp);
+ 153:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+ 154:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /*------------------------------------------------
+ 155:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * To improve backward compatibility
+ 156:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Recommended only if you have one display
+ 157:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  *------------------------------------------------*/
+ 158:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** 
+ 159:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** /**
+ 160:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * Get the active screen of the default display
+ 161:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  * @return pointer to the active screen
+ 162:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****  */
+ 163:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** static inline lv_obj_t * lv_scr_act(void)
+ 186              		.loc 4 163 26 view .LVU38
+ 187              	.LBB37:
+ 164:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** {
+ 165:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h ****     return lv_disp_get_scr_act(lv_disp_get_default());
+ 188              		.loc 4 165 5 view .LVU39
+ 189              		.loc 4 165 12 is_stmt 0 view .LVU40
+ 190 0004 FFF7FEFF 		bl	lv_disp_get_default
+ 191              	.LVL18:
+ 192 0008 FFF7FEFF 		bl	lv_disp_get_scr_act
+ 193              	.LVL19:
+ 194              	.LBE37:
+ARM GAS  /tmp/ccax10uq.s 			page 21
+
+
+ 195              	.LBE36:
+ 196              		.loc 1 54 25 view .LVU41
+ 197 000c FFF7FEFF 		bl	lv_slider_create
+ 198              	.LVL20:
+ 199 0010 0446     		mov	r4, r0
+ 200              	.LVL21:
+  55:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_slider_set_range(slider, 0, 255);
+ 201              		.loc 1 55 5 is_stmt 1 view .LVU42
+ 202              	.LBB38:
+ 203              	.LBI38:
+  97:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** {
+ 204              		.loc 2 97 20 view .LVU43
+ 205              	.LBB39:
+  99:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }
+ 206              		.loc 2 99 5 view .LVU44
+ 207 0012 FF22     		movs	r2, #255
+ 208 0014 0021     		movs	r1, #0
+ 209 0016 FFF7FEFF 		bl	lv_bar_set_range
+ 210              	.LVL22:
+  99:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }
+ 211              		.loc 2 99 5 is_stmt 0 view .LVU45
+ 212              	.LBE39:
+ 213              	.LBE38:
+  56:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_set_size(slider, 10, 200);
+ 214              		.loc 1 56 5 is_stmt 1 view .LVU46
+ 215 001a C822     		movs	r2, #200
+ 216 001c 0A21     		movs	r1, #10
+ 217 001e 2046     		mov	r0, r4
+ 218 0020 FFF7FEFF 		bl	lv_obj_set_size
+ 219              	.LVL23:
+  57:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_set_style_bg_color(slider, color, LV_PART_KNOB);
+ 220              		.loc 1 57 5 view .LVU47
+ 221 0024 4FF44032 		mov	r2, #196608
+ 222              	.LVL24:
+ 223              		.loc 1 57 5 is_stmt 0 view .LVU48
+ 224 0028 2946     		mov	r1, r5	@ movhi
+ 225 002a 2046     		mov	r0, r4
+ 226 002c FFF7FEFF 		bl	lv_obj_set_style_bg_color
+ 227              	.LVL25:
+  58:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_set_style_bg_color(slider, lv_color_darken(color, LV_OPA_40), LV_PART_INDICATOR);
+ 228              		.loc 1 58 5 is_stmt 1 view .LVU49
+ 229 0030 6621     		movs	r1, #102
+ 230 0032 2846     		mov	r0, r5	@ movhi
+ 231 0034 FFF7FEFF 		bl	lv_color_darken
+ 232              	.LVL26:
+ 233 0038 0146     		mov	r1, r0	@ movhi
+ 234 003a 4FF40032 		mov	r2, #131072
+ 235 003e 2046     		mov	r0, r4
+ 236 0040 FFF7FEFF 		bl	lv_obj_set_style_bg_color
+ 237              	.LVL27:
+  59:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_add_event_cb(slider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+ 238              		.loc 1 59 5 view .LVU50
+ 239 0044 0023     		movs	r3, #0
+ 240 0046 1C22     		movs	r2, #28
+ 241 0048 0249     		ldr	r1, .L7
+ 242 004a 2046     		mov	r0, r4
+ 243 004c FFF7FEFF 		bl	lv_obj_add_event_cb
+ARM GAS  /tmp/ccax10uq.s 			page 22
+
+
+ 244              	.LVL28:
+  60:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     return slider;
+ 245              		.loc 1 60 5 view .LVU51
+  61:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** }
+ 246              		.loc 1 61 1 is_stmt 0 view .LVU52
+ 247 0050 2046     		mov	r0, r4
+ 248 0052 38BD     		pop	{r3, r4, r5, pc}
+ 249              	.LVL29:
+ 250              	.L8:
+ 251              		.loc 1 61 1 view .LVU53
+ 252              		.align	2
+ 253              	.L7:
+ 254 0054 00000000 		.word	slider_event_cb
+ 255              		.cfi_endproc
+ 256              	.LFE186:
+ 258              		.section	.text.lv_example_img_2,"ax",%progbits
+ 259              		.align	1
+ 260              		.global	lv_example_img_2
+ 261              		.syntax unified
+ 262              		.thumb
+ 263              		.thumb_func
+ 264              		.fpu fpv4-sp-d16
+ 266              	lv_example_img_2:
+ 267              	.LFB184:
+  15:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     /*Create 4 sliders to adjust RGB color and re-color intensity*/
+ 268              		.loc 1 15 1 is_stmt 1 view -0
+ 269              		.cfi_startproc
+ 270              		@ args = 0, pretend = 0, frame = 0
+ 271              		@ frame_needed = 0, uses_anonymous_args = 0
+ 272 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 273              	.LCFI2:
+ 274              		.cfi_def_cfa_offset 24
+ 275              		.cfi_offset 4, -24
+ 276              		.cfi_offset 5, -20
+ 277              		.cfi_offset 6, -16
+ 278              		.cfi_offset 7, -12
+ 279              		.cfi_offset 8, -8
+ 280              		.cfi_offset 14, -4
+ 281 0004 82B0     		sub	sp, sp, #8
+ 282              	.LCFI3:
+ 283              		.cfi_def_cfa_offset 32
+  17:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     green_slider = create_slider(lv_palette_main(LV_PALETTE_GREEN));
+ 284              		.loc 1 17 5 view .LVU55
+  17:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     green_slider = create_slider(lv_palette_main(LV_PALETTE_GREEN));
+ 285              		.loc 1 17 18 is_stmt 0 view .LVU56
+ 286 0006 0020     		movs	r0, #0
+ 287 0008 FFF7FEFF 		bl	lv_palette_main
+ 288              	.LVL30:
+ 289 000c FFF7FEFF 		bl	create_slider
+ 290              	.LVL31:
+  17:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     green_slider = create_slider(lv_palette_main(LV_PALETTE_GREEN));
+ 291              		.loc 1 17 16 view .LVU57
+ 292 0010 DFF8DC80 		ldr	r8, .L11+20
+ 293 0014 C8F80000 		str	r0, [r8]
+  18:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     blue_slider = create_slider(lv_palette_main(LV_PALETTE_BLUE));
+ 294              		.loc 1 18 5 is_stmt 1 view .LVU58
+  18:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     blue_slider = create_slider(lv_palette_main(LV_PALETTE_BLUE));
+ARM GAS  /tmp/ccax10uq.s 			page 23
+
+
+ 295              		.loc 1 18 20 is_stmt 0 view .LVU59
+ 296 0018 0920     		movs	r0, #9
+ 297 001a FFF7FEFF 		bl	lv_palette_main
+ 298              	.LVL32:
+ 299 001e FFF7FEFF 		bl	create_slider
+ 300              	.LVL33:
+  18:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     blue_slider = create_slider(lv_palette_main(LV_PALETTE_BLUE));
+ 301              		.loc 1 18 18 view .LVU60
+ 302 0022 2E4F     		ldr	r7, .L11
+ 303 0024 3860     		str	r0, [r7]
+  19:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     intense_slider = create_slider(lv_palette_main(LV_PALETTE_GREY));
+ 304              		.loc 1 19 5 is_stmt 1 view .LVU61
+  19:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     intense_slider = create_slider(lv_palette_main(LV_PALETTE_GREY));
+ 305              		.loc 1 19 19 is_stmt 0 view .LVU62
+ 306 0026 0520     		movs	r0, #5
+ 307 0028 FFF7FEFF 		bl	lv_palette_main
+ 308              	.LVL34:
+ 309 002c FFF7FEFF 		bl	create_slider
+ 310              	.LVL35:
+  19:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     intense_slider = create_slider(lv_palette_main(LV_PALETTE_GREY));
+ 311              		.loc 1 19 17 view .LVU63
+ 312 0030 2B4E     		ldr	r6, .L11+4
+ 313 0032 3060     		str	r0, [r6]
+  20:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+ 314              		.loc 1 20 5 is_stmt 1 view .LVU64
+  20:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+ 315              		.loc 1 20 22 is_stmt 0 view .LVU65
+ 316 0034 1220     		movs	r0, #18
+ 317 0036 FFF7FEFF 		bl	lv_palette_main
+ 318              	.LVL36:
+ 319 003a FFF7FEFF 		bl	create_slider
+ 320              	.LVL37:
+  20:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+ 321              		.loc 1 20 20 view .LVU66
+ 322 003e 294D     		ldr	r5, .L11+8
+ 323 0040 2860     		str	r0, [r5]
+  22:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_slider_set_value(green_slider, LV_OPA_90, LV_ANIM_OFF);
+ 324              		.loc 1 22 5 is_stmt 1 view .LVU67
+ 325              	.LVL38:
+ 326              	.LBB50:
+ 327              	.LBI50:
+  75:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** {
+ 328              		.loc 2 75 20 view .LVU68
+ 329              	.LBB51:
+  77:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }
+ 330              		.loc 2 77 5 view .LVU69
+ 331 0042 0022     		movs	r2, #0
+ 332 0044 3321     		movs	r1, #51
+ 333 0046 D8F80000 		ldr	r0, [r8]
+ 334 004a FFF7FEFF 		bl	lv_bar_set_value
+ 335              	.LVL39:
+  77:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }
+ 336              		.loc 2 77 5 is_stmt 0 view .LVU70
+ 337              	.LBE51:
+ 338              	.LBE50:
+  23:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_slider_set_value(blue_slider, LV_OPA_60, LV_ANIM_OFF);
+ 339              		.loc 1 23 5 is_stmt 1 view .LVU71
+ARM GAS  /tmp/ccax10uq.s 			page 24
+
+
+ 340              	.LBB52:
+ 341              	.LBI52:
+  75:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** {
+ 342              		.loc 2 75 20 view .LVU72
+ 343              	.LBB53:
+  77:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }
+ 344              		.loc 2 77 5 view .LVU73
+ 345 004e 0022     		movs	r2, #0
+ 346 0050 E521     		movs	r1, #229
+ 347 0052 3868     		ldr	r0, [r7]
+ 348 0054 FFF7FEFF 		bl	lv_bar_set_value
+ 349              	.LVL40:
+  77:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }
+ 350              		.loc 2 77 5 is_stmt 0 view .LVU74
+ 351              	.LBE53:
+ 352              	.LBE52:
+  24:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_slider_set_value(intense_slider, LV_OPA_50, LV_ANIM_OFF);
+ 353              		.loc 1 24 5 is_stmt 1 view .LVU75
+ 354              	.LBB54:
+ 355              	.LBI54:
+  75:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** {
+ 356              		.loc 2 75 20 view .LVU76
+ 357              	.LBB55:
+  77:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }
+ 358              		.loc 2 77 5 view .LVU77
+ 359 0058 0022     		movs	r2, #0
+ 360 005a 9921     		movs	r1, #153
+ 361 005c 3068     		ldr	r0, [r6]
+ 362 005e FFF7FEFF 		bl	lv_bar_set_value
+ 363              	.LVL41:
+  77:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }
+ 364              		.loc 2 77 5 is_stmt 0 view .LVU78
+ 365              	.LBE55:
+ 366              	.LBE54:
+  25:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+ 367              		.loc 1 25 5 is_stmt 1 view .LVU79
+ 368              	.LBB56:
+ 369              	.LBI56:
+  75:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** {
+ 370              		.loc 2 75 20 view .LVU80
+ 371              	.LBB57:
+  77:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }
+ 372              		.loc 2 77 5 view .LVU81
+ 373 0062 0022     		movs	r2, #0
+ 374 0064 7F21     		movs	r1, #127
+ 375 0066 2868     		ldr	r0, [r5]
+ 376 0068 FFF7FEFF 		bl	lv_bar_set_value
+ 377              	.LVL42:
+  77:Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_slider.h **** }
+ 378              		.loc 2 77 5 is_stmt 0 view .LVU82
+ 379              	.LBE57:
+ 380              	.LBE56:
+  27:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_align_to(green_slider, red_slider, LV_ALIGN_OUT_RIGHT_MID, 25, 0);
+ 381              		.loc 1 27 5 is_stmt 1 view .LVU83
+ 382 006c 0023     		movs	r3, #0
+ 383 006e 1922     		movs	r2, #25
+ 384 0070 0721     		movs	r1, #7
+ARM GAS  /tmp/ccax10uq.s 			page 25
+
+
+ 385 0072 D8F80000 		ldr	r0, [r8]
+ 386 0076 FFF7FEFF 		bl	lv_obj_align
+ 387              	.LVL43:
+  28:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_align_to(blue_slider, green_slider, LV_ALIGN_OUT_RIGHT_MID, 25, 0);
+ 388              		.loc 1 28 5 view .LVU84
+ 389 007a 0024     		movs	r4, #0
+ 390 007c 0094     		str	r4, [sp]
+ 391 007e 1923     		movs	r3, #25
+ 392 0080 1422     		movs	r2, #20
+ 393 0082 D8F80010 		ldr	r1, [r8]
+ 394 0086 3868     		ldr	r0, [r7]
+ 395 0088 FFF7FEFF 		bl	lv_obj_align_to
+ 396              	.LVL44:
+  29:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_align_to(intense_slider, blue_slider, LV_ALIGN_OUT_RIGHT_MID, 25, 0);
+ 397              		.loc 1 29 5 view .LVU85
+ 398 008c 0094     		str	r4, [sp]
+ 399 008e 1923     		movs	r3, #25
+ 400 0090 1422     		movs	r2, #20
+ 401 0092 3968     		ldr	r1, [r7]
+ 402 0094 3068     		ldr	r0, [r6]
+ 403 0096 FFF7FEFF 		bl	lv_obj_align_to
+ 404              	.LVL45:
+  30:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+ 405              		.loc 1 30 5 view .LVU86
+ 406 009a 0094     		str	r4, [sp]
+ 407 009c 1923     		movs	r3, #25
+ 408 009e 1422     		movs	r2, #20
+ 409 00a0 3168     		ldr	r1, [r6]
+ 410 00a2 2868     		ldr	r0, [r5]
+ 411 00a4 FFF7FEFF 		bl	lv_obj_align_to
+ 412              	.LVL46:
+  33:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     img1 = lv_img_create(lv_scr_act());
+ 413              		.loc 1 33 5 view .LVU87
+  34:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_img_set_src(img1, &img_cogwheel_argb);
+ 414              		.loc 1 34 5 view .LVU88
+ 415              	.LBB58:
+ 416              	.LBI58:
+ 163:Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_disp.h **** {
+ 417              		.loc 4 163 26 view .LVU89
+ 418              	.LBB59:
+ 419              		.loc 4 165 5 view .LVU90
+ 420              		.loc 4 165 12 is_stmt 0 view .LVU91
+ 421 00a8 FFF7FEFF 		bl	lv_disp_get_default
+ 422              	.LVL47:
+ 423 00ac FFF7FEFF 		bl	lv_disp_get_scr_act
+ 424              	.LVL48:
+ 425              	.LBE59:
+ 426              	.LBE58:
+  34:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_img_set_src(img1, &img_cogwheel_argb);
+ 427              		.loc 1 34 12 view .LVU92
+ 428 00b0 FFF7FEFF 		bl	lv_img_create
+ 429              	.LVL49:
+  34:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_img_set_src(img1, &img_cogwheel_argb);
+ 430              		.loc 1 34 10 view .LVU93
+ 431 00b4 0C4E     		ldr	r6, .L11+12
+ 432 00b6 3060     		str	r0, [r6]
+  35:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c ****     lv_obj_align(img1, LV_ALIGN_RIGHT_MID, -20, 0);
+ARM GAS  /tmp/ccax10uq.s 			page 26
+
+
+ 433              		.loc 1 35 5 is_stmt 1 view .LVU94
+ 434 00b8 0C49     		ldr	r1, .L11+16
+ 435 00ba FFF7FEFF 		bl	lv_img_set_src
+ 436              	.LVL50:
+  36:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+ 437              		.loc 1 36 5 view .LVU95
+ 438 00be 2346     		mov	r3, r4
+ 439 00c0 6FF01302 		mvn	r2, #19
+ 440 00c4 0821     		movs	r1, #8
+ 441 00c6 3068     		ldr	r0, [r6]
+ 442 00c8 FFF7FEFF 		bl	lv_obj_align
+ 443              	.LVL51:
+  38:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** }
+ 444              		.loc 1 38 5 view .LVU96
+ 445 00cc 2246     		mov	r2, r4
+ 446 00ce 1C21     		movs	r1, #28
+ 447 00d0 2868     		ldr	r0, [r5]
+ 448 00d2 FFF7FEFF 		bl	lv_event_send
+ 449              	.LVL52:
+  39:Middlewares/lvgl/examples/widgets/img/lv_example_img_2.c **** 
+ 450              		.loc 1 39 1 is_stmt 0 view .LVU97
+ 451 00d6 02B0     		add	sp, sp, #8
+ 452              	.LCFI4:
+ 453              		.cfi_def_cfa_offset 24
+ 454              		@ sp needed
+ 455 00d8 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 456              	.L12:
+ 457              		.align	2
+ 458              	.L11:
+ 459 00dc 00000000 		.word	.LANCHOR1
+ 460 00e0 00000000 		.word	.LANCHOR2
+ 461 00e4 00000000 		.word	.LANCHOR3
+ 462 00e8 00000000 		.word	.LANCHOR4
+ 463 00ec 00000000 		.word	img_cogwheel_argb
+ 464 00f0 00000000 		.word	.LANCHOR0
+ 465              		.cfi_endproc
+ 466              	.LFE184:
+ 468              		.section	.bss.blue_slider,"aw",%nobits
+ 469              		.align	2
+ 470              		.set	.LANCHOR2,. + 0
+ 473              	blue_slider:
+ 474 0000 00000000 		.space	4
+ 475              		.section	.bss.green_slider,"aw",%nobits
+ 476              		.align	2
+ 477              		.set	.LANCHOR1,. + 0
+ 480              	green_slider:
+ 481 0000 00000000 		.space	4
+ 482              		.section	.bss.img1,"aw",%nobits
+ 483              		.align	2
+ 484              		.set	.LANCHOR4,. + 0
+ 487              	img1:
+ 488 0000 00000000 		.space	4
+ 489              		.section	.bss.intense_slider,"aw",%nobits
+ 490              		.align	2
+ 491              		.set	.LANCHOR3,. + 0
+ 494              	intense_slider:
+ 495 0000 00000000 		.space	4
+ARM GAS  /tmp/ccax10uq.s 			page 27
+
+
+ 496              		.section	.bss.red_slider,"aw",%nobits
+ 497              		.align	2
+ 498              		.set	.LANCHOR0,. + 0
+ 501              	red_slider:
+ 502 0000 00000000 		.space	4
+ 503              		.text
+ 504              	.Letext0:
+ 505              		.file 5 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 506              		.file 6 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ 507              		.file 7 "Middlewares/lvgl/examples/widgets/img/../../../src/misc/lv_ll.h"
+ 508              		.file 8 "Middlewares/lvgl/examples/widgets/img/../../../src/hal/../misc/lv_area.h"
+ 509              		.file 9 "Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_obj.h"
+ 510              		.file 10 "Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_group.h"
+ 511              		.file 11 "Middlewares/lvgl/examples/widgets/img/../../../src/core/../misc/lv_anim.h"
+ 512              		.file 12 "Middlewares/lvgl/examples/widgets/img/../../../src/core/../misc/lv_style.h"
+ 513              		.file 13 "Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_obj_scroll.h"
+ 514              		.file 14 "Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_obj_style.h"
+ 515              		.file 15 "Middlewares/lvgl/examples/widgets/img/../../../src/core/../draw/lv_img_buf.h"
+ 516              		.file 16 "Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_obj_class.h"
+ 517              		.file 17 "Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_event.h"
+ 518              		.file 18 "Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_bar.h"
+ 519              		.file 19 "Middlewares/lvgl/examples/widgets/img/../../../src/extra/widgets/imgbtn/lv_imgbtn.h"
+ 520              		.file 20 "Middlewares/lvgl/examples/widgets/img/../../../src/hal/lv_hal_disp.h"
+ 521              		.file 21 "Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_obj_pos.h"
+ 522              		.file 22 "Middlewares/lvgl/examples/widgets/img/../../../src/core/lv_obj_style_gen.h"
+ 523              		.file 23 "Middlewares/lvgl/examples/widgets/img/../../../src/widgets/lv_img.h"
+ARM GAS  /tmp/ccax10uq.s 			page 28
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 lv_example_img_2.c
+     /tmp/ccax10uq.s:18     .text.slider_event_cb:0000000000000000 $t
+     /tmp/ccax10uq.s:25     .text.slider_event_cb:0000000000000000 slider_event_cb
+     /tmp/ccax10uq.s:150    .text.slider_event_cb:0000000000000058 $d
+     /tmp/ccax10uq.s:159    .text.create_slider:0000000000000000 $t
+     /tmp/ccax10uq.s:165    .text.create_slider:0000000000000000 create_slider
+     /tmp/ccax10uq.s:254    .text.create_slider:0000000000000054 $d
+     /tmp/ccax10uq.s:259    .text.lv_example_img_2:0000000000000000 $t
+     /tmp/ccax10uq.s:266    .text.lv_example_img_2:0000000000000000 lv_example_img_2
+     /tmp/ccax10uq.s:459    .text.lv_example_img_2:00000000000000dc $d
+     /tmp/ccax10uq.s:469    .bss.blue_slider:0000000000000000 $d
+     /tmp/ccax10uq.s:473    .bss.blue_slider:0000000000000000 blue_slider
+     /tmp/ccax10uq.s:476    .bss.green_slider:0000000000000000 $d
+     /tmp/ccax10uq.s:480    .bss.green_slider:0000000000000000 green_slider
+     /tmp/ccax10uq.s:483    .bss.img1:0000000000000000 $d
+     /tmp/ccax10uq.s:487    .bss.img1:0000000000000000 img1
+     /tmp/ccax10uq.s:490    .bss.intense_slider:0000000000000000 $d
+     /tmp/ccax10uq.s:494    .bss.intense_slider:0000000000000000 intense_slider
+     /tmp/ccax10uq.s:497    .bss.red_slider:0000000000000000 $d
+     /tmp/ccax10uq.s:501    .bss.red_slider:0000000000000000 red_slider
+
+UNDEFINED SYMBOLS
+lv_bar_get_value
+lv_obj_set_style_img_recolor_opa
+lv_obj_set_style_img_recolor
+lv_disp_get_default
+lv_disp_get_scr_act
+lv_slider_create
+lv_bar_set_range
+lv_obj_set_size
+lv_obj_set_style_bg_color
+lv_color_darken
+lv_obj_add_event_cb
+lv_palette_main
+lv_bar_set_value
+lv_obj_align
+lv_obj_align_to
+lv_img_create
+lv_img_set_src
+lv_event_send
+img_cogwheel_argb
