@@ -56,14 +56,17 @@ void Error_Handler(void);
 /* USER CODE BEGIN EFP */
 void LED_Blinks(void);
 void LCD_COUNTER(void);
-
+void TIM2_Callback(void);
+void ADC_Task(void);
+void Wave_Data_Init(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
 #define LED_Pin GPIO_PIN_9
 #define LED_GPIO_Port GPIOF
 /* USER CODE BEGIN Private defines */
-
+#define wave_num 500
+#define wave_auto_num 500
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

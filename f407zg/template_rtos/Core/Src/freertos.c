@@ -26,6 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "adc.h"
 #include "lvgl.h"
 #include "lvgl_app.h"
 #include <stdio.h>
@@ -53,6 +54,15 @@ osThreadId BlinkTaskHandle;
 osThreadId HelloTaskHandle;
 osThreadId lvglTaskHandle;
 osThreadId counterTaskHandle;
+osThreadId ADCTaskHandle;
+extern uint8_t adc1CpltFlg;
+extern lv_obj_t * wave_chart;
+extern uint8_t waveStopFlg;
+extern lv_chart_series_t * wave_ser;
+extern ADC_HandleTypeDef hadc1;
+extern  uint16_t wave[wave_num];
+extern uint16_t AD1[6000];
+extern uint8_t waveAutoFlg=0;
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 
@@ -64,8 +74,10 @@ void lvgl_init(void){
   lv_port_disp_init();        // 显示器初始化
   lv_port_indev_init();       // 输入设备初始化（如果没有实现就注释掉）
   // lv_port_fs_init();          // 文件系统设备初始化（如果没有实现就注释掉）
-  lv_example_btn_1();
-  counter_label();
+  //lv_example_btn_1();
+  //counter_label();
+  wave_chart_init();
+  wave_btn();
   uint32_t ticks=HAL_GetTick()+1;
   char text[5];
   uint32_t i=0;
@@ -75,19 +87,32 @@ void lvgl_init(void){
     lv_tick_inc(LVGL_TICK);
     lv_task_handler();
     osDelay(LVGL_TICK);
-    if((HAL_GetTick()-ticks)>100){
-      ticks=HAL_GetTick();
-      sprintf(text,"%d",i);
-      //printf("%s %d\r\n",text,i);
-      lv_label_set_text(label1, text);
-      i++;
-    }
+    // if((HAL_GetTick()-ticks)>100){
+    //   ticks=HAL_GetTick();
+    //   sprintf(text,"%ld",i);
+    //   //printf("%s %d\r\n",text,i);
+    //   lv_label_set_text(label1, text);
+    //   i++;
+    // }
+    // if(adc1CpltFlg){
+    //   //HAL_Delay(100);
+    //   Wave_Data_Init();
+    //   if(waveStopFlg==0){
+    //     //printf("ADC DMA OK\r\n");
+    //     lv_chart_set_point_count(wave_chart, 1200);
+    //     lv_chart_set_ext_y_array(wave_chart, wave_ser, (lv_coord_t *)wave);
+    //   }
+    //   adc1CpltFlg=0;
+    //   HAL_ADC_Start_DMA(&hadc1,(uint16_t *)AD1,6000);
+    // }
+    //printf("adc1CpltFlg %d\r\n",adc1CpltFlg);
+
   }
 }
 void LED_Blinks(void){
   for(;;)
   {
-    
+    HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
     //printf("hello world\r\n");
     osDelay(500);
   }
@@ -95,12 +120,37 @@ void LED_Blinks(void){
 void Helloworld(void){
   for(;;)
   {
-    HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
+    
     printf("hello world\r\n");
     osDelay(500);
   }
 }
-
+void ADC_Task(void){
+  HAL_ADC_Start_DMA(&hadc1,(uint16_t *)AD1,6000);
+  for (;;)
+  {
+    
+    if(adc1CpltFlg){
+      osDelay(100);
+      Wave_Data_Init();
+      
+      //printf("ADC DMA OK\r\n");
+      if(waveStopFlg==0){
+        if(waveAutoFlg){
+          lv_chart_set_point_count(wave_chart, wave_auto_num);
+          lv_chart_set_ext_y_array(wave_chart, wave_ser, (lv_coord_t *)wave_auto_points); 
+        }else{
+          lv_chart_set_point_count(wave_chart, wave_num);
+          lv_chart_set_ext_y_array(wave_chart, wave_ser, (lv_coord_t *)wave); 
+        }
+      }
+      adc1CpltFlg=0;
+      HAL_ADC_Start_DMA(&hadc1,(uint16_t *)AD1,6000);
+    }
+    
+  }
+  
+}
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void const * argument);
@@ -130,7 +180,7 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackTy
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-
+  
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -159,11 +209,13 @@ void MX_FREERTOS_Init(void) {
 
   osThreadDef(blink, LED_Blinks, osPriorityNormal, 0, 128);
   BlinkTaskHandle = osThreadCreate(osThread(blink), NULL);
-  osThreadDef(hello, Helloworld, osPriorityNormal, 0, 128);
-  HelloTaskHandle = osThreadCreate(osThread(hello), NULL);
-  osThreadDef(lvgl, lvgl_init, osPriorityNormal , 0, 2048);
+/*   osThreadDef(hello, Helloworld, osPriorityNormal, 0, 128);
+  HelloTaskHandle = osThreadCreate(osThread(hello), NULL); */
+  osThreadDef(lvgl, lvgl_init, osPriorityRealtime , 0, 2048);
   lvglTaskHandle = osThreadCreate(osThread(lvgl), NULL);
-  
+
+  osThreadDef(adctask, ADC_Task, osPriorityNormal, 0, 1024);
+  ADCTaskHandle = osThreadCreate(osThread(adctask), NULL);
   /* USER CODE END RTOS_THREADS */
 
 }

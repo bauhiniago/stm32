@@ -20,7 +20,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "adc.h"
 #include "dma.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 #include "fsmc.h"
@@ -29,6 +31,7 @@
 /* USER CODE BEGIN Includes */
 #include "lvgl.h"
 #include "lvgl_app.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -38,6 +41,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,14 +52,84 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t adc1CpltFlg=0;
+uint16_t wave[wave_num];
+uint16_t wave_auto_points[wave_auto_num];
+uint16_t AD1[6000];
+uint16_t wave_max;
+uint16_t wave_min;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
+  if(hadc->Instance == ADC1){
+    adc1CpltFlg =1;
+  }
+}
+void Wave_Data_Init(void){
+  //AD1_Max=0;
+  //AD1_Min=4096;
+  uint16_t Point_num=6000;
+  wave_max=0;
+  wave_min=3300;
+  for(int i = 0,k=0; i < Point_num;) {
+    wave[k]=0;
+    for (int j = 0; j < Point_num/wave_num; ++j) {
+      wave[k]+=AD1[i++];
+    }
+    //printf("%ld\r\n",AD1[i]);
+    wave[k]/=(Point_num/wave_num);
+    wave[k]=(wave[k]/4096.0)*3300;
+    if(wave_max<wave[k]){
+      wave_max=wave[k];
+    }
+    if(wave_min>wave[k]){
+      wave_min=wave[k];
+    }
+    // if (wave[k]>3300)
+    // {
+    //   wave[k]=wave[k-1];
+    // }
+    //printf("%d\r\n",wave[k]);
+    k++;
+  }
+}
+void Wave_Auto(void){
+  uint16_t wave_trigger;
+  uint16_t wave_trigger_target[10];
+  uint8_t upFlg=0;
+  uint8_t k=0;
+  wave_trigger=(wave_max-wave_min)/4*3+wave_min;
+  for (int i = 0; i < wave_num; i++)
+  {
+    if ((wave[i]-wave_trigger)<5)
+    {
+      
+    }else if((wave[i]-wave_trigger)>5){
+      
+    }
+    
+  }
+}
+void TIM2_Callback(){
+  //HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+  // extern lv_obj_t * wave_chart;
+  // extern uint8_t waveStopFlg;
+  // extern lv_chart_series_t * wave_ser;
+  // if(adc1CpltFlg){
+  //     //HAL_Delay(100);
+  //     Wave_Data_Init();
+  //     if(waveStopFlg==0){
+  //       lv_chart_set_point_count(wave_chart, 640);
+  //       lv_chart_set_ext_y_array(wave_chart, wave_ser, (lv_coord_t *)wave);
+  //     }
+  //     adc1CpltFlg=0;
+  //     HAL_ADC_Start_DMA(&hadc1,(uint16_t *)AD1,6000);
+  //   }
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -94,10 +168,10 @@ int main(void)
   MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_FSMC_Init();
+  MX_ADC1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
-  //osThreadDef(counter, LCD_COUNTER, osPriorityNormal, 0, 2048);
-  //Task2Handle = osThreadCreate(osThread(counter), NULL);
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
@@ -183,7 +257,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-
+  if(htim->Instance == htim2.Instance)
+    TIM2_Callback();
   /* USER CODE END Callback 1 */
 }
 

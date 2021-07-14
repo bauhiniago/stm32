@@ -19,12 +19,15 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "sk6812.h"
+//#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,6 +48,7 @@
 
 /* USER CODE BEGIN PV */
 
+  
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -86,18 +90,54 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART1_UART_Init();
+  MX_TIM2_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+  extern uint16_t send_Buf[NUM];
+  SK_CloseAll();
+  //HAL_TIM_PWM_Start_DMA(&htim2, TIM_CHANNEL_1, (uint32_t *)send_Buf, NUM);
+  
+  
+  // for (size_t i = 0; i < 20; i++)
+  // {
+  //   send_Buf2[i]=200;
+  // }
+  //SK_CloseAll();
+//     SK_WritePixel(18,255,0,0);
+//     SK_WritePixel(19,255,0,0);
+// SK_WritePixel(17,255,0,0);
+    
 
+
+
+  //__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,800);
+
+  //HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  //SK_WritePixel(3,100,0,0);
+  //SK_WritePixel(19,0,100,0);
+  //SK_Breathing_RGB();
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
-    HAL_Delay(1000);
-    printf("Hello,World!\r\n");
+    //HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
+    
+    //HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+    //HAL_Delay(200)
+    
+    //SK_Watering_RGB();
+    SK_Rainbow(20);
+    //HAL_TIM_PWM_Start_DMA(&htim2, TIM_CHANNEL_1, (uint32_t *)send_Buf2,5);
+    //HAL_TIM_PWM_Start_DMA(&htim2, TIM_CHANNEL_1, (uint32_t *)send_Buf, NUM);
+    
+  //
+  
+  //SK_Breathing_RGB();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -144,6 +184,10 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
+{
+	//HAL_TIM_PWM_Stop_DMA(&htim2, TIM_CHANNEL_1);
+}
 
 /* USER CODE END 4 */
 
