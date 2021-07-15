@@ -78,7 +78,7 @@ static void wave_draw_stop(lv_event_t * e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     if(code == LV_EVENT_VALUE_CHANGED){
-        printf("STOP/RUN\r\n");
+        //printf("STOP/RUN\r\n");
         if(waveStopFlg==1){
             waveStopFlg=0;
         }else{
@@ -103,7 +103,6 @@ static void wave_auto_mode(lv_event_t * e)
 {
     lv_event_code_t code = lv_event_get_code(e);
    if(code == LV_EVENT_VALUE_CHANGED){
-        printf("STOP/RUN\r\n");
         if(waveAutoFlg==1){
             waveAutoFlg=0;
         }else{
@@ -130,13 +129,57 @@ void wave_btn(void)
     lv_obj_add_flag(btn2, LV_OBJ_FLAG_CHECKABLE);
     lv_obj_set_height(btn2, LV_SIZE_CONTENT);
 
-    lv_obj_t * btn3 = lv_btn_create(lv_scr_act());
-    lv_obj_add_event_cb(btn2, wave_auto_mode, LV_EVENT_ALL, NULL);
-    lv_obj_align(btn2, LV_ALIGN_TOP_LEFT, 220, 400);
-    lv_obj_add_flag(btn2, LV_OBJ_FLAG_CHECKABLE);
-    lv_obj_set_height(btn2, LV_SIZE_CONTENT);
-
     label = lv_label_create(btn2);
-    lv_label_set_text(label, "Auto");
+    lv_label_set_text(label, "Run/Stop");
     lv_obj_center(label);
+
+    lv_obj_t * btn3 = lv_btn_create(lv_scr_act());
+    lv_obj_add_event_cb(btn3, wave_auto_mode, LV_EVENT_ALL, NULL);
+    lv_obj_align(btn3, LV_ALIGN_TOP_LEFT, 250, 400);
+    lv_obj_add_flag(btn3, LV_OBJ_FLAG_CHECKABLE);
+    lv_obj_set_height(btn3, LV_SIZE_CONTENT);
+
+    label = lv_label_create(btn3);
+    lv_label_set_text(label, "Auto");
+    lv_obj_center(label); 
+}
+uint8_t distortion_mode=0;
+static void distortion_handler(lv_event_t * e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t * obj = lv_event_get_target(e);
+    if(code == LV_EVENT_VALUE_CHANGED) {
+        char buf[32];
+        lv_dropdown_get_selected_str(obj, buf, sizeof(buf));
+        char list[5][32]={
+            "No distortion",
+            "Top distortion",
+            "Bottom distortion",
+            "Two-way distortion",
+            "Crossover distortion",
+        };
+        for (uint8_t i = 0; i < 5; i++)
+        {
+            if(strstr(buf,list[i])){
+                distortion_mode=i;
+            }
+        
+        }
+        printf("mode:%d\r\n",distortion_mode);
+    }
+}
+
+void distortion_list(void)
+{
+    /*Create a normal drop down list*/
+    lv_obj_t * dd = lv_dropdown_create(lv_scr_act());
+    lv_dropdown_set_options(dd, "No distortion\n"
+                                "Top distortion\n"
+                                "Bottom distortion\n"
+                                "Two-way distortion\n"
+                                "Crossover distortion"
+                                );
+    lv_obj_align(dd, LV_ALIGN_TOP_LEFT, 20, 460);\
+    lv_obj_set_width(dd,220);
+    lv_obj_add_event_cb(dd, distortion_handler, LV_EVENT_ALL, NULL);
 }

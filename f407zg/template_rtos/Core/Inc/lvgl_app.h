@@ -12,6 +12,7 @@
 void counter_label(void);
 void wave_chart_init(void);
 void wave_btn(void);
+void distortion_list(void);
 
 
 

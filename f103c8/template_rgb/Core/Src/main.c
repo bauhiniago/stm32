@@ -131,7 +131,7 @@ int main(void)
     //HAL_Delay(200)
     
     //SK_Watering_RGB();
-    SK_Rainbow(20);
+    SK_Rainbow(40);
     //HAL_TIM_PWM_Start_DMA(&htim2, TIM_CHANNEL_1, (uint32_t *)send_Buf2,5);
     //HAL_TIM_PWM_Start_DMA(&htim2, TIM_CHANNEL_1, (uint32_t *)send_Buf, NUM);
     

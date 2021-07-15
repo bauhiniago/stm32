@@ -286,7 +286,7 @@ void SK_RainbowStep(uint32_t pos,uint16_t led){
 	}
 	else if (pos/256==6)
 	{
-		//0,0,255 -> 135,0,255 蓝靛
+		//0,0,255 -> 135,0,255 蓝 靛
 		uint16_t i=0;
 		uint16_t margin=135;
 		while (i<256)
@@ -338,11 +338,12 @@ void SK_Rainbow(uint8_t n){
 	{
 		for (int j = 0; j < n; j++)
 		{
-			SK_RainbowStep((pos+255*j/n/2)%(256*9),j);
+			SK_RainbowStep((pos+255*j/n*8)%(256*9),j);
 			//HAL_Delay(1);
-			Delay_us(100);
+			
 			
 		}
+		Delay_us(1);
 
 	}
 }

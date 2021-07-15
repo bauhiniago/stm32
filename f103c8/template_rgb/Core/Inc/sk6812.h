@@ -9,7 +9,7 @@ rest code >=50us
 
 
 
-#define PIXEL_NUM  20
+#define PIXEL_NUM  40
 #define NUM (24*PIXEL_NUM + 70)        // Reset 280us / 1.25us = 224
 #define WS1 4
 #define WS0 1

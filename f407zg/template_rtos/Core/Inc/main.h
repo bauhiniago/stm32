@@ -65,8 +65,10 @@ void Wave_Data_Init(void);
 #define LED_Pin GPIO_PIN_9
 #define LED_GPIO_Port GPIOF
 /* USER CODE BEGIN Private defines */
-#define wave_num 500
-#define wave_auto_num 500
+#define wave_num 2000
+#define AD_num 6000
+#define LVGL_TICK 5
+//#define wave_auto_num 500
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
