@@ -59,16 +59,23 @@ void LCD_COUNTER(void);
 void TIM2_Callback(void);
 void ADC_Task(void);
 void Wave_Data_Init(void);
+void FFT(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
 #define LED_Pin GPIO_PIN_9
 #define LED_GPIO_Port GPIOF
+#define Cross1_Pin GPIO_PIN_13
+#define Cross1_GPIO_Port GPIOF
+#define Cross2_Pin GPIO_PIN_14
+#define Cross2_GPIO_Port GPIOF
+#define TwoWay_Pin GPIO_PIN_15
+#define TwoWay_GPIO_Port GPIOF
 /* USER CODE BEGIN Private defines */
-#define wave_num 2000
-#define AD_num 6000
+#define wave_num 512
+#define AD_num 1024
 #define LVGL_TICK 5
-//#define wave_auto_num 500
+#define FFT_LENGTH  1024			// FFT长度，默认是1024点FFT
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

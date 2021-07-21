@@ -42,10 +42,10 @@ void wave_chart_init(void)
 {
     /*Create a chart*/
     wave_chart = lv_chart_create(lv_scr_act());
-    lv_obj_set_size(wave_chart, 380, 330);
+    lv_obj_set_size(wave_chart, 500, 420);
     lv_obj_align(wave_chart, LV_ALIGN_TOP_LEFT, 50, 0);
-    lv_chart_set_range(wave_chart, LV_CHART_AXIS_PRIMARY_Y, 0, 3300);
-    lv_chart_set_range(wave_chart, LV_CHART_AXIS_PRIMARY_X, 0, 380);
+    lv_chart_set_range(wave_chart, LV_CHART_AXIS_PRIMARY_Y, 0, 1000);
+    lv_chart_set_range(wave_chart, LV_CHART_AXIS_PRIMARY_X, 0, 512);
     lv_chart_set_axis_tick(wave_chart, LV_CHART_AXIS_PRIMARY_X, 5, 5, 5, 1, true, 20);
     lv_chart_set_axis_tick(wave_chart, LV_CHART_AXIS_PRIMARY_Y, 10, 5, 6, 5, true, 60);
     /*Do not display points on the data*/
@@ -62,14 +62,14 @@ void wave_chart_init(void)
     wave_slider_x = lv_slider_create(lv_scr_act());
     lv_slider_set_range(wave_slider_x, LV_IMG_ZOOM_NONE, LV_IMG_ZOOM_NONE * 10);
     lv_obj_add_event_cb(wave_slider_x, slider_x_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-    lv_obj_set_size(wave_slider_x, 380, 10);
+    lv_obj_set_size(wave_slider_x, 480, 10);
     lv_obj_align_to(wave_slider_x, wave_chart, LV_ALIGN_OUT_BOTTOM_MID, 0, 30);
 
     wave_slider_y = lv_slider_create(lv_scr_act());
     lv_slider_set_range(wave_slider_y, LV_IMG_ZOOM_NONE, LV_IMG_ZOOM_NONE * 10);
     lv_obj_add_event_cb(wave_slider_y, slider_y_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-    lv_obj_set_size(wave_slider_y, 10, 290);
-    lv_obj_align_to(wave_slider_y, wave_chart, LV_ALIGN_OUT_RIGHT_MID, 20, 0);
+    lv_obj_set_size(wave_slider_y, 10, 400);
+    lv_obj_align_to(wave_slider_y, wave_chart, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
 }
 
 uint8_t waveStopFlg=0;
@@ -117,7 +117,7 @@ void wave_btn(void)
 
     lv_obj_t * btn1 = lv_btn_create(lv_scr_act());
     lv_obj_add_event_cb(btn1, wave_zoom_stop, LV_EVENT_ALL, NULL);
-    lv_obj_align(btn1, LV_ALIGN_TOP_LEFT, 20, 400);
+    lv_obj_align(btn1, LV_ALIGN_TOP_RIGHT, -20, 20);
 
     label = lv_label_create(btn1);
     lv_label_set_text(label, "RESET");
@@ -125,7 +125,7 @@ void wave_btn(void)
 
     lv_obj_t * btn2 = lv_btn_create(lv_scr_act());
     lv_obj_add_event_cb(btn2, wave_draw_stop, LV_EVENT_ALL, NULL);
-    lv_obj_align(btn2, LV_ALIGN_TOP_LEFT, 120, 400);
+    lv_obj_align(btn2, LV_ALIGN_TOP_RIGHT, -20, 80);
     lv_obj_add_flag(btn2, LV_OBJ_FLAG_CHECKABLE);
     lv_obj_set_height(btn2, LV_SIZE_CONTENT);
 
@@ -133,15 +133,15 @@ void wave_btn(void)
     lv_label_set_text(label, "Run/Stop");
     lv_obj_center(label);
 
-    lv_obj_t * btn3 = lv_btn_create(lv_scr_act());
-    lv_obj_add_event_cb(btn3, wave_auto_mode, LV_EVENT_ALL, NULL);
-    lv_obj_align(btn3, LV_ALIGN_TOP_LEFT, 250, 400);
-    lv_obj_add_flag(btn3, LV_OBJ_FLAG_CHECKABLE);
-    lv_obj_set_height(btn3, LV_SIZE_CONTENT);
+    // lv_obj_t * btn3 = lv_btn_create(lv_scr_act());
+    // lv_obj_add_event_cb(btn3, wave_auto_mode, LV_EVENT_ALL, NULL);
+    // lv_obj_align(btn3, LV_ALIGN_TOP_RIGHT, -20, 140);
+    // lv_obj_add_flag(btn3, LV_OBJ_FLAG_CHECKABLE);
+    // lv_obj_set_height(btn3, LV_SIZE_CONTENT);
 
-    label = lv_label_create(btn3);
-    lv_label_set_text(label, "Auto");
-    lv_obj_center(label); 
+    // label = lv_label_create(btn3);
+    // lv_label_set_text(label, "Auto");
+    // lv_obj_center(label); 
 }
 uint8_t distortion_mode=0;
 static void distortion_handler(lv_event_t * e)
@@ -179,7 +179,16 @@ void distortion_list(void)
                                 "Two-way distortion\n"
                                 "Crossover distortion"
                                 );
-    lv_obj_align(dd, LV_ALIGN_TOP_LEFT, 20, 460);\
-    lv_obj_set_width(dd,220);
+    lv_obj_align(dd, LV_ALIGN_TOP_RIGHT, -20, 200);
+    lv_obj_set_width(dd,190);
     lv_obj_add_event_cb(dd, distortion_handler, LV_EVENT_ALL, NULL);
+}
+
+lv_obj_t * THD_text;
+void THD_label(void){
+    THD_text = lv_label_create(lv_scr_act());
+    lv_label_set_text(THD_text, "THD");
+    lv_obj_set_width(THD_text, 150);  /*Set smaller width to make the lines wrap*/
+    lv_obj_set_style_text_align(THD_text, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(THD_text, LV_ALIGN_TOP_RIGHT, -20, 140);
 }

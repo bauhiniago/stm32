@@ -17,8 +17,8 @@
 #include <stdint.h>
 
 /* Maximal horizontal and vertical resolution to support by the library.*/
-#define LV_HOR_RES_MAX          (480)
-#define LV_VER_RES_MAX          (800)
+#define LV_HOR_RES_MAX          (800)
+#define LV_VER_RES_MAX          (480)
 #define LV_CONF_INCLUDE_SIMPLE
 #define LV_LVGL_H_INCLUDE_SIMPLE
 // #define LV_BUILD_EXAMPLES
@@ -49,7 +49,7 @@
 #define LV_MEM_CUSTOM      0
 #if LV_MEM_CUSTOM == 0
 /*Size of the memory available for `lv_mem_alloc()` in bytes (>= 2kB)*/
-#  define LV_MEM_SIZE    (32U * 1024U)          /*[bytes]*/
+#  define LV_MEM_SIZE    (16U * 1024U)          /*[bytes]*/
 
 /*Set an address for the memory pool instead of allocating it as a normal array. Can be in external SRAM too.*/
 #  define LV_MEM_ADR          0     /*0: unused*/

@@ -1,0 +1,4160 @@
+ARM GAS  /tmp/ccMCXGLW.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"RC522.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.Delay_us,"ax",%progbits
+  16              		.align	1
+  17              		.global	Delay_us
+  18              		.arch armv7-m
+  19              		.syntax unified
+  20              		.thumb
+  21              		.thumb_func
+  22              		.fpu softvfp
+  24              	Delay_us:
+  25              	.LVL0:
+  26              	.LFB70:
+  27              		.file 1 "Core/Src/RC522.c"
+   1:Core/Src/RC522.c **** #include "main.h"
+   2:Core/Src/RC522.c **** #include "spi.h"
+   3:Core/Src/RC522.c **** #include "RC522.h"
+   4:Core/Src/RC522.c **** #include <stdio.h>
+   5:Core/Src/RC522.c **** #include <string.h>
+   6:Core/Src/RC522.c **** 
+   7:Core/Src/RC522.c **** // M1卡分为16个扇区，每个扇区由四个块（块0、块1、块2、块3）组成
+   8:Core/Src/RC522.c **** // 将16个扇区的64个块按绝对地址编号为：0~63
+   9:Core/Src/RC522.c **** // 第0个扇区的块0（即绝对地址0块），用于存放厂商代码，已经固化不可更
+  10:Core/Src/RC522.c **** // 每个扇区的块0、块1、块2为数据块，可用于存放数据
+  11:Core/Src/RC522.c **** // 每个扇区的块3为控制块（绝对地址为:块3、块7、块11.....）包括密码A，存
+  12:Core/Src/RC522.c **** 
+  13:Core/Src/RC522.c **** #define RC522_DELAY()   Delay_us( 20 )
+  14:Core/Src/RC522.c **** 
+  15:Core/Src/RC522.c **** // 用户自定义GPIO，用于控制片选和重启信号
+  16:Core/Src/RC522.c **** #define RC522_Reset_Disable()   HAL_GPIO_WritePin(RC522_RST_GPIO_Port,RC522_RST_Pin,GPIO_PIN_SET)
+  17:Core/Src/RC522.c **** #define RC522_Reset_Enable()    HAL_GPIO_WritePin(RC522_RST_GPIO_Port,RC522_RST_Pin,GPIO_PIN_RESET)
+  18:Core/Src/RC522.c **** #define RC522_CS_Disable()    HAL_GPIO_WritePin(RC522_CS_GPIO_Port,RC522_CS_Pin,GPIO_PIN_SET)
+  19:Core/Src/RC522.c **** #define RC522_CS_Enable()    HAL_GPIO_WritePin(RC522_CS_GPIO_Port,RC522_CS_Pin,GPIO_PIN_RESET)
+  20:Core/Src/RC522.c **** #define cardsNum 2
+  21:Core/Src/RC522.c **** 
+  22:Core/Src/RC522.c **** unsigned char CT[2];             //卡类型
+  23:Core/Src/RC522.c **** unsigned char SN[4];             //卡号
+  24:Core/Src/RC522.c **** unsigned char DATA[16];
+  25:Core/Src/RC522.c **** unsigned char RFID[16];          //存放RFID 
+  26:Core/Src/RC522.c **** unsigned char total=0;
+  27:Core/Src/RC522.c **** unsigned char mycards[cardsNum][4]={
+  28:Core/Src/RC522.c ****                     {0xAA,0x5B,0xD3,0x84},
+  29:Core/Src/RC522.c ****                     {0xF9,0x56,0x2C,0xE5}
+  30:Core/Src/RC522.c ****                 };
+  31:Core/Src/RC522.c **** int8_t cardNum;                
+ARM GAS  /tmp/ccMCXGLW.s 			page 2
+
+
+  32:Core/Src/RC522.c **** uint8_t KEY1_A[6]= {0xa0,0xa1,0xa2,0xa3,0xa4,0xa5};
+  33:Core/Src/RC522.c **** uint8_t KEY1_B[6]= {0xff,0xff,0xff,0xff,0xff,0xff};
+  34:Core/Src/RC522.c **** unsigned char RFID1[16]={0x00,0x00,0x00,0x00,0x00,0x00,0xff,0x07,0x80,0x29,0xff,0xff,0xff,0xff,0xff
+  35:Core/Src/RC522.c **** unsigned char DATA1[16]= {0x12,0x34,0x56,0x78,0x9A,0x00,0xff,0x07,0x80,0x29,0xff,0xff,0xff,0xff,0xf
+  36:Core/Src/RC522.c **** unsigned char status;
+  37:Core/Src/RC522.c **** unsigned char addr=0x08;
+  38:Core/Src/RC522.c **** 
+  39:Core/Src/RC522.c **** void RC522_Handle1(void){
+  40:Core/Src/RC522.c ****     status=MI_ERR;
+  41:Core/Src/RC522.c ****     status = PcdRequest(PICC_REQALL, CT);// 寻卡 -> 扫描有无卡片
+  42:Core/Src/RC522.c ****     if (status == MI_OK)
+  43:Core/Src/RC522.c ****     {
+  44:Core/Src/RC522.c ****         // 打印卡片类型代码
+  45:Core/Src/RC522.c ****         // printf("Card Type:%x%x\r\n", CT[0],CT[1]);
+  46:Core/Src/RC522.c ****         status=MI_ERR;
+  47:Core/Src/RC522.c ****         status=PcdAnticoll(SN);// 防冲突 -> 可取得UID
+  48:Core/Src/RC522.c ****         if (status==MI_OK)
+  49:Core/Src/RC522.c ****         {
+  50:Core/Src/RC522.c ****             // 打印16进制UID
+  51:Core/Src/RC522.c ****             ShowID(SN); 
+  52:Core/Src/RC522.c ****             // 判断卡所属用户
+  53:Core/Src/RC522.c ****             for (uint8_t i = 0; i < cardsNum; i++)
+  54:Core/Src/RC522.c ****             {
+  55:Core/Src/RC522.c ****                 if((SN[0]==mycards[i][0])&&(SN[1]==mycards[i][1])&&(SN[2]==mycards[i][2])&&(SN[3]==
+  56:Core/Src/RC522.c ****                 {
+  57:Core/Src/RC522.c ****                     cardNum=i;
+  58:Core/Src/RC522.c ****                     printf("The Card is:card_%d\r\n",i);
+  59:Core/Src/RC522.c ****                     break;
+  60:Core/Src/RC522.c ****                 }else{
+  61:Core/Src/RC522.c ****                     cardNum=-1;
+  62:Core/Src/RC522.c ****                 }
+  63:Core/Src/RC522.c ****             }
+  64:Core/Src/RC522.c ****             if (cardNum==-1)
+  65:Core/Src/RC522.c ****             {
+  66:Core/Src/RC522.c ****                 printf("Unkown card！\r\n");
+  67:Core/Src/RC522.c ****             }
+  68:Core/Src/RC522.c ****             status = MI_ERR;
+  69:Core/Src/RC522.c ****             status = PcdSelect(SN);// 选择卡片
+  70:Core/Src/RC522.c ****             if (status==MI_OK)
+  71:Core/Src/RC522.c ****             {
+  72:Core/Src/RC522.c ****                 printf("Select Card\r\n");
+  73:Core/Src/RC522.c ****                 status = MI_ERR;
+  74:Core/Src/RC522.c ****                 // 注意：此处的块地址0x0B即2扇区3区块，此块地址只需要指向�
+  75:Core/Src/RC522.c ****                 status = PcdAuthState(KeyModeA, 0x04, KEY1_A, SN);
+  76:Core/Src/RC522.c ****                 if(status == MI_OK)//验证成功
+  77:Core/Src/RC522.c ****                 {
+  78:Core/Src/RC522.c ****                     printf("PcdAuthState(A) success\r\n");
+  79:Core/Src/RC522.c ****                 }
+  80:Core/Src/RC522.c ****                 else
+  81:Core/Src/RC522.c ****                 {
+  82:Core/Src/RC522.c ****                     printf("PcdAuthState(A) failed\r\n");
+  83:Core/Src/RC522.c ****                 }
+  84:Core/Src/RC522.c ****             }
+  85:Core/Src/RC522.c ****         }
+  86:Core/Src/RC522.c ****         HAL_Delay(500); 
+  87:Core/Src/RC522.c ****     }
+  88:Core/Src/RC522.c ****     else{
+ARM GAS  /tmp/ccMCXGLW.s 			page 3
+
+
+  89:Core/Src/RC522.c ****         //NO Card
+  90:Core/Src/RC522.c ****     }    
+  91:Core/Src/RC522.c **** }
+  92:Core/Src/RC522.c **** // 测试程序0，完成addr读写读
+  93:Core/Src/RC522.c **** void RC522_Handle(void)
+  94:Core/Src/RC522.c **** {
+  95:Core/Src/RC522.c ****     uint8_t i = 0;
+  96:Core/Src/RC522.c ****     uint8_t card0_bit = 0;
+  97:Core/Src/RC522.c **** 
+  98:Core/Src/RC522.c ****     
+  99:Core/Src/RC522.c ****     if(status == MI_OK)//选卡成功
+ 100:Core/Src/RC522.c ****     {
+ 101:Core/Src/RC522.c ****        // printf("选卡成功\r\n");
+ 102:Core/Src/RC522.c ****         status = MI_ERR;
+ 103:Core/Src/RC522.c ****         // 验证A密钥 块地址 密码 SN 
+ 104:Core/Src/RC522.c **** 		// 注意：此处的块地址0x0B即2扇区3区块，此块地址只需要指向某一扇区就�
+ 105:Core/Src/RC522.c ****         status = PcdAuthState(0x60, 0x0B, KEY1_A, SN);
+ 106:Core/Src/RC522.c ****        
+ 107:Core/Src/RC522.c ****     }
+ 108:Core/Src/RC522.c ****     if(status == MI_OK)//验证成功
+ 109:Core/Src/RC522.c ****     {
+ 110:Core/Src/RC522.c ****         //printf("扇区验证成功\r\n");
+ 111:Core/Src/RC522.c ****         status = MI_ERR;
+ 112:Core/Src/RC522.c ****         // 读取M1卡一块数据 块地址 读取的数据 注意：因为上面验证的扇区�
+ 113:Core/Src/RC522.c ****         status = PcdRead(addr, DATA);
+ 114:Core/Src/RC522.c ****         if(status == MI_OK)//读卡成功
+ 115:Core/Src/RC522.c ****         {
+ 116:Core/Src/RC522.c ****             printf("RFID:%s\r\n", RFID);
+ 117:Core/Src/RC522.c ****             printf("DATA:");
+ 118:Core/Src/RC522.c ****             for(i = 0; i < 16; i++)
+ 119:Core/Src/RC522.c ****             {
+ 120:Core/Src/RC522.c ****                 printf("%02x", DATA[i]);
+ 121:Core/Src/RC522.c ****             }
+ 122:Core/Src/RC522.c ****             printf("\r\n");
+ 123:Core/Src/RC522.c ****         }
+ 124:Core/Src/RC522.c ****         else
+ 125:Core/Src/RC522.c ****         {
+ 126:Core/Src/RC522.c ****             //printf("读卡失败\r\n");
+ 127:Core/Src/RC522.c ****         }
+ 128:Core/Src/RC522.c ****     }
+ 129:Core/Src/RC522.c ****     if(status == MI_OK)//读卡成功
+ 130:Core/Src/RC522.c ****     {
+ 131:Core/Src/RC522.c ****         //printf("读卡成功\r\n");
+ 132:Core/Src/RC522.c ****         status = MI_ERR;
+ 133:Core/Src/RC522.c **** 		printf("一秒后开始写卡，请勿移开卡片！！\r\n");
+ 134:Core/Src/RC522.c **** 		HAL_Delay(1000);
+ 135:Core/Src/RC522.c ****         // status = PcdWrite(addr, DATA0);
+ 136:Core/Src/RC522.c ****         // 写数据到M1卡一块
+ 137:Core/Src/RC522.c ****         status = PcdWrite(addr, DATA1);
+ 138:Core/Src/RC522.c ****         if(status == MI_OK)//写卡成功
+ 139:Core/Src/RC522.c ****         {
+ 140:Core/Src/RC522.c ****             printf("PcdWrite() success\r\n");
+ 141:Core/Src/RC522.c ****         }
+ 142:Core/Src/RC522.c ****         else
+ 143:Core/Src/RC522.c ****         {
+ 144:Core/Src/RC522.c ****             printf("PcdWrite() failed\r\n");
+ 145:Core/Src/RC522.c **** 			HAL_Delay(3000);
+ARM GAS  /tmp/ccMCXGLW.s 			page 4
+
+
+ 146:Core/Src/RC522.c ****         }
+ 147:Core/Src/RC522.c ****         
+ 148:Core/Src/RC522.c ****     }
+ 149:Core/Src/RC522.c ****     if(status == MI_OK)//写卡成功
+ 150:Core/Src/RC522.c ****     {
+ 151:Core/Src/RC522.c ****         status = MI_ERR;
+ 152:Core/Src/RC522.c ****         // 读取M1卡一块数据 块地址 读取的数据
+ 153:Core/Src/RC522.c ****         status = PcdRead(addr, DATA);
+ 154:Core/Src/RC522.c ****         if(status == MI_OK)//读卡成功
+ 155:Core/Src/RC522.c ****         {
+ 156:Core/Src/RC522.c ****             // printf("DATA:%s\r\n", DATA);
+ 157:Core/Src/RC522.c ****             printf("DATA:");
+ 158:Core/Src/RC522.c ****             for(i = 0; i < 16; i++)
+ 159:Core/Src/RC522.c ****             {
+ 160:Core/Src/RC522.c ****                 printf("%02x", DATA[i]);
+ 161:Core/Src/RC522.c ****             }
+ 162:Core/Src/RC522.c ****             printf("\r\n");
+ 163:Core/Src/RC522.c ****         }
+ 164:Core/Src/RC522.c ****         else
+ 165:Core/Src/RC522.c ****         {
+ 166:Core/Src/RC522.c ****             printf("PcdRead() failed\r\n");
+ 167:Core/Src/RC522.c ****         }
+ 168:Core/Src/RC522.c ****     }
+ 169:Core/Src/RC522.c **** 
+ 170:Core/Src/RC522.c ****     if(status == MI_OK)//读卡成功
+ 171:Core/Src/RC522.c ****     {
+ 172:Core/Src/RC522.c ****         status = MI_ERR;
+ 173:Core/Src/RC522.c **** 		printf("RC522_Handle() run finished after 1 second!\r\n");
+ 174:Core/Src/RC522.c ****         HAL_Delay(1000);
+ 175:Core/Src/RC522.c ****     }
+ 176:Core/Src/RC522.c **** }
+ 177:Core/Src/RC522.c **** 
+ 178:Core/Src/RC522.c **** /* us delay func */
+ 179:Core/Src/RC522.c **** void Delay_us(uint32_t t) {
+  28              		.loc 1 179 27 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		.loc 1 179 27 is_stmt 0 view .LVU1
+  33 0000 10B5     		push	{r4, lr}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 8
+  36              		.cfi_offset 4, -8
+  37              		.cfi_offset 14, -4
+  38 0002 0446     		mov	r4, r0
+ 180:Core/Src/RC522.c ****     HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / 1000000);
+  39              		.loc 1 180 5 is_stmt 1 view .LVU2
+  40              		.loc 1 180 24 is_stmt 0 view .LVU3
+  41 0004 FFF7FEFF 		bl	HAL_RCC_GetHCLKFreq
+  42              	.LVL1:
+  43              		.loc 1 180 5 view .LVU4
+  44 0008 084B     		ldr	r3, .L3
+  45 000a A3FB0030 		umull	r3, r0, r3, r0
+  46 000e 800C     		lsrs	r0, r0, #18
+  47 0010 FFF7FEFF 		bl	HAL_SYSTICK_Config
+  48              	.LVL2:
+ 181:Core/Src/RC522.c ****     HAL_Delay(t - 1);
+ARM GAS  /tmp/ccMCXGLW.s 			page 5
+
+
+  49              		.loc 1 181 5 is_stmt 1 view .LVU5
+  50 0014 601E     		subs	r0, r4, #1
+  51 0016 FFF7FEFF 		bl	HAL_Delay
+  52              	.LVL3:
+ 182:Core/Src/RC522.c ****     HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / 1000);
+  53              		.loc 1 182 5 view .LVU6
+  54              		.loc 1 182 24 is_stmt 0 view .LVU7
+  55 001a FFF7FEFF 		bl	HAL_RCC_GetHCLKFreq
+  56              	.LVL4:
+  57              		.loc 1 182 5 view .LVU8
+  58 001e 044B     		ldr	r3, .L3+4
+  59 0020 A3FB0030 		umull	r3, r0, r3, r0
+  60 0024 8009     		lsrs	r0, r0, #6
+  61 0026 FFF7FEFF 		bl	HAL_SYSTICK_Config
+  62              	.LVL5:
+ 183:Core/Src/RC522.c **** }
+  63              		.loc 1 183 1 view .LVU9
+  64 002a 10BD     		pop	{r4, pc}
+  65              	.LVL6:
+  66              	.L4:
+  67              		.loc 1 183 1 view .LVU10
+  68              		.align	2
+  69              	.L3:
+  70 002c 83DE1B43 		.word	1125899907
+  71 0030 D34D6210 		.word	274877907
+  72              		.cfi_endproc
+  73              	.LFE70:
+  75              		.section	.rodata.ShowID.str1.4,"aMS",%progbits,1
+  76              		.align	2
+  77              	.LC0:
+  78 0000 5549443E 		.ascii	"UID>>>%s\015\012\000"
+  78      3E3E2573 
+  78      0D0A00
+  79              		.section	.text.ShowID,"ax",%progbits
+  80              		.align	1
+  81              		.global	ShowID
+  82              		.syntax unified
+  83              		.thumb
+  84              		.thumb_func
+  85              		.fpu softvfp
+  87              	ShowID:
+  88              	.LVL7:
+  89              	.LFB74:
+ 184:Core/Src/RC522.c **** 
+ 185:Core/Src/RC522.c **** /* 
+ 186:Core/Src/RC522.c ****     RC522寻卡
+ 187:Core/Src/RC522.c ****     cReq_code，寻卡方式
+ 188:Core/Src/RC522.c ****         = 0x52，寻感应区内所有符合14443A标准的卡
+ 189:Core/Src/RC522.c ****         = 0x26，寻未进入休眠状态的卡
+ 190:Core/Src/RC522.c ****     pTagType，卡片类型代码
+ 191:Core/Src/RC522.c ****         = 0x4400，Mifare_UltraLight
+ 192:Core/Src/RC522.c ****         = 0x0400，Mifare_One(S50)
+ 193:Core/Src/RC522.c ****         = 0x0200，Mifare_One(S70)
+ 194:Core/Src/RC522.c ****         = 0x0800，Mifare_Pro(X))
+ 195:Core/Src/RC522.c ****         = 0x4403，Mifare_DESFire
+ 196:Core/Src/RC522.c ****     返回 MI_OK即调用成功
+ 197:Core/Src/RC522.c ****  */
+ARM GAS  /tmp/ccMCXGLW.s 			page 6
+
+
+ 198:Core/Src/RC522.c **** char PcdRequest (uint8_t ucReq_code, uint8_t * pTagType)
+ 199:Core/Src/RC522.c **** {
+ 200:Core/Src/RC522.c ****     char cStatus;
+ 201:Core/Src/RC522.c ****     uint8_t ucComMF522Buf [MAXRLEN];
+ 202:Core/Src/RC522.c ****     uint32_t ulLen;
+ 203:Core/Src/RC522.c **** 
+ 204:Core/Src/RC522.c ****     ClearBitMask ( Status2Reg, 0x08 );	//清理指示MIFARECyptol单元接通以及所有卡的数�
+ 205:Core/Src/RC522.c ****     WriteRawRC ( BitFramingReg, 0x07 );	//	发送的最后一个字节的 七位
+ 206:Core/Src/RC522.c ****     SetBitMask ( TxControlReg, 0x03 );	//TX1,TX2管脚的输出信号传递经发送调制的13.56�
+ 207:Core/Src/RC522.c **** 
+ 208:Core/Src/RC522.c ****     ucComMF522Buf [0] = ucReq_code;		//存入 卡片命令字
+ 209:Core/Src/RC522.c **** 
+ 210:Core/Src/RC522.c ****     cStatus = PcdComMF522 ( PCD_TRANSCEIVE,	ucComMF522Buf, 1, ucComMF522Buf, & ulLen );	//寻卡
+ 211:Core/Src/RC522.c ****     
+ 212:Core/Src/RC522.c ****     if ( ( cStatus == MI_OK ) && ( ulLen == 0x10 ) )	//寻卡成功返回卡类型
+ 213:Core/Src/RC522.c ****     {
+ 214:Core/Src/RC522.c ****         * pTagType = ucComMF522Buf [ 0 ];
+ 215:Core/Src/RC522.c ****         * ( pTagType + 1 ) = ucComMF522Buf [ 1 ];
+ 216:Core/Src/RC522.c ****     }
+ 217:Core/Src/RC522.c ****     else
+ 218:Core/Src/RC522.c ****         cStatus = MI_ERR;
+ 219:Core/Src/RC522.c **** 
+ 220:Core/Src/RC522.c ****     return cStatus;
+ 221:Core/Src/RC522.c **** }
+ 222:Core/Src/RC522.c **** /*
+ 223:Core/Src/RC522.c ****     通过RC522和ISO14443卡通讯
+ 224:Core/Src/RC522.c ****     ucCommand，RC522命令字节
+ 225:Core/Src/RC522.c ****     pInData，通过RC522发送到卡片的数据
+ 226:Core/Src/RC522.c ****     ucInLenByte，发送数据的字节长度
+ 227:Core/Src/RC522.c ****     pOutData，接收到的卡片返回数据
+ 228:Core/Src/RC522.c ****     pOutLenBit，返回数据的位长度
+ 229:Core/Src/RC522.c ****     返回 MI_OK即调用成功
+ 230:Core/Src/RC522.c ****  */
+ 231:Core/Src/RC522.c **** char PcdComMF522 (uint8_t ucCommand, uint8_t * pInData, uint8_t ucInLenByte, uint8_t * pOutData, ui
+ 232:Core/Src/RC522.c **** { 
+ 233:Core/Src/RC522.c ****     char cStatus = MI_ERR;
+ 234:Core/Src/RC522.c ****     uint8_t ucIrqEn   = 0x00;
+ 235:Core/Src/RC522.c ****     uint8_t ucWaitFor = 0x00;
+ 236:Core/Src/RC522.c ****     uint8_t ucLastBits;
+ 237:Core/Src/RC522.c ****     uint8_t ucN;
+ 238:Core/Src/RC522.c ****     uint32_t ul;
+ 239:Core/Src/RC522.c ****     switch ( ucCommand )
+ 240:Core/Src/RC522.c ****     {
+ 241:Core/Src/RC522.c ****     case PCD_AUTHENT:		//Mifare认证
+ 242:Core/Src/RC522.c ****         ucIrqEn   = 0x12;		//允许错误中断请求ErrIEn  允许空闲中断IdleIEn
+ 243:Core/Src/RC522.c ****         ucWaitFor = 0x10;		//认证寻卡等待时候 查询空闲中断标志位
+ 244:Core/Src/RC522.c ****         break;
+ 245:Core/Src/RC522.c ****     case PCD_TRANSCEIVE:		//接收发送 发送接收
+ 246:Core/Src/RC522.c ****         ucIrqEn   = 0x77;		//允许TxIEn RxIEn IdleIEn LoAlertIEn ErrIEn TimerIEn
+ 247:Core/Src/RC522.c ****         ucWaitFor = 0x30;		//寻卡等待时候 查询接收中断标志位与 空闲中断标志�
+ 248:Core/Src/RC522.c ****         break;
+ 249:Core/Src/RC522.c ****     default:
+ 250:Core/Src/RC522.c ****         break;
+ 251:Core/Src/RC522.c ****     }
+ 252:Core/Src/RC522.c ****     WriteRawRC ( ComIEnReg, ucIrqEn | 0x80 );		//IRqInv置位管脚IRQ与Status1Reg的IRq位的值�
+ 253:Core/Src/RC522.c ****     ClearBitMask ( ComIrqReg, 0x80 );			//Set1该位清零时，CommIRqReg的屏蔽位清零
+ 254:Core/Src/RC522.c ****     WriteRawRC ( CommandReg, PCD_IDLE );		//写空闲命令
+ARM GAS  /tmp/ccMCXGLW.s 			page 7
+
+
+ 255:Core/Src/RC522.c ****     SetBitMask ( FIFOLevelReg, 0x80 );			//置位FlushBuffer清除内部FIFO的读和写指针以�
+ 256:Core/Src/RC522.c ****     for ( ul = 0; ul < ucInLenByte; ul ++ )
+ 257:Core/Src/RC522.c ****         WriteRawRC ( FIFODataReg, pInData [ ul ] );    		//写数据进FIFOdata
+ 258:Core/Src/RC522.c **** 
+ 259:Core/Src/RC522.c ****     WriteRawRC ( CommandReg, ucCommand );					//写命令
+ 260:Core/Src/RC522.c **** 
+ 261:Core/Src/RC522.c ****     if ( ucCommand == PCD_TRANSCEIVE )
+ 262:Core/Src/RC522.c ****         SetBitMask(BitFramingReg,0x80);  				//StartSend置位启动数据发送 该位与收发命
+ 263:Core/Src/RC522.c **** 
+ 264:Core/Src/RC522.c ****     ul = 1000;//根据时钟频率调整，操作M1卡最大等待时间25ms
+ 265:Core/Src/RC522.c **** 
+ 266:Core/Src/RC522.c ****     do 														//认证 与寻卡等待时间
+ 267:Core/Src/RC522.c ****     {
+ 268:Core/Src/RC522.c ****         ucN = ReadRawRC ( ComIrqReg );							//查询事件中断
+ 269:Core/Src/RC522.c ****         ul --;
+ 270:Core/Src/RC522.c ****     } while ( ( ul != 0 ) && ( ! ( ucN & 0x01 ) ) && ( ! ( ucN & ucWaitFor ) ) );		//退出条件i=
+ 271:Core/Src/RC522.c **** 
+ 272:Core/Src/RC522.c ****     ClearBitMask ( BitFramingReg, 0x80 );					//清理允许StartSend位
+ 273:Core/Src/RC522.c **** 
+ 274:Core/Src/RC522.c ****     if ( ul != 0 )
+ 275:Core/Src/RC522.c ****     {
+ 276:Core/Src/RC522.c ****         if ( ! (( ReadRawRC ( ErrorReg ) & 0x1B )) )			//读错误标志寄存器BufferOfI CollErr 
+ 277:Core/Src/RC522.c ****         {
+ 278:Core/Src/RC522.c ****             cStatus = MI_OK;
+ 279:Core/Src/RC522.c ****             if ( ucN & ucIrqEn & 0x01 )					//是否发生定时器中断
+ 280:Core/Src/RC522.c ****                 cStatus = MI_NOTAGERR;
+ 281:Core/Src/RC522.c **** 
+ 282:Core/Src/RC522.c ****             if ( ucCommand == PCD_TRANSCEIVE )
+ 283:Core/Src/RC522.c ****             {
+ 284:Core/Src/RC522.c ****                 ucN = ReadRawRC ( FIFOLevelReg );			//读FIFO中保存的字节数
+ 285:Core/Src/RC522.c ****                 ucLastBits = ReadRawRC ( ControlReg ) & 0x07;	//最后接收到得字节的有效�
+ 286:Core/Src/RC522.c ****                 if ( ucLastBits )
+ 287:Core/Src/RC522.c ****                     * pOutLenBit = ( ucN - 1 ) * 8 + ucLastBits;   	//N个字节数减去1（最后
+ 288:Core/Src/RC522.c ****                 else
+ 289:Core/Src/RC522.c ****                     * pOutLenBit = ucN * 8;   					//最后接收到的字节整个字节有效
+ 290:Core/Src/RC522.c ****                 if ( ucN == 0 )
+ 291:Core/Src/RC522.c ****                     ucN = 1;
+ 292:Core/Src/RC522.c ****                 if ( ucN > MAXRLEN )
+ 293:Core/Src/RC522.c ****                     ucN = MAXRLEN;
+ 294:Core/Src/RC522.c ****                 for ( ul = 0; ul < ucN; ul ++ )
+ 295:Core/Src/RC522.c ****                     pOutData [ ul ] = ReadRawRC ( FIFODataReg );
+ 296:Core/Src/RC522.c ****             }
+ 297:Core/Src/RC522.c ****         }
+ 298:Core/Src/RC522.c ****         else
+ 299:Core/Src/RC522.c ****             cStatus = MI_ERR;
+ 300:Core/Src/RC522.c ****     // printf(ErrorReg);
+ 301:Core/Src/RC522.c ****     }
+ 302:Core/Src/RC522.c ****     SetBitMask ( ControlReg, 0x80 );    // stop timer now
+ 303:Core/Src/RC522.c ****     WriteRawRC ( CommandReg, PCD_IDLE );
+ 304:Core/Src/RC522.c ****     return cStatus;
+ 305:Core/Src/RC522.c **** }
+ 306:Core/Src/RC522.c **** 
+ 307:Core/Src/RC522.c **** /*
+ 308:Core/Src/RC522.c ****     PCD防冲撞
+ 309:Core/Src/RC522.c ****     pSnr，卡片序列号，4字节
+ 310:Core/Src/RC522.c ****     返回 MI_OK即调用成功
+ 311:Core/Src/RC522.c ****  */
+ARM GAS  /tmp/ccMCXGLW.s 			page 8
+
+
+ 312:Core/Src/RC522.c **** char PcdAnticoll (uint8_t * pSnr)
+ 313:Core/Src/RC522.c **** {
+ 314:Core/Src/RC522.c ****     char cStatus;
+ 315:Core/Src/RC522.c ****     uint8_t uc, ucSnr_check = 0;
+ 316:Core/Src/RC522.c ****     uint8_t ucComMF522Buf [ MAXRLEN ];
+ 317:Core/Src/RC522.c ****     uint32_t ulLen;
+ 318:Core/Src/RC522.c **** 
+ 319:Core/Src/RC522.c ****     ClearBitMask ( Status2Reg, 0x08 );		//清MFCryptol On位 只有成功执行MFAuthent命令后�
+ 320:Core/Src/RC522.c ****     WriteRawRC ( BitFramingReg, 0x00);		//清理寄存器 停止收发
+ 321:Core/Src/RC522.c ****     ClearBitMask ( CollReg, 0x80 );			//清ValuesAfterColl所有接收的位在冲突后被清除
+ 322:Core/Src/RC522.c **** 
+ 323:Core/Src/RC522.c ****     /*
+ 324:Core/Src/RC522.c ****     参考ISO14443协议：https://blog.csdn.net/wowocpp/article/details/79910800
+ 325:Core/Src/RC522.c ****     PCD 发送 SEL = ‘93’，NVB = ‘20’两个字节
+ 326:Core/Src/RC522.c ****     迫使所有的在场的PICC发回完整的UID CLn作为应答。
+ 327:Core/Src/RC522.c ****     */
+ 328:Core/Src/RC522.c **** 
+ 329:Core/Src/RC522.c ****     ucComMF522Buf [ 0 ] = 0x93;	//卡片防冲突命令
+ 330:Core/Src/RC522.c ****     ucComMF522Buf [ 1 ] = 0x20;
+ 331:Core/Src/RC522.c **** 
+ 332:Core/Src/RC522.c ****     // 发送并接收数据 接收的数据存储于ucComMF522Buf
+ 333:Core/Src/RC522.c ****     cStatus = PcdComMF522 ( PCD_TRANSCEIVE, ucComMF522Buf, 2, ucComMF522Buf, & ulLen);//与卡片�
+ 334:Core/Src/RC522.c **** 
+ 335:Core/Src/RC522.c ****     if ( cStatus == MI_OK)		//通信成功
+ 336:Core/Src/RC522.c ****     {
+ 337:Core/Src/RC522.c ****         
+ 338:Core/Src/RC522.c ****         // 收到的UID 存入pSnr
+ 339:Core/Src/RC522.c ****         for ( uc = 0; uc < 4; uc ++ )
+ 340:Core/Src/RC522.c ****         {
+ 341:Core/Src/RC522.c ****             * ( pSnr + uc )  = ucComMF522Buf [ uc ];			//读出UID
+ 342:Core/Src/RC522.c ****             ucSnr_check ^= ucComMF522Buf [ uc ];
+ 343:Core/Src/RC522.c ****         }
+ 344:Core/Src/RC522.c ****         if ( ucSnr_check != ucComMF522Buf [ uc ] )
+ 345:Core/Src/RC522.c ****             cStatus = MI_ERR;
+ 346:Core/Src/RC522.c ****     }
+ 347:Core/Src/RC522.c ****     SetBitMask ( CollReg, 0x80 );
+ 348:Core/Src/RC522.c ****     return cStatus;
+ 349:Core/Src/RC522.c **** }
+ 350:Core/Src/RC522.c **** 
+ 351:Core/Src/RC522.c **** void ShowID(uint8_t *p)
+ 352:Core/Src/RC522.c **** {
+  90              		.loc 1 352 1 is_stmt 1 view -0
+  91              		.cfi_startproc
+  92              		@ args = 0, pretend = 0, frame = 16
+  93              		@ frame_needed = 0, uses_anonymous_args = 0
+  94              		.loc 1 352 1 is_stmt 0 view .LVU12
+  95 0000 00B5     		push	{lr}
+  96              	.LCFI1:
+  97              		.cfi_def_cfa_offset 4
+  98              		.cfi_offset 14, -4
+  99 0002 85B0     		sub	sp, sp, #20
+ 100              	.LCFI2:
+ 101              		.cfi_def_cfa_offset 24
+ 353:Core/Src/RC522.c ****     uint8_t num[9];
+ 102              		.loc 1 353 5 is_stmt 1 view .LVU13
+ 354:Core/Src/RC522.c ****     uint8_t i;
+ 103              		.loc 1 354 5 view .LVU14
+ARM GAS  /tmp/ccMCXGLW.s 			page 9
+
+
+ 355:Core/Src/RC522.c ****     for(i=0; i<4; i++)
+ 104              		.loc 1 355 5 view .LVU15
+ 105              	.LVL8:
+ 106              		.loc 1 355 10 is_stmt 0 view .LVU16
+ 107 0004 0023     		movs	r3, #0
+ 108              		.loc 1 355 5 view .LVU17
+ 109 0006 0EE0     		b	.L6
+ 110              	.LVL9:
+ 111              	.L7:
+ 356:Core/Src/RC522.c ****     {
+ 357:Core/Src/RC522.c ****         num[i*2] = p[i] / 16;
+ 358:Core/Src/RC522.c ****         num[i*2] > 9 ? (num[i*2] += '7') : (num[i*2] += '0');
+ 112              		.loc 1 358 54 discriminator 2 view .LVU18
+ 113 0008 3031     		adds	r1, r1, #48
+ 114 000a 0DF1100E 		add	lr, sp, #16
+ 115 000e 9644     		add	lr, lr, r2
+ 116 0010 0EF80C1C 		strb	r1, [lr, #-12]
+ 117 0014 1CE0     		b	.L8
+ 118              	.L9:
+ 359:Core/Src/RC522.c ****         num[i*2+1] = p[i] % 16;
+ 360:Core/Src/RC522.c ****         num[i*2+1] > 9 ? (num[i*2+1] += '7') : (num[i*2+1] += '0');
+ 119              		.loc 1 360 60 discriminator 2 view .LVU19
+ 120 0016 0DF1100C 		add	ip, sp, #16
+ 121 001a 6244     		add	r2, r2, ip
+ 122 001c 3031     		adds	r1, r1, #48
+ 123 001e 02F80C1C 		strb	r1, [r2, #-12]
+ 124              	.L10:
+ 355:Core/Src/RC522.c ****     {
+ 125              		.loc 1 355 19 is_stmt 1 discriminator 2 view .LVU20
+ 355:Core/Src/RC522.c ****     {
+ 126              		.loc 1 355 20 is_stmt 0 discriminator 2 view .LVU21
+ 127 0022 0133     		adds	r3, r3, #1
+ 128              	.LVL10:
+ 355:Core/Src/RC522.c ****     {
+ 129              		.loc 1 355 20 discriminator 2 view .LVU22
+ 130 0024 DBB2     		uxtb	r3, r3
+ 131              	.LVL11:
+ 132              	.L6:
+ 355:Core/Src/RC522.c ****     {
+ 133              		.loc 1 355 14 is_stmt 1 discriminator 1 view .LVU23
+ 355:Core/Src/RC522.c ****     {
+ 134              		.loc 1 355 5 is_stmt 0 discriminator 1 view .LVU24
+ 135 0026 032B     		cmp	r3, #3
+ 136 0028 25D8     		bhi	.L13
+ 357:Core/Src/RC522.c ****         num[i*2] > 9 ? (num[i*2] += '7') : (num[i*2] += '0');
+ 137              		.loc 1 357 9 is_stmt 1 view .LVU25
+ 357:Core/Src/RC522.c ****         num[i*2] > 9 ? (num[i*2] += '7') : (num[i*2] += '0');
+ 138              		.loc 1 357 21 is_stmt 0 view .LVU26
+ 139 002a 00EB030C 		add	ip, r0, r3
+ 140 002e C15C     		ldrb	r1, [r0, r3]	@ zero_extendqisi2
+ 357:Core/Src/RC522.c ****         num[i*2] > 9 ? (num[i*2] += '7') : (num[i*2] += '0');
+ 141              		.loc 1 357 14 view .LVU27
+ 142 0030 5A00     		lsls	r2, r3, #1
+ 357:Core/Src/RC522.c ****         num[i*2] > 9 ? (num[i*2] += '7') : (num[i*2] += '0');
+ 143              		.loc 1 357 18 view .LVU28
+ 144 0032 0909     		lsrs	r1, r1, #4
+ 145 0034 0DF1100E 		add	lr, sp, #16
+ARM GAS  /tmp/ccMCXGLW.s 			page 10
+
+
+ 146 0038 0EEB430E 		add	lr, lr, r3, lsl #1
+ 147 003c 0EF80C1C 		strb	r1, [lr, #-12]
+ 358:Core/Src/RC522.c ****         num[i*2+1] = p[i] % 16;
+ 148              		.loc 1 358 9 is_stmt 1 view .LVU29
+ 358:Core/Src/RC522.c ****         num[i*2+1] = p[i] % 16;
+ 149              		.loc 1 358 42 is_stmt 0 view .LVU30
+ 150 0040 0929     		cmp	r1, #9
+ 151 0042 E1D9     		bls	.L7
+ 358:Core/Src/RC522.c ****         num[i*2+1] = p[i] % 16;
+ 152              		.loc 1 358 34 discriminator 1 view .LVU31
+ 153 0044 3731     		adds	r1, r1, #55
+ 154 0046 0DF1100E 		add	lr, sp, #16
+ 155 004a 9644     		add	lr, lr, r2
+ 156 004c 0EF80C1C 		strb	r1, [lr, #-12]
+ 157              	.L8:
+ 359:Core/Src/RC522.c ****         num[i*2+1] > 9 ? (num[i*2+1] += '7') : (num[i*2+1] += '0');
+ 158              		.loc 1 359 9 is_stmt 1 view .LVU32
+ 359:Core/Src/RC522.c ****         num[i*2+1] > 9 ? (num[i*2+1] += '7') : (num[i*2+1] += '0');
+ 159              		.loc 1 359 23 is_stmt 0 view .LVU33
+ 160 0050 9CF80010 		ldrb	r1, [ip]	@ zero_extendqisi2
+ 359:Core/Src/RC522.c ****         num[i*2+1] > 9 ? (num[i*2+1] += '7') : (num[i*2+1] += '0');
+ 161              		.loc 1 359 16 view .LVU34
+ 162 0054 0132     		adds	r2, r2, #1
+ 359:Core/Src/RC522.c ****         num[i*2+1] > 9 ? (num[i*2+1] += '7') : (num[i*2+1] += '0');
+ 163              		.loc 1 359 27 view .LVU35
+ 164 0056 01F00F01 		and	r1, r1, #15
+ 359:Core/Src/RC522.c ****         num[i*2+1] > 9 ? (num[i*2+1] += '7') : (num[i*2+1] += '0');
+ 165              		.loc 1 359 20 view .LVU36
+ 166 005a 0DF1100C 		add	ip, sp, #16
+ 167 005e 9444     		add	ip, ip, r2
+ 168 0060 0CF80C1C 		strb	r1, [ip, #-12]
+ 169              		.loc 1 360 9 is_stmt 1 view .LVU37
+ 170              		.loc 1 360 46 is_stmt 0 view .LVU38
+ 171 0064 0929     		cmp	r1, #9
+ 172 0066 D6D9     		bls	.L9
+ 173              		.loc 1 360 38 discriminator 1 view .LVU39
+ 174 0068 0DF1100C 		add	ip, sp, #16
+ 175 006c 6244     		add	r2, r2, ip
+ 176 006e 3731     		adds	r1, r1, #55
+ 177 0070 02F80C1C 		strb	r1, [r2, #-12]
+ 178 0074 D5E7     		b	.L10
+ 179              	.L13:
+ 361:Core/Src/RC522.c ****     }
+ 362:Core/Src/RC522.c ****     num[8] = 0;
+ 180              		.loc 1 362 5 is_stmt 1 view .LVU40
+ 181              		.loc 1 362 12 is_stmt 0 view .LVU41
+ 182 0076 0023     		movs	r3, #0
+ 183              	.LVL12:
+ 184              		.loc 1 362 12 view .LVU42
+ 185 0078 8DF80C30 		strb	r3, [sp, #12]
+ 363:Core/Src/RC522.c ****     printf("UID>>>%s\r\n", num);
+ 186              		.loc 1 363 5 is_stmt 1 view .LVU43
+ 187 007c 01A9     		add	r1, sp, #4
+ 188 007e 0348     		ldr	r0, .L14
+ 189              	.LVL13:
+ 190              		.loc 1 363 5 is_stmt 0 view .LVU44
+ 191 0080 FFF7FEFF 		bl	printf
+ARM GAS  /tmp/ccMCXGLW.s 			page 11
+
+
+ 192              	.LVL14:
+ 364:Core/Src/RC522.c **** }
+ 193              		.loc 1 364 1 view .LVU45
+ 194 0084 05B0     		add	sp, sp, #20
+ 195              	.LCFI3:
+ 196              		.cfi_def_cfa_offset 4
+ 197              		@ sp needed
+ 198 0086 5DF804FB 		ldr	pc, [sp], #4
+ 199              	.L15:
+ 200 008a 00BF     		.align	2
+ 201              	.L14:
+ 202 008c 00000000 		.word	.LC0
+ 203              		.cfi_endproc
+ 204              	.LFE74:
+ 206              		.section	.text.WriteRawRC,"ax",%progbits
+ 207              		.align	1
+ 208              		.global	WriteRawRC
+ 209              		.syntax unified
+ 210              		.thumb
+ 211              		.thumb_func
+ 212              		.fpu softvfp
+ 214              	WriteRawRC:
+ 215              	.LVL15:
+ 216              	.LFB85:
+ 365:Core/Src/RC522.c **** 
+ 366:Core/Src/RC522.c **** /*
+ 367:Core/Src/RC522.c ****     选定卡片
+ 368:Core/Src/RC522.c ****     pSnr，卡片序列号，4字节
+ 369:Core/Src/RC522.c ****     返回 MI_OK调用成功
+ 370:Core/Src/RC522.c ****  */
+ 371:Core/Src/RC522.c **** char PcdSelect (uint8_t * pSnr)
+ 372:Core/Src/RC522.c **** {
+ 373:Core/Src/RC522.c ****     char cStatus;
+ 374:Core/Src/RC522.c ****     uint8_t uc;
+ 375:Core/Src/RC522.c ****     uint8_t ucComMF522Buf [ MAXRLEN ];
+ 376:Core/Src/RC522.c ****     uint32_t  ulLen;
+ 377:Core/Src/RC522.c **** 
+ 378:Core/Src/RC522.c ****     // 防冲撞 0x93
+ 379:Core/Src/RC522.c ****     ucComMF522Buf [ 0 ] = PICC_ANTICOLL1;
+ 380:Core/Src/RC522.c ****     // 假设没有冲突，PCD 指定NVB为70，此值表示PCD将发送完整的UID CLn，与40�
+ 381:Core/Src/RC522.c ****     ucComMF522Buf [ 1 ] = 0x70;
+ 382:Core/Src/RC522.c ****     ucComMF522Buf [ 6 ] = 0;
+ 383:Core/Src/RC522.c **** 
+ 384:Core/Src/RC522.c ****     // 3 4 5 6位存放UID，第7位一直异或。。。
+ 385:Core/Src/RC522.c ****     for ( uc = 0; uc < 4; uc ++ )
+ 386:Core/Src/RC522.c ****     {
+ 387:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 2 ] = * ( pSnr + uc );
+ 388:Core/Src/RC522.c ****         ucComMF522Buf [ 6 ] ^= * ( pSnr + uc );
+ 389:Core/Src/RC522.c ****     }
+ 390:Core/Src/RC522.c **** 
+ 391:Core/Src/RC522.c ****     // CRC(循环冗余校验)
+ 392:Core/Src/RC522.c ****     CalulateCRC ( ucComMF522Buf, 7, & ucComMF522Buf [ 7 ] );
+ 393:Core/Src/RC522.c ****     ClearBitMask ( Status2Reg, 0x08 );
+ 394:Core/Src/RC522.c ****     // 发送并接收数据
+ 395:Core/Src/RC522.c ****     cStatus = PcdComMF522 ( PCD_TRANSCEIVE, ucComMF522Buf, 9, ucComMF522Buf, & ulLen );
+ 396:Core/Src/RC522.c ****     if ( ( cStatus == MI_OK ) && ( ulLen == 0x18 ) )
+ 397:Core/Src/RC522.c ****         cStatus = MI_OK;
+ARM GAS  /tmp/ccMCXGLW.s 			page 12
+
+
+ 398:Core/Src/RC522.c ****     else
+ 399:Core/Src/RC522.c ****         cStatus = MI_ERR;
+ 400:Core/Src/RC522.c ****     return cStatus;
+ 401:Core/Src/RC522.c **** }
+ 402:Core/Src/RC522.c **** 
+ 403:Core/Src/RC522.c **** /*
+ 404:Core/Src/RC522.c ****     验证卡片密码
+ 405:Core/Src/RC522.c ****     ucAuth_mode，密码验证模式
+ 406:Core/Src/RC522.c ****         = 0x60，验证A密钥
+ 407:Core/Src/RC522.c ****         = 0x61，验证B密钥
+ 408:Core/Src/RC522.c ****     ucAddr，块地址
+ 409:Core/Src/RC522.c ****     pKey，密码
+ 410:Core/Src/RC522.c ****     pSnr，卡片序列号，4字节
+ 411:Core/Src/RC522.c ****     返回MI_OK调用成功
+ 412:Core/Src/RC522.c ****  */
+ 413:Core/Src/RC522.c **** char PcdAuthState (uint8_t ucAuth_mode, uint8_t ucAddr, uint8_t * pKey, uint8_t * pSnr)
+ 414:Core/Src/RC522.c **** {
+ 415:Core/Src/RC522.c ****     char cStatus;
+ 416:Core/Src/RC522.c ****     uint8_t uc, ucComMF522Buf [ MAXRLEN ];
+ 417:Core/Src/RC522.c ****     uint32_t ulLen;
+ 418:Core/Src/RC522.c **** 
+ 419:Core/Src/RC522.c ****     ucComMF522Buf [ 0 ] = ucAuth_mode;
+ 420:Core/Src/RC522.c ****     ucComMF522Buf [ 1 ] = ucAddr;
+ 421:Core/Src/RC522.c **** 
+ 422:Core/Src/RC522.c ****     for ( uc = 0; uc < 6; uc ++ )
+ 423:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 2 ] = * ( pKey + uc );
+ 424:Core/Src/RC522.c **** 
+ 425:Core/Src/RC522.c ****     for ( uc = 0; uc < 6; uc ++ )
+ 426:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 8 ] = * ( pSnr + uc );
+ 427:Core/Src/RC522.c **** 
+ 428:Core/Src/RC522.c ****     // 验证密钥命令
+ 429:Core/Src/RC522.c ****     cStatus = PcdComMF522 ( PCD_AUTHENT, ucComMF522Buf, 12, ucComMF522Buf, & ulLen );
+ 430:Core/Src/RC522.c **** 
+ 431:Core/Src/RC522.c ****     if ( ( cStatus != MI_OK ) || ( ! ( ReadRawRC ( Status2Reg ) & 0x08 ) ) )
+ 432:Core/Src/RC522.c ****     {
+ 433:Core/Src/RC522.c ****         cStatus = MI_ERR;
+ 434:Core/Src/RC522.c ****     }
+ 435:Core/Src/RC522.c ****     return cStatus;
+ 436:Core/Src/RC522.c **** }
+ 437:Core/Src/RC522.c **** 
+ 438:Core/Src/RC522.c **** 
+ 439:Core/Src/RC522.c **** /*
+ 440:Core/Src/RC522.c ****     用RC522计算CRC16
+ 441:Core/Src/RC522.c ****     pIndata，计算CRC16的数组
+ 442:Core/Src/RC522.c ****     ucLen，计算CRC16的数组字节长度
+ 443:Core/Src/RC522.c ****     pOutData，存放计算结果存放的首地址
+ 444:Core/Src/RC522.c ****  */
+ 445:Core/Src/RC522.c **** void CalulateCRC (uint8_t * pIndata, uint8_t ucLen, uint8_t * pOutData)
+ 446:Core/Src/RC522.c **** {
+ 447:Core/Src/RC522.c ****     uint8_t uc, ucN;
+ 448:Core/Src/RC522.c **** 
+ 449:Core/Src/RC522.c ****     ClearBitMask(DivIrqReg,0x04);
+ 450:Core/Src/RC522.c **** 	
+ 451:Core/Src/RC522.c ****     WriteRawRC(CommandReg,PCD_IDLE);
+ 452:Core/Src/RC522.c **** 	
+ 453:Core/Src/RC522.c ****     SetBitMask(FIFOLevelReg,0x80);
+ 454:Core/Src/RC522.c **** 	
+ARM GAS  /tmp/ccMCXGLW.s 			page 13
+
+
+ 455:Core/Src/RC522.c ****     for ( uc = 0; uc < ucLen; uc ++)
+ 456:Core/Src/RC522.c **** 	    WriteRawRC ( FIFODataReg, * ( pIndata + uc ) );   
+ 457:Core/Src/RC522.c **** 
+ 458:Core/Src/RC522.c ****     WriteRawRC ( CommandReg, PCD_CALCCRC );
+ 459:Core/Src/RC522.c **** 	
+ 460:Core/Src/RC522.c ****     uc = 0xFF;
+ 461:Core/Src/RC522.c **** 	
+ 462:Core/Src/RC522.c ****     do 
+ 463:Core/Src/RC522.c ****     {
+ 464:Core/Src/RC522.c ****         ucN = ReadRawRC ( DivIrqReg );
+ 465:Core/Src/RC522.c ****         uc --;
+ 466:Core/Src/RC522.c ****     } while ( ( uc != 0 ) && ! ( ucN & 0x04 ) );
+ 467:Core/Src/RC522.c **** 		
+ 468:Core/Src/RC522.c ****     pOutData [ 0 ] = ReadRawRC ( CRCResultRegL );
+ 469:Core/Src/RC522.c ****     pOutData [ 1 ] = ReadRawRC ( CRCResultRegM );
+ 470:Core/Src/RC522.c **** 	
+ 471:Core/Src/RC522.c **** }
+ 472:Core/Src/RC522.c **** 
+ 473:Core/Src/RC522.c **** /*
+ 474:Core/Src/RC522.c ****     读取M1卡一块数据
+ 475:Core/Src/RC522.c ****     ucAddr，块地址
+ 476:Core/Src/RC522.c ****     pData，读出的数据，16字节
+ 477:Core/Src/RC522.c ****     返回MI_OK用成功
+ 478:Core/Src/RC522.c ****  */
+ 479:Core/Src/RC522.c **** char PcdRead (uint8_t ucAddr, uint8_t * pData)
+ 480:Core/Src/RC522.c **** {
+ 481:Core/Src/RC522.c **** 	char cStatus;
+ 482:Core/Src/RC522.c **** 	uint8_t uc, ucComMF522Buf [ MAXRLEN ]; 
+ 483:Core/Src/RC522.c **** 	uint32_t ulLen;
+ 484:Core/Src/RC522.c **** 	
+ 485:Core/Src/RC522.c **** 	ucComMF522Buf [ 0 ] = PICC_READ;
+ 486:Core/Src/RC522.c **** 	ucComMF522Buf [ 1 ] = ucAddr;
+ 487:Core/Src/RC522.c **** 	
+ 488:Core/Src/RC522.c **** 	CalulateCRC ( ucComMF522Buf, 2, & ucComMF522Buf [ 2 ] );
+ 489:Core/Src/RC522.c **** 	
+ 490:Core/Src/RC522.c **** 	cStatus = PcdComMF522 ( PCD_TRANSCEIVE, ucComMF522Buf, 4, ucComMF522Buf, & ulLen );
+ 491:Core/Src/RC522.c **** 	
+ 492:Core/Src/RC522.c **** 	if ((cStatus == MI_OK) && (ulLen == 0x90))
+ 493:Core/Src/RC522.c **** 	{
+ 494:Core/Src/RC522.c **** 		for (uc = 0; uc < 16; uc ++)
+ 495:Core/Src/RC522.c **** 			*(pData + uc) = ucComMF522Buf[uc];   
+ 496:Core/Src/RC522.c **** 	}
+ 497:Core/Src/RC522.c **** 	else
+ 498:Core/Src/RC522.c **** 		cStatus = MI_ERR;   
+ 499:Core/Src/RC522.c **** 	return cStatus;
+ 500:Core/Src/RC522.c **** }
+ 501:Core/Src/RC522.c **** 
+ 502:Core/Src/RC522.c **** /*
+ 503:Core/Src/RC522.c ****     写数据到M1卡一块
+ 504:Core/Src/RC522.c ****     ucAddr，块地址
+ 505:Core/Src/RC522.c ****     pData，写入的数据，16字节
+ 506:Core/Src/RC522.c ****     返回MI_OK调用成功
+ 507:Core/Src/RC522.c ****  */
+ 508:Core/Src/RC522.c **** char PcdWrite (uint8_t ucAddr, uint8_t * pData)
+ 509:Core/Src/RC522.c **** {
+ 510:Core/Src/RC522.c **** 	char cStatus;
+ 511:Core/Src/RC522.c **** 	uint8_t uc, ucComMF522Buf [ MAXRLEN ];
+ARM GAS  /tmp/ccMCXGLW.s 			page 14
+
+
+ 512:Core/Src/RC522.c **** 	uint32_t ulLen;
+ 513:Core/Src/RC522.c **** 	
+ 514:Core/Src/RC522.c **** 	ucComMF522Buf [ 0 ] = PICC_WRITE;
+ 515:Core/Src/RC522.c **** 	ucComMF522Buf [ 1 ] = ucAddr;
+ 516:Core/Src/RC522.c **** 	
+ 517:Core/Src/RC522.c **** 	CalulateCRC ( ucComMF522Buf, 2, & ucComMF522Buf [ 2 ] );
+ 518:Core/Src/RC522.c **** 	cStatus = PcdComMF522 ( PCD_TRANSCEIVE, ucComMF522Buf, 4, ucComMF522Buf, & ulLen );
+ 519:Core/Src/RC522.c **** 	
+ 520:Core/Src/RC522.c **** 	if ( ( cStatus != MI_OK ) || ( ulLen != 4 ) || ( ( ucComMF522Buf [ 0 ] & 0x0F ) != 0x0A ) )
+ 521:Core/Src/RC522.c **** 		cStatus = MI_ERR;   
+ 522:Core/Src/RC522.c **** 	if ( cStatus == MI_OK )
+ 523:Core/Src/RC522.c **** 	{
+ 524:Core/Src/RC522.c **** 		memcpy(ucComMF522Buf, pData, 16);
+ 525:Core/Src/RC522.c **** 		for ( uc = 0; uc < 16; uc ++ )
+ 526:Core/Src/RC522.c **** 			ucComMF522Buf [ uc ] = * ( pData + uc );  
+ 527:Core/Src/RC522.c **** 		CalulateCRC ( ucComMF522Buf, 16, & ucComMF522Buf [ 16 ] );
+ 528:Core/Src/RC522.c **** 		cStatus = PcdComMF522 ( PCD_TRANSCEIVE, ucComMF522Buf, 18, ucComMF522Buf, & ulLen );
+ 529:Core/Src/RC522.c **** 		if (( cStatus != MI_OK ) || ( ulLen != 4 ) || (( ucComMF522Buf [0] & 0x0F ) != 0x0A ))
+ 530:Core/Src/RC522.c **** 			cStatus = MI_ERR;   
+ 531:Core/Src/RC522.c **** 	} 
+ 532:Core/Src/RC522.c **** 	return cStatus;
+ 533:Core/Src/RC522.c **** }
+ 534:Core/Src/RC522.c **** 
+ 535:Core/Src/RC522.c **** 
+ 536:Core/Src/RC522.c **** 
+ 537:Core/Src/RC522.c **** /* 初始化RC522 */
+ 538:Core/Src/RC522.c **** void RC522_Init (void)
+ 539:Core/Src/RC522.c **** {
+ 540:Core/Src/RC522.c **** 	RC522_Reset_Disable();
+ 541:Core/Src/RC522.c **** 	RC522_CS_Disable();
+ 542:Core/Src/RC522.c ****     PcdAntennaOff ();//关天线
+ 543:Core/Src/RC522.c ****     PcdAntennaOn ();//开天线
+ 544:Core/Src/RC522.c ****     PCD_Reset();
+ 545:Core/Src/RC522.c **** 	M500PcdConfigISOType ( 'A' );//设置工作方式
+ 546:Core/Src/RC522.c **** }
+ 547:Core/Src/RC522.c **** /* 复位RC522 */
+ 548:Core/Src/RC522.c **** void PCD_Reset (void)
+ 549:Core/Src/RC522.c **** {
+ 550:Core/Src/RC522.c ****     RC522_Reset_Disable();
+ 551:Core/Src/RC522.c ****     Delay_us ( 1 );
+ 552:Core/Src/RC522.c ****     RC522_Reset_Enable();
+ 553:Core/Src/RC522.c ****     Delay_us ( 1 );
+ 554:Core/Src/RC522.c ****     RC522_Reset_Disable();
+ 555:Core/Src/RC522.c ****     Delay_us ( 1 );
+ 556:Core/Src/RC522.c ****     WriteRawRC ( CommandReg, 0x0f );
+ 557:Core/Src/RC522.c **** 
+ 558:Core/Src/RC522.c ****     while ( ReadRawRC ( CommandReg ) & 0x10 );
+ 559:Core/Src/RC522.c ****     Delay_us ( 1 );
+ 560:Core/Src/RC522.c **** 
+ 561:Core/Src/RC522.c ****     WriteRawRC ( ModeReg, 0x3D );            //定义发送和接收常用模式 和Mifare卡通讯
+ 562:Core/Src/RC522.c ****     WriteRawRC ( TReloadRegL, 30 );          //16位定时器低位    
+ 563:Core/Src/RC522.c ****     WriteRawRC ( TReloadRegH, 0 );			 //16位定时器高位
+ 564:Core/Src/RC522.c ****     WriteRawRC ( TModeReg, 0x8D );			 //定义内部定时器的设置
+ 565:Core/Src/RC522.c ****     WriteRawRC ( TPrescalerReg, 0x3E );		 //设置定时器分频系数
+ 566:Core/Src/RC522.c ****     WriteRawRC ( TxAutoReg, 0x40 );			 //调制发送信号为100%ASK	
+ 567:Core/Src/RC522.c **** }
+ 568:Core/Src/RC522.c **** /* 设置RC522的工作方式 */
+ARM GAS  /tmp/ccMCXGLW.s 			page 15
+
+
+ 569:Core/Src/RC522.c **** void M500PcdConfigISOType (uint8_t ucType)
+ 570:Core/Src/RC522.c **** {
+ 571:Core/Src/RC522.c **** 	if ( ucType == 'A')                     //ISO14443_A
+ 572:Core/Src/RC522.c **** 	{
+ 573:Core/Src/RC522.c **** 		ClearBitMask ( Status2Reg, 0x08 );
+ 574:Core/Src/RC522.c **** 		WriteRawRC ( ModeReg, 0x3D );//3F
+ 575:Core/Src/RC522.c **** 		WriteRawRC ( RxSelReg, 0x86 );//84
+ 576:Core/Src/RC522.c **** 		WriteRawRC( RFCfgReg, 0x7F );   //4F
+ 577:Core/Src/RC522.c **** 		WriteRawRC( TReloadRegL, 30 );//tmoLength);// TReloadVal = 'h6a =tmoLength(dec) 
+ 578:Core/Src/RC522.c **** 		WriteRawRC ( TReloadRegH, 0 );
+ 579:Core/Src/RC522.c **** 		WriteRawRC ( TModeReg, 0x8D );
+ 580:Core/Src/RC522.c **** 		WriteRawRC ( TPrescalerReg, 0x3E );
+ 581:Core/Src/RC522.c **** 		Delay_us ( 2 );
+ 582:Core/Src/RC522.c **** 	}
+ 583:Core/Src/RC522.c **** }
+ 584:Core/Src/RC522.c **** /* 开启天线 */
+ 585:Core/Src/RC522.c **** void PcdAntennaOn (void)
+ 586:Core/Src/RC522.c **** {
+ 587:Core/Src/RC522.c ****     uint8_t uc;
+ 588:Core/Src/RC522.c ****     uc = ReadRawRC ( TxControlReg );
+ 589:Core/Src/RC522.c ****     if ( ! ( uc & 0x03 ) )//0x7F;
+ 590:Core/Src/RC522.c ****         SetBitMask(TxControlReg, 0x03);
+ 591:Core/Src/RC522.c **** }
+ 592:Core/Src/RC522.c **** /* 关闭天线 */
+ 593:Core/Src/RC522.c **** void PcdAntennaOff (void)
+ 594:Core/Src/RC522.c **** {
+ 595:Core/Src/RC522.c ****     ClearBitMask ( TxControlReg, 0x03 );
+ 596:Core/Src/RC522.c **** }
+ 597:Core/Src/RC522.c **** 
+ 598:Core/Src/RC522.c **** /* 向RC522写入指定地址的数据 */
+ 599:Core/Src/RC522.c **** void WriteRawRC(uint8_t ucAddress, uint8_t ucValue)
+ 600:Core/Src/RC522.c **** {  
+ 217              		.loc 1 600 1 is_stmt 1 view -0
+ 218              		.cfi_startproc
+ 219              		@ args = 0, pretend = 0, frame = 8
+ 220              		@ frame_needed = 0, uses_anonymous_args = 0
+ 221              		.loc 1 600 1 is_stmt 0 view .LVU47
+ 222 0000 10B5     		push	{r4, lr}
+ 223              	.LCFI4:
+ 224              		.cfi_def_cfa_offset 8
+ 225              		.cfi_offset 4, -8
+ 226              		.cfi_offset 14, -4
+ 227 0002 82B0     		sub	sp, sp, #8
+ 228              	.LCFI5:
+ 229              		.cfi_def_cfa_offset 16
+ 601:Core/Src/RC522.c **** 	uint8_t sentData[2];
+ 230              		.loc 1 601 2 is_stmt 1 view .LVU48
+ 602:Core/Src/RC522.c **** 	sentData[0] = ( ucAddress << 1 ) & 0x7E;
+ 231              		.loc 1 602 2 view .LVU49
+ 232              		.loc 1 602 28 is_stmt 0 view .LVU50
+ 233 0004 4000     		lsls	r0, r0, #1
+ 234              	.LVL16:
+ 235              		.loc 1 602 35 view .LVU51
+ 236 0006 00F07E00 		and	r0, r0, #126
+ 237              		.loc 1 602 14 view .LVU52
+ 238 000a 8DF80400 		strb	r0, [sp, #4]
+ 603:Core/Src/RC522.c ****     sentData[1] = ucValue;
+ARM GAS  /tmp/ccMCXGLW.s 			page 16
+
+
+ 239              		.loc 1 603 5 is_stmt 1 view .LVU53
+ 240              		.loc 1 603 17 is_stmt 0 view .LVU54
+ 241 000e 8DF80510 		strb	r1, [sp, #5]
+ 604:Core/Src/RC522.c **** 	RC522_CS_Enable();
+ 242              		.loc 1 604 2 is_stmt 1 view .LVU55
+ 243 0012 0A4C     		ldr	r4, .L18
+ 244 0014 0022     		movs	r2, #0
+ 245 0016 1021     		movs	r1, #16
+ 246              	.LVL17:
+ 247              		.loc 1 604 2 is_stmt 0 view .LVU56
+ 248 0018 2046     		mov	r0, r4
+ 249 001a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 250              	.LVL18:
+ 605:Core/Src/RC522.c **** 	HAL_SPI_Transmit(&hspi1,(uint8_t*)sentData,2,0xFFFF);
+ 251              		.loc 1 605 2 is_stmt 1 view .LVU57
+ 252 001e 4FF6FF73 		movw	r3, #65535
+ 253 0022 0222     		movs	r2, #2
+ 254 0024 01A9     		add	r1, sp, #4
+ 255 0026 0648     		ldr	r0, .L18+4
+ 256 0028 FFF7FEFF 		bl	HAL_SPI_Transmit
+ 257              	.LVL19:
+ 606:Core/Src/RC522.c **** 	RC522_CS_Disable();	
+ 258              		.loc 1 606 2 view .LVU58
+ 259 002c 0122     		movs	r2, #1
+ 260 002e 1021     		movs	r1, #16
+ 261 0030 2046     		mov	r0, r4
+ 262 0032 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 263              	.LVL20:
+ 607:Core/Src/RC522.c **** }
+ 264              		.loc 1 607 1 is_stmt 0 view .LVU59
+ 265 0036 02B0     		add	sp, sp, #8
+ 266              	.LCFI6:
+ 267              		.cfi_def_cfa_offset 8
+ 268              		@ sp needed
+ 269 0038 10BD     		pop	{r4, pc}
+ 270              	.L19:
+ 271 003a 00BF     		.align	2
+ 272              	.L18:
+ 273 003c 00080140 		.word	1073809408
+ 274 0040 00000000 		.word	hspi1
+ 275              		.cfi_endproc
+ 276              	.LFE85:
+ 278              		.section	.text.ReadRawRC,"ax",%progbits
+ 279              		.align	1
+ 280              		.global	ReadRawRC
+ 281              		.syntax unified
+ 282              		.thumb
+ 283              		.thumb_func
+ 284              		.fpu softvfp
+ 286              	ReadRawRC:
+ 287              	.LVL21:
+ 288              	.LFB86:
+ 608:Core/Src/RC522.c **** /* 读取RC522指定地址的数据 */
+ 609:Core/Src/RC522.c **** uint8_t ReadRawRC (uint8_t ucAddress)
+ 610:Core/Src/RC522.c **** {
+ 289              		.loc 1 610 1 is_stmt 1 view -0
+ 290              		.cfi_startproc
+ARM GAS  /tmp/ccMCXGLW.s 			page 17
+
+
+ 291              		@ args = 0, pretend = 0, frame = 8
+ 292              		@ frame_needed = 0, uses_anonymous_args = 0
+ 293              		.loc 1 610 1 is_stmt 0 view .LVU61
+ 294 0000 30B5     		push	{r4, r5, lr}
+ 295              	.LCFI7:
+ 296              		.cfi_def_cfa_offset 12
+ 297              		.cfi_offset 4, -12
+ 298              		.cfi_offset 5, -8
+ 299              		.cfi_offset 14, -4
+ 300 0002 83B0     		sub	sp, sp, #12
+ 301              	.LCFI8:
+ 302              		.cfi_def_cfa_offset 24
+ 611:Core/Src/RC522.c **** 	uint8_t ucAddr[1], ucReturn[1];
+ 303              		.loc 1 611 2 is_stmt 1 view .LVU62
+ 612:Core/Src/RC522.c **** 	ucAddr[0] = ( ( ucAddress << 1 ) & 0x7E ) | 0x80;
+ 304              		.loc 1 612 2 view .LVU63
+ 305              		.loc 1 612 28 is_stmt 0 view .LVU64
+ 306 0004 4000     		lsls	r0, r0, #1
+ 307              	.LVL22:
+ 308              		.loc 1 612 35 view .LVU65
+ 309 0006 00F07E00 		and	r0, r0, #126
+ 310              		.loc 1 612 44 view .LVU66
+ 311 000a 40F08000 		orr	r0, r0, #128
+ 312              		.loc 1 612 12 view .LVU67
+ 313 000e 8DF80400 		strb	r0, [sp, #4]
+ 613:Core/Src/RC522.c **** 	RC522_CS_Enable();
+ 314              		.loc 1 613 2 is_stmt 1 view .LVU68
+ 315 0012 0F4C     		ldr	r4, .L22
+ 316 0014 0022     		movs	r2, #0
+ 317 0016 1021     		movs	r1, #16
+ 318 0018 2046     		mov	r0, r4
+ 319 001a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 320              	.LVL23:
+ 614:Core/Src/RC522.c **** 	//SPI_RC522_SendByte ( ucAddr );
+ 615:Core/Src/RC522.c ****     HAL_SPI_Transmit(&hspi1,(uint8_t*)ucAddr,1,0xFFFF);
+ 321              		.loc 1 615 5 view .LVU69
+ 322 001e 0D4D     		ldr	r5, .L22+4
+ 323 0020 4FF6FF73 		movw	r3, #65535
+ 324 0024 0122     		movs	r2, #1
+ 325 0026 01A9     		add	r1, sp, #4
+ 326 0028 2846     		mov	r0, r5
+ 327 002a FFF7FEFF 		bl	HAL_SPI_Transmit
+ 328              	.LVL24:
+ 616:Core/Src/RC522.c **** 	// ucReturn = SPI_RC522_ReadByte ();
+ 617:Core/Src/RC522.c ****     HAL_SPI_Receive(&hspi1,(uint8_t*)ucReturn,1,0xFFFF);
+ 329              		.loc 1 617 5 view .LVU70
+ 330 002e 4FF6FF73 		movw	r3, #65535
+ 331 0032 0122     		movs	r2, #1
+ 332 0034 6946     		mov	r1, sp
+ 333 0036 2846     		mov	r0, r5
+ 334 0038 FFF7FEFF 		bl	HAL_SPI_Receive
+ 335              	.LVL25:
+ 618:Core/Src/RC522.c ****     //printf("%x\r\n",ucReturn[0]);
+ 619:Core/Src/RC522.c **** 	RC522_CS_Disable();
+ 336              		.loc 1 619 2 view .LVU71
+ 337 003c 0122     		movs	r2, #1
+ 338 003e 1021     		movs	r1, #16
+ARM GAS  /tmp/ccMCXGLW.s 			page 18
+
+
+ 339 0040 2046     		mov	r0, r4
+ 340 0042 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 341              	.LVL26:
+ 620:Core/Src/RC522.c **** 	return ucReturn[0];
+ 342              		.loc 1 620 2 view .LVU72
+ 621:Core/Src/RC522.c **** }
+ 343              		.loc 1 621 1 is_stmt 0 view .LVU73
+ 344 0046 9DF80000 		ldrb	r0, [sp]	@ zero_extendqisi2
+ 345 004a 03B0     		add	sp, sp, #12
+ 346              	.LCFI9:
+ 347              		.cfi_def_cfa_offset 12
+ 348              		@ sp needed
+ 349 004c 30BD     		pop	{r4, r5, pc}
+ 350              	.L23:
+ 351 004e 00BF     		.align	2
+ 352              	.L22:
+ 353 0050 00080140 		.word	1073809408
+ 354 0054 00000000 		.word	hspi1
+ 355              		.cfi_endproc
+ 356              	.LFE86:
+ 358              		.section	.text.PCD_Reset,"ax",%progbits
+ 359              		.align	1
+ 360              		.global	PCD_Reset
+ 361              		.syntax unified
+ 362              		.thumb
+ 363              		.thumb_func
+ 364              		.fpu softvfp
+ 366              	PCD_Reset:
+ 367              	.LFB81:
+ 549:Core/Src/RC522.c ****     RC522_Reset_Disable();
+ 368              		.loc 1 549 1 is_stmt 1 view -0
+ 369              		.cfi_startproc
+ 370              		@ args = 0, pretend = 0, frame = 0
+ 371              		@ frame_needed = 0, uses_anonymous_args = 0
+ 372 0000 10B5     		push	{r4, lr}
+ 373              	.LCFI10:
+ 374              		.cfi_def_cfa_offset 8
+ 375              		.cfi_offset 4, -8
+ 376              		.cfi_offset 14, -4
+ 550:Core/Src/RC522.c ****     Delay_us ( 1 );
+ 377              		.loc 1 550 5 view .LVU75
+ 378 0002 1F4C     		ldr	r4, .L27
+ 379 0004 0122     		movs	r2, #1
+ 380 0006 1146     		mov	r1, r2
+ 381 0008 2046     		mov	r0, r4
+ 382 000a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 383              	.LVL27:
+ 551:Core/Src/RC522.c ****     RC522_Reset_Enable();
+ 384              		.loc 1 551 5 view .LVU76
+ 385 000e 0120     		movs	r0, #1
+ 386 0010 FFF7FEFF 		bl	Delay_us
+ 387              	.LVL28:
+ 552:Core/Src/RC522.c ****     Delay_us ( 1 );
+ 388              		.loc 1 552 5 view .LVU77
+ 389 0014 0022     		movs	r2, #0
+ 390 0016 0121     		movs	r1, #1
+ 391 0018 2046     		mov	r0, r4
+ARM GAS  /tmp/ccMCXGLW.s 			page 19
+
+
+ 392 001a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 393              	.LVL29:
+ 553:Core/Src/RC522.c ****     RC522_Reset_Disable();
+ 394              		.loc 1 553 5 view .LVU78
+ 395 001e 0120     		movs	r0, #1
+ 396 0020 FFF7FEFF 		bl	Delay_us
+ 397              	.LVL30:
+ 554:Core/Src/RC522.c ****     Delay_us ( 1 );
+ 398              		.loc 1 554 5 view .LVU79
+ 399 0024 0122     		movs	r2, #1
+ 400 0026 1146     		mov	r1, r2
+ 401 0028 2046     		mov	r0, r4
+ 402 002a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 403              	.LVL31:
+ 555:Core/Src/RC522.c ****     WriteRawRC ( CommandReg, 0x0f );
+ 404              		.loc 1 555 5 view .LVU80
+ 405 002e 0120     		movs	r0, #1
+ 406 0030 FFF7FEFF 		bl	Delay_us
+ 407              	.LVL32:
+ 556:Core/Src/RC522.c **** 
+ 408              		.loc 1 556 5 view .LVU81
+ 409 0034 0F21     		movs	r1, #15
+ 410 0036 0120     		movs	r0, #1
+ 411 0038 FFF7FEFF 		bl	WriteRawRC
+ 412              	.LVL33:
+ 558:Core/Src/RC522.c ****     Delay_us ( 1 );
+ 413              		.loc 1 558 5 view .LVU82
+ 414              	.L25:
+ 558:Core/Src/RC522.c ****     Delay_us ( 1 );
+ 415              		.loc 1 558 46 discriminator 1 view .LVU83
+ 558:Core/Src/RC522.c ****     Delay_us ( 1 );
+ 416              		.loc 1 558 11 discriminator 1 view .LVU84
+ 558:Core/Src/RC522.c ****     Delay_us ( 1 );
+ 417              		.loc 1 558 13 is_stmt 0 discriminator 1 view .LVU85
+ 418 003c 0120     		movs	r0, #1
+ 419 003e FFF7FEFF 		bl	ReadRawRC
+ 420              	.LVL34:
+ 558:Core/Src/RC522.c ****     Delay_us ( 1 );
+ 421              		.loc 1 558 11 discriminator 1 view .LVU86
+ 422 0042 10F0100F 		tst	r0, #16
+ 423 0046 F9D1     		bne	.L25
+ 559:Core/Src/RC522.c **** 
+ 424              		.loc 1 559 5 is_stmt 1 view .LVU87
+ 425 0048 0120     		movs	r0, #1
+ 426 004a FFF7FEFF 		bl	Delay_us
+ 427              	.LVL35:
+ 561:Core/Src/RC522.c ****     WriteRawRC ( TReloadRegL, 30 );          //16位定时器低位    
+ 428              		.loc 1 561 5 view .LVU88
+ 429 004e 3D21     		movs	r1, #61
+ 430 0050 1120     		movs	r0, #17
+ 431 0052 FFF7FEFF 		bl	WriteRawRC
+ 432              	.LVL36:
+ 562:Core/Src/RC522.c ****     WriteRawRC ( TReloadRegH, 0 );			 //16位定时器高位
+ 433              		.loc 1 562 5 view .LVU89
+ 434 0056 1E21     		movs	r1, #30
+ 435 0058 2D20     		movs	r0, #45
+ 436 005a FFF7FEFF 		bl	WriteRawRC
+ARM GAS  /tmp/ccMCXGLW.s 			page 20
+
+
+ 437              	.LVL37:
+ 563:Core/Src/RC522.c ****     WriteRawRC ( TModeReg, 0x8D );			 //定义内部定时器的设置
+ 438              		.loc 1 563 5 view .LVU90
+ 439 005e 0021     		movs	r1, #0
+ 440 0060 2C20     		movs	r0, #44
+ 441 0062 FFF7FEFF 		bl	WriteRawRC
+ 442              	.LVL38:
+ 564:Core/Src/RC522.c ****     WriteRawRC ( TPrescalerReg, 0x3E );		 //设置定时器分频系数
+ 443              		.loc 1 564 5 view .LVU91
+ 444 0066 8D21     		movs	r1, #141
+ 445 0068 2A20     		movs	r0, #42
+ 446 006a FFF7FEFF 		bl	WriteRawRC
+ 447              	.LVL39:
+ 565:Core/Src/RC522.c ****     WriteRawRC ( TxAutoReg, 0x40 );			 //调制发送信号为100%ASK	
+ 448              		.loc 1 565 5 view .LVU92
+ 449 006e 3E21     		movs	r1, #62
+ 450 0070 2B20     		movs	r0, #43
+ 451 0072 FFF7FEFF 		bl	WriteRawRC
+ 452              	.LVL40:
+ 566:Core/Src/RC522.c **** }
+ 453              		.loc 1 566 5 view .LVU93
+ 454 0076 4021     		movs	r1, #64
+ 455 0078 1520     		movs	r0, #21
+ 456 007a FFF7FEFF 		bl	WriteRawRC
+ 457              	.LVL41:
+ 567:Core/Src/RC522.c **** /* 设置RC522的工作方式 */
+ 458              		.loc 1 567 1 is_stmt 0 view .LVU94
+ 459 007e 10BD     		pop	{r4, pc}
+ 460              	.L28:
+ 461              		.align	2
+ 462              	.L27:
+ 463 0080 000C0140 		.word	1073810432
+ 464              		.cfi_endproc
+ 465              	.LFE81:
+ 467              		.section	.text.SetBitMask,"ax",%progbits
+ 468              		.align	1
+ 469              		.global	SetBitMask
+ 470              		.syntax unified
+ 471              		.thumb
+ 472              		.thumb_func
+ 473              		.fpu softvfp
+ 475              	SetBitMask:
+ 476              	.LVL42:
+ 477              	.LFB87:
+ 622:Core/Src/RC522.c **** /* 向RCC指定寄存器置位 */
+ 623:Core/Src/RC522.c **** void SetBitMask (uint8_t ucReg, uint8_t ucMask)
+ 624:Core/Src/RC522.c **** {
+ 478              		.loc 1 624 1 is_stmt 1 view -0
+ 479              		.cfi_startproc
+ 480              		@ args = 0, pretend = 0, frame = 0
+ 481              		@ frame_needed = 0, uses_anonymous_args = 0
+ 482              		.loc 1 624 1 is_stmt 0 view .LVU96
+ 483 0000 38B5     		push	{r3, r4, r5, lr}
+ 484              	.LCFI11:
+ 485              		.cfi_def_cfa_offset 16
+ 486              		.cfi_offset 3, -16
+ 487              		.cfi_offset 4, -12
+ARM GAS  /tmp/ccMCXGLW.s 			page 21
+
+
+ 488              		.cfi_offset 5, -8
+ 489              		.cfi_offset 14, -4
+ 490 0002 0446     		mov	r4, r0
+ 491 0004 0D46     		mov	r5, r1
+ 625:Core/Src/RC522.c ****     uint8_t ucTemp;
+ 492              		.loc 1 625 5 is_stmt 1 view .LVU97
+ 626:Core/Src/RC522.c ****     ucTemp = ReadRawRC ( ucReg );
+ 493              		.loc 1 626 5 view .LVU98
+ 494              		.loc 1 626 14 is_stmt 0 view .LVU99
+ 495 0006 FFF7FEFF 		bl	ReadRawRC
+ 496              	.LVL43:
+ 627:Core/Src/RC522.c ****     WriteRawRC ( ucReg, ucTemp | ucMask );         // set bit mask
+ 497              		.loc 1 627 5 is_stmt 1 view .LVU100
+ 498 000a 40EA0501 		orr	r1, r0, r5
+ 499 000e C9B2     		uxtb	r1, r1
+ 500 0010 2046     		mov	r0, r4
+ 501              	.LVL44:
+ 502              		.loc 1 627 5 is_stmt 0 view .LVU101
+ 503 0012 FFF7FEFF 		bl	WriteRawRC
+ 504              	.LVL45:
+ 628:Core/Src/RC522.c **** }
+ 505              		.loc 1 628 1 view .LVU102
+ 506 0016 38BD     		pop	{r3, r4, r5, pc}
+ 507              		.cfi_endproc
+ 508              	.LFE87:
+ 510              		.section	.text.PcdAntennaOn,"ax",%progbits
+ 511              		.align	1
+ 512              		.global	PcdAntennaOn
+ 513              		.syntax unified
+ 514              		.thumb
+ 515              		.thumb_func
+ 516              		.fpu softvfp
+ 518              	PcdAntennaOn:
+ 519              	.LFB83:
+ 586:Core/Src/RC522.c ****     uint8_t uc;
+ 520              		.loc 1 586 1 is_stmt 1 view -0
+ 521              		.cfi_startproc
+ 522              		@ args = 0, pretend = 0, frame = 0
+ 523              		@ frame_needed = 0, uses_anonymous_args = 0
+ 524 0000 08B5     		push	{r3, lr}
+ 525              	.LCFI12:
+ 526              		.cfi_def_cfa_offset 8
+ 527              		.cfi_offset 3, -8
+ 528              		.cfi_offset 14, -4
+ 587:Core/Src/RC522.c ****     uc = ReadRawRC ( TxControlReg );
+ 529              		.loc 1 587 5 view .LVU104
+ 588:Core/Src/RC522.c ****     if ( ! ( uc & 0x03 ) )//0x7F;
+ 530              		.loc 1 588 5 view .LVU105
+ 588:Core/Src/RC522.c ****     if ( ! ( uc & 0x03 ) )//0x7F;
+ 531              		.loc 1 588 10 is_stmt 0 view .LVU106
+ 532 0002 1420     		movs	r0, #20
+ 533 0004 FFF7FEFF 		bl	ReadRawRC
+ 534              	.LVL46:
+ 589:Core/Src/RC522.c ****         SetBitMask(TxControlReg, 0x03);
+ 535              		.loc 1 589 5 is_stmt 1 view .LVU107
+ 589:Core/Src/RC522.c ****         SetBitMask(TxControlReg, 0x03);
+ 536              		.loc 1 589 8 is_stmt 0 view .LVU108
+ARM GAS  /tmp/ccMCXGLW.s 			page 22
+
+
+ 537 0008 10F0030F 		tst	r0, #3
+ 538 000c 00D0     		beq	.L34
+ 539              	.LVL47:
+ 540              	.L31:
+ 591:Core/Src/RC522.c **** /* 关闭天线 */
+ 541              		.loc 1 591 1 view .LVU109
+ 542 000e 08BD     		pop	{r3, pc}
+ 543              	.LVL48:
+ 544              	.L34:
+ 590:Core/Src/RC522.c **** }
+ 545              		.loc 1 590 9 is_stmt 1 view .LVU110
+ 546 0010 0321     		movs	r1, #3
+ 547 0012 1420     		movs	r0, #20
+ 548              	.LVL49:
+ 590:Core/Src/RC522.c **** }
+ 549              		.loc 1 590 9 is_stmt 0 view .LVU111
+ 550 0014 FFF7FEFF 		bl	SetBitMask
+ 551              	.LVL50:
+ 591:Core/Src/RC522.c **** /* 关闭天线 */
+ 552              		.loc 1 591 1 view .LVU112
+ 553 0018 F9E7     		b	.L31
+ 554              		.cfi_endproc
+ 555              	.LFE83:
+ 557              		.section	.text.ClearBitMask,"ax",%progbits
+ 558              		.align	1
+ 559              		.global	ClearBitMask
+ 560              		.syntax unified
+ 561              		.thumb
+ 562              		.thumb_func
+ 563              		.fpu softvfp
+ 565              	ClearBitMask:
+ 566              	.LVL51:
+ 567              	.LFB88:
+ 629:Core/Src/RC522.c **** /* 向RCC指定寄存器清位 */
+ 630:Core/Src/RC522.c **** void ClearBitMask (uint8_t ucReg, uint8_t ucMask) 
+ 631:Core/Src/RC522.c **** {
+ 568              		.loc 1 631 1 is_stmt 1 view -0
+ 569              		.cfi_startproc
+ 570              		@ args = 0, pretend = 0, frame = 0
+ 571              		@ frame_needed = 0, uses_anonymous_args = 0
+ 572              		.loc 1 631 1 is_stmt 0 view .LVU114
+ 573 0000 38B5     		push	{r3, r4, r5, lr}
+ 574              	.LCFI13:
+ 575              		.cfi_def_cfa_offset 16
+ 576              		.cfi_offset 3, -16
+ 577              		.cfi_offset 4, -12
+ 578              		.cfi_offset 5, -8
+ 579              		.cfi_offset 14, -4
+ 580 0002 0446     		mov	r4, r0
+ 581 0004 0D46     		mov	r5, r1
+ 632:Core/Src/RC522.c ****     uint8_t ucTemp;
+ 582              		.loc 1 632 5 is_stmt 1 view .LVU115
+ 633:Core/Src/RC522.c ****     ucTemp = ReadRawRC ( ucReg );
+ 583              		.loc 1 633 5 view .LVU116
+ 584              		.loc 1 633 14 is_stmt 0 view .LVU117
+ 585 0006 FFF7FEFF 		bl	ReadRawRC
+ 586              	.LVL52:
+ARM GAS  /tmp/ccMCXGLW.s 			page 23
+
+
+ 634:Core/Src/RC522.c ****     WriteRawRC ( ucReg, ucTemp & ( ~ ucMask) );  // clear bit mask
+ 587              		.loc 1 634 5 is_stmt 1 view .LVU118
+ 588              		.loc 1 634 32 is_stmt 0 view .LVU119
+ 589 000a 20EA0501 		bic	r1, r0, r5
+ 590              		.loc 1 634 5 view .LVU120
+ 591 000e C9B2     		uxtb	r1, r1
+ 592 0010 2046     		mov	r0, r4
+ 593              	.LVL53:
+ 594              		.loc 1 634 5 view .LVU121
+ 595 0012 FFF7FEFF 		bl	WriteRawRC
+ 596              	.LVL54:
+ 635:Core/Src/RC522.c **** }
+ 597              		.loc 1 635 1 view .LVU122
+ 598 0016 38BD     		pop	{r3, r4, r5, pc}
+ 599              		.cfi_endproc
+ 600              	.LFE88:
+ 602              		.section	.text.PcdComMF522,"ax",%progbits
+ 603              		.align	1
+ 604              		.global	PcdComMF522
+ 605              		.syntax unified
+ 606              		.thumb
+ 607              		.thumb_func
+ 608              		.fpu softvfp
+ 610              	PcdComMF522:
+ 611              	.LVL55:
+ 612              	.LFB72:
+ 232:Core/Src/RC522.c ****     char cStatus = MI_ERR;
+ 613              		.loc 1 232 1 is_stmt 1 view -0
+ 614              		.cfi_startproc
+ 615              		@ args = 4, pretend = 0, frame = 0
+ 616              		@ frame_needed = 0, uses_anonymous_args = 0
+ 232:Core/Src/RC522.c ****     char cStatus = MI_ERR;
+ 617              		.loc 1 232 1 is_stmt 0 view .LVU124
+ 618 0000 2DE9F047 		push	{r4, r5, r6, r7, r8, r9, r10, lr}
+ 619              	.LCFI14:
+ 620              		.cfi_def_cfa_offset 32
+ 621              		.cfi_offset 4, -32
+ 622              		.cfi_offset 5, -28
+ 623              		.cfi_offset 6, -24
+ 624              		.cfi_offset 7, -20
+ 625              		.cfi_offset 8, -16
+ 626              		.cfi_offset 9, -12
+ 627              		.cfi_offset 10, -8
+ 628              		.cfi_offset 14, -4
+ 629 0004 0746     		mov	r7, r0
+ 630 0006 8A46     		mov	r10, r1
+ 631 0008 1546     		mov	r5, r2
+ 632 000a 9946     		mov	r9, r3
+ 233:Core/Src/RC522.c ****     uint8_t ucIrqEn   = 0x00;
+ 633              		.loc 1 233 5 is_stmt 1 view .LVU125
+ 634              	.LVL56:
+ 234:Core/Src/RC522.c ****     uint8_t ucWaitFor = 0x00;
+ 635              		.loc 1 234 5 view .LVU126
+ 235:Core/Src/RC522.c ****     uint8_t ucLastBits;
+ 636              		.loc 1 235 5 view .LVU127
+ 236:Core/Src/RC522.c ****     uint8_t ucN;
+ 637              		.loc 1 236 5 view .LVU128
+ARM GAS  /tmp/ccMCXGLW.s 			page 24
+
+
+ 237:Core/Src/RC522.c ****     uint32_t ul;
+ 638              		.loc 1 237 5 view .LVU129
+ 238:Core/Src/RC522.c ****     switch ( ucCommand )
+ 639              		.loc 1 238 5 view .LVU130
+ 239:Core/Src/RC522.c ****     {
+ 640              		.loc 1 239 5 view .LVU131
+ 641 000c 0C28     		cmp	r0, #12
+ 642 000e 17D0     		beq	.L51
+ 643 0010 0E28     		cmp	r0, #14
+ 644 0012 19D1     		bne	.L52
+ 243:Core/Src/RC522.c ****         break;
+ 645              		.loc 1 243 19 is_stmt 0 view .LVU132
+ 646 0014 1026     		movs	r6, #16
+ 242:Core/Src/RC522.c ****         ucWaitFor = 0x10;		//认证寻卡等待时候 查询空闲中断标志位
+ 647              		.loc 1 242 19 view .LVU133
+ 648 0016 4FF01208 		mov	r8, #18
+ 649              	.L38:
+ 650              	.LVL57:
+ 252:Core/Src/RC522.c ****     ClearBitMask ( ComIrqReg, 0x80 );			//Set1该位清零时，CommIRqReg的屏蔽位清零
+ 651              		.loc 1 252 5 is_stmt 1 view .LVU134
+ 652 001a 48F08001 		orr	r1, r8, #128
+ 653              	.LVL58:
+ 252:Core/Src/RC522.c ****     ClearBitMask ( ComIrqReg, 0x80 );			//Set1该位清零时，CommIRqReg的屏蔽位清零
+ 654              		.loc 1 252 5 is_stmt 0 view .LVU135
+ 655 001e 0220     		movs	r0, #2
+ 656              	.LVL59:
+ 252:Core/Src/RC522.c ****     ClearBitMask ( ComIrqReg, 0x80 );			//Set1该位清零时，CommIRqReg的屏蔽位清零
+ 657              		.loc 1 252 5 view .LVU136
+ 658 0020 FFF7FEFF 		bl	WriteRawRC
+ 659              	.LVL60:
+ 253:Core/Src/RC522.c ****     WriteRawRC ( CommandReg, PCD_IDLE );		//写空闲命令
+ 660              		.loc 1 253 5 is_stmt 1 view .LVU137
+ 661 0024 8021     		movs	r1, #128
+ 662 0026 0420     		movs	r0, #4
+ 663 0028 FFF7FEFF 		bl	ClearBitMask
+ 664              	.LVL61:
+ 254:Core/Src/RC522.c ****     SetBitMask ( FIFOLevelReg, 0x80 );			//置位FlushBuffer清除内部FIFO的读和写指针以�
+ 665              		.loc 1 254 5 view .LVU138
+ 666 002c 0021     		movs	r1, #0
+ 667 002e 0120     		movs	r0, #1
+ 668 0030 FFF7FEFF 		bl	WriteRawRC
+ 669              	.LVL62:
+ 255:Core/Src/RC522.c ****     for ( ul = 0; ul < ucInLenByte; ul ++ )
+ 670              		.loc 1 255 5 view .LVU139
+ 671 0034 8021     		movs	r1, #128
+ 672 0036 0A20     		movs	r0, #10
+ 673 0038 FFF7FEFF 		bl	SetBitMask
+ 674              	.LVL63:
+ 256:Core/Src/RC522.c ****         WriteRawRC ( FIFODataReg, pInData [ ul ] );    		//写数据进FIFOdata
+ 675              		.loc 1 256 5 view .LVU140
+ 256:Core/Src/RC522.c ****         WriteRawRC ( FIFODataReg, pInData [ ul ] );    		//写数据进FIFOdata
+ 676              		.loc 1 256 14 is_stmt 0 view .LVU141
+ 677 003c 0024     		movs	r4, #0
+ 256:Core/Src/RC522.c ****         WriteRawRC ( FIFODataReg, pInData [ ul ] );    		//写数据进FIFOdata
+ 678              		.loc 1 256 5 view .LVU142
+ 679 003e 0CE0     		b	.L39
+ 680              	.LVL64:
+ARM GAS  /tmp/ccMCXGLW.s 			page 25
+
+
+ 681              	.L51:
+ 247:Core/Src/RC522.c ****         break;
+ 682              		.loc 1 247 19 view .LVU143
+ 683 0040 3026     		movs	r6, #48
+ 246:Core/Src/RC522.c ****         ucWaitFor = 0x30;		//寻卡等待时候 查询接收中断标志位与 空闲中断标志�
+ 684              		.loc 1 246 19 view .LVU144
+ 685 0042 4FF07708 		mov	r8, #119
+ 686 0046 E8E7     		b	.L38
+ 687              	.L52:
+ 239:Core/Src/RC522.c ****     {
+ 688              		.loc 1 239 5 view .LVU145
+ 689 0048 0026     		movs	r6, #0
+ 690 004a B046     		mov	r8, r6
+ 691 004c E5E7     		b	.L38
+ 692              	.LVL65:
+ 693              	.L40:
+ 257:Core/Src/RC522.c **** 
+ 694              		.loc 1 257 9 is_stmt 1 discriminator 3 view .LVU146
+ 695 004e 1AF80410 		ldrb	r1, [r10, r4]	@ zero_extendqisi2
+ 696 0052 0920     		movs	r0, #9
+ 697 0054 FFF7FEFF 		bl	WriteRawRC
+ 698              	.LVL66:
+ 256:Core/Src/RC522.c ****         WriteRawRC ( FIFODataReg, pInData [ ul ] );    		//写数据进FIFOdata
+ 699              		.loc 1 256 37 discriminator 3 view .LVU147
+ 256:Core/Src/RC522.c ****         WriteRawRC ( FIFODataReg, pInData [ ul ] );    		//写数据进FIFOdata
+ 700              		.loc 1 256 40 is_stmt 0 discriminator 3 view .LVU148
+ 701 0058 0134     		adds	r4, r4, #1
+ 702              	.LVL67:
+ 703              	.L39:
+ 256:Core/Src/RC522.c ****         WriteRawRC ( FIFODataReg, pInData [ ul ] );    		//写数据进FIFOdata
+ 704              		.loc 1 256 19 is_stmt 1 discriminator 1 view .LVU149
+ 256:Core/Src/RC522.c ****         WriteRawRC ( FIFODataReg, pInData [ ul ] );    		//写数据进FIFOdata
+ 705              		.loc 1 256 5 is_stmt 0 discriminator 1 view .LVU150
+ 706 005a A542     		cmp	r5, r4
+ 707 005c F7D8     		bhi	.L40
+ 259:Core/Src/RC522.c **** 
+ 708              		.loc 1 259 5 is_stmt 1 view .LVU151
+ 709 005e 3946     		mov	r1, r7
+ 710 0060 0120     		movs	r0, #1
+ 711 0062 FFF7FEFF 		bl	WriteRawRC
+ 712              	.LVL68:
+ 261:Core/Src/RC522.c ****         SetBitMask(BitFramingReg,0x80);  				//StartSend置位启动数据发送 该位与收发命
+ 713              		.loc 1 261 5 view .LVU152
+ 261:Core/Src/RC522.c ****         SetBitMask(BitFramingReg,0x80);  				//StartSend置位启动数据发送 该位与收发命
+ 714              		.loc 1 261 8 is_stmt 0 view .LVU153
+ 715 0066 0C2F     		cmp	r7, #12
+ 716 0068 1DD0     		beq	.L59
+ 717              	.L41:
+ 256:Core/Src/RC522.c ****         WriteRawRC ( FIFODataReg, pInData [ ul ] );    		//写数据进FIFOdata
+ 718              		.loc 1 256 14 discriminator 3 view .LVU154
+ 719 006a 4FF47A75 		mov	r5, #1000
+ 720              	.LVL69:
+ 721              	.L43:
+ 266:Core/Src/RC522.c ****     {
+ 722              		.loc 1 266 5 is_stmt 1 discriminator 3 view .LVU155
+ 268:Core/Src/RC522.c ****         ul --;
+ 723              		.loc 1 268 9 discriminator 3 view .LVU156
+ARM GAS  /tmp/ccMCXGLW.s 			page 26
+
+
+ 268:Core/Src/RC522.c ****         ul --;
+ 724              		.loc 1 268 15 is_stmt 0 discriminator 3 view .LVU157
+ 725 006e 0420     		movs	r0, #4
+ 726 0070 FFF7FEFF 		bl	ReadRawRC
+ 727              	.LVL70:
+ 728 0074 0446     		mov	r4, r0
+ 729              	.LVL71:
+ 269:Core/Src/RC522.c ****     } while ( ( ul != 0 ) && ( ! ( ucN & 0x01 ) ) && ( ! ( ucN & ucWaitFor ) ) );		//退出条件i=
+ 730              		.loc 1 269 9 is_stmt 1 discriminator 3 view .LVU158
+ 270:Core/Src/RC522.c **** 
+ 731              		.loc 1 270 13 discriminator 3 view .LVU159
+ 270:Core/Src/RC522.c **** 
+ 732              		.loc 1 270 5 is_stmt 0 discriminator 3 view .LVU160
+ 733 0076 013D     		subs	r5, r5, #1
+ 734              	.LVL72:
+ 270:Core/Src/RC522.c **** 
+ 735              		.loc 1 270 5 discriminator 3 view .LVU161
+ 736 0078 04D0     		beq	.L42
+ 270:Core/Src/RC522.c **** 
+ 737              		.loc 1 270 27 discriminator 1 view .LVU162
+ 738 007a 10F0010F 		tst	r0, #1
+ 739 007e 01D1     		bne	.L42
+ 270:Core/Src/RC522.c **** 
+ 740              		.loc 1 270 51 discriminator 2 view .LVU163
+ 741 0080 0642     		tst	r6, r0
+ 742 0082 F4D0     		beq	.L43
+ 743              	.L42:
+ 272:Core/Src/RC522.c **** 
+ 744              		.loc 1 272 5 is_stmt 1 view .LVU164
+ 745 0084 8021     		movs	r1, #128
+ 746 0086 0D20     		movs	r0, #13
+ 747              	.LVL73:
+ 272:Core/Src/RC522.c **** 
+ 748              		.loc 1 272 5 is_stmt 0 view .LVU165
+ 749 0088 FFF7FEFF 		bl	ClearBitMask
+ 750              	.LVL74:
+ 274:Core/Src/RC522.c ****     {
+ 751              		.loc 1 274 5 is_stmt 1 view .LVU166
+ 274:Core/Src/RC522.c ****     {
+ 752              		.loc 1 274 8 is_stmt 0 view .LVU167
+ 753 008c 85B9     		cbnz	r5, .L60
+ 233:Core/Src/RC522.c ****     uint8_t ucIrqEn   = 0x00;
+ 754              		.loc 1 233 10 view .LVU168
+ 755 008e 0224     		movs	r4, #2
+ 756              	.LVL75:
+ 757              	.L44:
+ 302:Core/Src/RC522.c ****     WriteRawRC ( CommandReg, PCD_IDLE );
+ 758              		.loc 1 302 5 is_stmt 1 view .LVU169
+ 759 0090 8021     		movs	r1, #128
+ 760 0092 0C20     		movs	r0, #12
+ 761 0094 FFF7FEFF 		bl	SetBitMask
+ 762              	.LVL76:
+ 303:Core/Src/RC522.c ****     return cStatus;
+ 763              		.loc 1 303 5 view .LVU170
+ 764 0098 0021     		movs	r1, #0
+ 765 009a 0120     		movs	r0, #1
+ 766 009c FFF7FEFF 		bl	WriteRawRC
+ARM GAS  /tmp/ccMCXGLW.s 			page 27
+
+
+ 767              	.LVL77:
+ 304:Core/Src/RC522.c **** }
+ 768              		.loc 1 304 5 view .LVU171
+ 305:Core/Src/RC522.c **** 
+ 769              		.loc 1 305 1 is_stmt 0 view .LVU172
+ 770 00a0 2046     		mov	r0, r4
+ 771 00a2 BDE8F087 		pop	{r4, r5, r6, r7, r8, r9, r10, pc}
+ 772              	.LVL78:
+ 773              	.L59:
+ 262:Core/Src/RC522.c **** 
+ 774              		.loc 1 262 9 is_stmt 1 view .LVU173
+ 775 00a6 8021     		movs	r1, #128
+ 776 00a8 0D20     		movs	r0, #13
+ 777 00aa FFF7FEFF 		bl	SetBitMask
+ 778              	.LVL79:
+ 779 00ae DCE7     		b	.L41
+ 780              	.LVL80:
+ 781              	.L60:
+ 276:Core/Src/RC522.c ****         {
+ 782              		.loc 1 276 9 view .LVU174
+ 276:Core/Src/RC522.c ****         {
+ 783              		.loc 1 276 19 is_stmt 0 view .LVU175
+ 784 00b0 0620     		movs	r0, #6
+ 785 00b2 FFF7FEFF 		bl	ReadRawRC
+ 786              	.LVL81:
+ 276:Core/Src/RC522.c ****         {
+ 787              		.loc 1 276 12 view .LVU176
+ 788 00b6 10F01B0F 		tst	r0, #27
+ 789 00ba 2AD1     		bne	.L54
+ 278:Core/Src/RC522.c ****             if ( ucN & ucIrqEn & 0x01 )					//是否发生定时器中断
+ 790              		.loc 1 278 13 is_stmt 1 view .LVU177
+ 791              	.LVL82:
+ 279:Core/Src/RC522.c ****                 cStatus = MI_NOTAGERR;
+ 792              		.loc 1 279 13 view .LVU178
+ 279:Core/Src/RC522.c ****                 cStatus = MI_NOTAGERR;
+ 793              		.loc 1 279 32 is_stmt 0 view .LVU179
+ 794 00bc 08EA0404 		and	r4, r8, r4
+ 279:Core/Src/RC522.c ****                 cStatus = MI_NOTAGERR;
+ 795              		.loc 1 279 16 view .LVU180
+ 796 00c0 14F00104 		ands	r4, r4, #1
+ 797 00c4 00D0     		beq	.L45
+ 280:Core/Src/RC522.c **** 
+ 798              		.loc 1 280 25 view .LVU181
+ 799 00c6 0124     		movs	r4, #1
+ 800              	.L45:
+ 801              	.LVL83:
+ 282:Core/Src/RC522.c ****             {
+ 802              		.loc 1 282 13 is_stmt 1 view .LVU182
+ 282:Core/Src/RC522.c ****             {
+ 803              		.loc 1 282 16 is_stmt 0 view .LVU183
+ 804 00c8 0C2F     		cmp	r7, #12
+ 805 00ca E1D1     		bne	.L44
+ 284:Core/Src/RC522.c ****                 ucLastBits = ReadRawRC ( ControlReg ) & 0x07;	//最后接收到得字节的有效�
+ 806              		.loc 1 284 17 is_stmt 1 view .LVU184
+ 284:Core/Src/RC522.c ****                 ucLastBits = ReadRawRC ( ControlReg ) & 0x07;	//最后接收到得字节的有效�
+ 807              		.loc 1 284 23 is_stmt 0 view .LVU185
+ 808 00cc 0A20     		movs	r0, #10
+ARM GAS  /tmp/ccMCXGLW.s 			page 28
+
+
+ 809 00ce FFF7FEFF 		bl	ReadRawRC
+ 810              	.LVL84:
+ 811 00d2 0646     		mov	r6, r0
+ 812              	.LVL85:
+ 285:Core/Src/RC522.c ****                 if ( ucLastBits )
+ 813              		.loc 1 285 17 is_stmt 1 view .LVU186
+ 285:Core/Src/RC522.c ****                 if ( ucLastBits )
+ 814              		.loc 1 285 30 is_stmt 0 view .LVU187
+ 815 00d4 0C20     		movs	r0, #12
+ 816 00d6 FFF7FEFF 		bl	ReadRawRC
+ 817              	.LVL86:
+ 286:Core/Src/RC522.c ****                     * pOutLenBit = ( ucN - 1 ) * 8 + ucLastBits;   	//N个字节数减去1（最后
+ 818              		.loc 1 286 17 is_stmt 1 view .LVU188
+ 286:Core/Src/RC522.c ****                     * pOutLenBit = ( ucN - 1 ) * 8 + ucLastBits;   	//N个字节数减去1（最后
+ 819              		.loc 1 286 20 is_stmt 0 view .LVU189
+ 820 00da 10F00700 		ands	r0, r0, #7
+ 821              	.LVL87:
+ 286:Core/Src/RC522.c ****                     * pOutLenBit = ( ucN - 1 ) * 8 + ucLastBits;   	//N个字节数减去1（最后
+ 822              		.loc 1 286 20 view .LVU190
+ 823 00de 09D0     		beq	.L46
+ 287:Core/Src/RC522.c ****                 else
+ 824              		.loc 1 287 21 is_stmt 1 view .LVU191
+ 287:Core/Src/RC522.c ****                 else
+ 825              		.loc 1 287 42 is_stmt 0 view .LVU192
+ 826 00e0 731E     		subs	r3, r6, #1
+ 287:Core/Src/RC522.c ****                 else
+ 827              		.loc 1 287 52 view .LVU193
+ 828 00e2 00EBC300 		add	r0, r0, r3, lsl #3
+ 287:Core/Src/RC522.c ****                 else
+ 829              		.loc 1 287 34 view .LVU194
+ 830 00e6 089B     		ldr	r3, [sp, #32]
+ 831 00e8 1860     		str	r0, [r3]
+ 832              	.L47:
+ 290:Core/Src/RC522.c ****                     ucN = 1;
+ 833              		.loc 1 290 17 is_stmt 1 view .LVU195
+ 290:Core/Src/RC522.c ****                     ucN = 1;
+ 834              		.loc 1 290 20 is_stmt 0 view .LVU196
+ 835 00ea 3EB1     		cbz	r6, .L56
+ 292:Core/Src/RC522.c ****                     ucN = MAXRLEN;
+ 836              		.loc 1 292 17 is_stmt 1 view .LVU197
+ 292:Core/Src/RC522.c ****                     ucN = MAXRLEN;
+ 837              		.loc 1 292 20 is_stmt 0 view .LVU198
+ 838 00ec 122E     		cmp	r6, #18
+ 839 00ee 06D9     		bls	.L48
+ 293:Core/Src/RC522.c ****                 for ( ul = 0; ul < ucN; ul ++ )
+ 840              		.loc 1 293 25 view .LVU199
+ 841 00f0 1226     		movs	r6, #18
+ 842              	.LVL88:
+ 293:Core/Src/RC522.c ****                 for ( ul = 0; ul < ucN; ul ++ )
+ 843              		.loc 1 293 25 view .LVU200
+ 844 00f2 04E0     		b	.L48
+ 845              	.LVL89:
+ 846              	.L46:
+ 289:Core/Src/RC522.c ****                 if ( ucN == 0 )
+ 847              		.loc 1 289 21 is_stmt 1 view .LVU201
+ 289:Core/Src/RC522.c ****                 if ( ucN == 0 )
+ 848              		.loc 1 289 40 is_stmt 0 view .LVU202
+ARM GAS  /tmp/ccMCXGLW.s 			page 29
+
+
+ 849 00f4 F300     		lsls	r3, r6, #3
+ 289:Core/Src/RC522.c ****                 if ( ucN == 0 )
+ 850              		.loc 1 289 34 view .LVU203
+ 851 00f6 089A     		ldr	r2, [sp, #32]
+ 852 00f8 1360     		str	r3, [r2]
+ 853 00fa F6E7     		b	.L47
+ 854              	.L56:
+ 291:Core/Src/RC522.c ****                 if ( ucN > MAXRLEN )
+ 855              		.loc 1 291 25 view .LVU204
+ 856 00fc 0126     		movs	r6, #1
+ 857              	.LVL90:
+ 858              	.L48:
+ 294:Core/Src/RC522.c ****                     pOutData [ ul ] = ReadRawRC ( FIFODataReg );
+ 859              		.loc 1 294 17 is_stmt 1 view .LVU205
+ 294:Core/Src/RC522.c ****                     pOutData [ ul ] = ReadRawRC ( FIFODataReg );
+ 860              		.loc 1 294 26 is_stmt 0 view .LVU206
+ 861 00fe 0025     		movs	r5, #0
+ 862              	.LVL91:
+ 863              	.L49:
+ 294:Core/Src/RC522.c ****                     pOutData [ ul ] = ReadRawRC ( FIFODataReg );
+ 864              		.loc 1 294 31 is_stmt 1 discriminator 1 view .LVU207
+ 294:Core/Src/RC522.c ****                     pOutData [ ul ] = ReadRawRC ( FIFODataReg );
+ 865              		.loc 1 294 17 is_stmt 0 discriminator 1 view .LVU208
+ 866 0100 AE42     		cmp	r6, r5
+ 867 0102 C5D9     		bls	.L44
+ 295:Core/Src/RC522.c ****             }
+ 868              		.loc 1 295 21 is_stmt 1 discriminator 3 view .LVU209
+ 295:Core/Src/RC522.c ****             }
+ 869              		.loc 1 295 39 is_stmt 0 discriminator 3 view .LVU210
+ 870 0104 0920     		movs	r0, #9
+ 871 0106 FFF7FEFF 		bl	ReadRawRC
+ 872              	.LVL92:
+ 295:Core/Src/RC522.c ****             }
+ 873              		.loc 1 295 37 discriminator 3 view .LVU211
+ 874 010a 09F80500 		strb	r0, [r9, r5]
+ 294:Core/Src/RC522.c ****                     pOutData [ ul ] = ReadRawRC ( FIFODataReg );
+ 875              		.loc 1 294 41 is_stmt 1 discriminator 3 view .LVU212
+ 294:Core/Src/RC522.c ****                     pOutData [ ul ] = ReadRawRC ( FIFODataReg );
+ 876              		.loc 1 294 44 is_stmt 0 discriminator 3 view .LVU213
+ 877 010e 0135     		adds	r5, r5, #1
+ 878              	.LVL93:
+ 294:Core/Src/RC522.c ****                     pOutData [ ul ] = ReadRawRC ( FIFODataReg );
+ 879              		.loc 1 294 44 discriminator 3 view .LVU214
+ 880 0110 F6E7     		b	.L49
+ 881              	.LVL94:
+ 882              	.L54:
+ 299:Core/Src/RC522.c ****     // printf(ErrorReg);
+ 883              		.loc 1 299 21 view .LVU215
+ 884 0112 0224     		movs	r4, #2
+ 885 0114 BCE7     		b	.L44
+ 886              		.cfi_endproc
+ 887              	.LFE72:
+ 889              		.section	.text.PcdAuthState,"ax",%progbits
+ 890              		.align	1
+ 891              		.global	PcdAuthState
+ 892              		.syntax unified
+ 893              		.thumb
+ARM GAS  /tmp/ccMCXGLW.s 			page 30
+
+
+ 894              		.thumb_func
+ 895              		.fpu softvfp
+ 897              	PcdAuthState:
+ 898              	.LVL95:
+ 899              	.LFB76:
+ 414:Core/Src/RC522.c ****     char cStatus;
+ 900              		.loc 1 414 1 is_stmt 1 view -0
+ 901              		.cfi_startproc
+ 902              		@ args = 0, pretend = 0, frame = 24
+ 903              		@ frame_needed = 0, uses_anonymous_args = 0
+ 414:Core/Src/RC522.c ****     char cStatus;
+ 904              		.loc 1 414 1 is_stmt 0 view .LVU217
+ 905 0000 10B5     		push	{r4, lr}
+ 906              	.LCFI15:
+ 907              		.cfi_def_cfa_offset 8
+ 908              		.cfi_offset 4, -8
+ 909              		.cfi_offset 14, -4
+ 910 0002 88B0     		sub	sp, sp, #32
+ 911              	.LCFI16:
+ 912              		.cfi_def_cfa_offset 40
+ 415:Core/Src/RC522.c ****     uint8_t uc, ucComMF522Buf [ MAXRLEN ];
+ 913              		.loc 1 415 5 is_stmt 1 view .LVU218
+ 416:Core/Src/RC522.c ****     uint32_t ulLen;
+ 914              		.loc 1 416 5 view .LVU219
+ 417:Core/Src/RC522.c **** 
+ 915              		.loc 1 417 5 view .LVU220
+ 419:Core/Src/RC522.c ****     ucComMF522Buf [ 1 ] = ucAddr;
+ 916              		.loc 1 419 5 view .LVU221
+ 419:Core/Src/RC522.c ****     ucComMF522Buf [ 1 ] = ucAddr;
+ 917              		.loc 1 419 25 is_stmt 0 view .LVU222
+ 918 0004 8DF80C00 		strb	r0, [sp, #12]
+ 420:Core/Src/RC522.c **** 
+ 919              		.loc 1 420 5 is_stmt 1 view .LVU223
+ 420:Core/Src/RC522.c **** 
+ 920              		.loc 1 420 25 is_stmt 0 view .LVU224
+ 921 0008 8DF80D10 		strb	r1, [sp, #13]
+ 422:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 2 ] = * ( pKey + uc );
+ 922              		.loc 1 422 5 is_stmt 1 view .LVU225
+ 923              	.LVL96:
+ 422:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 2 ] = * ( pKey + uc );
+ 924              		.loc 1 422 14 is_stmt 0 view .LVU226
+ 925 000c 0021     		movs	r1, #0
+ 926              	.LVL97:
+ 422:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 2 ] = * ( pKey + uc );
+ 927              		.loc 1 422 5 view .LVU227
+ 928 000e 08E0     		b	.L62
+ 929              	.LVL98:
+ 930              	.L63:
+ 423:Core/Src/RC522.c **** 
+ 931              		.loc 1 423 9 is_stmt 1 discriminator 3 view .LVU228
+ 423:Core/Src/RC522.c **** 
+ 932              		.loc 1 423 28 is_stmt 0 discriminator 3 view .LVU229
+ 933 0010 881C     		adds	r0, r1, #2
+ 423:Core/Src/RC522.c **** 
+ 934              		.loc 1 423 36 discriminator 3 view .LVU230
+ 935 0012 12F801C0 		ldrb	ip, [r2, r1]	@ zero_extendqisi2
+ 423:Core/Src/RC522.c **** 
+ARM GAS  /tmp/ccMCXGLW.s 			page 31
+
+
+ 936              		.loc 1 423 34 discriminator 3 view .LVU231
+ 937 0016 08AC     		add	r4, sp, #32
+ 938 0018 2044     		add	r0, r0, r4
+ 939 001a 00F814CC 		strb	ip, [r0, #-20]
+ 422:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 2 ] = * ( pKey + uc );
+ 940              		.loc 1 422 27 is_stmt 1 discriminator 3 view .LVU232
+ 422:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 2 ] = * ( pKey + uc );
+ 941              		.loc 1 422 30 is_stmt 0 discriminator 3 view .LVU233
+ 942 001e 0131     		adds	r1, r1, #1
+ 943              	.LVL99:
+ 422:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 2 ] = * ( pKey + uc );
+ 944              		.loc 1 422 30 discriminator 3 view .LVU234
+ 945 0020 C9B2     		uxtb	r1, r1
+ 946              	.LVL100:
+ 947              	.L62:
+ 422:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 2 ] = * ( pKey + uc );
+ 948              		.loc 1 422 19 is_stmt 1 discriminator 1 view .LVU235
+ 422:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 2 ] = * ( pKey + uc );
+ 949              		.loc 1 422 5 is_stmt 0 discriminator 1 view .LVU236
+ 950 0022 0529     		cmp	r1, #5
+ 951 0024 F4D9     		bls	.L63
+ 425:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 8 ] = * ( pSnr + uc );
+ 952              		.loc 1 425 14 view .LVU237
+ 953 0026 0022     		movs	r2, #0
+ 954              	.LVL101:
+ 425:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 8 ] = * ( pSnr + uc );
+ 955              		.loc 1 425 14 view .LVU238
+ 956 0028 08E0     		b	.L64
+ 957              	.LVL102:
+ 958              	.L65:
+ 426:Core/Src/RC522.c **** 
+ 959              		.loc 1 426 9 is_stmt 1 discriminator 3 view .LVU239
+ 426:Core/Src/RC522.c **** 
+ 960              		.loc 1 426 28 is_stmt 0 discriminator 3 view .LVU240
+ 961 002a 02F10801 		add	r1, r2, #8
+ 426:Core/Src/RC522.c **** 
+ 962              		.loc 1 426 36 discriminator 3 view .LVU241
+ 963 002e 985C     		ldrb	r0, [r3, r2]	@ zero_extendqisi2
+ 426:Core/Src/RC522.c **** 
+ 964              		.loc 1 426 34 discriminator 3 view .LVU242
+ 965 0030 08AC     		add	r4, sp, #32
+ 966 0032 2144     		add	r1, r1, r4
+ 967 0034 01F8140C 		strb	r0, [r1, #-20]
+ 425:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 8 ] = * ( pSnr + uc );
+ 968              		.loc 1 425 27 is_stmt 1 discriminator 3 view .LVU243
+ 425:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 8 ] = * ( pSnr + uc );
+ 969              		.loc 1 425 30 is_stmt 0 discriminator 3 view .LVU244
+ 970 0038 0132     		adds	r2, r2, #1
+ 971              	.LVL103:
+ 425:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 8 ] = * ( pSnr + uc );
+ 972              		.loc 1 425 30 discriminator 3 view .LVU245
+ 973 003a D2B2     		uxtb	r2, r2
+ 974              	.LVL104:
+ 975              	.L64:
+ 425:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 8 ] = * ( pSnr + uc );
+ 976              		.loc 1 425 19 is_stmt 1 discriminator 1 view .LVU246
+ 425:Core/Src/RC522.c ****         ucComMF522Buf [ uc + 8 ] = * ( pSnr + uc );
+ARM GAS  /tmp/ccMCXGLW.s 			page 32
+
+
+ 977              		.loc 1 425 5 is_stmt 0 discriminator 1 view .LVU247
+ 978 003c 052A     		cmp	r2, #5
+ 979 003e F4D9     		bls	.L65
+ 429:Core/Src/RC522.c **** 
+ 980              		.loc 1 429 5 is_stmt 1 view .LVU248
+ 429:Core/Src/RC522.c **** 
+ 981              		.loc 1 429 15 is_stmt 0 view .LVU249
+ 982 0040 02AB     		add	r3, sp, #8
+ 983              	.LVL105:
+ 429:Core/Src/RC522.c **** 
+ 984              		.loc 1 429 15 view .LVU250
+ 985 0042 0093     		str	r3, [sp]
+ 986 0044 03AB     		add	r3, sp, #12
+ 987 0046 0C22     		movs	r2, #12
+ 988              	.LVL106:
+ 429:Core/Src/RC522.c **** 
+ 989              		.loc 1 429 15 view .LVU251
+ 990 0048 1946     		mov	r1, r3
+ 991 004a 0E20     		movs	r0, #14
+ 992 004c FFF7FEFF 		bl	PcdComMF522
+ 993              	.LVL107:
+ 431:Core/Src/RC522.c ****     {
+ 994              		.loc 1 431 5 is_stmt 1 view .LVU252
+ 431:Core/Src/RC522.c ****     {
+ 995              		.loc 1 431 8 is_stmt 0 view .LVU253
+ 996 0050 0446     		mov	r4, r0
+ 997 0052 18B1     		cbz	r0, .L70
+ 433:Core/Src/RC522.c ****     }
+ 998              		.loc 1 433 17 view .LVU254
+ 999 0054 0224     		movs	r4, #2
+ 1000              	.LVL108:
+ 1001              	.L66:
+ 435:Core/Src/RC522.c **** }
+ 1002              		.loc 1 435 5 is_stmt 1 view .LVU255
+ 436:Core/Src/RC522.c **** 
+ 1003              		.loc 1 436 1 is_stmt 0 view .LVU256
+ 1004 0056 2046     		mov	r0, r4
+ 1005 0058 08B0     		add	sp, sp, #32
+ 1006              	.LCFI17:
+ 1007              		.cfi_remember_state
+ 1008              		.cfi_def_cfa_offset 8
+ 1009              		@ sp needed
+ 1010 005a 10BD     		pop	{r4, pc}
+ 1011              	.LVL109:
+ 1012              	.L70:
+ 1013              	.LCFI18:
+ 1014              		.cfi_restore_state
+ 431:Core/Src/RC522.c ****     {
+ 1015              		.loc 1 431 40 discriminator 1 view .LVU257
+ 1016 005c 0820     		movs	r0, #8
+ 1017              	.LVL110:
+ 431:Core/Src/RC522.c ****     {
+ 1018              		.loc 1 431 40 discriminator 1 view .LVU258
+ 1019 005e FFF7FEFF 		bl	ReadRawRC
+ 1020              	.LVL111:
+ 431:Core/Src/RC522.c ****     {
+ 1021              		.loc 1 431 31 discriminator 1 view .LVU259
+ARM GAS  /tmp/ccMCXGLW.s 			page 33
+
+
+ 1022 0062 10F0080F 		tst	r0, #8
+ 1023 0066 F6D1     		bne	.L66
+ 433:Core/Src/RC522.c ****     }
+ 1024              		.loc 1 433 17 view .LVU260
+ 1025 0068 0224     		movs	r4, #2
+ 1026 006a F4E7     		b	.L66
+ 1027              		.cfi_endproc
+ 1028              	.LFE76:
+ 1030              		.section	.text.PcdRequest,"ax",%progbits
+ 1031              		.align	1
+ 1032              		.global	PcdRequest
+ 1033              		.syntax unified
+ 1034              		.thumb
+ 1035              		.thumb_func
+ 1036              		.fpu softvfp
+ 1038              	PcdRequest:
+ 1039              	.LVL112:
+ 1040              	.LFB71:
+ 199:Core/Src/RC522.c ****     char cStatus;
+ 1041              		.loc 1 199 1 is_stmt 1 view -0
+ 1042              		.cfi_startproc
+ 1043              		@ args = 0, pretend = 0, frame = 24
+ 1044              		@ frame_needed = 0, uses_anonymous_args = 0
+ 199:Core/Src/RC522.c ****     char cStatus;
+ 1045              		.loc 1 199 1 is_stmt 0 view .LVU262
+ 1046 0000 30B5     		push	{r4, r5, lr}
+ 1047              	.LCFI19:
+ 1048              		.cfi_def_cfa_offset 12
+ 1049              		.cfi_offset 4, -12
+ 1050              		.cfi_offset 5, -8
+ 1051              		.cfi_offset 14, -4
+ 1052 0002 89B0     		sub	sp, sp, #36
+ 1053              	.LCFI20:
+ 1054              		.cfi_def_cfa_offset 48
+ 1055 0004 0446     		mov	r4, r0
+ 1056 0006 0D46     		mov	r5, r1
+ 200:Core/Src/RC522.c ****     uint8_t ucComMF522Buf [MAXRLEN];
+ 1057              		.loc 1 200 5 is_stmt 1 view .LVU263
+ 201:Core/Src/RC522.c ****     uint32_t ulLen;
+ 1058              		.loc 1 201 5 view .LVU264
+ 202:Core/Src/RC522.c **** 
+ 1059              		.loc 1 202 5 view .LVU265
+ 204:Core/Src/RC522.c ****     WriteRawRC ( BitFramingReg, 0x07 );	//	发送的最后一个字节的 七位
+ 1060              		.loc 1 204 5 view .LVU266
+ 1061 0008 0821     		movs	r1, #8
+ 1062              	.LVL113:
+ 204:Core/Src/RC522.c ****     WriteRawRC ( BitFramingReg, 0x07 );	//	发送的最后一个字节的 七位
+ 1063              		.loc 1 204 5 is_stmt 0 view .LVU267
+ 1064 000a 0846     		mov	r0, r1
+ 1065              	.LVL114:
+ 204:Core/Src/RC522.c ****     WriteRawRC ( BitFramingReg, 0x07 );	//	发送的最后一个字节的 七位
+ 1066              		.loc 1 204 5 view .LVU268
+ 1067 000c FFF7FEFF 		bl	ClearBitMask
+ 1068              	.LVL115:
+ 205:Core/Src/RC522.c ****     SetBitMask ( TxControlReg, 0x03 );	//TX1,TX2管脚的输出信号传递经发送调制的13.56�
+ 1069              		.loc 1 205 5 is_stmt 1 view .LVU269
+ 1070 0010 0721     		movs	r1, #7
+ARM GAS  /tmp/ccMCXGLW.s 			page 34
+
+
+ 1071 0012 0D20     		movs	r0, #13
+ 1072 0014 FFF7FEFF 		bl	WriteRawRC
+ 1073              	.LVL116:
+ 206:Core/Src/RC522.c **** 
+ 1074              		.loc 1 206 5 view .LVU270
+ 1075 0018 0321     		movs	r1, #3
+ 1076 001a 1420     		movs	r0, #20
+ 1077 001c FFF7FEFF 		bl	SetBitMask
+ 1078              	.LVL117:
+ 208:Core/Src/RC522.c **** 
+ 1079              		.loc 1 208 5 view .LVU271
+ 208:Core/Src/RC522.c **** 
+ 1080              		.loc 1 208 23 is_stmt 0 view .LVU272
+ 1081 0020 8DF80C40 		strb	r4, [sp, #12]
+ 210:Core/Src/RC522.c ****     
+ 1082              		.loc 1 210 5 is_stmt 1 view .LVU273
+ 210:Core/Src/RC522.c ****     
+ 1083              		.loc 1 210 15 is_stmt 0 view .LVU274
+ 1084 0024 02AB     		add	r3, sp, #8
+ 1085 0026 0093     		str	r3, [sp]
+ 1086 0028 03AB     		add	r3, sp, #12
+ 1087 002a 0122     		movs	r2, #1
+ 1088 002c 1946     		mov	r1, r3
+ 1089 002e 0C20     		movs	r0, #12
+ 1090 0030 FFF7FEFF 		bl	PcdComMF522
+ 1091              	.LVL118:
+ 212:Core/Src/RC522.c ****     {
+ 1092              		.loc 1 212 5 is_stmt 1 view .LVU275
+ 212:Core/Src/RC522.c ****     {
+ 1093              		.loc 1 212 8 is_stmt 0 view .LVU276
+ 1094 0034 58B9     		cbnz	r0, .L73
+ 212:Core/Src/RC522.c ****     {
+ 1095              		.loc 1 212 42 discriminator 1 view .LVU277
+ 1096 0036 029B     		ldr	r3, [sp, #8]
+ 212:Core/Src/RC522.c ****     {
+ 1097              		.loc 1 212 31 discriminator 1 view .LVU278
+ 1098 0038 102B     		cmp	r3, #16
+ 1099 003a 01D0     		beq	.L76
+ 218:Core/Src/RC522.c **** 
+ 1100              		.loc 1 218 17 view .LVU279
+ 1101 003c 0220     		movs	r0, #2
+ 1102 003e 07E0     		b	.L72
+ 1103              	.L76:
+ 214:Core/Src/RC522.c ****         * ( pTagType + 1 ) = ucComMF522Buf [ 1 ];
+ 1104              		.loc 1 214 9 is_stmt 1 view .LVU280
+ 214:Core/Src/RC522.c ****         * ( pTagType + 1 ) = ucComMF522Buf [ 1 ];
+ 1105              		.loc 1 214 36 is_stmt 0 view .LVU281
+ 1106 0040 9DF80C30 		ldrb	r3, [sp, #12]	@ zero_extendqisi2
+ 214:Core/Src/RC522.c ****         * ( pTagType + 1 ) = ucComMF522Buf [ 1 ];
+ 1107              		.loc 1 214 20 view .LVU282
+ 1108 0044 2B70     		strb	r3, [r5]
+ 215:Core/Src/RC522.c ****     }
+ 1109              		.loc 1 215 9 is_stmt 1 view .LVU283
+ 215:Core/Src/RC522.c ****     }
+ 1110              		.loc 1 215 44 is_stmt 0 view .LVU284
+ 1111 0046 9DF80D30 		ldrb	r3, [sp, #13]	@ zero_extendqisi2
+ 215:Core/Src/RC522.c ****     }
+ARM GAS  /tmp/ccMCXGLW.s 			page 35
+
+
+ 1112              		.loc 1 215 28 view .LVU285
+ 1113 004a 6B70     		strb	r3, [r5, #1]
+ 1114 004c 00E0     		b	.L72
+ 1115              	.L73:
+ 218:Core/Src/RC522.c **** 
+ 1116              		.loc 1 218 17 view .LVU286
+ 1117 004e 0220     		movs	r0, #2
+ 1118              	.L72:
+ 1119              	.LVL119:
+ 220:Core/Src/RC522.c **** }
+ 1120              		.loc 1 220 5 is_stmt 1 view .LVU287
+ 221:Core/Src/RC522.c **** /*
+ 1121              		.loc 1 221 1 is_stmt 0 view .LVU288
+ 1122 0050 09B0     		add	sp, sp, #36
+ 1123              	.LCFI21:
+ 1124              		.cfi_def_cfa_offset 12
+ 1125              		@ sp needed
+ 1126 0052 30BD     		pop	{r4, r5, pc}
+ 221:Core/Src/RC522.c **** /*
+ 1127              		.loc 1 221 1 view .LVU289
+ 1128              		.cfi_endproc
+ 1129              	.LFE71:
+ 1131              		.section	.text.PcdAnticoll,"ax",%progbits
+ 1132              		.align	1
+ 1133              		.global	PcdAnticoll
+ 1134              		.syntax unified
+ 1135              		.thumb
+ 1136              		.thumb_func
+ 1137              		.fpu softvfp
+ 1139              	PcdAnticoll:
+ 1140              	.LVL120:
+ 1141              	.LFB73:
+ 313:Core/Src/RC522.c ****     char cStatus;
+ 1142              		.loc 1 313 1 is_stmt 1 view -0
+ 1143              		.cfi_startproc
+ 1144              		@ args = 0, pretend = 0, frame = 24
+ 1145              		@ frame_needed = 0, uses_anonymous_args = 0
+ 313:Core/Src/RC522.c ****     char cStatus;
+ 1146              		.loc 1 313 1 is_stmt 0 view .LVU291
+ 1147 0000 30B5     		push	{r4, r5, lr}
+ 1148              	.LCFI22:
+ 1149              		.cfi_def_cfa_offset 12
+ 1150              		.cfi_offset 4, -12
+ 1151              		.cfi_offset 5, -8
+ 1152              		.cfi_offset 14, -4
+ 1153 0002 89B0     		sub	sp, sp, #36
+ 1154              	.LCFI23:
+ 1155              		.cfi_def_cfa_offset 48
+ 1156 0004 0446     		mov	r4, r0
+ 314:Core/Src/RC522.c ****     uint8_t uc, ucSnr_check = 0;
+ 1157              		.loc 1 314 5 is_stmt 1 view .LVU292
+ 315:Core/Src/RC522.c ****     uint8_t ucComMF522Buf [ MAXRLEN ];
+ 1158              		.loc 1 315 5 view .LVU293
+ 1159              	.LVL121:
+ 316:Core/Src/RC522.c ****     uint32_t ulLen;
+ 1160              		.loc 1 316 5 view .LVU294
+ 317:Core/Src/RC522.c **** 
+ARM GAS  /tmp/ccMCXGLW.s 			page 36
+
+
+ 1161              		.loc 1 317 5 view .LVU295
+ 319:Core/Src/RC522.c ****     WriteRawRC ( BitFramingReg, 0x00);		//清理寄存器 停止收发
+ 1162              		.loc 1 319 5 view .LVU296
+ 1163 0006 0821     		movs	r1, #8
+ 1164 0008 0846     		mov	r0, r1
+ 1165              	.LVL122:
+ 319:Core/Src/RC522.c ****     WriteRawRC ( BitFramingReg, 0x00);		//清理寄存器 停止收发
+ 1166              		.loc 1 319 5 is_stmt 0 view .LVU297
+ 1167 000a FFF7FEFF 		bl	ClearBitMask
+ 1168              	.LVL123:
+ 320:Core/Src/RC522.c ****     ClearBitMask ( CollReg, 0x80 );			//清ValuesAfterColl所有接收的位在冲突后被清除
+ 1169              		.loc 1 320 5 is_stmt 1 view .LVU298
+ 1170 000e 0021     		movs	r1, #0
+ 1171 0010 0D20     		movs	r0, #13
+ 1172 0012 FFF7FEFF 		bl	WriteRawRC
+ 1173              	.LVL124:
+ 321:Core/Src/RC522.c **** 
+ 1174              		.loc 1 321 5 view .LVU299
+ 1175 0016 8021     		movs	r1, #128
+ 1176 0018 0E20     		movs	r0, #14
+ 1177 001a FFF7FEFF 		bl	ClearBitMask
+ 1178              	.LVL125:
+ 329:Core/Src/RC522.c ****     ucComMF522Buf [ 1 ] = 0x20;
+ 1179              		.loc 1 329 5 view .LVU300
+ 329:Core/Src/RC522.c ****     ucComMF522Buf [ 1 ] = 0x20;
+ 1180              		.loc 1 329 25 is_stmt 0 view .LVU301
+ 1181 001e 9323     		movs	r3, #147
+ 1182 0020 8DF80C30 		strb	r3, [sp, #12]
+ 330:Core/Src/RC522.c **** 
+ 1183              		.loc 1 330 5 is_stmt 1 view .LVU302
+ 330:Core/Src/RC522.c **** 
+ 1184              		.loc 1 330 25 is_stmt 0 view .LVU303
+ 1185 0024 2023     		movs	r3, #32
+ 1186 0026 8DF80D30 		strb	r3, [sp, #13]
+ 333:Core/Src/RC522.c **** 
+ 1187              		.loc 1 333 5 is_stmt 1 view .LVU304
+ 333:Core/Src/RC522.c **** 
+ 1188              		.loc 1 333 15 is_stmt 0 view .LVU305
+ 1189 002a 02AB     		add	r3, sp, #8
+ 1190 002c 0093     		str	r3, [sp]
+ 1191 002e 03AB     		add	r3, sp, #12
+ 1192 0030 0222     		movs	r2, #2
+ 1193 0032 1946     		mov	r1, r3
+ 1194 0034 0C20     		movs	r0, #12
+ 1195 0036 FFF7FEFF 		bl	PcdComMF522
+ 1196              	.LVL126:
+ 335:Core/Src/RC522.c ****     {
+ 1197              		.loc 1 335 5 is_stmt 1 view .LVU306
+ 335:Core/Src/RC522.c ****     {
+ 1198              		.loc 1 335 8 is_stmt 0 view .LVU307
+ 1199 003a 0546     		mov	r5, r0
+ 1200 003c C8B1     		cbz	r0, .L81
+ 1201              	.LVL127:
+ 1202              	.L79:
+ 347:Core/Src/RC522.c ****     return cStatus;
+ 1203              		.loc 1 347 5 is_stmt 1 view .LVU308
+ 1204 003e 8021     		movs	r1, #128
+ARM GAS  /tmp/ccMCXGLW.s 			page 37
+
+
+ 1205 0040 0E20     		movs	r0, #14
+ 1206 0042 FFF7FEFF 		bl	SetBitMask
+ 1207              	.LVL128:
+ 348:Core/Src/RC522.c **** }
+ 1208              		.loc 1 348 5 view .LVU309
+ 349:Core/Src/RC522.c **** 
+ 1209              		.loc 1 349 1 is_stmt 0 view .LVU310
+ 1210 0046 2846     		mov	r0, r5
+ 1211 0048 09B0     		add	sp, sp, #36
+ 1212              	.LCFI24:
+ 1213              		.cfi_remember_state
+ 1214              		.cfi_def_cfa_offset 12
+ 1215              		@ sp needed
+ 1216 004a 30BD     		pop	{r4, r5, pc}
+ 1217              	.LVL129:
+ 1218              	.L80:
+ 1219              	.LCFI25:
+ 1220              		.cfi_restore_state
+ 341:Core/Src/RC522.c ****             ucSnr_check ^= ucComMF522Buf [ uc ];
+ 1221              		.loc 1 341 13 is_stmt 1 discriminator 3 view .LVU311
+ 341:Core/Src/RC522.c ****             ucSnr_check ^= ucComMF522Buf [ uc ];
+ 1222              		.loc 1 341 46 is_stmt 0 discriminator 3 view .LVU312
+ 1223 004c 08A9     		add	r1, sp, #32
+ 1224 004e 1944     		add	r1, r1, r3
+ 1225 0050 11F8141C 		ldrb	r1, [r1, #-20]	@ zero_extendqisi2
+ 341:Core/Src/RC522.c ****             ucSnr_check ^= ucComMF522Buf [ uc ];
+ 1226              		.loc 1 341 30 discriminator 3 view .LVU313
+ 1227 0054 E154     		strb	r1, [r4, r3]
+ 342:Core/Src/RC522.c ****         }
+ 1228              		.loc 1 342 13 is_stmt 1 discriminator 3 view .LVU314
+ 342:Core/Src/RC522.c ****         }
+ 1229              		.loc 1 342 25 is_stmt 0 discriminator 3 view .LVU315
+ 1230 0056 4A40     		eors	r2, r2, r1
+ 1231              	.LVL130:
+ 342:Core/Src/RC522.c ****         }
+ 1232              		.loc 1 342 25 discriminator 3 view .LVU316
+ 1233 0058 D2B2     		uxtb	r2, r2
+ 1234              	.LVL131:
+ 339:Core/Src/RC522.c ****         {
+ 1235              		.loc 1 339 31 is_stmt 1 discriminator 3 view .LVU317
+ 339:Core/Src/RC522.c ****         {
+ 1236              		.loc 1 339 34 is_stmt 0 discriminator 3 view .LVU318
+ 1237 005a 0133     		adds	r3, r3, #1
+ 1238              	.LVL132:
+ 339:Core/Src/RC522.c ****         {
+ 1239              		.loc 1 339 34 discriminator 3 view .LVU319
+ 1240 005c DBB2     		uxtb	r3, r3
+ 1241              	.LVL133:
+ 1242              	.L78:
+ 339:Core/Src/RC522.c ****         {
+ 1243              		.loc 1 339 23 is_stmt 1 discriminator 1 view .LVU320
+ 339:Core/Src/RC522.c ****         {
+ 1244              		.loc 1 339 9 is_stmt 0 discriminator 1 view .LVU321
+ 1245 005e 032B     		cmp	r3, #3
+ 1246 0060 F4D9     		bls	.L80
+ 344:Core/Src/RC522.c ****             cStatus = MI_ERR;
+ 1247              		.loc 1 344 9 is_stmt 1 view .LVU322
+ARM GAS  /tmp/ccMCXGLW.s 			page 38
+
+
+ 344:Core/Src/RC522.c ****             cStatus = MI_ERR;
+ 1248              		.loc 1 344 43 is_stmt 0 view .LVU323
+ 1249 0062 08A9     		add	r1, sp, #32
+ 1250 0064 0B44     		add	r3, r3, r1
+ 1251              	.LVL134:
+ 344:Core/Src/RC522.c ****             cStatus = MI_ERR;
+ 1252              		.loc 1 344 43 view .LVU324
+ 1253 0066 13F8143C 		ldrb	r3, [r3, #-20]	@ zero_extendqisi2
+ 344:Core/Src/RC522.c ****             cStatus = MI_ERR;
+ 1254              		.loc 1 344 12 view .LVU325
+ 1255 006a 9342     		cmp	r3, r2
+ 1256 006c E7D0     		beq	.L79
+ 345:Core/Src/RC522.c ****     }
+ 1257              		.loc 1 345 21 view .LVU326
+ 1258 006e 0225     		movs	r5, #2
+ 1259 0070 E5E7     		b	.L79
+ 1260              	.LVL135:
+ 1261              	.L81:
+ 315:Core/Src/RC522.c ****     uint8_t ucComMF522Buf [ MAXRLEN ];
+ 1262              		.loc 1 315 17 view .LVU327
+ 1263 0072 0246     		mov	r2, r0
+ 339:Core/Src/RC522.c ****         {
+ 1264              		.loc 1 339 18 view .LVU328
+ 1265 0074 0346     		mov	r3, r0
+ 1266 0076 F2E7     		b	.L78
+ 1267              		.cfi_endproc
+ 1268              	.LFE73:
+ 1270              		.section	.text.CalulateCRC,"ax",%progbits
+ 1271              		.align	1
+ 1272              		.global	CalulateCRC
+ 1273              		.syntax unified
+ 1274              		.thumb
+ 1275              		.thumb_func
+ 1276              		.fpu softvfp
+ 1278              	CalulateCRC:
+ 1279              	.LVL136:
+ 1280              	.LFB77:
+ 446:Core/Src/RC522.c ****     uint8_t uc, ucN;
+ 1281              		.loc 1 446 1 is_stmt 1 view -0
+ 1282              		.cfi_startproc
+ 1283              		@ args = 0, pretend = 0, frame = 0
+ 1284              		@ frame_needed = 0, uses_anonymous_args = 0
+ 446:Core/Src/RC522.c ****     uint8_t uc, ucN;
+ 1285              		.loc 1 446 1 is_stmt 0 view .LVU330
+ 1286 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 1287              	.LCFI26:
+ 1288              		.cfi_def_cfa_offset 24
+ 1289              		.cfi_offset 3, -24
+ 1290              		.cfi_offset 4, -20
+ 1291              		.cfi_offset 5, -16
+ 1292              		.cfi_offset 6, -12
+ 1293              		.cfi_offset 7, -8
+ 1294              		.cfi_offset 14, -4
+ 1295 0002 0746     		mov	r7, r0
+ 1296 0004 0D46     		mov	r5, r1
+ 1297 0006 1646     		mov	r6, r2
+ 447:Core/Src/RC522.c **** 
+ARM GAS  /tmp/ccMCXGLW.s 			page 39
+
+
+ 1298              		.loc 1 447 5 is_stmt 1 view .LVU331
+ 449:Core/Src/RC522.c **** 	
+ 1299              		.loc 1 449 5 view .LVU332
+ 1300 0008 0421     		movs	r1, #4
+ 1301              	.LVL137:
+ 449:Core/Src/RC522.c **** 	
+ 1302              		.loc 1 449 5 is_stmt 0 view .LVU333
+ 1303 000a 0520     		movs	r0, #5
+ 1304              	.LVL138:
+ 449:Core/Src/RC522.c **** 	
+ 1305              		.loc 1 449 5 view .LVU334
+ 1306 000c FFF7FEFF 		bl	ClearBitMask
+ 1307              	.LVL139:
+ 451:Core/Src/RC522.c **** 	
+ 1308              		.loc 1 451 5 is_stmt 1 view .LVU335
+ 1309 0010 0021     		movs	r1, #0
+ 1310 0012 0120     		movs	r0, #1
+ 1311 0014 FFF7FEFF 		bl	WriteRawRC
+ 1312              	.LVL140:
+ 453:Core/Src/RC522.c **** 	
+ 1313              		.loc 1 453 5 view .LVU336
+ 1314 0018 8021     		movs	r1, #128
+ 1315 001a 0A20     		movs	r0, #10
+ 1316 001c FFF7FEFF 		bl	SetBitMask
+ 1317              	.LVL141:
+ 455:Core/Src/RC522.c **** 	    WriteRawRC ( FIFODataReg, * ( pIndata + uc ) );   
+ 1318              		.loc 1 455 5 view .LVU337
+ 455:Core/Src/RC522.c **** 	    WriteRawRC ( FIFODataReg, * ( pIndata + uc ) );   
+ 1319              		.loc 1 455 14 is_stmt 0 view .LVU338
+ 1320 0020 0024     		movs	r4, #0
+ 455:Core/Src/RC522.c **** 	    WriteRawRC ( FIFODataReg, * ( pIndata + uc ) );   
+ 1321              		.loc 1 455 5 view .LVU339
+ 1322 0022 05E0     		b	.L85
+ 1323              	.LVL142:
+ 1324              	.L86:
+ 456:Core/Src/RC522.c **** 
+ 1325              		.loc 1 456 6 is_stmt 1 discriminator 3 view .LVU340
+ 1326 0024 395D     		ldrb	r1, [r7, r4]	@ zero_extendqisi2
+ 1327 0026 0920     		movs	r0, #9
+ 1328 0028 FFF7FEFF 		bl	WriteRawRC
+ 1329              	.LVL143:
+ 455:Core/Src/RC522.c **** 	    WriteRawRC ( FIFODataReg, * ( pIndata + uc ) );   
+ 1330              		.loc 1 455 31 discriminator 3 view .LVU341
+ 455:Core/Src/RC522.c **** 	    WriteRawRC ( FIFODataReg, * ( pIndata + uc ) );   
+ 1331              		.loc 1 455 34 is_stmt 0 discriminator 3 view .LVU342
+ 1332 002c 0134     		adds	r4, r4, #1
+ 1333              	.LVL144:
+ 455:Core/Src/RC522.c **** 	    WriteRawRC ( FIFODataReg, * ( pIndata + uc ) );   
+ 1334              		.loc 1 455 34 discriminator 3 view .LVU343
+ 1335 002e E4B2     		uxtb	r4, r4
+ 1336              	.LVL145:
+ 1337              	.L85:
+ 455:Core/Src/RC522.c **** 	    WriteRawRC ( FIFODataReg, * ( pIndata + uc ) );   
+ 1338              		.loc 1 455 19 is_stmt 1 discriminator 1 view .LVU344
+ 455:Core/Src/RC522.c **** 	    WriteRawRC ( FIFODataReg, * ( pIndata + uc ) );   
+ 1339              		.loc 1 455 5 is_stmt 0 discriminator 1 view .LVU345
+ 1340 0030 AC42     		cmp	r4, r5
+ARM GAS  /tmp/ccMCXGLW.s 			page 40
+
+
+ 1341 0032 F7D3     		bcc	.L86
+ 458:Core/Src/RC522.c **** 	
+ 1342              		.loc 1 458 5 is_stmt 1 view .LVU346
+ 1343 0034 0321     		movs	r1, #3
+ 1344 0036 0120     		movs	r0, #1
+ 1345 0038 FFF7FEFF 		bl	WriteRawRC
+ 1346              	.LVL146:
+ 460:Core/Src/RC522.c **** 	
+ 1347              		.loc 1 460 5 view .LVU347
+ 460:Core/Src/RC522.c **** 	
+ 1348              		.loc 1 460 8 is_stmt 0 view .LVU348
+ 1349 003c FF24     		movs	r4, #255
+ 1350              	.LVL147:
+ 1351              	.L88:
+ 462:Core/Src/RC522.c ****     {
+ 1352              		.loc 1 462 5 is_stmt 1 discriminator 2 view .LVU349
+ 464:Core/Src/RC522.c ****         uc --;
+ 1353              		.loc 1 464 9 discriminator 2 view .LVU350
+ 464:Core/Src/RC522.c ****         uc --;
+ 1354              		.loc 1 464 15 is_stmt 0 discriminator 2 view .LVU351
+ 1355 003e 0520     		movs	r0, #5
+ 1356 0040 FFF7FEFF 		bl	ReadRawRC
+ 1357              	.LVL148:
+ 465:Core/Src/RC522.c ****     } while ( ( uc != 0 ) && ! ( ucN & 0x04 ) );
+ 1358              		.loc 1 465 9 is_stmt 1 discriminator 2 view .LVU352
+ 465:Core/Src/RC522.c ****     } while ( ( uc != 0 ) && ! ( ucN & 0x04 ) );
+ 1359              		.loc 1 465 12 is_stmt 0 discriminator 2 view .LVU353
+ 1360 0044 631E     		subs	r3, r4, #1
+ 1361              	.LVL149:
+ 466:Core/Src/RC522.c **** 		
+ 1362              		.loc 1 466 13 is_stmt 1 discriminator 2 view .LVU354
+ 466:Core/Src/RC522.c **** 		
+ 1363              		.loc 1 466 5 is_stmt 0 discriminator 2 view .LVU355
+ 1364 0046 13F0FF04 		ands	r4, r3, #255
+ 1365 004a 02D0     		beq	.L87
+ 466:Core/Src/RC522.c **** 		
+ 1366              		.loc 1 466 27 discriminator 1 view .LVU356
+ 1367 004c 10F0040F 		tst	r0, #4
+ 1368 0050 F5D0     		beq	.L88
+ 1369              	.L87:
+ 468:Core/Src/RC522.c ****     pOutData [ 1 ] = ReadRawRC ( CRCResultRegM );
+ 1370              		.loc 1 468 5 is_stmt 1 view .LVU357
+ 468:Core/Src/RC522.c ****     pOutData [ 1 ] = ReadRawRC ( CRCResultRegM );
+ 1371              		.loc 1 468 22 is_stmt 0 view .LVU358
+ 1372 0052 2220     		movs	r0, #34
+ 1373              	.LVL150:
+ 468:Core/Src/RC522.c ****     pOutData [ 1 ] = ReadRawRC ( CRCResultRegM );
+ 1374              		.loc 1 468 22 view .LVU359
+ 1375 0054 FFF7FEFF 		bl	ReadRawRC
+ 1376              	.LVL151:
+ 468:Core/Src/RC522.c ****     pOutData [ 1 ] = ReadRawRC ( CRCResultRegM );
+ 1377              		.loc 1 468 20 view .LVU360
+ 1378 0058 3070     		strb	r0, [r6]
+ 469:Core/Src/RC522.c **** 	
+ 1379              		.loc 1 469 5 is_stmt 1 view .LVU361
+ 469:Core/Src/RC522.c **** 	
+ 1380              		.loc 1 469 22 is_stmt 0 view .LVU362
+ARM GAS  /tmp/ccMCXGLW.s 			page 41
+
+
+ 1381 005a 2120     		movs	r0, #33
+ 1382 005c FFF7FEFF 		bl	ReadRawRC
+ 1383              	.LVL152:
+ 469:Core/Src/RC522.c **** 	
+ 1384              		.loc 1 469 20 view .LVU363
+ 1385 0060 7070     		strb	r0, [r6, #1]
+ 471:Core/Src/RC522.c **** 
+ 1386              		.loc 1 471 1 view .LVU364
+ 1387 0062 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 471:Core/Src/RC522.c **** 
+ 1388              		.loc 1 471 1 view .LVU365
+ 1389              		.cfi_endproc
+ 1390              	.LFE77:
+ 1392              		.section	.text.PcdRead,"ax",%progbits
+ 1393              		.align	1
+ 1394              		.global	PcdRead
+ 1395              		.syntax unified
+ 1396              		.thumb
+ 1397              		.thumb_func
+ 1398              		.fpu softvfp
+ 1400              	PcdRead:
+ 1401              	.LVL153:
+ 1402              	.LFB78:
+ 480:Core/Src/RC522.c **** 	char cStatus;
+ 1403              		.loc 1 480 1 is_stmt 1 view -0
+ 1404              		.cfi_startproc
+ 1405              		@ args = 0, pretend = 0, frame = 24
+ 1406              		@ frame_needed = 0, uses_anonymous_args = 0
+ 480:Core/Src/RC522.c **** 	char cStatus;
+ 1407              		.loc 1 480 1 is_stmt 0 view .LVU367
+ 1408 0000 10B5     		push	{r4, lr}
+ 1409              	.LCFI27:
+ 1410              		.cfi_def_cfa_offset 8
+ 1411              		.cfi_offset 4, -8
+ 1412              		.cfi_offset 14, -4
+ 1413 0002 88B0     		sub	sp, sp, #32
+ 1414              	.LCFI28:
+ 1415              		.cfi_def_cfa_offset 40
+ 1416 0004 0C46     		mov	r4, r1
+ 481:Core/Src/RC522.c **** 	uint8_t uc, ucComMF522Buf [ MAXRLEN ]; 
+ 1417              		.loc 1 481 2 is_stmt 1 view .LVU368
+ 482:Core/Src/RC522.c **** 	uint32_t ulLen;
+ 1418              		.loc 1 482 2 view .LVU369
+ 483:Core/Src/RC522.c **** 	
+ 1419              		.loc 1 483 2 view .LVU370
+ 485:Core/Src/RC522.c **** 	ucComMF522Buf [ 1 ] = ucAddr;
+ 1420              		.loc 1 485 2 view .LVU371
+ 485:Core/Src/RC522.c **** 	ucComMF522Buf [ 1 ] = ucAddr;
+ 1421              		.loc 1 485 22 is_stmt 0 view .LVU372
+ 1422 0006 3023     		movs	r3, #48
+ 1423 0008 8DF80C30 		strb	r3, [sp, #12]
+ 486:Core/Src/RC522.c **** 	
+ 1424              		.loc 1 486 2 is_stmt 1 view .LVU373
+ 486:Core/Src/RC522.c **** 	
+ 1425              		.loc 1 486 22 is_stmt 0 view .LVU374
+ 1426 000c 8DF80D00 		strb	r0, [sp, #13]
+ 488:Core/Src/RC522.c **** 	
+ARM GAS  /tmp/ccMCXGLW.s 			page 42
+
+
+ 1427              		.loc 1 488 2 is_stmt 1 view .LVU375
+ 1428 0010 0DF10E02 		add	r2, sp, #14
+ 1429 0014 0221     		movs	r1, #2
+ 1430              	.LVL154:
+ 488:Core/Src/RC522.c **** 	
+ 1431              		.loc 1 488 2 is_stmt 0 view .LVU376
+ 1432 0016 03A8     		add	r0, sp, #12
+ 1433              	.LVL155:
+ 488:Core/Src/RC522.c **** 	
+ 1434              		.loc 1 488 2 view .LVU377
+ 1435 0018 FFF7FEFF 		bl	CalulateCRC
+ 1436              	.LVL156:
+ 490:Core/Src/RC522.c **** 	
+ 1437              		.loc 1 490 2 is_stmt 1 view .LVU378
+ 490:Core/Src/RC522.c **** 	
+ 1438              		.loc 1 490 12 is_stmt 0 view .LVU379
+ 1439 001c 02AB     		add	r3, sp, #8
+ 1440 001e 0093     		str	r3, [sp]
+ 1441 0020 03AB     		add	r3, sp, #12
+ 1442 0022 0422     		movs	r2, #4
+ 1443 0024 1946     		mov	r1, r3
+ 1444 0026 0C20     		movs	r0, #12
+ 1445 0028 FFF7FEFF 		bl	PcdComMF522
+ 1446              	.LVL157:
+ 492:Core/Src/RC522.c **** 	{
+ 1447              		.loc 1 492 2 is_stmt 1 view .LVU380
+ 492:Core/Src/RC522.c **** 	{
+ 1448              		.loc 1 492 5 is_stmt 0 view .LVU381
+ 1449 002c 80B9     		cbnz	r0, .L94
+ 492:Core/Src/RC522.c **** 	{
+ 1450              		.loc 1 492 35 discriminator 1 view .LVU382
+ 1451 002e 029B     		ldr	r3, [sp, #8]
+ 492:Core/Src/RC522.c **** 	{
+ 1452              		.loc 1 492 25 discriminator 1 view .LVU383
+ 1453 0030 902B     		cmp	r3, #144
+ 1454 0032 0BD0     		beq	.L95
+ 498:Core/Src/RC522.c **** 	return cStatus;
+ 1455              		.loc 1 498 11 view .LVU384
+ 1456 0034 0220     		movs	r0, #2
+ 1457 0036 0CE0     		b	.L91
+ 1458              	.LVL158:
+ 1459              	.L93:
+ 495:Core/Src/RC522.c **** 	}
+ 1460              		.loc 1 495 4 is_stmt 1 discriminator 3 view .LVU385
+ 495:Core/Src/RC522.c **** 	}
+ 1461              		.loc 1 495 33 is_stmt 0 discriminator 3 view .LVU386
+ 1462 0038 08AA     		add	r2, sp, #32
+ 1463 003a 1A44     		add	r2, r2, r3
+ 1464 003c 12F8142C 		ldrb	r2, [r2, #-20]	@ zero_extendqisi2
+ 495:Core/Src/RC522.c **** 	}
+ 1465              		.loc 1 495 18 discriminator 3 view .LVU387
+ 1466 0040 E254     		strb	r2, [r4, r3]
+ 494:Core/Src/RC522.c **** 			*(pData + uc) = ucComMF522Buf[uc];   
+ 1467              		.loc 1 494 25 is_stmt 1 discriminator 3 view .LVU388
+ 494:Core/Src/RC522.c **** 			*(pData + uc) = ucComMF522Buf[uc];   
+ 1468              		.loc 1 494 28 is_stmt 0 discriminator 3 view .LVU389
+ 1469 0042 0133     		adds	r3, r3, #1
+ARM GAS  /tmp/ccMCXGLW.s 			page 43
+
+
+ 1470              	.LVL159:
+ 494:Core/Src/RC522.c **** 			*(pData + uc) = ucComMF522Buf[uc];   
+ 1471              		.loc 1 494 28 discriminator 3 view .LVU390
+ 1472 0044 DBB2     		uxtb	r3, r3
+ 1473              	.LVL160:
+ 1474              	.L92:
+ 494:Core/Src/RC522.c **** 			*(pData + uc) = ucComMF522Buf[uc];   
+ 1475              		.loc 1 494 16 is_stmt 1 discriminator 1 view .LVU391
+ 494:Core/Src/RC522.c **** 			*(pData + uc) = ucComMF522Buf[uc];   
+ 1476              		.loc 1 494 3 is_stmt 0 discriminator 1 view .LVU392
+ 1477 0046 0F2B     		cmp	r3, #15
+ 1478 0048 F6D9     		bls	.L93
+ 1479 004a 02E0     		b	.L91
+ 1480              	.LVL161:
+ 1481              	.L95:
+ 494:Core/Src/RC522.c **** 			*(pData + uc) = ucComMF522Buf[uc];   
+ 1482              		.loc 1 494 11 view .LVU393
+ 1483 004c 0346     		mov	r3, r0
+ 1484 004e FAE7     		b	.L92
+ 1485              	.L94:
+ 498:Core/Src/RC522.c **** 	return cStatus;
+ 1486              		.loc 1 498 11 view .LVU394
+ 1487 0050 0220     		movs	r0, #2
+ 1488              	.L91:
+ 1489              	.LVL162:
+ 499:Core/Src/RC522.c **** }
+ 1490              		.loc 1 499 2 is_stmt 1 view .LVU395
+ 500:Core/Src/RC522.c **** 
+ 1491              		.loc 1 500 1 is_stmt 0 view .LVU396
+ 1492 0052 08B0     		add	sp, sp, #32
+ 1493              	.LCFI29:
+ 1494              		.cfi_def_cfa_offset 8
+ 1495              		@ sp needed
+ 1496 0054 10BD     		pop	{r4, pc}
+ 500:Core/Src/RC522.c **** 
+ 1497              		.loc 1 500 1 view .LVU397
+ 1498              		.cfi_endproc
+ 1499              	.LFE78:
+ 1501              		.section	.text.PcdWrite,"ax",%progbits
+ 1502              		.align	1
+ 1503              		.global	PcdWrite
+ 1504              		.syntax unified
+ 1505              		.thumb
+ 1506              		.thumb_func
+ 1507              		.fpu softvfp
+ 1509              	PcdWrite:
+ 1510              	.LVL163:
+ 1511              	.LFB79:
+ 509:Core/Src/RC522.c **** 	char cStatus;
+ 1512              		.loc 1 509 1 is_stmt 1 view -0
+ 1513              		.cfi_startproc
+ 1514              		@ args = 0, pretend = 0, frame = 24
+ 1515              		@ frame_needed = 0, uses_anonymous_args = 0
+ 509:Core/Src/RC522.c **** 	char cStatus;
+ 1516              		.loc 1 509 1 is_stmt 0 view .LVU399
+ 1517 0000 10B5     		push	{r4, lr}
+ 1518              	.LCFI30:
+ARM GAS  /tmp/ccMCXGLW.s 			page 44
+
+
+ 1519              		.cfi_def_cfa_offset 8
+ 1520              		.cfi_offset 4, -8
+ 1521              		.cfi_offset 14, -4
+ 1522 0002 88B0     		sub	sp, sp, #32
+ 1523              	.LCFI31:
+ 1524              		.cfi_def_cfa_offset 40
+ 1525 0004 0C46     		mov	r4, r1
+ 510:Core/Src/RC522.c **** 	uint8_t uc, ucComMF522Buf [ MAXRLEN ];
+ 1526              		.loc 1 510 2 is_stmt 1 view .LVU400
+ 511:Core/Src/RC522.c **** 	uint32_t ulLen;
+ 1527              		.loc 1 511 2 view .LVU401
+ 512:Core/Src/RC522.c **** 	
+ 1528              		.loc 1 512 2 view .LVU402
+ 514:Core/Src/RC522.c **** 	ucComMF522Buf [ 1 ] = ucAddr;
+ 1529              		.loc 1 514 2 view .LVU403
+ 514:Core/Src/RC522.c **** 	ucComMF522Buf [ 1 ] = ucAddr;
+ 1530              		.loc 1 514 22 is_stmt 0 view .LVU404
+ 1531 0006 A023     		movs	r3, #160
+ 1532 0008 8DF80C30 		strb	r3, [sp, #12]
+ 515:Core/Src/RC522.c **** 	
+ 1533              		.loc 1 515 2 is_stmt 1 view .LVU405
+ 515:Core/Src/RC522.c **** 	
+ 1534              		.loc 1 515 22 is_stmt 0 view .LVU406
+ 1535 000c 8DF80D00 		strb	r0, [sp, #13]
+ 517:Core/Src/RC522.c **** 	cStatus = PcdComMF522 ( PCD_TRANSCEIVE, ucComMF522Buf, 4, ucComMF522Buf, & ulLen );
+ 1536              		.loc 1 517 2 is_stmt 1 view .LVU407
+ 1537 0010 0DF10E02 		add	r2, sp, #14
+ 1538 0014 0221     		movs	r1, #2
+ 1539              	.LVL164:
+ 517:Core/Src/RC522.c **** 	cStatus = PcdComMF522 ( PCD_TRANSCEIVE, ucComMF522Buf, 4, ucComMF522Buf, & ulLen );
+ 1540              		.loc 1 517 2 is_stmt 0 view .LVU408
+ 1541 0016 03A8     		add	r0, sp, #12
+ 1542              	.LVL165:
+ 517:Core/Src/RC522.c **** 	cStatus = PcdComMF522 ( PCD_TRANSCEIVE, ucComMF522Buf, 4, ucComMF522Buf, & ulLen );
+ 1543              		.loc 1 517 2 view .LVU409
+ 1544 0018 FFF7FEFF 		bl	CalulateCRC
+ 1545              	.LVL166:
+ 518:Core/Src/RC522.c **** 	
+ 1546              		.loc 1 518 2 is_stmt 1 view .LVU410
+ 518:Core/Src/RC522.c **** 	
+ 1547              		.loc 1 518 12 is_stmt 0 view .LVU411
+ 1548 001c 02AB     		add	r3, sp, #8
+ 1549 001e 0093     		str	r3, [sp]
+ 1550 0020 03AB     		add	r3, sp, #12
+ 1551 0022 0422     		movs	r2, #4
+ 1552 0024 1946     		mov	r1, r3
+ 1553 0026 0C20     		movs	r0, #12
+ 1554 0028 FFF7FEFF 		bl	PcdComMF522
+ 1555              	.LVL167:
+ 520:Core/Src/RC522.c **** 		cStatus = MI_ERR;   
+ 1556              		.loc 1 520 2 is_stmt 1 view .LVU412
+ 520:Core/Src/RC522.c **** 		cStatus = MI_ERR;   
+ 1557              		.loc 1 520 5 is_stmt 0 view .LVU413
+ 1558 002c 0028     		cmp	r0, #0
+ 1559 002e 3ED1     		bne	.L101
+ 1560 0030 8446     		mov	ip, r0
+ 520:Core/Src/RC522.c **** 		cStatus = MI_ERR;   
+ARM GAS  /tmp/ccMCXGLW.s 			page 45
+
+
+ 1561              		.loc 1 520 39 discriminator 1 view .LVU414
+ 1562 0032 029B     		ldr	r3, [sp, #8]
+ 520:Core/Src/RC522.c **** 		cStatus = MI_ERR;   
+ 1563              		.loc 1 520 28 discriminator 1 view .LVU415
+ 1564 0034 042B     		cmp	r3, #4
+ 1565 0036 01D0     		beq	.L108
+ 521:Core/Src/RC522.c **** 	if ( cStatus == MI_OK )
+ 1566              		.loc 1 521 11 view .LVU416
+ 1567 0038 0220     		movs	r0, #2
+ 1568              	.LVL168:
+ 521:Core/Src/RC522.c **** 	if ( cStatus == MI_OK )
+ 1569              		.loc 1 521 11 view .LVU417
+ 1570 003a 39E0     		b	.L98
+ 1571              	.LVL169:
+ 1572              	.L108:
+ 520:Core/Src/RC522.c **** 		cStatus = MI_ERR;   
+ 1573              		.loc 1 520 67 discriminator 2 view .LVU418
+ 1574 003c 9DF80C30 		ldrb	r3, [sp, #12]	@ zero_extendqisi2
+ 520:Core/Src/RC522.c **** 		cStatus = MI_ERR;   
+ 1575              		.loc 1 520 46 discriminator 2 view .LVU419
+ 1576 0040 03F00F03 		and	r3, r3, #15
+ 1577 0044 0A2B     		cmp	r3, #10
+ 1578 0046 01D0     		beq	.L109
+ 521:Core/Src/RC522.c **** 	if ( cStatus == MI_OK )
+ 1579              		.loc 1 521 11 view .LVU420
+ 1580 0048 0220     		movs	r0, #2
+ 1581              	.LVL170:
+ 521:Core/Src/RC522.c **** 	if ( cStatus == MI_OK )
+ 1582              		.loc 1 521 11 view .LVU421
+ 1583 004a 31E0     		b	.L98
+ 1584              	.LVL171:
+ 1585              	.L109:
+ 522:Core/Src/RC522.c **** 	{
+ 1586              		.loc 1 522 2 is_stmt 1 view .LVU422
+ 524:Core/Src/RC522.c **** 		for ( uc = 0; uc < 16; uc ++ )
+ 1587              		.loc 1 524 3 view .LVU423
+ 1588 004c 0DF10C0E 		add	lr, sp, #12
+ 1589 0050 2068     		ldr	r0, [r4]	@ unaligned
+ 1590 0052 6168     		ldr	r1, [r4, #4]	@ unaligned
+ 1591 0054 A268     		ldr	r2, [r4, #8]	@ unaligned
+ 1592 0056 E368     		ldr	r3, [r4, #12]	@ unaligned
+ 1593 0058 AEE80F00 		stmia	lr!, {r0, r1, r2, r3}
+ 525:Core/Src/RC522.c **** 			ucComMF522Buf [ uc ] = * ( pData + uc );  
+ 1594              		.loc 1 525 3 view .LVU424
+ 1595              	.LVL172:
+ 525:Core/Src/RC522.c **** 			ucComMF522Buf [ uc ] = * ( pData + uc );  
+ 1596              		.loc 1 525 3 is_stmt 0 view .LVU425
+ 1597 005c 09E0     		b	.L99
+ 1598              	.LVL173:
+ 1599              	.L100:
+ 526:Core/Src/RC522.c **** 		CalulateCRC ( ucComMF522Buf, 16, & ucComMF522Buf [ 16 ] );
+ 1600              		.loc 1 526 4 is_stmt 1 discriminator 3 view .LVU426
+ 526:Core/Src/RC522.c **** 		CalulateCRC ( ucComMF522Buf, 16, & ucComMF522Buf [ 16 ] );
+ 1601              		.loc 1 526 27 is_stmt 0 discriminator 3 view .LVU427
+ 1602 005e 14F80C20 		ldrb	r2, [r4, ip]	@ zero_extendqisi2
+ 526:Core/Src/RC522.c **** 		CalulateCRC ( ucComMF522Buf, 16, & ucComMF522Buf [ 16 ] );
+ 1603              		.loc 1 526 25 discriminator 3 view .LVU428
+ARM GAS  /tmp/ccMCXGLW.s 			page 46
+
+
+ 1604 0062 08AB     		add	r3, sp, #32
+ 1605 0064 6344     		add	r3, r3, ip
+ 1606 0066 03F8142C 		strb	r2, [r3, #-20]
+ 525:Core/Src/RC522.c **** 			ucComMF522Buf [ uc ] = * ( pData + uc );  
+ 1607              		.loc 1 525 26 is_stmt 1 discriminator 3 view .LVU429
+ 525:Core/Src/RC522.c **** 			ucComMF522Buf [ uc ] = * ( pData + uc );  
+ 1608              		.loc 1 525 29 is_stmt 0 discriminator 3 view .LVU430
+ 1609 006a 0CF1010C 		add	ip, ip, #1
+ 1610              	.LVL174:
+ 525:Core/Src/RC522.c **** 			ucComMF522Buf [ uc ] = * ( pData + uc );  
+ 1611              		.loc 1 525 29 discriminator 3 view .LVU431
+ 1612 006e 5FFA8CFC 		uxtb	ip, ip
+ 1613              	.LVL175:
+ 1614              	.L99:
+ 525:Core/Src/RC522.c **** 			ucComMF522Buf [ uc ] = * ( pData + uc );  
+ 1615              		.loc 1 525 17 is_stmt 1 discriminator 1 view .LVU432
+ 525:Core/Src/RC522.c **** 			ucComMF522Buf [ uc ] = * ( pData + uc );  
+ 1616              		.loc 1 525 3 is_stmt 0 discriminator 1 view .LVU433
+ 1617 0072 BCF10F0F 		cmp	ip, #15
+ 1618 0076 F2D9     		bls	.L100
+ 527:Core/Src/RC522.c **** 		cStatus = PcdComMF522 ( PCD_TRANSCEIVE, ucComMF522Buf, 18, ucComMF522Buf, & ulLen );
+ 1619              		.loc 1 527 3 is_stmt 1 view .LVU434
+ 1620 0078 07AA     		add	r2, sp, #28
+ 1621 007a 1021     		movs	r1, #16
+ 1622 007c 03A8     		add	r0, sp, #12
+ 1623 007e FFF7FEFF 		bl	CalulateCRC
+ 1624              	.LVL176:
+ 528:Core/Src/RC522.c **** 		if (( cStatus != MI_OK ) || ( ulLen != 4 ) || (( ucComMF522Buf [0] & 0x0F ) != 0x0A ))
+ 1625              		.loc 1 528 3 view .LVU435
+ 528:Core/Src/RC522.c **** 		if (( cStatus != MI_OK ) || ( ulLen != 4 ) || (( ucComMF522Buf [0] & 0x0F ) != 0x0A ))
+ 1626              		.loc 1 528 13 is_stmt 0 view .LVU436
+ 1627 0082 02AB     		add	r3, sp, #8
+ 1628 0084 0093     		str	r3, [sp]
+ 1629 0086 03AB     		add	r3, sp, #12
+ 1630 0088 1222     		movs	r2, #18
+ 1631 008a 1946     		mov	r1, r3
+ 1632 008c 0C20     		movs	r0, #12
+ 1633 008e FFF7FEFF 		bl	PcdComMF522
+ 1634              	.LVL177:
+ 529:Core/Src/RC522.c **** 			cStatus = MI_ERR;   
+ 1635              		.loc 1 529 3 is_stmt 1 view .LVU437
+ 529:Core/Src/RC522.c **** 			cStatus = MI_ERR;   
+ 1636              		.loc 1 529 6 is_stmt 0 view .LVU438
+ 1637 0092 78B9     		cbnz	r0, .L104
+ 529:Core/Src/RC522.c **** 			cStatus = MI_ERR;   
+ 1638              		.loc 1 529 39 discriminator 1 view .LVU439
+ 1639 0094 029B     		ldr	r3, [sp, #8]
+ 529:Core/Src/RC522.c **** 			cStatus = MI_ERR;   
+ 1640              		.loc 1 529 28 discriminator 1 view .LVU440
+ 1641 0096 042B     		cmp	r3, #4
+ 1642 0098 01D0     		beq	.L110
+ 530:Core/Src/RC522.c **** 	} 
+ 1643              		.loc 1 530 12 view .LVU441
+ 1644 009a 0220     		movs	r0, #2
+ 1645              	.LVL178:
+ 530:Core/Src/RC522.c **** 	} 
+ 1646              		.loc 1 530 12 view .LVU442
+ARM GAS  /tmp/ccMCXGLW.s 			page 47
+
+
+ 1647 009c 08E0     		b	.L98
+ 1648              	.LVL179:
+ 1649              	.L110:
+ 529:Core/Src/RC522.c **** 			cStatus = MI_ERR;   
+ 1650              		.loc 1 529 66 discriminator 2 view .LVU443
+ 1651 009e 9DF80C30 		ldrb	r3, [sp, #12]	@ zero_extendqisi2
+ 529:Core/Src/RC522.c **** 			cStatus = MI_ERR;   
+ 1652              		.loc 1 529 46 discriminator 2 view .LVU444
+ 1653 00a2 03F00F03 		and	r3, r3, #15
+ 1654 00a6 0A2B     		cmp	r3, #10
+ 1655 00a8 02D0     		beq	.L98
+ 530:Core/Src/RC522.c **** 	} 
+ 1656              		.loc 1 530 12 view .LVU445
+ 1657 00aa 0220     		movs	r0, #2
+ 1658              	.LVL180:
+ 530:Core/Src/RC522.c **** 	} 
+ 1659              		.loc 1 530 12 view .LVU446
+ 1660 00ac 00E0     		b	.L98
+ 1661              	.LVL181:
+ 1662              	.L101:
+ 521:Core/Src/RC522.c **** 	if ( cStatus == MI_OK )
+ 1663              		.loc 1 521 11 view .LVU447
+ 1664 00ae 0220     		movs	r0, #2
+ 1665              	.LVL182:
+ 1666              	.L98:
+ 532:Core/Src/RC522.c **** }
+ 1667              		.loc 1 532 2 is_stmt 1 view .LVU448
+ 533:Core/Src/RC522.c **** 
+ 1668              		.loc 1 533 1 is_stmt 0 view .LVU449
+ 1669 00b0 08B0     		add	sp, sp, #32
+ 1670              	.LCFI32:
+ 1671              		.cfi_remember_state
+ 1672              		.cfi_def_cfa_offset 8
+ 1673              		@ sp needed
+ 1674 00b2 10BD     		pop	{r4, pc}
+ 1675              	.LVL183:
+ 1676              	.L104:
+ 1677              	.LCFI33:
+ 1678              		.cfi_restore_state
+ 530:Core/Src/RC522.c **** 	} 
+ 1679              		.loc 1 530 12 view .LVU450
+ 1680 00b4 0220     		movs	r0, #2
+ 1681              	.LVL184:
+ 530:Core/Src/RC522.c **** 	} 
+ 1682              		.loc 1 530 12 view .LVU451
+ 1683 00b6 FBE7     		b	.L98
+ 1684              		.cfi_endproc
+ 1685              	.LFE79:
+ 1687              		.section	.rodata.RC522_Handle.str1.4,"aMS",%progbits,1
+ 1688              		.align	2
+ 1689              	.LC1:
+ 1690 0000 52464944 		.ascii	"RFID:%s\015\012\000"
+ 1690      3A25730D 
+ 1690      0A00
+ 1691 000a 0000     		.align	2
+ 1692              	.LC2:
+ 1693 000c 44415441 		.ascii	"DATA:\000"
+ARM GAS  /tmp/ccMCXGLW.s 			page 48
+
+
+ 1693      3A00
+ 1694 0012 0000     		.align	2
+ 1695              	.LC3:
+ 1696 0014 25303278 		.ascii	"%02x\000"
+ 1696      00
+ 1697 0019 000000   		.align	2
+ 1698              	.LC4:
+ 1699 001c 0D00     		.ascii	"\015\000"
+ 1700 001e 0000     		.align	2
+ 1701              	.LC5:
+ 1702 0020 E4B880E7 		.ascii	"\344\270\200\347\247\222\345\220\216\345\274\200\345"
+ 1702      A792E590 
+ 1702      8EE5BC80 
+ 1702      E5
+ 1703 002d A78BE586 		.ascii	"\247\213\345\206\231\345\215\241\357\274\214\350\257"
+ 1703      99E58DA1 
+ 1703      EFBC8CE8 
+ 1703      AF
+ 1704 003a B7E58BBF 		.ascii	"\267\345\213\277\347\247\273\345\274\200\345\215\241"
+ 1704      E7A7BBE5 
+ 1704      BC80E58D 
+ 1704      A1
+ 1705 0047 E78987EF 		.ascii	"\347\211\207\357\274\201\357\274\201\015\000"
+ 1705      BC81EFBC 
+ 1705      810D00
+ 1706 0052 0000     		.align	2
+ 1707              	.LC6:
+ 1708 0054 50636457 		.ascii	"PcdWrite() success\015\000"
+ 1708      72697465 
+ 1708      28292073 
+ 1708      75636365 
+ 1708      73730D00 
+ 1709              		.align	2
+ 1710              	.LC7:
+ 1711 0068 50636457 		.ascii	"PcdWrite() failed\015\000"
+ 1711      72697465 
+ 1711      28292066 
+ 1711      61696C65 
+ 1711      640D00
+ 1712 007b 00       		.align	2
+ 1713              	.LC8:
+ 1714 007c 50636452 		.ascii	"PcdRead() failed\015\000"
+ 1714      65616428 
+ 1714      29206661 
+ 1714      696C6564 
+ 1714      0D00
+ 1715 008e 0000     		.align	2
+ 1716              	.LC9:
+ 1717 0090 52433532 		.ascii	"RC522_Handle() run finished after 1 second!\015\000"
+ 1717      325F4861 
+ 1717      6E646C65 
+ 1717      28292072 
+ 1717      756E2066 
+ 1718              		.section	.text.RC522_Handle,"ax",%progbits
+ 1719              		.align	1
+ 1720              		.global	RC522_Handle
+ 1721              		.syntax unified
+ARM GAS  /tmp/ccMCXGLW.s 			page 49
+
+
+ 1722              		.thumb
+ 1723              		.thumb_func
+ 1724              		.fpu softvfp
+ 1726              	RC522_Handle:
+ 1727              	.LFB69:
+  94:Core/Src/RC522.c ****     uint8_t i = 0;
+ 1728              		.loc 1 94 1 is_stmt 1 view -0
+ 1729              		.cfi_startproc
+ 1730              		@ args = 0, pretend = 0, frame = 0
+ 1731              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1732 0000 38B5     		push	{r3, r4, r5, lr}
+ 1733              	.LCFI34:
+ 1734              		.cfi_def_cfa_offset 16
+ 1735              		.cfi_offset 3, -16
+ 1736              		.cfi_offset 4, -12
+ 1737              		.cfi_offset 5, -8
+ 1738              		.cfi_offset 14, -4
+  95:Core/Src/RC522.c ****     uint8_t card0_bit = 0;
+ 1739              		.loc 1 95 5 view .LVU453
+ 1740              	.LVL185:
+  96:Core/Src/RC522.c **** 
+ 1741              		.loc 1 96 5 view .LVU454
+  99:Core/Src/RC522.c ****     {
+ 1742              		.loc 1 99 5 view .LVU455
+  99:Core/Src/RC522.c ****     {
+ 1743              		.loc 1 99 15 is_stmt 0 view .LVU456
+ 1744 0002 434B     		ldr	r3, .L130
+ 1745 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  99:Core/Src/RC522.c ****     {
+ 1746              		.loc 1 99 7 view .LVU457
+ 1747 0006 7BB1     		cbz	r3, .L124
+ 1748              	.L112:
+ 108:Core/Src/RC522.c ****     {
+ 1749              		.loc 1 108 5 is_stmt 1 view .LVU458
+ 108:Core/Src/RC522.c ****     {
+ 1750              		.loc 1 108 15 is_stmt 0 view .LVU459
+ 1751 0008 414B     		ldr	r3, .L130
+ 1752 000a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 108:Core/Src/RC522.c ****     {
+ 1753              		.loc 1 108 7 view .LVU460
+ 1754 000c BBB1     		cbz	r3, .L125
+ 1755              	.LVL186:
+ 1756              	.L113:
+ 127:Core/Src/RC522.c ****     }
+ 1757              		.loc 1 127 9 is_stmt 1 view .LVU461
+ 129:Core/Src/RC522.c ****     {
+ 1758              		.loc 1 129 5 view .LVU462
+ 129:Core/Src/RC522.c ****     {
+ 1759              		.loc 1 129 15 is_stmt 0 view .LVU463
+ 1760 000e 404B     		ldr	r3, .L130
+ 1761 0010 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 129:Core/Src/RC522.c ****     {
+ 1762              		.loc 1 129 7 view .LVU464
+ 1763 0012 002B     		cmp	r3, #0
+ 1764 0014 34D0     		beq	.L126
+ 1765              	.L116:
+ 149:Core/Src/RC522.c ****     {
+ARM GAS  /tmp/ccMCXGLW.s 			page 50
+
+
+ 1766              		.loc 1 149 5 is_stmt 1 view .LVU465
+ 149:Core/Src/RC522.c ****     {
+ 1767              		.loc 1 149 15 is_stmt 0 view .LVU466
+ 1768 0016 3E4B     		ldr	r3, .L130
+ 1769 0018 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 149:Core/Src/RC522.c ****     {
+ 1770              		.loc 1 149 7 view .LVU467
+ 1771 001a 002B     		cmp	r3, #0
+ 1772 001c 4DD0     		beq	.L127
+ 1773              	.L118:
+ 170:Core/Src/RC522.c ****     {
+ 1774              		.loc 1 170 5 is_stmt 1 view .LVU468
+ 170:Core/Src/RC522.c ****     {
+ 1775              		.loc 1 170 15 is_stmt 0 view .LVU469
+ 1776 001e 3C4B     		ldr	r3, .L130
+ 1777 0020 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 170:Core/Src/RC522.c ****     {
+ 1778              		.loc 1 170 7 view .LVU470
+ 1779 0022 002B     		cmp	r3, #0
+ 1780 0024 69D0     		beq	.L128
+ 1781              	.L111:
+ 176:Core/Src/RC522.c **** 
+ 1782              		.loc 1 176 1 view .LVU471
+ 1783 0026 38BD     		pop	{r3, r4, r5, pc}
+ 1784              	.LVL187:
+ 1785              	.L124:
+ 102:Core/Src/RC522.c ****         // 验证A密钥 块地址 密码 SN 
+ 1786              		.loc 1 102 9 is_stmt 1 view .LVU472
+ 102:Core/Src/RC522.c ****         // 验证A密钥 块地址 密码 SN 
+ 1787              		.loc 1 102 16 is_stmt 0 view .LVU473
+ 1788 0028 394C     		ldr	r4, .L130
+ 1789 002a 0223     		movs	r3, #2
+ 1790 002c 2370     		strb	r3, [r4]
+ 105:Core/Src/RC522.c ****        
+ 1791              		.loc 1 105 9 is_stmt 1 view .LVU474
+ 105:Core/Src/RC522.c ****        
+ 1792              		.loc 1 105 18 is_stmt 0 view .LVU475
+ 1793 002e 394B     		ldr	r3, .L130+4
+ 1794 0030 394A     		ldr	r2, .L130+8
+ 1795 0032 0B21     		movs	r1, #11
+ 1796 0034 6020     		movs	r0, #96
+ 1797 0036 FFF7FEFF 		bl	PcdAuthState
+ 1798              	.LVL188:
+ 105:Core/Src/RC522.c ****        
+ 1799              		.loc 1 105 16 view .LVU476
+ 1800 003a 2070     		strb	r0, [r4]
+ 1801 003c E4E7     		b	.L112
+ 1802              	.L125:
+ 111:Core/Src/RC522.c ****         // 读取M1卡一块数据 块地址 读取的数据 注意：因为上面验证的扇区�
+ 1803              		.loc 1 111 9 is_stmt 1 view .LVU477
+ 111:Core/Src/RC522.c ****         // 读取M1卡一块数据 块地址 读取的数据 注意：因为上面验证的扇区�
+ 1804              		.loc 1 111 16 is_stmt 0 view .LVU478
+ 1805 003e 344D     		ldr	r5, .L130
+ 1806 0040 0223     		movs	r3, #2
+ 1807 0042 2B70     		strb	r3, [r5]
+ 113:Core/Src/RC522.c ****         if(status == MI_OK)//读卡成功
+ 1808              		.loc 1 113 9 is_stmt 1 view .LVU479
+ARM GAS  /tmp/ccMCXGLW.s 			page 51
+
+
+ 113:Core/Src/RC522.c ****         if(status == MI_OK)//读卡成功
+ 1809              		.loc 1 113 18 is_stmt 0 view .LVU480
+ 1810 0044 3549     		ldr	r1, .L130+12
+ 1811 0046 364B     		ldr	r3, .L130+16
+ 1812 0048 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 1813 004a FFF7FEFF 		bl	PcdRead
+ 1814              	.LVL189:
+ 1815 004e 0446     		mov	r4, r0
+ 113:Core/Src/RC522.c ****         if(status == MI_OK)//读卡成功
+ 1816              		.loc 1 113 16 view .LVU481
+ 1817 0050 2870     		strb	r0, [r5]
+ 114:Core/Src/RC522.c ****         {
+ 1818              		.loc 1 114 9 is_stmt 1 view .LVU482
+ 114:Core/Src/RC522.c ****         {
+ 1819              		.loc 1 114 11 is_stmt 0 view .LVU483
+ 1820 0052 0028     		cmp	r0, #0
+ 1821 0054 DBD1     		bne	.L113
+ 116:Core/Src/RC522.c ****             printf("DATA:");
+ 1822              		.loc 1 116 13 is_stmt 1 view .LVU484
+ 1823 0056 3349     		ldr	r1, .L130+20
+ 1824 0058 3348     		ldr	r0, .L130+24
+ 1825 005a FFF7FEFF 		bl	printf
+ 1826              	.LVL190:
+ 117:Core/Src/RC522.c ****             for(i = 0; i < 16; i++)
+ 1827              		.loc 1 117 13 view .LVU485
+ 1828 005e 3348     		ldr	r0, .L130+28
+ 1829 0060 FFF7FEFF 		bl	printf
+ 1830              	.LVL191:
+ 118:Core/Src/RC522.c ****             {
+ 1831              		.loc 1 118 13 view .LVU486
+ 1832              	.L114:
+ 118:Core/Src/RC522.c ****             {
+ 1833              		.loc 1 118 24 discriminator 1 view .LVU487
+ 118:Core/Src/RC522.c ****             {
+ 1834              		.loc 1 118 13 is_stmt 0 discriminator 1 view .LVU488
+ 1835 0064 0F2C     		cmp	r4, #15
+ 1836 0066 07D8     		bhi	.L129
+ 120:Core/Src/RC522.c ****             }
+ 1837              		.loc 1 120 17 is_stmt 1 discriminator 3 view .LVU489
+ 1838 0068 2C4B     		ldr	r3, .L130+12
+ 1839 006a 195D     		ldrb	r1, [r3, r4]	@ zero_extendqisi2
+ 1840 006c 3048     		ldr	r0, .L130+32
+ 1841 006e FFF7FEFF 		bl	printf
+ 1842              	.LVL192:
+ 118:Core/Src/RC522.c ****             {
+ 1843              		.loc 1 118 32 discriminator 3 view .LVU490
+ 118:Core/Src/RC522.c ****             {
+ 1844              		.loc 1 118 33 is_stmt 0 discriminator 3 view .LVU491
+ 1845 0072 0134     		adds	r4, r4, #1
+ 1846              	.LVL193:
+ 118:Core/Src/RC522.c ****             {
+ 1847              		.loc 1 118 33 discriminator 3 view .LVU492
+ 1848 0074 E4B2     		uxtb	r4, r4
+ 1849              	.LVL194:
+ 118:Core/Src/RC522.c ****             {
+ 1850              		.loc 1 118 33 discriminator 3 view .LVU493
+ 1851 0076 F5E7     		b	.L114
+ARM GAS  /tmp/ccMCXGLW.s 			page 52
+
+
+ 1852              	.L129:
+ 122:Core/Src/RC522.c ****         }
+ 1853              		.loc 1 122 13 is_stmt 1 view .LVU494
+ 1854 0078 2E48     		ldr	r0, .L130+36
+ 1855 007a FFF7FEFF 		bl	puts
+ 1856              	.LVL195:
+ 1857 007e C6E7     		b	.L113
+ 1858              	.LVL196:
+ 1859              	.L126:
+ 132:Core/Src/RC522.c **** 		printf("一秒后开始写卡，请勿移开卡片！！\r\n");
+ 1860              		.loc 1 132 9 view .LVU495
+ 132:Core/Src/RC522.c **** 		printf("一秒后开始写卡，请勿移开卡片！！\r\n");
+ 1861              		.loc 1 132 16 is_stmt 0 view .LVU496
+ 1862 0080 234C     		ldr	r4, .L130
+ 1863 0082 0223     		movs	r3, #2
+ 1864 0084 2370     		strb	r3, [r4]
+ 133:Core/Src/RC522.c **** 		HAL_Delay(1000);
+ 1865              		.loc 1 133 3 is_stmt 1 view .LVU497
+ 1866 0086 2C48     		ldr	r0, .L130+40
+ 1867 0088 FFF7FEFF 		bl	puts
+ 1868              	.LVL197:
+ 134:Core/Src/RC522.c ****         // status = PcdWrite(addr, DATA0);
+ 1869              		.loc 1 134 3 view .LVU498
+ 1870 008c 4FF47A70 		mov	r0, #1000
+ 1871 0090 FFF7FEFF 		bl	HAL_Delay
+ 1872              	.LVL198:
+ 137:Core/Src/RC522.c ****         if(status == MI_OK)//写卡成功
+ 1873              		.loc 1 137 9 view .LVU499
+ 137:Core/Src/RC522.c ****         if(status == MI_OK)//写卡成功
+ 1874              		.loc 1 137 18 is_stmt 0 view .LVU500
+ 1875 0094 2949     		ldr	r1, .L130+44
+ 1876 0096 224B     		ldr	r3, .L130+16
+ 1877 0098 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 1878 009a FFF7FEFF 		bl	PcdWrite
+ 1879              	.LVL199:
+ 137:Core/Src/RC522.c ****         if(status == MI_OK)//写卡成功
+ 1880              		.loc 1 137 16 view .LVU501
+ 1881 009e 2070     		strb	r0, [r4]
+ 138:Core/Src/RC522.c ****         {
+ 1882              		.loc 1 138 9 is_stmt 1 view .LVU502
+ 138:Core/Src/RC522.c ****         {
+ 1883              		.loc 1 138 11 is_stmt 0 view .LVU503
+ 1884 00a0 18B9     		cbnz	r0, .L117
+ 140:Core/Src/RC522.c ****         }
+ 1885              		.loc 1 140 13 is_stmt 1 view .LVU504
+ 1886 00a2 2748     		ldr	r0, .L130+48
+ 1887 00a4 FFF7FEFF 		bl	puts
+ 1888              	.LVL200:
+ 1889 00a8 B5E7     		b	.L116
+ 1890              	.L117:
+ 144:Core/Src/RC522.c **** 			HAL_Delay(3000);
+ 1891              		.loc 1 144 13 view .LVU505
+ 1892 00aa 2648     		ldr	r0, .L130+52
+ 1893 00ac FFF7FEFF 		bl	puts
+ 1894              	.LVL201:
+ 145:Core/Src/RC522.c ****         }
+ 1895              		.loc 1 145 4 view .LVU506
+ARM GAS  /tmp/ccMCXGLW.s 			page 53
+
+
+ 1896 00b0 40F6B830 		movw	r0, #3000
+ 1897 00b4 FFF7FEFF 		bl	HAL_Delay
+ 1898              	.LVL202:
+ 1899 00b8 ADE7     		b	.L116
+ 1900              	.L127:
+ 151:Core/Src/RC522.c ****         // 读取M1卡一块数据 块地址 读取的数据
+ 1901              		.loc 1 151 9 view .LVU507
+ 151:Core/Src/RC522.c ****         // 读取M1卡一块数据 块地址 读取的数据
+ 1902              		.loc 1 151 16 is_stmt 0 view .LVU508
+ 1903 00ba 154D     		ldr	r5, .L130
+ 1904 00bc 0223     		movs	r3, #2
+ 1905 00be 2B70     		strb	r3, [r5]
+ 153:Core/Src/RC522.c ****         if(status == MI_OK)//读卡成功
+ 1906              		.loc 1 153 9 is_stmt 1 view .LVU509
+ 153:Core/Src/RC522.c ****         if(status == MI_OK)//读卡成功
+ 1907              		.loc 1 153 18 is_stmt 0 view .LVU510
+ 1908 00c0 1649     		ldr	r1, .L130+12
+ 1909 00c2 174B     		ldr	r3, .L130+16
+ 1910 00c4 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 1911 00c6 FFF7FEFF 		bl	PcdRead
+ 1912              	.LVL203:
+ 1913 00ca 0446     		mov	r4, r0
+ 153:Core/Src/RC522.c ****         if(status == MI_OK)//读卡成功
+ 1914              		.loc 1 153 16 view .LVU511
+ 1915 00cc 2870     		strb	r0, [r5]
+ 154:Core/Src/RC522.c ****         {
+ 1916              		.loc 1 154 9 is_stmt 1 view .LVU512
+ 154:Core/Src/RC522.c ****         {
+ 1917              		.loc 1 154 11 is_stmt 0 view .LVU513
+ 1918 00ce 80B9     		cbnz	r0, .L119
+ 157:Core/Src/RC522.c ****             for(i = 0; i < 16; i++)
+ 1919              		.loc 1 157 13 is_stmt 1 view .LVU514
+ 1920 00d0 1648     		ldr	r0, .L130+28
+ 1921 00d2 FFF7FEFF 		bl	printf
+ 1922              	.LVL204:
+ 158:Core/Src/RC522.c ****             {
+ 1923              		.loc 1 158 13 view .LVU515
+ 158:Core/Src/RC522.c ****             {
+ 1924              		.loc 1 158 13 is_stmt 0 view .LVU516
+ 1925 00d6 06E0     		b	.L120
+ 1926              	.LVL205:
+ 1927              	.L121:
+ 160:Core/Src/RC522.c ****             }
+ 1928              		.loc 1 160 17 is_stmt 1 discriminator 3 view .LVU517
+ 1929 00d8 104B     		ldr	r3, .L130+12
+ 1930 00da 195D     		ldrb	r1, [r3, r4]	@ zero_extendqisi2
+ 1931 00dc 1448     		ldr	r0, .L130+32
+ 1932 00de FFF7FEFF 		bl	printf
+ 1933              	.LVL206:
+ 158:Core/Src/RC522.c ****             {
+ 1934              		.loc 1 158 32 discriminator 3 view .LVU518
+ 158:Core/Src/RC522.c ****             {
+ 1935              		.loc 1 158 33 is_stmt 0 discriminator 3 view .LVU519
+ 1936 00e2 0134     		adds	r4, r4, #1
+ 1937              	.LVL207:
+ 158:Core/Src/RC522.c ****             {
+ 1938              		.loc 1 158 33 discriminator 3 view .LVU520
+ARM GAS  /tmp/ccMCXGLW.s 			page 54
+
+
+ 1939 00e4 E4B2     		uxtb	r4, r4
+ 1940              	.LVL208:
+ 1941              	.L120:
+ 158:Core/Src/RC522.c ****             {
+ 1942              		.loc 1 158 24 is_stmt 1 discriminator 1 view .LVU521
+ 158:Core/Src/RC522.c ****             {
+ 1943              		.loc 1 158 13 is_stmt 0 discriminator 1 view .LVU522
+ 1944 00e6 0F2C     		cmp	r4, #15
+ 1945 00e8 F6D9     		bls	.L121
+ 162:Core/Src/RC522.c ****         }
+ 1946              		.loc 1 162 13 is_stmt 1 view .LVU523
+ 1947 00ea 1248     		ldr	r0, .L130+36
+ 1948 00ec FFF7FEFF 		bl	puts
+ 1949              	.LVL209:
+ 1950 00f0 95E7     		b	.L118
+ 1951              	.LVL210:
+ 1952              	.L119:
+ 166:Core/Src/RC522.c ****         }
+ 1953              		.loc 1 166 13 view .LVU524
+ 1954 00f2 1548     		ldr	r0, .L130+56
+ 1955 00f4 FFF7FEFF 		bl	puts
+ 1956              	.LVL211:
+ 1957 00f8 91E7     		b	.L118
+ 1958              	.L128:
+ 172:Core/Src/RC522.c **** 		printf("RC522_Handle() run finished after 1 second!\r\n");
+ 1959              		.loc 1 172 9 view .LVU525
+ 172:Core/Src/RC522.c **** 		printf("RC522_Handle() run finished after 1 second!\r\n");
+ 1960              		.loc 1 172 16 is_stmt 0 view .LVU526
+ 1961 00fa 054B     		ldr	r3, .L130
+ 1962 00fc 0222     		movs	r2, #2
+ 1963 00fe 1A70     		strb	r2, [r3]
+ 173:Core/Src/RC522.c ****         HAL_Delay(1000);
+ 1964              		.loc 1 173 3 is_stmt 1 view .LVU527
+ 1965 0100 1248     		ldr	r0, .L130+60
+ 1966 0102 FFF7FEFF 		bl	puts
+ 1967              	.LVL212:
+ 174:Core/Src/RC522.c ****     }
+ 1968              		.loc 1 174 9 view .LVU528
+ 1969 0106 4FF47A70 		mov	r0, #1000
+ 1970 010a FFF7FEFF 		bl	HAL_Delay
+ 1971              	.LVL213:
+ 176:Core/Src/RC522.c **** 
+ 1972              		.loc 1 176 1 is_stmt 0 view .LVU529
+ 1973 010e 8AE7     		b	.L111
+ 1974              	.L131:
+ 1975              		.align	2
+ 1976              	.L130:
+ 1977 0110 00000000 		.word	.LANCHOR0
+ 1978 0114 00000000 		.word	.LANCHOR1
+ 1979 0118 00000000 		.word	.LANCHOR2
+ 1980 011c 00000000 		.word	.LANCHOR3
+ 1981 0120 00000000 		.word	.LANCHOR4
+ 1982 0124 00000000 		.word	.LANCHOR5
+ 1983 0128 00000000 		.word	.LC1
+ 1984 012c 0C000000 		.word	.LC2
+ 1985 0130 14000000 		.word	.LC3
+ 1986 0134 1C000000 		.word	.LC4
+ARM GAS  /tmp/ccMCXGLW.s 			page 55
+
+
+ 1987 0138 20000000 		.word	.LC5
+ 1988 013c 00000000 		.word	.LANCHOR6
+ 1989 0140 54000000 		.word	.LC6
+ 1990 0144 68000000 		.word	.LC7
+ 1991 0148 7C000000 		.word	.LC8
+ 1992 014c 90000000 		.word	.LC9
+ 1993              		.cfi_endproc
+ 1994              	.LFE69:
+ 1996              		.section	.text.PcdSelect,"ax",%progbits
+ 1997              		.align	1
+ 1998              		.global	PcdSelect
+ 1999              		.syntax unified
+ 2000              		.thumb
+ 2001              		.thumb_func
+ 2002              		.fpu softvfp
+ 2004              	PcdSelect:
+ 2005              	.LVL214:
+ 2006              	.LFB75:
+ 372:Core/Src/RC522.c ****     char cStatus;
+ 2007              		.loc 1 372 1 is_stmt 1 view -0
+ 2008              		.cfi_startproc
+ 2009              		@ args = 0, pretend = 0, frame = 24
+ 2010              		@ frame_needed = 0, uses_anonymous_args = 0
+ 372:Core/Src/RC522.c ****     char cStatus;
+ 2011              		.loc 1 372 1 is_stmt 0 view .LVU531
+ 2012 0000 00B5     		push	{lr}
+ 2013              	.LCFI35:
+ 2014              		.cfi_def_cfa_offset 4
+ 2015              		.cfi_offset 14, -4
+ 2016 0002 89B0     		sub	sp, sp, #36
+ 2017              	.LCFI36:
+ 2018              		.cfi_def_cfa_offset 40
+ 373:Core/Src/RC522.c ****     uint8_t uc;
+ 2019              		.loc 1 373 5 is_stmt 1 view .LVU532
+ 374:Core/Src/RC522.c ****     uint8_t ucComMF522Buf [ MAXRLEN ];
+ 2020              		.loc 1 374 5 view .LVU533
+ 375:Core/Src/RC522.c ****     uint32_t  ulLen;
+ 2021              		.loc 1 375 5 view .LVU534
+ 376:Core/Src/RC522.c **** 
+ 2022              		.loc 1 376 5 view .LVU535
+ 379:Core/Src/RC522.c ****     // 假设没有冲突，PCD 指定NVB为70，此值表示PCD将发送完整的UID CLn，与40�
+ 2023              		.loc 1 379 5 view .LVU536
+ 379:Core/Src/RC522.c ****     // 假设没有冲突，PCD 指定NVB为70，此值表示PCD将发送完整的UID CLn，与40�
+ 2024              		.loc 1 379 25 is_stmt 0 view .LVU537
+ 2025 0004 9323     		movs	r3, #147
+ 2026 0006 8DF80C30 		strb	r3, [sp, #12]
+ 381:Core/Src/RC522.c ****     ucComMF522Buf [ 6 ] = 0;
+ 2027              		.loc 1 381 5 is_stmt 1 view .LVU538
+ 381:Core/Src/RC522.c ****     ucComMF522Buf [ 6 ] = 0;
+ 2028              		.loc 1 381 25 is_stmt 0 view .LVU539
+ 2029 000a 7023     		movs	r3, #112
+ 2030 000c 8DF80D30 		strb	r3, [sp, #13]
+ 382:Core/Src/RC522.c **** 
+ 2031              		.loc 1 382 5 is_stmt 1 view .LVU540
+ 382:Core/Src/RC522.c **** 
+ 2032              		.loc 1 382 25 is_stmt 0 view .LVU541
+ 2033 0010 0023     		movs	r3, #0
+ARM GAS  /tmp/ccMCXGLW.s 			page 56
+
+
+ 2034 0012 8DF81230 		strb	r3, [sp, #18]
+ 385:Core/Src/RC522.c ****     {
+ 2035              		.loc 1 385 5 is_stmt 1 view .LVU542
+ 2036              	.LVL215:
+ 385:Core/Src/RC522.c ****     {
+ 2037              		.loc 1 385 5 is_stmt 0 view .LVU543
+ 2038 0016 0DE0     		b	.L133
+ 2039              	.LVL216:
+ 2040              	.L134:
+ 387:Core/Src/RC522.c ****         ucComMF522Buf [ 6 ] ^= * ( pSnr + uc );
+ 2041              		.loc 1 387 9 is_stmt 1 discriminator 3 view .LVU544
+ 387:Core/Src/RC522.c ****         ucComMF522Buf [ 6 ] ^= * ( pSnr + uc );
+ 2042              		.loc 1 387 28 is_stmt 0 discriminator 3 view .LVU545
+ 2043 0018 991C     		adds	r1, r3, #2
+ 387:Core/Src/RC522.c ****         ucComMF522Buf [ 6 ] ^= * ( pSnr + uc );
+ 2044              		.loc 1 387 36 discriminator 3 view .LVU546
+ 2045 001a C25C     		ldrb	r2, [r0, r3]	@ zero_extendqisi2
+ 387:Core/Src/RC522.c ****         ucComMF522Buf [ 6 ] ^= * ( pSnr + uc );
+ 2046              		.loc 1 387 34 discriminator 3 view .LVU547
+ 2047 001c 0DF1200C 		add	ip, sp, #32
+ 2048 0020 6144     		add	r1, r1, ip
+ 2049 0022 01F8142C 		strb	r2, [r1, #-20]
+ 388:Core/Src/RC522.c ****     }
+ 2050              		.loc 1 388 9 is_stmt 1 discriminator 3 view .LVU548
+ 388:Core/Src/RC522.c ****     }
+ 2051              		.loc 1 388 29 is_stmt 0 discriminator 3 view .LVU549
+ 2052 0026 9DF81210 		ldrb	r1, [sp, #18]	@ zero_extendqisi2
+ 2053 002a 4A40     		eors	r2, r2, r1
+ 2054 002c 8DF81220 		strb	r2, [sp, #18]
+ 385:Core/Src/RC522.c ****     {
+ 2055              		.loc 1 385 27 is_stmt 1 discriminator 3 view .LVU550
+ 385:Core/Src/RC522.c ****     {
+ 2056              		.loc 1 385 30 is_stmt 0 discriminator 3 view .LVU551
+ 2057 0030 0133     		adds	r3, r3, #1
+ 2058              	.LVL217:
+ 385:Core/Src/RC522.c ****     {
+ 2059              		.loc 1 385 30 discriminator 3 view .LVU552
+ 2060 0032 DBB2     		uxtb	r3, r3
+ 2061              	.LVL218:
+ 2062              	.L133:
+ 385:Core/Src/RC522.c ****     {
+ 2063              		.loc 1 385 19 is_stmt 1 discriminator 1 view .LVU553
+ 385:Core/Src/RC522.c ****     {
+ 2064              		.loc 1 385 5 is_stmt 0 discriminator 1 view .LVU554
+ 2065 0034 032B     		cmp	r3, #3
+ 2066 0036 EFD9     		bls	.L134
+ 392:Core/Src/RC522.c ****     ClearBitMask ( Status2Reg, 0x08 );
+ 2067              		.loc 1 392 5 is_stmt 1 view .LVU555
+ 2068 0038 0DF11302 		add	r2, sp, #19
+ 2069 003c 0721     		movs	r1, #7
+ 2070 003e 03A8     		add	r0, sp, #12
+ 2071              	.LVL219:
+ 392:Core/Src/RC522.c ****     ClearBitMask ( Status2Reg, 0x08 );
+ 2072              		.loc 1 392 5 is_stmt 0 view .LVU556
+ 2073 0040 FFF7FEFF 		bl	CalulateCRC
+ 2074              	.LVL220:
+ 393:Core/Src/RC522.c ****     // 发送并接收数据
+ARM GAS  /tmp/ccMCXGLW.s 			page 57
+
+
+ 2075              		.loc 1 393 5 is_stmt 1 view .LVU557
+ 2076 0044 0821     		movs	r1, #8
+ 2077 0046 0846     		mov	r0, r1
+ 2078 0048 FFF7FEFF 		bl	ClearBitMask
+ 2079              	.LVL221:
+ 395:Core/Src/RC522.c ****     if ( ( cStatus == MI_OK ) && ( ulLen == 0x18 ) )
+ 2080              		.loc 1 395 5 view .LVU558
+ 395:Core/Src/RC522.c ****     if ( ( cStatus == MI_OK ) && ( ulLen == 0x18 ) )
+ 2081              		.loc 1 395 15 is_stmt 0 view .LVU559
+ 2082 004c 02AB     		add	r3, sp, #8
+ 2083 004e 0093     		str	r3, [sp]
+ 2084 0050 03AB     		add	r3, sp, #12
+ 2085 0052 0922     		movs	r2, #9
+ 2086 0054 1946     		mov	r1, r3
+ 2087 0056 0C20     		movs	r0, #12
+ 2088 0058 FFF7FEFF 		bl	PcdComMF522
+ 2089              	.LVL222:
+ 396:Core/Src/RC522.c ****         cStatus = MI_OK;
+ 2090              		.loc 1 396 5 is_stmt 1 view .LVU560
+ 396:Core/Src/RC522.c ****         cStatus = MI_OK;
+ 2091              		.loc 1 396 8 is_stmt 0 view .LVU561
+ 2092 005c 20B9     		cbnz	r0, .L136
+ 396:Core/Src/RC522.c ****         cStatus = MI_OK;
+ 2093              		.loc 1 396 42 discriminator 1 view .LVU562
+ 2094 005e 029B     		ldr	r3, [sp, #8]
+ 396:Core/Src/RC522.c ****         cStatus = MI_OK;
+ 2095              		.loc 1 396 31 discriminator 1 view .LVU563
+ 2096 0060 182B     		cmp	r3, #24
+ 2097 0062 02D0     		beq	.L135
+ 399:Core/Src/RC522.c ****     return cStatus;
+ 2098              		.loc 1 399 17 view .LVU564
+ 2099 0064 0220     		movs	r0, #2
+ 2100              	.LVL223:
+ 399:Core/Src/RC522.c ****     return cStatus;
+ 2101              		.loc 1 399 17 view .LVU565
+ 2102 0066 00E0     		b	.L135
+ 2103              	.LVL224:
+ 2104              	.L136:
+ 399:Core/Src/RC522.c ****     return cStatus;
+ 2105              		.loc 1 399 17 view .LVU566
+ 2106 0068 0220     		movs	r0, #2
+ 2107              	.LVL225:
+ 2108              	.L135:
+ 400:Core/Src/RC522.c **** }
+ 2109              		.loc 1 400 5 is_stmt 1 view .LVU567
+ 401:Core/Src/RC522.c **** 
+ 2110              		.loc 1 401 1 is_stmt 0 view .LVU568
+ 2111 006a 09B0     		add	sp, sp, #36
+ 2112              	.LCFI37:
+ 2113              		.cfi_def_cfa_offset 4
+ 2114              		@ sp needed
+ 2115 006c 5DF804FB 		ldr	pc, [sp], #4
+ 2116              		.cfi_endproc
+ 2117              	.LFE75:
+ 2119              		.section	.rodata.RC522_Handle1.str1.4,"aMS",%progbits,1
+ 2120              		.align	2
+ 2121              	.LC10:
+ARM GAS  /tmp/ccMCXGLW.s 			page 58
+
+
+ 2122 0000 54686520 		.ascii	"The Card is:card_%d\015\012\000"
+ 2122      43617264 
+ 2122      2069733A 
+ 2122      63617264 
+ 2122      5F25640D 
+ 2123 0016 0000     		.align	2
+ 2124              	.LC11:
+ 2125 0018 556E6B6F 		.ascii	"Unkown card\357\274\201\015\000"
+ 2125      776E2063 
+ 2125      617264EF 
+ 2125      BC810D00 
+ 2126              		.align	2
+ 2127              	.LC12:
+ 2128 0028 53656C65 		.ascii	"Select Card\015\000"
+ 2128      63742043 
+ 2128      6172640D 
+ 2128      00
+ 2129 0035 000000   		.align	2
+ 2130              	.LC13:
+ 2131 0038 50636441 		.ascii	"PcdAuthState(A) success\015\000"
+ 2131      75746853 
+ 2131      74617465 
+ 2131      28412920 
+ 2131      73756363 
+ 2132 0051 000000   		.align	2
+ 2133              	.LC14:
+ 2134 0054 50636441 		.ascii	"PcdAuthState(A) failed\015\000"
+ 2134      75746853 
+ 2134      74617465 
+ 2134      28412920 
+ 2134      6661696C 
+ 2135              		.section	.text.RC522_Handle1,"ax",%progbits
+ 2136              		.align	1
+ 2137              		.global	RC522_Handle1
+ 2138              		.syntax unified
+ 2139              		.thumb
+ 2140              		.thumb_func
+ 2141              		.fpu softvfp
+ 2143              	RC522_Handle1:
+ 2144              	.LFB68:
+  39:Core/Src/RC522.c ****     status=MI_ERR;
+ 2145              		.loc 1 39 25 is_stmt 1 view -0
+ 2146              		.cfi_startproc
+ 2147              		@ args = 0, pretend = 0, frame = 0
+ 2148              		@ frame_needed = 0, uses_anonymous_args = 0
+ 2149 0000 38B5     		push	{r3, r4, r5, lr}
+ 2150              	.LCFI38:
+ 2151              		.cfi_def_cfa_offset 16
+ 2152              		.cfi_offset 3, -16
+ 2153              		.cfi_offset 4, -12
+ 2154              		.cfi_offset 5, -8
+ 2155              		.cfi_offset 14, -4
+  40:Core/Src/RC522.c ****     status = PcdRequest(PICC_REQALL, CT);// 寻卡 -> 扫描有无卡片
+ 2156              		.loc 1 40 5 view .LVU570
+  40:Core/Src/RC522.c ****     status = PcdRequest(PICC_REQALL, CT);// 寻卡 -> 扫描有无卡片
+ 2157              		.loc 1 40 11 is_stmt 0 view .LVU571
+ 2158 0002 384C     		ldr	r4, .L151
+ARM GAS  /tmp/ccMCXGLW.s 			page 59
+
+
+ 2159 0004 0223     		movs	r3, #2
+ 2160 0006 2370     		strb	r3, [r4]
+  41:Core/Src/RC522.c ****     if (status == MI_OK)
+ 2161              		.loc 1 41 5 is_stmt 1 view .LVU572
+  41:Core/Src/RC522.c ****     if (status == MI_OK)
+ 2162              		.loc 1 41 14 is_stmt 0 view .LVU573
+ 2163 0008 3749     		ldr	r1, .L151+4
+ 2164 000a 5220     		movs	r0, #82
+ 2165 000c FFF7FEFF 		bl	PcdRequest
+ 2166              	.LVL226:
+  41:Core/Src/RC522.c ****     if (status == MI_OK)
+ 2167              		.loc 1 41 12 view .LVU574
+ 2168 0010 2070     		strb	r0, [r4]
+  42:Core/Src/RC522.c ****     {
+ 2169              		.loc 1 42 5 is_stmt 1 view .LVU575
+  42:Core/Src/RC522.c ****     {
+ 2170              		.loc 1 42 8 is_stmt 0 view .LVU576
+ 2171 0012 00B1     		cbz	r0, .L148
+ 2172              	.L138:
+  91:Core/Src/RC522.c **** // 测试程序0，完成addr读写读
+ 2173              		.loc 1 91 1 view .LVU577
+ 2174 0014 38BD     		pop	{r3, r4, r5, pc}
+ 2175              	.L148:
+  46:Core/Src/RC522.c ****         status=PcdAnticoll(SN);// 防冲突 -> 可取得UID
+ 2176              		.loc 1 46 9 is_stmt 1 view .LVU578
+  46:Core/Src/RC522.c ****         status=PcdAnticoll(SN);// 防冲突 -> 可取得UID
+ 2177              		.loc 1 46 15 is_stmt 0 view .LVU579
+ 2178 0016 2546     		mov	r5, r4
+ 2179 0018 0223     		movs	r3, #2
+ 2180 001a 2370     		strb	r3, [r4]
+  47:Core/Src/RC522.c ****         if (status==MI_OK)
+ 2181              		.loc 1 47 9 is_stmt 1 view .LVU580
+  47:Core/Src/RC522.c ****         if (status==MI_OK)
+ 2182              		.loc 1 47 16 is_stmt 0 view .LVU581
+ 2183 001c 3348     		ldr	r0, .L151+8
+ 2184 001e FFF7FEFF 		bl	PcdAnticoll
+ 2185              	.LVL227:
+ 2186 0022 0446     		mov	r4, r0
+  47:Core/Src/RC522.c ****         if (status==MI_OK)
+ 2187              		.loc 1 47 15 view .LVU582
+ 2188 0024 2870     		strb	r0, [r5]
+  48:Core/Src/RC522.c ****         {
+ 2189              		.loc 1 48 9 is_stmt 1 view .LVU583
+  48:Core/Src/RC522.c ****         {
+ 2190              		.loc 1 48 12 is_stmt 0 view .LVU584
+ 2191 0026 20B1     		cbz	r0, .L149
+ 2192              	.L140:
+  86:Core/Src/RC522.c ****     }
+ 2193              		.loc 1 86 9 is_stmt 1 view .LVU585
+ 2194 0028 4FF4FA70 		mov	r0, #500
+ 2195 002c FFF7FEFF 		bl	HAL_Delay
+ 2196              	.LVL228:
+  90:Core/Src/RC522.c **** }
+ 2197              		.loc 1 90 5 view .LVU586
+  91:Core/Src/RC522.c **** // 测试程序0，完成addr读写读
+ 2198              		.loc 1 91 1 is_stmt 0 view .LVU587
+ 2199 0030 F0E7     		b	.L138
+ARM GAS  /tmp/ccMCXGLW.s 			page 60
+
+
+ 2200              	.L149:
+  51:Core/Src/RC522.c ****             // 判断卡所属用户
+ 2201              		.loc 1 51 13 is_stmt 1 view .LVU588
+ 2202 0032 2E48     		ldr	r0, .L151+8
+ 2203 0034 FFF7FEFF 		bl	ShowID
+ 2204              	.LVL229:
+  53:Core/Src/RC522.c ****             {
+ 2205              		.loc 1 53 13 view .LVU589
+ 2206              	.LBB2:
+  53:Core/Src/RC522.c ****             {
+ 2207              		.loc 1 53 18 view .LVU590
+  53:Core/Src/RC522.c ****             {
+ 2208              		.loc 1 53 13 is_stmt 0 view .LVU591
+ 2209 0038 04E0     		b	.L141
+ 2210              	.LVL230:
+ 2211              	.L142:
+  61:Core/Src/RC522.c ****                 }
+ 2212              		.loc 1 61 21 is_stmt 1 discriminator 2 view .LVU592
+  61:Core/Src/RC522.c ****                 }
+ 2213              		.loc 1 61 28 is_stmt 0 discriminator 2 view .LVU593
+ 2214 003a 2D4B     		ldr	r3, .L151+12
+ 2215 003c FF22     		movs	r2, #255
+ 2216 003e 1A70     		strb	r2, [r3]
+  53:Core/Src/RC522.c ****             {
+ 2217              		.loc 1 53 47 is_stmt 1 discriminator 2 view .LVU594
+  53:Core/Src/RC522.c ****             {
+ 2218              		.loc 1 53 48 is_stmt 0 discriminator 2 view .LVU595
+ 2219 0040 0134     		adds	r4, r4, #1
+ 2220              	.LVL231:
+  53:Core/Src/RC522.c ****             {
+ 2221              		.loc 1 53 48 discriminator 2 view .LVU596
+ 2222 0042 E4B2     		uxtb	r4, r4
+ 2223              	.LVL232:
+ 2224              	.L141:
+  53:Core/Src/RC522.c ****             {
+ 2225              		.loc 1 53 33 is_stmt 1 discriminator 1 view .LVU597
+  53:Core/Src/RC522.c ****             {
+ 2226              		.loc 1 53 13 is_stmt 0 discriminator 1 view .LVU598
+ 2227 0044 012C     		cmp	r4, #1
+ 2228 0046 24D8     		bhi	.L143
+  55:Core/Src/RC522.c ****                 {
+ 2229              		.loc 1 55 17 is_stmt 1 view .LVU599
+  55:Core/Src/RC522.c ****                 {
+ 2230              		.loc 1 55 23 is_stmt 0 view .LVU600
+ 2231 0048 284B     		ldr	r3, .L151+8
+ 2232 004a 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+  55:Core/Src/RC522.c ****                 {
+ 2233              		.loc 1 55 38 view .LVU601
+ 2234 004c 2146     		mov	r1, r4
+ 2235 004e 294B     		ldr	r3, .L151+16
+ 2236 0050 13F82430 		ldrb	r3, [r3, r4, lsl #2]	@ zero_extendqisi2
+  55:Core/Src/RC522.c ****                 {
+ 2237              		.loc 1 55 19 view .LVU602
+ 2238 0054 9A42     		cmp	r2, r3
+ 2239 0056 F0D1     		bne	.L142
+  55:Core/Src/RC522.c ****                 {
+ 2240              		.loc 1 55 47 discriminator 1 view .LVU603
+ARM GAS  /tmp/ccMCXGLW.s 			page 61
+
+
+ 2241 0058 244B     		ldr	r3, .L151+8
+ 2242 005a 5A78     		ldrb	r2, [r3, #1]	@ zero_extendqisi2
+  55:Core/Src/RC522.c ****                 {
+ 2243              		.loc 1 55 62 discriminator 1 view .LVU604
+ 2244 005c 254B     		ldr	r3, .L151+16
+ 2245 005e 03EB8403 		add	r3, r3, r4, lsl #2
+ 2246 0062 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+  55:Core/Src/RC522.c ****                 {
+ 2247              		.loc 1 55 42 discriminator 1 view .LVU605
+ 2248 0064 9A42     		cmp	r2, r3
+ 2249 0066 E8D1     		bne	.L142
+  55:Core/Src/RC522.c ****                 {
+ 2250              		.loc 1 55 71 discriminator 2 view .LVU606
+ 2251 0068 204B     		ldr	r3, .L151+8
+ 2252 006a 9A78     		ldrb	r2, [r3, #2]	@ zero_extendqisi2
+  55:Core/Src/RC522.c ****                 {
+ 2253              		.loc 1 55 86 discriminator 2 view .LVU607
+ 2254 006c 214B     		ldr	r3, .L151+16
+ 2255 006e 03EB8403 		add	r3, r3, r4, lsl #2
+ 2256 0072 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
+  55:Core/Src/RC522.c ****                 {
+ 2257              		.loc 1 55 66 discriminator 2 view .LVU608
+ 2258 0074 9A42     		cmp	r2, r3
+ 2259 0076 E0D1     		bne	.L142
+  55:Core/Src/RC522.c ****                 {
+ 2260              		.loc 1 55 95 discriminator 3 view .LVU609
+ 2261 0078 1C4B     		ldr	r3, .L151+8
+ 2262 007a DA78     		ldrb	r2, [r3, #3]	@ zero_extendqisi2
+  55:Core/Src/RC522.c ****                 {
+ 2263              		.loc 1 55 110 discriminator 3 view .LVU610
+ 2264 007c 1D4B     		ldr	r3, .L151+16
+ 2265 007e 03EB8403 		add	r3, r3, r4, lsl #2
+ 2266 0082 DB78     		ldrb	r3, [r3, #3]	@ zero_extendqisi2
+  55:Core/Src/RC522.c ****                 {
+ 2267              		.loc 1 55 90 discriminator 3 view .LVU611
+ 2268 0084 9A42     		cmp	r2, r3
+ 2269 0086 D8D1     		bne	.L142
+  57:Core/Src/RC522.c ****                     printf("The Card is:card_%d\r\n",i);
+ 2270              		.loc 1 57 21 is_stmt 1 view .LVU612
+  57:Core/Src/RC522.c ****                     printf("The Card is:card_%d\r\n",i);
+ 2271              		.loc 1 57 28 is_stmt 0 view .LVU613
+ 2272 0088 194B     		ldr	r3, .L151+12
+ 2273 008a 1C70     		strb	r4, [r3]
+  58:Core/Src/RC522.c ****                     break;
+ 2274              		.loc 1 58 21 is_stmt 1 view .LVU614
+ 2275 008c 1A48     		ldr	r0, .L151+20
+ 2276 008e FFF7FEFF 		bl	printf
+ 2277              	.LVL233:
+  59:Core/Src/RC522.c ****                 }else{
+ 2278              		.loc 1 59 21 view .LVU615
+ 2279              	.L143:
+ 2280              	.LBE2:
+  64:Core/Src/RC522.c ****             {
+ 2281              		.loc 1 64 13 view .LVU616
+  64:Core/Src/RC522.c ****             {
+ 2282              		.loc 1 64 24 is_stmt 0 view .LVU617
+ 2283 0092 174B     		ldr	r3, .L151+12
+ARM GAS  /tmp/ccMCXGLW.s 			page 62
+
+
+ 2284 0094 93F90030 		ldrsb	r3, [r3]
+  64:Core/Src/RC522.c ****             {
+ 2285              		.loc 1 64 16 view .LVU618
+ 2286 0098 B3F1FF3F 		cmp	r3, #-1
+ 2287 009c 19D0     		beq	.L150
+ 2288              	.L145:
+  68:Core/Src/RC522.c ****             status = PcdSelect(SN);// 选择卡片
+ 2289              		.loc 1 68 13 is_stmt 1 view .LVU619
+  68:Core/Src/RC522.c ****             status = PcdSelect(SN);// 选择卡片
+ 2290              		.loc 1 68 20 is_stmt 0 view .LVU620
+ 2291 009e 114C     		ldr	r4, .L151
+ 2292              	.LVL234:
+  68:Core/Src/RC522.c ****             status = PcdSelect(SN);// 选择卡片
+ 2293              		.loc 1 68 20 view .LVU621
+ 2294 00a0 0223     		movs	r3, #2
+ 2295 00a2 2370     		strb	r3, [r4]
+  69:Core/Src/RC522.c ****             if (status==MI_OK)
+ 2296              		.loc 1 69 13 is_stmt 1 view .LVU622
+  69:Core/Src/RC522.c ****             if (status==MI_OK)
+ 2297              		.loc 1 69 22 is_stmt 0 view .LVU623
+ 2298 00a4 1148     		ldr	r0, .L151+8
+ 2299 00a6 FFF7FEFF 		bl	PcdSelect
+ 2300              	.LVL235:
+  69:Core/Src/RC522.c ****             if (status==MI_OK)
+ 2301              		.loc 1 69 20 view .LVU624
+ 2302 00aa 2070     		strb	r0, [r4]
+  70:Core/Src/RC522.c ****             {
+ 2303              		.loc 1 70 13 is_stmt 1 view .LVU625
+  70:Core/Src/RC522.c ****             {
+ 2304              		.loc 1 70 16 is_stmt 0 view .LVU626
+ 2305 00ac 0028     		cmp	r0, #0
+ 2306 00ae BBD1     		bne	.L140
+  72:Core/Src/RC522.c ****                 status = MI_ERR;
+ 2307              		.loc 1 72 17 is_stmt 1 view .LVU627
+ 2308 00b0 1248     		ldr	r0, .L151+24
+ 2309 00b2 FFF7FEFF 		bl	puts
+ 2310              	.LVL236:
+  73:Core/Src/RC522.c ****                 // 注意：此处的块地址0x0B即2扇区3区块，此块地址只需要指向�
+ 2311              		.loc 1 73 17 view .LVU628
+  73:Core/Src/RC522.c ****                 // 注意：此处的块地址0x0B即2扇区3区块，此块地址只需要指向�
+ 2312              		.loc 1 73 24 is_stmt 0 view .LVU629
+ 2313 00b6 0223     		movs	r3, #2
+ 2314 00b8 2370     		strb	r3, [r4]
+  75:Core/Src/RC522.c ****                 if(status == MI_OK)//验证成功
+ 2315              		.loc 1 75 17 is_stmt 1 view .LVU630
+  75:Core/Src/RC522.c ****                 if(status == MI_OK)//验证成功
+ 2316              		.loc 1 75 26 is_stmt 0 view .LVU631
+ 2317 00ba 0C4B     		ldr	r3, .L151+8
+ 2318 00bc 104A     		ldr	r2, .L151+28
+ 2319 00be 0421     		movs	r1, #4
+ 2320 00c0 6020     		movs	r0, #96
+ 2321 00c2 FFF7FEFF 		bl	PcdAuthState
+ 2322              	.LVL237:
+  75:Core/Src/RC522.c ****                 if(status == MI_OK)//验证成功
+ 2323              		.loc 1 75 24 view .LVU632
+ 2324 00c6 2070     		strb	r0, [r4]
+  76:Core/Src/RC522.c ****                 {
+ARM GAS  /tmp/ccMCXGLW.s 			page 63
+
+
+ 2325              		.loc 1 76 17 is_stmt 1 view .LVU633
+  76:Core/Src/RC522.c ****                 {
+ 2326              		.loc 1 76 19 is_stmt 0 view .LVU634
+ 2327 00c8 38B9     		cbnz	r0, .L146
+  78:Core/Src/RC522.c ****                 }
+ 2328              		.loc 1 78 21 is_stmt 1 view .LVU635
+ 2329 00ca 0E48     		ldr	r0, .L151+32
+ 2330 00cc FFF7FEFF 		bl	puts
+ 2331              	.LVL238:
+ 2332 00d0 AAE7     		b	.L140
+ 2333              	.LVL239:
+ 2334              	.L150:
+  66:Core/Src/RC522.c ****             }
+ 2335              		.loc 1 66 17 view .LVU636
+ 2336 00d2 0D48     		ldr	r0, .L151+36
+ 2337 00d4 FFF7FEFF 		bl	puts
+ 2338              	.LVL240:
+ 2339 00d8 E1E7     		b	.L145
+ 2340              	.LVL241:
+ 2341              	.L146:
+  82:Core/Src/RC522.c ****                 }
+ 2342              		.loc 1 82 21 view .LVU637
+ 2343 00da 0C48     		ldr	r0, .L151+40
+ 2344 00dc FFF7FEFF 		bl	puts
+ 2345              	.LVL242:
+ 2346 00e0 A2E7     		b	.L140
+ 2347              	.L152:
+ 2348 00e2 00BF     		.align	2
+ 2349              	.L151:
+ 2350 00e4 00000000 		.word	.LANCHOR0
+ 2351 00e8 00000000 		.word	.LANCHOR7
+ 2352 00ec 00000000 		.word	.LANCHOR1
+ 2353 00f0 00000000 		.word	.LANCHOR9
+ 2354 00f4 00000000 		.word	.LANCHOR8
+ 2355 00f8 00000000 		.word	.LC10
+ 2356 00fc 28000000 		.word	.LC12
+ 2357 0100 00000000 		.word	.LANCHOR2
+ 2358 0104 38000000 		.word	.LC13
+ 2359 0108 18000000 		.word	.LC11
+ 2360 010c 54000000 		.word	.LC14
+ 2361              		.cfi_endproc
+ 2362              	.LFE68:
+ 2364              		.section	.text.M500PcdConfigISOType,"ax",%progbits
+ 2365              		.align	1
+ 2366              		.global	M500PcdConfigISOType
+ 2367              		.syntax unified
+ 2368              		.thumb
+ 2369              		.thumb_func
+ 2370              		.fpu softvfp
+ 2372              	M500PcdConfigISOType:
+ 2373              	.LVL243:
+ 2374              	.LFB82:
+ 570:Core/Src/RC522.c **** 	if ( ucType == 'A')                     //ISO14443_A
+ 2375              		.loc 1 570 1 view -0
+ 2376              		.cfi_startproc
+ 2377              		@ args = 0, pretend = 0, frame = 0
+ 2378              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  /tmp/ccMCXGLW.s 			page 64
+
+
+ 571:Core/Src/RC522.c **** 	{
+ 2379              		.loc 1 571 2 view .LVU639
+ 571:Core/Src/RC522.c **** 	{
+ 2380              		.loc 1 571 5 is_stmt 0 view .LVU640
+ 2381 0000 4128     		cmp	r0, #65
+ 2382 0002 00D0     		beq	.L159
+ 2383 0004 7047     		bx	lr
+ 2384              	.L159:
+ 570:Core/Src/RC522.c **** 	if ( ucType == 'A')                     //ISO14443_A
+ 2385              		.loc 1 570 1 view .LVU641
+ 2386 0006 08B5     		push	{r3, lr}
+ 2387              	.LCFI39:
+ 2388              		.cfi_def_cfa_offset 8
+ 2389              		.cfi_offset 3, -8
+ 2390              		.cfi_offset 14, -4
+ 573:Core/Src/RC522.c **** 		WriteRawRC ( ModeReg, 0x3D );//3F
+ 2391              		.loc 1 573 3 is_stmt 1 view .LVU642
+ 2392 0008 0821     		movs	r1, #8
+ 2393 000a 0846     		mov	r0, r1
+ 2394              	.LVL244:
+ 573:Core/Src/RC522.c **** 		WriteRawRC ( ModeReg, 0x3D );//3F
+ 2395              		.loc 1 573 3 is_stmt 0 view .LVU643
+ 2396 000c FFF7FEFF 		bl	ClearBitMask
+ 2397              	.LVL245:
+ 574:Core/Src/RC522.c **** 		WriteRawRC ( RxSelReg, 0x86 );//84
+ 2398              		.loc 1 574 3 is_stmt 1 view .LVU644
+ 2399 0010 3D21     		movs	r1, #61
+ 2400 0012 1120     		movs	r0, #17
+ 2401 0014 FFF7FEFF 		bl	WriteRawRC
+ 2402              	.LVL246:
+ 575:Core/Src/RC522.c **** 		WriteRawRC( RFCfgReg, 0x7F );   //4F
+ 2403              		.loc 1 575 3 view .LVU645
+ 2404 0018 8621     		movs	r1, #134
+ 2405 001a 1720     		movs	r0, #23
+ 2406 001c FFF7FEFF 		bl	WriteRawRC
+ 2407              	.LVL247:
+ 576:Core/Src/RC522.c **** 		WriteRawRC( TReloadRegL, 30 );//tmoLength);// TReloadVal = 'h6a =tmoLength(dec) 
+ 2408              		.loc 1 576 3 view .LVU646
+ 2409 0020 7F21     		movs	r1, #127
+ 2410 0022 2620     		movs	r0, #38
+ 2411 0024 FFF7FEFF 		bl	WriteRawRC
+ 2412              	.LVL248:
+ 577:Core/Src/RC522.c **** 		WriteRawRC ( TReloadRegH, 0 );
+ 2413              		.loc 1 577 3 view .LVU647
+ 2414 0028 1E21     		movs	r1, #30
+ 2415 002a 2D20     		movs	r0, #45
+ 2416 002c FFF7FEFF 		bl	WriteRawRC
+ 2417              	.LVL249:
+ 578:Core/Src/RC522.c **** 		WriteRawRC ( TModeReg, 0x8D );
+ 2418              		.loc 1 578 3 view .LVU648
+ 2419 0030 0021     		movs	r1, #0
+ 2420 0032 2C20     		movs	r0, #44
+ 2421 0034 FFF7FEFF 		bl	WriteRawRC
+ 2422              	.LVL250:
+ 579:Core/Src/RC522.c **** 		WriteRawRC ( TPrescalerReg, 0x3E );
+ 2423              		.loc 1 579 3 view .LVU649
+ 2424 0038 8D21     		movs	r1, #141
+ARM GAS  /tmp/ccMCXGLW.s 			page 65
+
+
+ 2425 003a 2A20     		movs	r0, #42
+ 2426 003c FFF7FEFF 		bl	WriteRawRC
+ 2427              	.LVL251:
+ 580:Core/Src/RC522.c **** 		Delay_us ( 2 );
+ 2428              		.loc 1 580 3 view .LVU650
+ 2429 0040 3E21     		movs	r1, #62
+ 2430 0042 2B20     		movs	r0, #43
+ 2431 0044 FFF7FEFF 		bl	WriteRawRC
+ 2432              	.LVL252:
+ 581:Core/Src/RC522.c **** 	}
+ 2433              		.loc 1 581 3 view .LVU651
+ 2434 0048 0220     		movs	r0, #2
+ 2435 004a FFF7FEFF 		bl	Delay_us
+ 2436              	.LVL253:
+ 583:Core/Src/RC522.c **** /* 开启天线 */
+ 2437              		.loc 1 583 1 is_stmt 0 view .LVU652
+ 2438 004e 08BD     		pop	{r3, pc}
+ 2439              		.cfi_endproc
+ 2440              	.LFE82:
+ 2442              		.section	.text.PcdAntennaOff,"ax",%progbits
+ 2443              		.align	1
+ 2444              		.global	PcdAntennaOff
+ 2445              		.syntax unified
+ 2446              		.thumb
+ 2447              		.thumb_func
+ 2448              		.fpu softvfp
+ 2450              	PcdAntennaOff:
+ 2451              	.LFB84:
+ 594:Core/Src/RC522.c ****     ClearBitMask ( TxControlReg, 0x03 );
+ 2452              		.loc 1 594 1 is_stmt 1 view -0
+ 2453              		.cfi_startproc
+ 2454              		@ args = 0, pretend = 0, frame = 0
+ 2455              		@ frame_needed = 0, uses_anonymous_args = 0
+ 2456 0000 08B5     		push	{r3, lr}
+ 2457              	.LCFI40:
+ 2458              		.cfi_def_cfa_offset 8
+ 2459              		.cfi_offset 3, -8
+ 2460              		.cfi_offset 14, -4
+ 595:Core/Src/RC522.c **** }
+ 2461              		.loc 1 595 5 view .LVU654
+ 2462 0002 0321     		movs	r1, #3
+ 2463 0004 1420     		movs	r0, #20
+ 2464 0006 FFF7FEFF 		bl	ClearBitMask
+ 2465              	.LVL254:
+ 596:Core/Src/RC522.c **** 
+ 2466              		.loc 1 596 1 is_stmt 0 view .LVU655
+ 2467 000a 08BD     		pop	{r3, pc}
+ 2468              		.cfi_endproc
+ 2469              	.LFE84:
+ 2471              		.section	.text.RC522_Init,"ax",%progbits
+ 2472              		.align	1
+ 2473              		.global	RC522_Init
+ 2474              		.syntax unified
+ 2475              		.thumb
+ 2476              		.thumb_func
+ 2477              		.fpu softvfp
+ 2479              	RC522_Init:
+ARM GAS  /tmp/ccMCXGLW.s 			page 66
+
+
+ 2480              	.LFB80:
+ 539:Core/Src/RC522.c **** 	RC522_Reset_Disable();
+ 2481              		.loc 1 539 1 is_stmt 1 view -0
+ 2482              		.cfi_startproc
+ 2483              		@ args = 0, pretend = 0, frame = 0
+ 2484              		@ frame_needed = 0, uses_anonymous_args = 0
+ 2485 0000 08B5     		push	{r3, lr}
+ 2486              	.LCFI41:
+ 2487              		.cfi_def_cfa_offset 8
+ 2488              		.cfi_offset 3, -8
+ 2489              		.cfi_offset 14, -4
+ 540:Core/Src/RC522.c **** 	RC522_CS_Disable();
+ 2490              		.loc 1 540 2 view .LVU657
+ 2491 0002 0122     		movs	r2, #1
+ 2492 0004 1146     		mov	r1, r2
+ 2493 0006 0948     		ldr	r0, .L164
+ 2494 0008 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 2495              	.LVL255:
+ 541:Core/Src/RC522.c ****     PcdAntennaOff ();//关天线
+ 2496              		.loc 1 541 2 view .LVU658
+ 2497 000c 0122     		movs	r2, #1
+ 2498 000e 1021     		movs	r1, #16
+ 2499 0010 0748     		ldr	r0, .L164+4
+ 2500 0012 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 2501              	.LVL256:
+ 542:Core/Src/RC522.c ****     PcdAntennaOn ();//开天线
+ 2502              		.loc 1 542 5 view .LVU659
+ 2503 0016 FFF7FEFF 		bl	PcdAntennaOff
+ 2504              	.LVL257:
+ 543:Core/Src/RC522.c ****     PCD_Reset();
+ 2505              		.loc 1 543 5 view .LVU660
+ 2506 001a FFF7FEFF 		bl	PcdAntennaOn
+ 2507              	.LVL258:
+ 544:Core/Src/RC522.c **** 	M500PcdConfigISOType ( 'A' );//设置工作方式
+ 2508              		.loc 1 544 5 view .LVU661
+ 2509 001e FFF7FEFF 		bl	PCD_Reset
+ 2510              	.LVL259:
+ 545:Core/Src/RC522.c **** }
+ 2511              		.loc 1 545 2 view .LVU662
+ 2512 0022 4120     		movs	r0, #65
+ 2513 0024 FFF7FEFF 		bl	M500PcdConfigISOType
+ 2514              	.LVL260:
+ 546:Core/Src/RC522.c **** /* 复位RC522 */
+ 2515              		.loc 1 546 1 is_stmt 0 view .LVU663
+ 2516 0028 08BD     		pop	{r3, pc}
+ 2517              	.L165:
+ 2518 002a 00BF     		.align	2
+ 2519              	.L164:
+ 2520 002c 000C0140 		.word	1073810432
+ 2521 0030 00080140 		.word	1073809408
+ 2522              		.cfi_endproc
+ 2523              	.LFE80:
+ 2525              		.global	addr
+ 2526              		.global	status
+ 2527              		.global	DATA1
+ 2528              		.global	RFID1
+ 2529              		.global	KEY1_B
+ARM GAS  /tmp/ccMCXGLW.s 			page 67
+
+
+ 2530              		.global	KEY1_A
+ 2531              		.global	cardNum
+ 2532              		.global	mycards
+ 2533              		.global	total
+ 2534              		.global	RFID
+ 2535              		.global	DATA
+ 2536              		.global	SN
+ 2537              		.global	CT
+ 2538              		.section	.bss.CT,"aw",%nobits
+ 2539              		.align	2
+ 2540              		.set	.LANCHOR7,. + 0
+ 2543              	CT:
+ 2544 0000 0000     		.space	2
+ 2545              		.section	.bss.DATA,"aw",%nobits
+ 2546              		.align	2
+ 2547              		.set	.LANCHOR3,. + 0
+ 2550              	DATA:
+ 2551 0000 00000000 		.space	16
+ 2551      00000000 
+ 2551      00000000 
+ 2551      00000000 
+ 2552              		.section	.bss.RFID,"aw",%nobits
+ 2553              		.align	2
+ 2554              		.set	.LANCHOR5,. + 0
+ 2557              	RFID:
+ 2558 0000 00000000 		.space	16
+ 2558      00000000 
+ 2558      00000000 
+ 2558      00000000 
+ 2559              		.section	.bss.SN,"aw",%nobits
+ 2560              		.align	2
+ 2561              		.set	.LANCHOR1,. + 0
+ 2564              	SN:
+ 2565 0000 00000000 		.space	4
+ 2566              		.section	.bss.cardNum,"aw",%nobits
+ 2567              		.set	.LANCHOR9,. + 0
+ 2570              	cardNum:
+ 2571 0000 00       		.space	1
+ 2572              		.section	.bss.status,"aw",%nobits
+ 2573              		.set	.LANCHOR0,. + 0
+ 2576              	status:
+ 2577 0000 00       		.space	1
+ 2578              		.section	.bss.total,"aw",%nobits
+ 2581              	total:
+ 2582 0000 00       		.space	1
+ 2583              		.section	.data.DATA1,"aw"
+ 2584              		.align	2
+ 2585              		.set	.LANCHOR6,. + 0
+ 2588              	DATA1:
+ 2589 0000 12345678 		.ascii	"\0224Vx\232\000\377\007\200)\377\377\377\377\377\377"
+ 2589      9A00FF07 
+ 2589      8029FFFF 
+ 2589      FFFFFFFF 
+ 2590              		.section	.data.KEY1_A,"aw"
+ 2591              		.align	2
+ 2592              		.set	.LANCHOR2,. + 0
+ 2595              	KEY1_A:
+ARM GAS  /tmp/ccMCXGLW.s 			page 68
+
+
+ 2596 0000 A0A1A2A3 		.ascii	"\240\241\242\243\244\245"
+ 2596      A4A5
+ 2597              		.section	.data.KEY1_B,"aw"
+ 2598              		.align	2
+ 2601              	KEY1_B:
+ 2602 0000 FFFFFFFF 		.ascii	"\377\377\377\377\377\377"
+ 2602      FFFF
+ 2603              		.section	.data.RFID1,"aw"
+ 2604              		.align	2
+ 2607              	RFID1:
+ 2608 0000 00000000 		.ascii	"\000\000\000\000\000\000\377\007\200)\377\377\377\377"
+ 2608      0000FF07 
+ 2608      8029FFFF 
+ 2608      FFFF
+ 2609 000e FFFF     		.ascii	"\377\377"
+ 2610              		.section	.data.addr,"aw"
+ 2611              		.set	.LANCHOR4,. + 0
+ 2614              	addr:
+ 2615 0000 08       		.byte	8
+ 2616              		.section	.data.mycards,"aw"
+ 2617              		.align	2
+ 2618              		.set	.LANCHOR8,. + 0
+ 2621              	mycards:
+ 2622 0000 AA5BD384 		.ascii	"\252[\323\204"
+ 2623 0004 F9562CE5 		.ascii	"\371V,\345"
+ 2624              		.text
+ 2625              	.Letext0:
+ 2626              		.file 2 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 2627              		.file 3 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ 2628              		.file 4 "Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h"
+ 2629              		.file 5 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def.h"
+ 2630              		.file 6 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h"
+ 2631              		.file 7 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_dma.h"
+ 2632              		.file 8 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_spi.h"
+ 2633              		.file 9 "Core/Inc/spi.h"
+ 2634              		.file 10 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/stdio.h"
+ 2635              		.file 11 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h"
+ 2636              		.file 12 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_cortex.h"
+ 2637              		.file 13 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h"
+ 2638              		.file 14 "<built-in>"
+ARM GAS  /tmp/ccMCXGLW.s 			page 69
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 RC522.c
+     /tmp/ccMCXGLW.s:16     .text.Delay_us:0000000000000000 $t
+     /tmp/ccMCXGLW.s:24     .text.Delay_us:0000000000000000 Delay_us
+     /tmp/ccMCXGLW.s:70     .text.Delay_us:000000000000002c $d
+     /tmp/ccMCXGLW.s:76     .rodata.ShowID.str1.4:0000000000000000 $d
+     /tmp/ccMCXGLW.s:80     .text.ShowID:0000000000000000 $t
+     /tmp/ccMCXGLW.s:87     .text.ShowID:0000000000000000 ShowID
+     /tmp/ccMCXGLW.s:202    .text.ShowID:000000000000008c $d
+     /tmp/ccMCXGLW.s:207    .text.WriteRawRC:0000000000000000 $t
+     /tmp/ccMCXGLW.s:214    .text.WriteRawRC:0000000000000000 WriteRawRC
+     /tmp/ccMCXGLW.s:273    .text.WriteRawRC:000000000000003c $d
+     /tmp/ccMCXGLW.s:279    .text.ReadRawRC:0000000000000000 $t
+     /tmp/ccMCXGLW.s:286    .text.ReadRawRC:0000000000000000 ReadRawRC
+     /tmp/ccMCXGLW.s:353    .text.ReadRawRC:0000000000000050 $d
+     /tmp/ccMCXGLW.s:359    .text.PCD_Reset:0000000000000000 $t
+     /tmp/ccMCXGLW.s:366    .text.PCD_Reset:0000000000000000 PCD_Reset
+     /tmp/ccMCXGLW.s:463    .text.PCD_Reset:0000000000000080 $d
+     /tmp/ccMCXGLW.s:468    .text.SetBitMask:0000000000000000 $t
+     /tmp/ccMCXGLW.s:475    .text.SetBitMask:0000000000000000 SetBitMask
+     /tmp/ccMCXGLW.s:511    .text.PcdAntennaOn:0000000000000000 $t
+     /tmp/ccMCXGLW.s:518    .text.PcdAntennaOn:0000000000000000 PcdAntennaOn
+     /tmp/ccMCXGLW.s:558    .text.ClearBitMask:0000000000000000 $t
+     /tmp/ccMCXGLW.s:565    .text.ClearBitMask:0000000000000000 ClearBitMask
+     /tmp/ccMCXGLW.s:603    .text.PcdComMF522:0000000000000000 $t
+     /tmp/ccMCXGLW.s:610    .text.PcdComMF522:0000000000000000 PcdComMF522
+     /tmp/ccMCXGLW.s:890    .text.PcdAuthState:0000000000000000 $t
+     /tmp/ccMCXGLW.s:897    .text.PcdAuthState:0000000000000000 PcdAuthState
+     /tmp/ccMCXGLW.s:1031   .text.PcdRequest:0000000000000000 $t
+     /tmp/ccMCXGLW.s:1038   .text.PcdRequest:0000000000000000 PcdRequest
+     /tmp/ccMCXGLW.s:1132   .text.PcdAnticoll:0000000000000000 $t
+     /tmp/ccMCXGLW.s:1139   .text.PcdAnticoll:0000000000000000 PcdAnticoll
+     /tmp/ccMCXGLW.s:1271   .text.CalulateCRC:0000000000000000 $t
+     /tmp/ccMCXGLW.s:1278   .text.CalulateCRC:0000000000000000 CalulateCRC
+     /tmp/ccMCXGLW.s:1393   .text.PcdRead:0000000000000000 $t
+     /tmp/ccMCXGLW.s:1400   .text.PcdRead:0000000000000000 PcdRead
+     /tmp/ccMCXGLW.s:1502   .text.PcdWrite:0000000000000000 $t
+     /tmp/ccMCXGLW.s:1509   .text.PcdWrite:0000000000000000 PcdWrite
+     /tmp/ccMCXGLW.s:1688   .rodata.RC522_Handle.str1.4:0000000000000000 $d
+     /tmp/ccMCXGLW.s:1719   .text.RC522_Handle:0000000000000000 $t
+     /tmp/ccMCXGLW.s:1726   .text.RC522_Handle:0000000000000000 RC522_Handle
+     /tmp/ccMCXGLW.s:1977   .text.RC522_Handle:0000000000000110 $d
+     /tmp/ccMCXGLW.s:1997   .text.PcdSelect:0000000000000000 $t
+     /tmp/ccMCXGLW.s:2004   .text.PcdSelect:0000000000000000 PcdSelect
+     /tmp/ccMCXGLW.s:2120   .rodata.RC522_Handle1.str1.4:0000000000000000 $d
+     /tmp/ccMCXGLW.s:2136   .text.RC522_Handle1:0000000000000000 $t
+     /tmp/ccMCXGLW.s:2143   .text.RC522_Handle1:0000000000000000 RC522_Handle1
+     /tmp/ccMCXGLW.s:2350   .text.RC522_Handle1:00000000000000e4 $d
+     /tmp/ccMCXGLW.s:2365   .text.M500PcdConfigISOType:0000000000000000 $t
+     /tmp/ccMCXGLW.s:2372   .text.M500PcdConfigISOType:0000000000000000 M500PcdConfigISOType
+     /tmp/ccMCXGLW.s:2443   .text.PcdAntennaOff:0000000000000000 $t
+     /tmp/ccMCXGLW.s:2450   .text.PcdAntennaOff:0000000000000000 PcdAntennaOff
+     /tmp/ccMCXGLW.s:2472   .text.RC522_Init:0000000000000000 $t
+     /tmp/ccMCXGLW.s:2479   .text.RC522_Init:0000000000000000 RC522_Init
+     /tmp/ccMCXGLW.s:2520   .text.RC522_Init:000000000000002c $d
+     /tmp/ccMCXGLW.s:2614   .data.addr:0000000000000000 addr
+     /tmp/ccMCXGLW.s:2576   .bss.status:0000000000000000 status
+ARM GAS  /tmp/ccMCXGLW.s 			page 70
+
+
+     /tmp/ccMCXGLW.s:2588   .data.DATA1:0000000000000000 DATA1
+     /tmp/ccMCXGLW.s:2607   .data.RFID1:0000000000000000 RFID1
+     /tmp/ccMCXGLW.s:2601   .data.KEY1_B:0000000000000000 KEY1_B
+     /tmp/ccMCXGLW.s:2595   .data.KEY1_A:0000000000000000 KEY1_A
+     /tmp/ccMCXGLW.s:2570   .bss.cardNum:0000000000000000 cardNum
+     /tmp/ccMCXGLW.s:2621   .data.mycards:0000000000000000 mycards
+     /tmp/ccMCXGLW.s:2581   .bss.total:0000000000000000 total
+     /tmp/ccMCXGLW.s:2557   .bss.RFID:0000000000000000 RFID
+     /tmp/ccMCXGLW.s:2550   .bss.DATA:0000000000000000 DATA
+     /tmp/ccMCXGLW.s:2564   .bss.SN:0000000000000000 SN
+     /tmp/ccMCXGLW.s:2543   .bss.CT:0000000000000000 CT
+     /tmp/ccMCXGLW.s:2539   .bss.CT:0000000000000000 $d
+     /tmp/ccMCXGLW.s:2546   .bss.DATA:0000000000000000 $d
+     /tmp/ccMCXGLW.s:2553   .bss.RFID:0000000000000000 $d
+     /tmp/ccMCXGLW.s:2560   .bss.SN:0000000000000000 $d
+     /tmp/ccMCXGLW.s:2571   .bss.cardNum:0000000000000000 $d
+     /tmp/ccMCXGLW.s:2577   .bss.status:0000000000000000 $d
+     /tmp/ccMCXGLW.s:2582   .bss.total:0000000000000000 $d
+     /tmp/ccMCXGLW.s:2584   .data.DATA1:0000000000000000 $d
+     /tmp/ccMCXGLW.s:2591   .data.KEY1_A:0000000000000000 $d
+     /tmp/ccMCXGLW.s:2598   .data.KEY1_B:0000000000000000 $d
+     /tmp/ccMCXGLW.s:2604   .data.RFID1:0000000000000000 $d
+     /tmp/ccMCXGLW.s:2617   .data.mycards:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+HAL_RCC_GetHCLKFreq
+HAL_SYSTICK_Config
+HAL_Delay
+printf
+HAL_GPIO_WritePin
+HAL_SPI_Transmit
+hspi1
+HAL_SPI_Receive
+puts

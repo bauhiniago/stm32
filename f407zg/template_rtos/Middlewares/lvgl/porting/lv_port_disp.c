@@ -129,7 +129,7 @@ static void disp_init(void)
 {
   
     LCD_Init();
-    LCD_Display_Dir(0);
+    LCD_Display_Dir(1);
   
     /*You code here*/
 }

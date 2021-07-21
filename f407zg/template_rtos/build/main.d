@@ -20,6 +20,8 @@ build/main.o: Core/Src/main.c Core/Inc/main.h \
  Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_adc.h \
  Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_adc.h \
  Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_adc_ex.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dac.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dac_ex.h \
  Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h \
  Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h \
  Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h \
@@ -47,8 +49,8 @@ build/main.o: Core/Src/main.c Core/Inc/main.h \
  Middlewares/Third_Party/FreeRTOS/Source/include/queue.h \
  Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h \
  Middlewares/Third_Party/FreeRTOS/Source/include/timers.h Core/Inc/adc.h \
- Core/Inc/main.h Core/Inc/dma.h Core/Inc/tim.h Core/Inc/usart.h \
- Core/Inc/gpio.h Core/Inc/fsmc.h Middlewares/lvgl/lvgl.h \
+ Core/Inc/main.h Core/Inc/dac.h Core/Inc/dma.h Core/Inc/tim.h \
+ Core/Inc/usart.h Core/Inc/gpio.h Core/Inc/fsmc.h Middlewares/lvgl/lvgl.h \
  Middlewares/lvgl/src/misc/lv_log.h \
  Middlewares/lvgl/src/misc/../lv_conf_internal.h \
  Middlewares/lvgl/src/misc/../lv_conf_kconfig.h \
@@ -218,7 +220,9 @@ build/main.o: Core/Src/main.c Core/Inc/main.h \
  Middlewares/lvgl/src/extra/themes/mono/../../../core/lv_obj.h \
  Middlewares/lvgl/src/extra/themes/basic/lv_theme_basic.h \
  Middlewares/lvgl/src/extra/themes/basic/../../../core/lv_obj.h \
- Core/Inc/lvgl_app.h
+ Core/Inc/lvgl_app.h Drivers/DSP/Include/arm_math.h \
+ Drivers/DSP/Include/arm_const_structs.h Drivers/DSP/Include/arm_math.h \
+ Drivers/DSP/Include/arm_common_tables.h
 Core/Inc/main.h:
 Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 Core/Inc/stm32f4xx_hal_conf.h:
@@ -243,6 +247,8 @@ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_cortex.h:
 Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_adc.h:
 Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_adc.h:
 Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_adc_ex.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dac.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dac_ex.h:
 Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h:
 Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h:
 Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h:
@@ -272,6 +278,7 @@ Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h:
 Middlewares/Third_Party/FreeRTOS/Source/include/timers.h:
 Core/Inc/adc.h:
 Core/Inc/main.h:
+Core/Inc/dac.h:
 Core/Inc/dma.h:
 Core/Inc/tim.h:
 Core/Inc/usart.h:
@@ -458,3 +465,7 @@ Middlewares/lvgl/src/extra/themes/mono/../../../core/lv_obj.h:
 Middlewares/lvgl/src/extra/themes/basic/lv_theme_basic.h:
 Middlewares/lvgl/src/extra/themes/basic/../../../core/lv_obj.h:
 Core/Inc/lvgl_app.h:
+Drivers/DSP/Include/arm_math.h:
+Drivers/DSP/Include/arm_const_structs.h:
+Drivers/DSP/Include/arm_math.h:
+Drivers/DSP/Include/arm_common_tables.h:
