@@ -1,0 +1,2959 @@
+ARM GAS  /tmp/ccV45s2B.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"AD9854.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.Freq_convert,"ax",%progbits
+  18              		.align	1
+  19              		.arch armv7e-m
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	Freq_convert:
+  26              	.LVL0:
+  27              	.LFB237:
+  28              		.file 1 "Core/Src/AD9854.c"
+   1:Core/Src/AD9854.c **** //=====================================================================
+   2:Core/Src/AD9854.c **** //                    AD9854 驱动程序设计
+   3:Core/Src/AD9854.c **** //硬件连接: P0    ——Data;	  
+   4:Core/Src/AD9854.c **** //          P2    ——Adr;    
+   5:Core/Src/AD9854.c **** //          RESET ——P3^7;     
+   6:Core/Src/AD9854.c **** //          UDCLK ——P3^6;   
+   7:Core/Src/AD9854.c **** //          WR    ——P3.5;	  
+   8:Core/Src/AD9854.c **** //          RD    ——p3.4;    
+   9:Core/Src/AD9854.c **** //          FDATA ——P3^3;     
+  10:Core/Src/AD9854.c **** //          OSK   ——P3^2;  
+  11:Core/Src/AD9854.c **** //          VDD--逻辑电源(3.3V)
+  12:Core/Src/AD9854.c **** //          VSS--GND(0V)  
+  13:Core/Src/AD9854.c **** //AD9854.c
+  14:Core/Src/AD9854.c **** //康威电子工作室
+  15:Core/Src/AD9854.c **** //说明：本程序基于硬件的外接晶振为20MHZ
+  16:Core/Src/AD9854.c **** //=====================================================================
+  17:Core/Src/AD9854.c **** 
+  18:Core/Src/AD9854.c **** #include "AD9854.h"      //STC单片机头文件	
+  19:Core/Src/AD9854.c **** #include "myiic.h"
+  20:Core/Src/AD9854.c **** 
+  21:Core/Src/AD9854.c **** 
+  22:Core/Src/AD9854.c **** 
+  23:Core/Src/AD9854.c **** 
+  24:Core/Src/AD9854.c **** uchar FreqWord[6];				 //6个字节频率控制字
+  25:Core/Src/AD9854.c **** 
+  26:Core/Src/AD9854.c **** //**********************以下为系统时钟以及其相关变量设置**************************
+  27:Core/Src/AD9854.c **** 
+  28:Core/Src/AD9854.c **** /* 
+  29:Core/Src/AD9854.c ****       此处根据自己的需要设置系统时钟以及与其相关的因子，一次需且只需
+  30:Core/Src/AD9854.c ****       CLK_Set为时钟倍频设置，可设置4~20倍倍频，但最大不能超过300MHZ
+ARM GAS  /tmp/ccV45s2B.s 			page 2
+
+
+  31:Core/Src/AD9854.c ****       Freq_mult_ulong和Freq_mult_doulle均为2的48次方除以系统时钟，一个为长整形�
+  32:Core/Src/AD9854.c **** */
+  33:Core/Src/AD9854.c **** 
+  34:Core/Src/AD9854.c **** /*
+  35:Core/Src/AD9854.c **** #define      CLK_Set            4
+  36:Core/Src/AD9854.c **** const ulong  Freq_mult_ulong  = 3518437;
+  37:Core/Src/AD9854.c **** const double Freq_mult_doulle = 3518437.2088832;
+  38:Core/Src/AD9854.c **** */
+  39:Core/Src/AD9854.c **** 
+  40:Core/Src/AD9854.c **** /*
+  41:Core/Src/AD9854.c **** #define      CLK_Set            5
+  42:Core/Src/AD9854.c **** const ulong  Freq_mult_ulong  = 2814750;
+  43:Core/Src/AD9854.c **** const double Freq_mult_doulle = 2814749.76710656;
+  44:Core/Src/AD9854.c **** */
+  45:Core/Src/AD9854.c **** 
+  46:Core/Src/AD9854.c ****  /*
+  47:Core/Src/AD9854.c **** #define      CLK_Set            6
+  48:Core/Src/AD9854.c **** const ulong  Freq_mult_ulong  = 2345625;
+  49:Core/Src/AD9854.c **** const double Freq_mult_doulle = 2345624.80592213;
+  50:Core/Src/AD9854.c ****   */
+  51:Core/Src/AD9854.c **** 
+  52:Core/Src/AD9854.c **** /*
+  53:Core/Src/AD9854.c **** #define      CLK_Set            7
+  54:Core/Src/AD9854.c **** const ulong  Freq_mult_ulong  = 2010536;
+  55:Core/Src/AD9854.c **** const double Freq_mult_doulle = 2010535.54793326;
+  56:Core/Src/AD9854.c **** */
+  57:Core/Src/AD9854.c **** 
+  58:Core/Src/AD9854.c **** /*
+  59:Core/Src/AD9854.c **** #define      CLK_Set            8
+  60:Core/Src/AD9854.c **** const ulong  Freq_mult_ulong  = 1759219;
+  61:Core/Src/AD9854.c **** const double Freq_mult_doulle = 1759218.6044416;
+  62:Core/Src/AD9854.c **** */
+  63:Core/Src/AD9854.c **** 
+  64:Core/Src/AD9854.c **** /*
+  65:Core/Src/AD9854.c **** #define      CLK_Set            9
+  66:Core/Src/AD9854.c **** const ulong  Freq_mult_ulong  = 1563750;
+  67:Core/Src/AD9854.c **** const double Freq_mult_doulle = 1563749.87061476;
+  68:Core/Src/AD9854.c **** */
+  69:Core/Src/AD9854.c **** 
+  70:Core/Src/AD9854.c **** /*
+  71:Core/Src/AD9854.c **** #define      CLK_Set            10
+  72:Core/Src/AD9854.c **** const ulong  Freq_mult_ulong  = 1407375;
+  73:Core/Src/AD9854.c **** const double Freq_mult_doulle = 1407374.88355328;
+  74:Core/Src/AD9854.c **** */
+  75:Core/Src/AD9854.c **** 
+  76:Core/Src/AD9854.c **** /*
+  77:Core/Src/AD9854.c **** #define      CLK_Set            11
+  78:Core/Src/AD9854.c **** const ulong  Freq_mult_ulong  = 1279432;
+  79:Core/Src/AD9854.c **** const double Freq_mult_doulle = 1279431.712321164;
+  80:Core/Src/AD9854.c **** */
+  81:Core/Src/AD9854.c **** 
+  82:Core/Src/AD9854.c **** 
+  83:Core/Src/AD9854.c **** #define      CLK_Set            12
+  84:Core/Src/AD9854.c **** const ulong  Freq_mult_ulong  = 1172812;
+  85:Core/Src/AD9854.c **** const double Freq_mult_doulle = 1172812.402961067;
+  86:Core/Src/AD9854.c **** 
+  87:Core/Src/AD9854.c **** 
+ARM GAS  /tmp/ccV45s2B.s 			page 3
+
+
+  88:Core/Src/AD9854.c **** /*
+  89:Core/Src/AD9854.c **** #define      CLK_Set            13
+  90:Core/Src/AD9854.c **** const ulong  Freq_mult_ulong  = 1082596;
+  91:Core/Src/AD9854.c **** const double Freq_mult_doulle = 1082596.064271754;
+  92:Core/Src/AD9854.c **** */
+  93:Core/Src/AD9854.c **** 
+  94:Core/Src/AD9854.c **** /*
+  95:Core/Src/AD9854.c **** #define      CLK_Set            14
+  96:Core/Src/AD9854.c **** const ulong  Freq_mult_ulong  = 1005268;
+  97:Core/Src/AD9854.c **** const double Freq_mult_doulle = 1005267.773966629;
+  98:Core/Src/AD9854.c **** */
+  99:Core/Src/AD9854.c **** 
+ 100:Core/Src/AD9854.c **** /*
+ 101:Core/Src/AD9854.c **** #define      CLK_Set            15
+ 102:Core/Src/AD9854.c **** const ulong  Freq_mult_ulong  = 938250;
+ 103:Core/Src/AD9854.c **** const double Freq_mult_doulle = 938249.9223688533;
+ 104:Core/Src/AD9854.c **** 
+ 105:Core/Src/AD9854.c ****  */
+ 106:Core/Src/AD9854.c **** //**************************修改硬件时要修改的部分********************************
+ 107:Core/Src/AD9854.c **** 
+ 108:Core/Src/AD9854.c **** 
+ 109:Core/Src/AD9854.c **** 
+ 110:Core/Src/AD9854.c **** //**************************以下部分为函数定义********************************
+ 111:Core/Src/AD9854.c **** 
+ 112:Core/Src/AD9854.c **** static void AD9854_WR_Byte(uint32_t addr,uint32_t dat);
+ 113:Core/Src/AD9854.c **** extern void AD9854_Init(void);						  
+ 114:Core/Src/AD9854.c **** static void Freq_convert(long Freq);	         	  
+ 115:Core/Src/AD9854.c **** extern void AD9854_SetSine(ulong Freq,uint Shape);	  
+ 116:Core/Src/AD9854.c **** static void Freq_double_convert(double Freq);		  
+ 117:Core/Src/AD9854.c **** extern void AD9854_SetSine_double(double Freq,uint Shape);
+ 118:Core/Src/AD9854.c **** extern void AD9854_InitFSK(void);				
+ 119:Core/Src/AD9854.c **** extern void AD9854_SetFSK(ulong Freq1,ulong Freq2);					  
+ 120:Core/Src/AD9854.c **** extern void AD9854_InitBPSK(void);					  
+ 121:Core/Src/AD9854.c **** extern void AD9854_SetBPSK(uint Phase1,uint Phase2);					
+ 122:Core/Src/AD9854.c **** extern void AD9854_InitOSK(void);					 
+ 123:Core/Src/AD9854.c **** extern void AD9854_SetOSK(uchar RateShape);					  
+ 124:Core/Src/AD9854.c **** extern void AD9854_InitAM(void);					 
+ 125:Core/Src/AD9854.c **** extern void AD9854_SetAM(uint Shape);					
+ 126:Core/Src/AD9854.c **** extern void AD9854_InitRFSK(void);					 
+ 127:Core/Src/AD9854.c **** extern void AD9854_SetRFSK(ulong Freq_Low,ulong Freq_High,ulong Freq_Up_Down,ulong FreRate);				
+ 128:Core/Src/AD9854.c **** 
+ 129:Core/Src/AD9854.c **** 
+ 130:Core/Src/AD9854.c **** 
+ 131:Core/Src/AD9854.c **** //====================================================================================
+ 132:Core/Src/AD9854.c **** //函数名称:void AD9854_WR_Byte(uchar addr,uchar dat)
+ 133:Core/Src/AD9854.c **** //函数功能:AD9854并行口写入数据
+ 134:Core/Src/AD9854.c **** //入口参数:addr     6位地址
+ 135:Core/Src/AD9854.c **** //         dat      写入的数据
+ 136:Core/Src/AD9854.c **** //出口参数:无
+ 137:Core/Src/AD9854.c **** //====================================================================================
+ 138:Core/Src/AD9854.c **** uint32_t dat1,dat2;
+ 139:Core/Src/AD9854.c **** 
+ 140:Core/Src/AD9854.c **** #define	GET_BIT(x, bit)	((x & (1 << bit)) >> bit)	/* 获取第bit位 */
+ 141:Core/Src/AD9854.c **** 
+ 142:Core/Src/AD9854.c **** void AD9854_WR_Byte(uint32_t addr,uint32_t dat)
+ 143:Core/Src/AD9854.c **** {
+ 144:Core/Src/AD9854.c **** 	dat1= dat|(addr<<8);
+ARM GAS  /tmp/ccV45s2B.s 			page 4
+
+
+ 145:Core/Src/AD9854.c ****     uint32_t x;
+ 146:Core/Src/AD9854.c ****     x=(dat1&0x3fff)|((dat1^0x3fff)<<16);
+ 147:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D0_GPIO_Port,D0_Pin,x&0x1);
+ 148:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D1_GPIO_Port,D1_Pin,x>>1&0x1);
+ 149:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D2_GPIO_Port,D2_Pin,x>>2&0x1);
+ 150:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D3_GPIO_Port,D3_Pin,x>>3&0x1);
+ 151:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D4_GPIO_Port,D4_Pin,x>>4&0x1);
+ 152:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D5_GPIO_Port,D5_Pin,x>>5&0x1);
+ 153:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D6_GPIO_Port,D6_Pin,x>>6&0x1);
+ 154:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D7_GPIO_Port,D7_Pin,x>>7&0x1);
+ 155:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(A0_GPIO_Port,A0_Pin,x>>8&0x1);
+ 156:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(A1_GPIO_Port,A1_Pin,x>>9&0x1);
+ 157:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(A2_GPIO_Port,A2_Pin,x>>10&0x1);
+ 158:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(A3_GPIO_Port,A3_Pin,x>>11&0x1);
+ 159:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(A4_GPIO_Port,A4_Pin,x>>12&0x1);
+ 160:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(A5_GPIO_Port,A5_Pin,x>>13&0x1);
+ 161:Core/Src/AD9854.c **** //	AD9854_AdrBus  = ((addr&0x3f)<<8) | ((addr^0x3f)<<(16+8));
+ 162:Core/Src/AD9854.c **** //	AD9854_DataBus = dat|(dat^0xff)<<16;
+ 163:Core/Src/AD9854.c **** //	dat1  = ((addr&0x3f)<<8) | ((addr^0x3f)<<(16+8));
+ 164:Core/Src/AD9854.c **** //	dat2 = (dat1&0x3fff)|((dat1^0x3fff)<<16);
+ 165:Core/Src/AD9854.c **** 	// AD9854_WR      = 0;
+ 166:Core/Src/AD9854.c **** 	// AD9854_WR      = 1;
+ 167:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(WD_GPIO_Port,WD_Pin,GPIO_PIN_RESET);
+ 168:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(WD_GPIO_Port,WD_Pin,GPIO_PIN_SET);
+ 169:Core/Src/AD9854.c **** }
+ 170:Core/Src/AD9854.c **** 
+ 171:Core/Src/AD9854.c **** //====================================================================================
+ 172:Core/Src/AD9854.c **** //函数名称:void AD9854_Init(void)
+ 173:Core/Src/AD9854.c **** //函数功能:AD9854初始化
+ 174:Core/Src/AD9854.c **** //入口参数:无
+ 175:Core/Src/AD9854.c **** //出口参数:无
+ 176:Core/Src/AD9854.c **** //====================================================================================
+ 177:Core/Src/AD9854.c **** void AD9854_Init(void)
+ 178:Core/Src/AD9854.c **** {
+ 179:Core/Src/AD9854.c **** 	// HAL_GPIO_WritePin(WD_GPIO_Port,WD_Pin,GPIO_PIN_SET);//将读、写控制端口设为无效
+ 180:Core/Src/AD9854.c ****     // HAL_GPIO_WritePin(RD_GPIO_Port,RD_Pin,GPIO_PIN_SET);
+ 181:Core/Src/AD9854.c ****     // HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 182:Core/Src/AD9854.c ****     // HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_SET);                 //复位AD9854
+ 183:Core/Src/AD9854.c ****     // HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_RESET);
+ 184:Core/Src/AD9854.c **** 
+ 185:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(WD_GPIO_Port,WD_Pin,GPIO_PIN_SET);
+ 186:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RD_GPIO_Port,RD_Pin,GPIO_PIN_SET);
+ 187:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);
+ 188:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_SET);
+ 189:Core/Src/AD9854.c ****    // delay_us(10);
+ 190:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_RESET);
+ 191:Core/Src/AD9854.c **** 
+ 192:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1d,0x00);	           //关闭比较器
+ 193:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1e,CLK_Set);	   //设置系统时钟倍频            
+ 194:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1f,0x00);	   //设置系统为模式0，由外部更新
+ 195:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x20,0x60);	   //设置为可调节幅度，取消插值补偿
+ 196:Core/Src/AD9854.c **** 
+ 197:Core/Src/AD9854.c **** 	// HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);               //更新AD9854输出
+ 198:Core/Src/AD9854.c ****     // HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 199:Core/Src/AD9854.c **** 
+ 200:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 201:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);
+ARM GAS  /tmp/ccV45s2B.s 			page 5
+
+
+ 202:Core/Src/AD9854.c **** }
+ 203:Core/Src/AD9854.c **** //====================================================================================
+ 204:Core/Src/AD9854.c **** //函数名称:void Freq_convert(long Freq)
+ 205:Core/Src/AD9854.c **** //函数功能:正弦信号频率数据转换
+ 206:Core/Src/AD9854.c **** //入口参数:Freq   需要转换的频率，取值从0~SYSCLK/2
+ 207:Core/Src/AD9854.c **** //出口参数:无   但是影响全局变量FreqWord[6]的值
+ 208:Core/Src/AD9854.c **** //说明：   该算法位多字节相乘算法，有公式FTW = (Desired Output Frequency × 2N)/S
+ 209:Core/Src/AD9854.c **** //         得到该算法，其中N=48，Desired Output Frequency 为所需要的频率，即Freq�
+ 210:Core/Src/AD9854.c **** //         为可编程的系统时钟，FTW为48Bit的频率控制字，即FreqWord[6]
+ 211:Core/Src/AD9854.c **** //====================================================================================
+ 212:Core/Src/AD9854.c **** void Freq_convert(long Freq)   
+ 213:Core/Src/AD9854.c **** {
+  29              		.loc 1 213 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 8
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  34              		.loc 1 213 1 is_stmt 0 view .LVU1
+  35 0000 30B4     		push	{r4, r5}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 8
+  38              		.cfi_offset 4, -8
+  39              		.cfi_offset 5, -4
+  40 0002 82B0     		sub	sp, sp, #8
+  41              	.LCFI1:
+  42              		.cfi_def_cfa_offset 16
+ 214:Core/Src/AD9854.c ****     ulong FreqBuf;
+  43              		.loc 1 214 5 is_stmt 1 view .LVU2
+ 215:Core/Src/AD9854.c ****     ulong Temp=Freq_mult_ulong;   	       
+  44              		.loc 1 215 5 view .LVU3
+  45              	.LVL1:
+ 216:Core/Src/AD9854.c **** 
+ 217:Core/Src/AD9854.c **** 	uchar Array_Freq[4];			     //将输入频率因子分为四个字节
+  46              		.loc 1 217 2 view .LVU4
+ 218:Core/Src/AD9854.c **** 	Array_Freq[0]=(uchar)Freq;
+  47              		.loc 1 218 2 view .LVU5
+  48              		.loc 1 218 16 is_stmt 0 view .LVU6
+  49 0004 C1B2     		uxtb	r1, r0
+  50              		.loc 1 218 15 view .LVU7
+  51 0006 8DF80410 		strb	r1, [sp, #4]
+ 219:Core/Src/AD9854.c **** 	Array_Freq[1]=(uchar)(Freq>>8);
+  52              		.loc 1 219 2 is_stmt 1 view .LVU8
+  53              		.loc 1 219 16 is_stmt 0 view .LVU9
+  54 000a C0F3072C 		ubfx	ip, r0, #8, #8
+  55              		.loc 1 219 15 view .LVU10
+  56 000e 8DF805C0 		strb	ip, [sp, #5]
+ 220:Core/Src/AD9854.c **** 	Array_Freq[2]=(uchar)(Freq>>16);
+  57              		.loc 1 220 2 is_stmt 1 view .LVU11
+  58              		.loc 1 220 16 is_stmt 0 view .LVU12
+  59 0012 C0F30742 		ubfx	r2, r0, #16, #8
+  60              		.loc 1 220 15 view .LVU13
+  61 0016 8DF80620 		strb	r2, [sp, #6]
+ 221:Core/Src/AD9854.c **** 	Array_Freq[3]=(uchar)(Freq>>24);
+  62              		.loc 1 221 2 is_stmt 1 view .LVU14
+  63              		.loc 1 221 16 is_stmt 0 view .LVU15
+  64 001a 000E     		lsrs	r0, r0, #24
+  65              	.LVL2:
+ARM GAS  /tmp/ccV45s2B.s 			page 6
+
+
+  66              		.loc 1 221 15 view .LVU16
+  67 001c 8DF80700 		strb	r0, [sp, #7]
+ 222:Core/Src/AD9854.c **** 
+ 223:Core/Src/AD9854.c **** 	FreqBuf=Temp*Array_Freq[0];                  
+  68              		.loc 1 223 2 is_stmt 1 view .LVU17
+  69              		.loc 1 223 9 is_stmt 0 view .LVU18
+  70 0020 0D4D     		ldr	r5, .L3
+  71 0022 05FB01F1 		mul	r1, r5, r1
+  72              	.LVL3:
+ 224:Core/Src/AD9854.c ****     FreqWord[0]=FreqBuf;    
+  73              		.loc 1 224 5 is_stmt 1 view .LVU19
+  74              		.loc 1 224 16 is_stmt 0 view .LVU20
+  75 0026 0D4C     		ldr	r4, .L3+4
+  76 0028 2170     		strb	r1, [r4]
+ 225:Core/Src/AD9854.c ****     FreqBuf>>=8;
+  77              		.loc 1 225 5 is_stmt 1 view .LVU21
+  78              	.LVL4:
+ 226:Core/Src/AD9854.c **** 
+ 227:Core/Src/AD9854.c ****     FreqBuf+=(Temp*Array_Freq[1]);
+  79              		.loc 1 227 5 view .LVU22
+  80              		.loc 1 227 19 is_stmt 0 view .LVU23
+  81 002a 05FB0CF3 		mul	r3, r5, ip
+  82              		.loc 1 227 12 view .LVU24
+  83 002e 03EB1121 		add	r1, r3, r1, lsr #8
+  84              	.LVL5:
+ 228:Core/Src/AD9854.c ****     FreqWord[1]=FreqBuf;
+  85              		.loc 1 228 5 is_stmt 1 view .LVU25
+  86              		.loc 1 228 16 is_stmt 0 view .LVU26
+  87 0032 6170     		strb	r1, [r4, #1]
+ 229:Core/Src/AD9854.c ****     FreqBuf>>=8;
+  88              		.loc 1 229 5 is_stmt 1 view .LVU27
+  89              	.LVL6:
+ 230:Core/Src/AD9854.c **** 
+ 231:Core/Src/AD9854.c ****     FreqBuf+=(Temp*Array_Freq[2]);
+  90              		.loc 1 231 5 view .LVU28
+  91              		.loc 1 231 19 is_stmt 0 view .LVU29
+  92 0034 05FB02F3 		mul	r3, r5, r2
+  93              		.loc 1 231 12 view .LVU30
+  94 0038 03EB1123 		add	r3, r3, r1, lsr #8
+  95              	.LVL7:
+ 232:Core/Src/AD9854.c ****     FreqWord[2]=FreqBuf;
+  96              		.loc 1 232 5 is_stmt 1 view .LVU31
+  97              		.loc 1 232 16 is_stmt 0 view .LVU32
+  98 003c A370     		strb	r3, [r4, #2]
+ 233:Core/Src/AD9854.c ****     FreqBuf>>=8;
+  99              		.loc 1 233 5 is_stmt 1 view .LVU33
+ 100              	.LVL8:
+ 234:Core/Src/AD9854.c **** 
+ 235:Core/Src/AD9854.c **** 	FreqBuf+=(Temp*Array_Freq[3]);
+ 101              		.loc 1 235 2 view .LVU34
+ 102              		.loc 1 235 16 is_stmt 0 view .LVU35
+ 103 003e 05FB00F0 		mul	r0, r5, r0
+ 104              		.loc 1 235 9 view .LVU36
+ 105 0042 00EB1320 		add	r0, r0, r3, lsr #8
+ 106              	.LVL9:
+ 236:Core/Src/AD9854.c ****     FreqWord[3]=FreqBuf;
+ 107              		.loc 1 236 5 is_stmt 1 view .LVU37
+ARM GAS  /tmp/ccV45s2B.s 			page 7
+
+
+ 108              		.loc 1 236 16 is_stmt 0 view .LVU38
+ 109 0046 E070     		strb	r0, [r4, #3]
+ 237:Core/Src/AD9854.c ****     FreqBuf>>=8;
+ 110              		.loc 1 237 5 is_stmt 1 view .LVU39
+ 111              		.loc 1 237 12 is_stmt 0 view .LVU40
+ 112 0048 030A     		lsrs	r3, r0, #8
+ 113              	.LVL10:
+ 238:Core/Src/AD9854.c **** 
+ 239:Core/Src/AD9854.c ****     FreqWord[4]=FreqBuf;
+ 114              		.loc 1 239 5 is_stmt 1 view .LVU41
+ 115              		.loc 1 239 16 is_stmt 0 view .LVU42
+ 116 004a 2371     		strb	r3, [r4, #4]
+ 240:Core/Src/AD9854.c ****     FreqWord[5]=FreqBuf>>8;			
+ 117              		.loc 1 240 5 is_stmt 1 view .LVU43
+ 118              		.loc 1 240 24 is_stmt 0 view .LVU44
+ 119 004c 000C     		lsrs	r0, r0, #16
+ 120              		.loc 1 240 16 view .LVU45
+ 121 004e 6071     		strb	r0, [r4, #5]
+ 241:Core/Src/AD9854.c **** }  
+ 122              		.loc 1 241 1 view .LVU46
+ 123 0050 02B0     		add	sp, sp, #8
+ 124              	.LCFI2:
+ 125              		.cfi_def_cfa_offset 8
+ 126              		@ sp needed
+ 127 0052 30BC     		pop	{r4, r5}
+ 128              	.LCFI3:
+ 129              		.cfi_restore 5
+ 130              		.cfi_restore 4
+ 131              		.cfi_def_cfa_offset 0
+ 132 0054 7047     		bx	lr
+ 133              	.L4:
+ 134 0056 00BF     		.align	2
+ 135              	.L3:
+ 136 0058 4CE51100 		.word	1172812
+ 137 005c 00000000 		.word	.LANCHOR0
+ 138              		.cfi_endproc
+ 139              	.LFE237:
+ 141              		.global	__aeabi_dmul
+ 142              		.global	__aeabi_ddiv
+ 143              		.global	__aeabi_d2iz
+ 144              		.global	__aeabi_ui2d
+ 145              		.global	__aeabi_dsub
+ 146              		.global	__aeabi_d2uiz
+ 147              		.section	.text.Freq_double_convert,"ax",%progbits
+ 148              		.align	1
+ 149              		.syntax unified
+ 150              		.thumb
+ 151              		.thumb_func
+ 152              		.fpu fpv4-sp-d16
+ 154              	Freq_double_convert:
+ 155              	.LVL11:
+ 156              	.LFB239:
+ 242:Core/Src/AD9854.c **** 
+ 243:Core/Src/AD9854.c **** //====================================================================================
+ 244:Core/Src/AD9854.c **** //函数名称:void AD9854_SetSine(ulong Freq,uint Shape)
+ 245:Core/Src/AD9854.c **** //函数功能:AD9854正弦波产生程序
+ 246:Core/Src/AD9854.c **** //入口参数:Freq   频率设置，取值范围为0~(1/2)*SYSCLK
+ARM GAS  /tmp/ccV45s2B.s 			page 8
+
+
+ 247:Core/Src/AD9854.c **** //         Shape  幅度设置. 为12 Bit,取值范围为(0~4095) ,取值越大,幅度越大 
+ 248:Core/Src/AD9854.c **** //出口参数:无
+ 249:Core/Src/AD9854.c **** //====================================================================================
+ 250:Core/Src/AD9854.c **** void AD9854_SetSine(ulong Freq,uint Shape)
+ 251:Core/Src/AD9854.c **** {
+ 252:Core/Src/AD9854.c **** 	uchar count;
+ 253:Core/Src/AD9854.c **** 	uchar Adress;
+ 254:Core/Src/AD9854.c **** 
+ 255:Core/Src/AD9854.c **** 	Adress = 0x04;                        //选择频率控制字地址的初值
+ 256:Core/Src/AD9854.c **** 
+ 257:Core/Src/AD9854.c **** 	Freq_convert(Freq);		           //频率转换
+ 258:Core/Src/AD9854.c **** 
+ 259:Core/Src/AD9854.c **** 	for(count=6;count>0;)	          //写入6字节的频率控制字  
+ 260:Core/Src/AD9854.c ****     {
+ 261:Core/Src/AD9854.c **** 		AD9854_WR_Byte(Adress++,FreqWord[--count]);
+ 262:Core/Src/AD9854.c ****     }
+ 263:Core/Src/AD9854.c **** 	
+ 264:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x21,Shape>>8);	  //设置I通道幅度
+ 265:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x22,(uchar)(Shape&0xff));
+ 266:Core/Src/AD9854.c **** 	
+ 267:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x23,Shape>>8);	  //设置Q通道幅度
+ 268:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x24,(uchar)(Shape&0xff));
+ 269:Core/Src/AD9854.c **** 
+ 270:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);                    //更新AD9854输出
+ 271:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 272:Core/Src/AD9854.c **** }
+ 273:Core/Src/AD9854.c **** 
+ 274:Core/Src/AD9854.c **** //====================================================================================
+ 275:Core/Src/AD9854.c **** //函数名称:void Freq_doublt_convert(double Freq)
+ 276:Core/Src/AD9854.c **** //函数功能:正弦信号频率数据转换
+ 277:Core/Src/AD9854.c **** //入口参数:Freq   需要转换的频率，取值从0~SYSCLK/2
+ 278:Core/Src/AD9854.c **** //出口参数:无   但是影响全局变量FreqWord[6]的值
+ 279:Core/Src/AD9854.c **** //说明：   有公式FTW = (Desired Output Frequency × 2N)/SYSCLK得到该函数，
+ 280:Core/Src/AD9854.c **** //         其中N=48，Desired Output Frequency 为所需要的频率，即Freq，SYSCLK
+ 281:Core/Src/AD9854.c **** //         为可编程的系统时钟，FTW为48Bit的频率控制字，即FreqWord[6]
+ 282:Core/Src/AD9854.c **** //注意：   该函数与上面函数的区别为该函数的入口参数为double，可使信号�
+ 283:Core/Src/AD9854.c **** //         建议在100HZ以下用本函数，在高于100HZ的情况下用函数void Freq_convert(
+ 284:Core/Src/AD9854.c **** //====================================================================================
+ 285:Core/Src/AD9854.c **** void Freq_double_convert(double Freq)   
+ 286:Core/Src/AD9854.c **** {
+ 157              		.loc 1 286 1 is_stmt 1 view -0
+ 158              		.cfi_startproc
+ 159              		@ args = 0, pretend = 0, frame = 0
+ 160              		@ frame_needed = 0, uses_anonymous_args = 0
+ 161              		.loc 1 286 1 is_stmt 0 view .LVU48
+ 162 0000 D0B5     		push	{r4, r6, r7, lr}
+ 163              	.LCFI4:
+ 164              		.cfi_def_cfa_offset 16
+ 165              		.cfi_offset 4, -16
+ 166              		.cfi_offset 6, -12
+ 167              		.cfi_offset 7, -8
+ 168              		.cfi_offset 14, -4
+ 287:Core/Src/AD9854.c **** 	ulong Low32;
+ 169              		.loc 1 287 2 is_stmt 1 view .LVU49
+ 288:Core/Src/AD9854.c **** 	uint  High16;
+ 170              		.loc 1 288 2 view .LVU50
+ 289:Core/Src/AD9854.c ****     double Temp=Freq_mult_doulle;   	            //23ca99为2的48次方除以120M
+ARM GAS  /tmp/ccV45s2B.s 			page 9
+
+
+ 171              		.loc 1 289 5 view .LVU51
+ 172              	.LVL12:
+ 290:Core/Src/AD9854.c **** 	Freq*=(double)(Temp);
+ 173              		.loc 1 290 2 view .LVU52
+ 174              		.loc 1 290 6 is_stmt 0 view .LVU53
+ 175 0002 16A3     		adr	r3, .L7+4
+ 176 0004 D3E90023 		ldrd	r2, [r3]
+ 177 0008 FFF7FEFF 		bl	__aeabi_dmul
+ 178              	.LVL13:
+ 179              		.loc 1 290 6 view .LVU54
+ 180 000c 0646     		mov	r6, r0
+ 181 000e 0F46     		mov	r7, r1
+ 182              	.LVL14:
+ 291:Core/Src/AD9854.c **** //	1 0000 0000 0000 0000 0000 0000 0000 0000 = 4294967295
+ 292:Core/Src/AD9854.c **** 	High16 =(int)(Freq/4294967295);                  //2^32 = 4294967295
+ 183              		.loc 1 292 2 is_stmt 1 view .LVU55
+ 184              		.loc 1 292 20 is_stmt 0 view .LVU56
+ 185 0010 14A3     		adr	r3, .L7+12
+ 186 0012 D3E90023 		ldrd	r2, [r3]
+ 187 0016 FFF7FEFF 		bl	__aeabi_ddiv
+ 188              	.LVL15:
+ 189              		.loc 1 292 10 view .LVU57
+ 190 001a FFF7FEFF 		bl	__aeabi_d2iz
+ 191              	.LVL16:
+ 192 001e 0446     		mov	r4, r0
+ 193              	.LVL17:
+ 293:Core/Src/AD9854.c **** 	Freq -= (double)High16*4294967295;
+ 194              		.loc 1 293 2 is_stmt 1 view .LVU58
+ 195              		.loc 1 293 10 is_stmt 0 view .LVU59
+ 196 0020 FFF7FEFF 		bl	__aeabi_ui2d
+ 197              	.LVL18:
+ 198              		.loc 1 293 24 view .LVU60
+ 199 0024 0FA3     		adr	r3, .L7+12
+ 200 0026 D3E90023 		ldrd	r2, [r3]
+ 201 002a FFF7FEFF 		bl	__aeabi_dmul
+ 202              	.LVL19:
+ 203 002e 0246     		mov	r2, r0
+ 204 0030 0B46     		mov	r3, r1
+ 205              		.loc 1 293 7 view .LVU61
+ 206 0032 3046     		mov	r0, r6
+ 207 0034 3946     		mov	r1, r7
+ 208 0036 FFF7FEFF 		bl	__aeabi_dsub
+ 209              	.LVL20:
+ 294:Core/Src/AD9854.c **** 	Low32 = (ulong)Freq;
+ 210              		.loc 1 294 2 is_stmt 1 view .LVU62
+ 211              		.loc 1 294 8 is_stmt 0 view .LVU63
+ 212 003a FFF7FEFF 		bl	__aeabi_d2uiz
+ 213              	.LVL21:
+ 295:Core/Src/AD9854.c **** 
+ 296:Core/Src/AD9854.c ****     FreqWord[0]=Low32;	     
+ 214              		.loc 1 296 5 is_stmt 1 view .LVU64
+ 215              		.loc 1 296 16 is_stmt 0 view .LVU65
+ 216 003e 064B     		ldr	r3, .L7
+ 217 0040 1870     		strb	r0, [r3]
+ 297:Core/Src/AD9854.c ****     FreqWord[1]=Low32>>8;
+ 218              		.loc 1 297 5 is_stmt 1 view .LVU66
+ 219              		.loc 1 297 22 is_stmt 0 view .LVU67
+ARM GAS  /tmp/ccV45s2B.s 			page 10
+
+
+ 220 0042 020A     		lsrs	r2, r0, #8
+ 221              		.loc 1 297 16 view .LVU68
+ 222 0044 5A70     		strb	r2, [r3, #1]
+ 298:Core/Src/AD9854.c ****     FreqWord[2]=Low32>>16;
+ 223              		.loc 1 298 5 is_stmt 1 view .LVU69
+ 224              		.loc 1 298 22 is_stmt 0 view .LVU70
+ 225 0046 020C     		lsrs	r2, r0, #16
+ 226              		.loc 1 298 16 view .LVU71
+ 227 0048 9A70     		strb	r2, [r3, #2]
+ 299:Core/Src/AD9854.c ****     FreqWord[3]=Low32>>24;
+ 228              		.loc 1 299 5 is_stmt 1 view .LVU72
+ 229              		.loc 1 299 22 is_stmt 0 view .LVU73
+ 230 004a 000E     		lsrs	r0, r0, #24
+ 231              	.LVL22:
+ 232              		.loc 1 299 16 view .LVU74
+ 233 004c D870     		strb	r0, [r3, #3]
+ 300:Core/Src/AD9854.c ****     FreqWord[4]=High16;
+ 234              		.loc 1 300 5 is_stmt 1 view .LVU75
+ 235              		.loc 1 300 16 is_stmt 0 view .LVU76
+ 236 004e 1C71     		strb	r4, [r3, #4]
+ 301:Core/Src/AD9854.c ****     FreqWord[5]=High16>>8;			
+ 237              		.loc 1 301 5 is_stmt 1 view .LVU77
+ 238              		.loc 1 301 23 is_stmt 0 view .LVU78
+ 239 0050 240A     		lsrs	r4, r4, #8
+ 240              	.LVL23:
+ 241              		.loc 1 301 16 view .LVU79
+ 242 0052 5C71     		strb	r4, [r3, #5]
+ 302:Core/Src/AD9854.c **** } 
+ 243              		.loc 1 302 1 view .LVU80
+ 244 0054 D0BD     		pop	{r4, r6, r7, pc}
+ 245              	.L8:
+ 246 0056 00BF     		.align	3
+ 247              	.L7:
+ 248 0058 00000000 		.word	.LANCHOR0
+ 249 005c DC742867 		.word	1730704604
+ 250 0060 4CE53141 		.word	1093789004
+ 251 0064 0000E0FF 		.word	-2097152
+ 252 0068 FFFFEF41 		.word	1106247679
+ 253              		.cfi_endproc
+ 254              	.LFE239:
+ 256              		.section	.text.AD9854_WR_Byte,"ax",%progbits
+ 257              		.align	1
+ 258              		.syntax unified
+ 259              		.thumb
+ 260              		.thumb_func
+ 261              		.fpu fpv4-sp-d16
+ 263              	AD9854_WR_Byte:
+ 264              	.LVL24:
+ 265              	.LFB235:
+ 143:Core/Src/AD9854.c **** 	dat1= dat|(addr<<8);
+ 266              		.loc 1 143 1 is_stmt 1 view -0
+ 267              		.cfi_startproc
+ 268              		@ args = 0, pretend = 0, frame = 0
+ 269              		@ frame_needed = 0, uses_anonymous_args = 0
+ 143:Core/Src/AD9854.c **** 	dat1= dat|(addr<<8);
+ 270              		.loc 1 143 1 is_stmt 0 view .LVU82
+ 271 0000 70B5     		push	{r4, r5, r6, lr}
+ARM GAS  /tmp/ccV45s2B.s 			page 11
+
+
+ 272              	.LCFI5:
+ 273              		.cfi_def_cfa_offset 16
+ 274              		.cfi_offset 4, -16
+ 275              		.cfi_offset 5, -12
+ 276              		.cfi_offset 6, -8
+ 277              		.cfi_offset 14, -4
+ 144:Core/Src/AD9854.c ****     uint32_t x;
+ 278              		.loc 1 144 2 is_stmt 1 view .LVU83
+ 144:Core/Src/AD9854.c ****     uint32_t x;
+ 279              		.loc 1 144 11 is_stmt 0 view .LVU84
+ 280 0002 41EA0024 		orr	r4, r1, r0, lsl #8
+ 144:Core/Src/AD9854.c ****     uint32_t x;
+ 281              		.loc 1 144 6 view .LVU85
+ 282 0006 394B     		ldr	r3, .L11
+ 283 0008 1C60     		str	r4, [r3]
+ 145:Core/Src/AD9854.c ****     x=(dat1&0x3fff)|((dat1^0x3fff)<<16);
+ 284              		.loc 1 145 5 is_stmt 1 view .LVU86
+ 146:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D0_GPIO_Port,D0_Pin,x&0x1);
+ 285              		.loc 1 146 5 view .LVU87
+ 146:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D0_GPIO_Port,D0_Pin,x&0x1);
+ 286              		.loc 1 146 12 is_stmt 0 view .LVU88
+ 287 000a C4F30D02 		ubfx	r2, r4, #0, #14
+ 146:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D0_GPIO_Port,D0_Pin,x&0x1);
+ 288              		.loc 1 146 35 view .LVU89
+ 289 000e 2404     		lsls	r4, r4, #16
+ 290 0010 84F07F54 		eor	r4, r4, #1069547520
+ 291 0014 84F47C14 		eor	r4, r4, #4128768
+ 146:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D0_GPIO_Port,D0_Pin,x&0x1);
+ 292              		.loc 1 146 6 view .LVU90
+ 293 0018 1443     		orrs	r4, r4, r2
+ 294              	.LVL25:
+ 147:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D1_GPIO_Port,D1_Pin,x>>1&0x1);
+ 295              		.loc 1 147 5 is_stmt 1 view .LVU91
+ 296 001a 354E     		ldr	r6, .L11+4
+ 297 001c 02F00102 		and	r2, r2, #1
+ 298 0020 4FF48071 		mov	r1, #256
+ 299              	.LVL26:
+ 147:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D1_GPIO_Port,D1_Pin,x>>1&0x1);
+ 300              		.loc 1 147 5 is_stmt 0 view .LVU92
+ 301 0024 3046     		mov	r0, r6
+ 302              	.LVL27:
+ 147:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D1_GPIO_Port,D1_Pin,x>>1&0x1);
+ 303              		.loc 1 147 5 view .LVU93
+ 304 0026 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 305              	.LVL28:
+ 148:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D2_GPIO_Port,D2_Pin,x>>2&0x1);
+ 306              		.loc 1 148 5 is_stmt 1 view .LVU94
+ 307 002a C4F34002 		ubfx	r2, r4, #1, #1
+ 308 002e 8021     		movs	r1, #128
+ 309 0030 3048     		ldr	r0, .L11+8
+ 310 0032 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 311              	.LVL29:
+ 149:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D3_GPIO_Port,D3_Pin,x>>3&0x1);
+ 312              		.loc 1 149 5 view .LVU95
+ 313 0036 C4F38002 		ubfx	r2, r4, #2, #1
+ 314 003a 4FF40061 		mov	r1, #2048
+ 315 003e 3046     		mov	r0, r6
+ARM GAS  /tmp/ccV45s2B.s 			page 12
+
+
+ 316 0040 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 317              	.LVL30:
+ 150:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D4_GPIO_Port,D4_Pin,x>>4&0x1);
+ 318              		.loc 1 150 5 view .LVU96
+ 319 0044 C4F3C002 		ubfx	r2, r4, #3, #1
+ 320 0048 4FF48041 		mov	r1, #16384
+ 321 004c 3046     		mov	r0, r6
+ 322 004e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 323              	.LVL31:
+ 151:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D5_GPIO_Port,D5_Pin,x>>5&0x1);
+ 324              		.loc 1 151 5 view .LVU97
+ 325 0052 294D     		ldr	r5, .L11+12
+ 326 0054 C4F30012 		ubfx	r2, r4, #4, #1
+ 327 0058 0821     		movs	r1, #8
+ 328 005a 2846     		mov	r0, r5
+ 329 005c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 330              	.LVL32:
+ 152:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D6_GPIO_Port,D6_Pin,x>>6&0x1);
+ 331              		.loc 1 152 5 view .LVU98
+ 332 0060 C4F34012 		ubfx	r2, r4, #5, #1
+ 333 0064 2021     		movs	r1, #32
+ 334 0066 2846     		mov	r0, r5
+ 335 0068 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 336              	.LVL33:
+ 153:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(D7_GPIO_Port,D7_Pin,x>>7&0x1);
+ 337              		.loc 1 153 5 view .LVU99
+ 338 006c C4F38012 		ubfx	r2, r4, #6, #1
+ 339 0070 8021     		movs	r1, #128
+ 340 0072 2846     		mov	r0, r5
+ 341 0074 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 342              	.LVL34:
+ 154:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(A0_GPIO_Port,A0_Pin,x>>8&0x1);
+ 343              		.loc 1 154 5 view .LVU100
+ 344 0078 C4F3C012 		ubfx	r2, r4, #7, #1
+ 345 007c 4FF40071 		mov	r1, #512
+ 346 0080 2846     		mov	r0, r5
+ 347 0082 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 348              	.LVL35:
+ 155:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(A1_GPIO_Port,A1_Pin,x>>9&0x1);
+ 349              		.loc 1 155 5 view .LVU101
+ 350 0086 C4F30022 		ubfx	r2, r4, #8, #1
+ 351 008a 4FF40051 		mov	r1, #8192
+ 352 008e 3046     		mov	r0, r6
+ 353 0090 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 354              	.LVL36:
+ 156:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(A2_GPIO_Port,A2_Pin,x>>10&0x1);
+ 355              		.loc 1 156 5 view .LVU102
+ 356 0094 C4F34022 		ubfx	r2, r4, #9, #1
+ 357 0098 4FF40041 		mov	r1, #32768
+ 358 009c 3046     		mov	r0, r6
+ 359 009e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 360              	.LVL37:
+ 157:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(A3_GPIO_Port,A3_Pin,x>>11&0x1);
+ 361              		.loc 1 157 5 view .LVU103
+ 362 00a2 C4F38022 		ubfx	r2, r4, #10, #1
+ 363 00a6 1021     		movs	r1, #16
+ 364 00a8 2846     		mov	r0, r5
+ARM GAS  /tmp/ccV45s2B.s 			page 13
+
+
+ 365 00aa FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 366              	.LVL38:
+ 158:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(A4_GPIO_Port,A4_Pin,x>>12&0x1);
+ 367              		.loc 1 158 5 view .LVU104
+ 368 00ae C4F3C022 		ubfx	r2, r4, #11, #1
+ 369 00b2 4021     		movs	r1, #64
+ 370 00b4 2846     		mov	r0, r5
+ 371 00b6 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 372              	.LVL39:
+ 159:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(A5_GPIO_Port,A5_Pin,x>>13&0x1);
+ 373              		.loc 1 159 5 view .LVU105
+ 374 00ba C4F30032 		ubfx	r2, r4, #12, #1
+ 375 00be 4FF48071 		mov	r1, #256
+ 376 00c2 2846     		mov	r0, r5
+ 377 00c4 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 378              	.LVL40:
+ 160:Core/Src/AD9854.c **** //	AD9854_AdrBus  = ((addr&0x3f)<<8) | ((addr^0x3f)<<(16+8));
+ 379              		.loc 1 160 5 view .LVU106
+ 380 00c8 C4F34032 		ubfx	r2, r4, #13, #1
+ 381 00cc 0121     		movs	r1, #1
+ 382 00ce 0B48     		ldr	r0, .L11+16
+ 383 00d0 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 384              	.LVL41:
+ 167:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(WD_GPIO_Port,WD_Pin,GPIO_PIN_SET);
+ 385              		.loc 1 167 5 view .LVU107
+ 386 00d4 0A4C     		ldr	r4, .L11+20
+ 387              	.LVL42:
+ 167:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(WD_GPIO_Port,WD_Pin,GPIO_PIN_SET);
+ 388              		.loc 1 167 5 is_stmt 0 view .LVU108
+ 389 00d6 0022     		movs	r2, #0
+ 390 00d8 4021     		movs	r1, #64
+ 391 00da 2046     		mov	r0, r4
+ 392 00dc FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 393              	.LVL43:
+ 168:Core/Src/AD9854.c **** }
+ 394              		.loc 1 168 5 is_stmt 1 view .LVU109
+ 395 00e0 0122     		movs	r2, #1
+ 396 00e2 4021     		movs	r1, #64
+ 397 00e4 2046     		mov	r0, r4
+ 398 00e6 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 399              	.LVL44:
+ 169:Core/Src/AD9854.c **** 
+ 400              		.loc 1 169 1 is_stmt 0 view .LVU110
+ 401 00ea 70BD     		pop	{r4, r5, r6, pc}
+ 402              	.L12:
+ 403              		.align	2
+ 404              	.L11:
+ 405 00ec 00000000 		.word	.LANCHOR1
+ 406 00f0 00180240 		.word	1073879040
+ 407 00f4 00080240 		.word	1073874944
+ 408 00f8 00040240 		.word	1073873920
+ 409 00fc 00100240 		.word	1073876992
+ 410 0100 000C0240 		.word	1073875968
+ 411              		.cfi_endproc
+ 412              	.LFE235:
+ 414              		.section	.text.AD9854_Init,"ax",%progbits
+ 415              		.align	1
+ARM GAS  /tmp/ccV45s2B.s 			page 14
+
+
+ 416              		.global	AD9854_Init
+ 417              		.syntax unified
+ 418              		.thumb
+ 419              		.thumb_func
+ 420              		.fpu fpv4-sp-d16
+ 422              	AD9854_Init:
+ 423              	.LFB236:
+ 178:Core/Src/AD9854.c **** 	// HAL_GPIO_WritePin(WD_GPIO_Port,WD_Pin,GPIO_PIN_SET);//将读、写控制端口设为无效
+ 424              		.loc 1 178 1 is_stmt 1 view -0
+ 425              		.cfi_startproc
+ 426              		@ args = 0, pretend = 0, frame = 0
+ 427              		@ frame_needed = 0, uses_anonymous_args = 0
+ 428 0000 38B5     		push	{r3, r4, r5, lr}
+ 429              	.LCFI6:
+ 430              		.cfi_def_cfa_offset 16
+ 431              		.cfi_offset 3, -16
+ 432              		.cfi_offset 4, -12
+ 433              		.cfi_offset 5, -8
+ 434              		.cfi_offset 14, -4
+ 185:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RD_GPIO_Port,RD_Pin,GPIO_PIN_SET);
+ 435              		.loc 1 185 5 view .LVU112
+ 436 0002 0122     		movs	r2, #1
+ 437 0004 4021     		movs	r1, #64
+ 438 0006 1C48     		ldr	r0, .L15
+ 439 0008 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 440              	.LVL45:
+ 186:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);
+ 441              		.loc 1 186 5 view .LVU113
+ 442 000c 0122     		movs	r2, #1
+ 443 000e 4FF48071 		mov	r1, #256
+ 444 0012 1A48     		ldr	r0, .L15+4
+ 445 0014 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 446              	.LVL46:
+ 187:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_SET);
+ 447              		.loc 1 187 5 view .LVU114
+ 448 0018 194C     		ldr	r4, .L15+8
+ 449 001a 0022     		movs	r2, #0
+ 450 001c 4FF40071 		mov	r1, #512
+ 451 0020 2046     		mov	r0, r4
+ 452 0022 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 453              	.LVL47:
+ 188:Core/Src/AD9854.c ****    // delay_us(10);
+ 454              		.loc 1 188 5 view .LVU115
+ 455 0026 174D     		ldr	r5, .L15+12
+ 456 0028 0122     		movs	r2, #1
+ 457 002a 0221     		movs	r1, #2
+ 458 002c 2846     		mov	r0, r5
+ 459 002e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 460              	.LVL48:
+ 190:Core/Src/AD9854.c **** 
+ 461              		.loc 1 190 5 view .LVU116
+ 462 0032 0022     		movs	r2, #0
+ 463 0034 0221     		movs	r1, #2
+ 464 0036 2846     		mov	r0, r5
+ 465 0038 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 466              	.LVL49:
+ 192:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1e,CLK_Set);	   //设置系统时钟倍频            
+ARM GAS  /tmp/ccV45s2B.s 			page 15
+
+
+ 467              		.loc 1 192 2 view .LVU117
+ 468 003c 0021     		movs	r1, #0
+ 469 003e 1D20     		movs	r0, #29
+ 470 0040 FFF7FEFF 		bl	AD9854_WR_Byte
+ 471              	.LVL50:
+ 193:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1f,0x00);	   //设置系统为模式0，由外部更新
+ 472              		.loc 1 193 2 view .LVU118
+ 473 0044 0C21     		movs	r1, #12
+ 474 0046 1E20     		movs	r0, #30
+ 475 0048 FFF7FEFF 		bl	AD9854_WR_Byte
+ 476              	.LVL51:
+ 194:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x20,0x60);	   //设置为可调节幅度，取消插值补偿
+ 477              		.loc 1 194 2 view .LVU119
+ 478 004c 0021     		movs	r1, #0
+ 479 004e 1F20     		movs	r0, #31
+ 480 0050 FFF7FEFF 		bl	AD9854_WR_Byte
+ 481              	.LVL52:
+ 195:Core/Src/AD9854.c **** 
+ 482              		.loc 1 195 2 view .LVU120
+ 483 0054 6021     		movs	r1, #96
+ 484 0056 2020     		movs	r0, #32
+ 485 0058 FFF7FEFF 		bl	AD9854_WR_Byte
+ 486              	.LVL53:
+ 200:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);
+ 487              		.loc 1 200 5 view .LVU121
+ 488 005c 0122     		movs	r2, #1
+ 489 005e 4FF40071 		mov	r1, #512
+ 490 0062 2046     		mov	r0, r4
+ 491 0064 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 492              	.LVL54:
+ 201:Core/Src/AD9854.c **** }
+ 493              		.loc 1 201 5 view .LVU122
+ 494 0068 0022     		movs	r2, #0
+ 495 006a 4FF40071 		mov	r1, #512
+ 496 006e 2046     		mov	r0, r4
+ 497 0070 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 498              	.LVL55:
+ 202:Core/Src/AD9854.c **** //====================================================================================
+ 499              		.loc 1 202 1 is_stmt 0 view .LVU123
+ 500 0074 38BD     		pop	{r3, r4, r5, pc}
+ 501              	.L16:
+ 502 0076 00BF     		.align	2
+ 503              	.L15:
+ 504 0078 000C0240 		.word	1073875968
+ 505 007c 00000240 		.word	1073872896
+ 506 0080 00180240 		.word	1073879040
+ 507 0084 00100240 		.word	1073876992
+ 508              		.cfi_endproc
+ 509              	.LFE236:
+ 511              		.section	.text.AD9854_SetSine,"ax",%progbits
+ 512              		.align	1
+ 513              		.global	AD9854_SetSine
+ 514              		.syntax unified
+ 515              		.thumb
+ 516              		.thumb_func
+ 517              		.fpu fpv4-sp-d16
+ 519              	AD9854_SetSine:
+ARM GAS  /tmp/ccV45s2B.s 			page 16
+
+
+ 520              	.LVL56:
+ 521              	.LFB238:
+ 251:Core/Src/AD9854.c **** 	uchar count;
+ 522              		.loc 1 251 1 is_stmt 1 view -0
+ 523              		.cfi_startproc
+ 524              		@ args = 0, pretend = 0, frame = 0
+ 525              		@ frame_needed = 0, uses_anonymous_args = 0
+ 251:Core/Src/AD9854.c **** 	uchar count;
+ 526              		.loc 1 251 1 is_stmt 0 view .LVU125
+ 527 0000 70B5     		push	{r4, r5, r6, lr}
+ 528              	.LCFI7:
+ 529              		.cfi_def_cfa_offset 16
+ 530              		.cfi_offset 4, -16
+ 531              		.cfi_offset 5, -12
+ 532              		.cfi_offset 6, -8
+ 533              		.cfi_offset 14, -4
+ 534 0002 0E46     		mov	r6, r1
+ 252:Core/Src/AD9854.c **** 	uchar Adress;
+ 535              		.loc 1 252 2 is_stmt 1 view .LVU126
+ 253:Core/Src/AD9854.c **** 
+ 536              		.loc 1 253 2 view .LVU127
+ 255:Core/Src/AD9854.c **** 
+ 537              		.loc 1 255 2 view .LVU128
+ 538              	.LVL57:
+ 257:Core/Src/AD9854.c **** 
+ 539              		.loc 1 257 2 view .LVU129
+ 540 0004 FFF7FEFF 		bl	Freq_convert
+ 541              	.LVL58:
+ 259:Core/Src/AD9854.c ****     {
+ 542              		.loc 1 259 2 view .LVU130
+ 255:Core/Src/AD9854.c **** 
+ 543              		.loc 1 255 9 is_stmt 0 view .LVU131
+ 544 0008 0420     		movs	r0, #4
+ 259:Core/Src/AD9854.c ****     {
+ 545              		.loc 1 259 11 view .LVU132
+ 546 000a 0624     		movs	r4, #6
+ 259:Core/Src/AD9854.c ****     {
+ 547              		.loc 1 259 2 view .LVU133
+ 548 000c 08E0     		b	.L18
+ 549              	.LVL59:
+ 550              	.L19:
+ 261:Core/Src/AD9854.c ****     }
+ 551              		.loc 1 261 3 is_stmt 1 view .LVU134
+ 261:Core/Src/AD9854.c ****     }
+ 552              		.loc 1 261 24 is_stmt 0 view .LVU135
+ 553 000e 451C     		adds	r5, r0, #1
+ 554 0010 EDB2     		uxtb	r5, r5
+ 555              	.LVL60:
+ 261:Core/Src/AD9854.c ****     }
+ 556              		.loc 1 261 3 view .LVU136
+ 557 0012 013C     		subs	r4, r4, #1
+ 558              	.LVL61:
+ 261:Core/Src/AD9854.c ****     }
+ 559              		.loc 1 261 3 view .LVU137
+ 560 0014 E4B2     		uxtb	r4, r4
+ 561              	.LVL62:
+ 261:Core/Src/AD9854.c ****     }
+ARM GAS  /tmp/ccV45s2B.s 			page 17
+
+
+ 562              		.loc 1 261 3 view .LVU138
+ 563 0016 134B     		ldr	r3, .L21
+ 564 0018 195D     		ldrb	r1, [r3, r4]	@ zero_extendqisi2
+ 565 001a FFF7FEFF 		bl	AD9854_WR_Byte
+ 566              	.LVL63:
+ 261:Core/Src/AD9854.c ****     }
+ 567              		.loc 1 261 24 view .LVU139
+ 568 001e 2846     		mov	r0, r5
+ 569              	.LVL64:
+ 570              	.L18:
+ 259:Core/Src/AD9854.c ****     {
+ 571              		.loc 1 259 14 is_stmt 1 discriminator 1 view .LVU140
+ 259:Core/Src/AD9854.c ****     {
+ 572              		.loc 1 259 2 is_stmt 0 discriminator 1 view .LVU141
+ 573 0020 002C     		cmp	r4, #0
+ 574 0022 F4D1     		bne	.L19
+ 264:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x22,(uchar)(Shape&0xff));
+ 575              		.loc 1 264 2 is_stmt 1 view .LVU142
+ 264:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x22,(uchar)(Shape&0xff));
+ 576              		.loc 1 264 27 is_stmt 0 view .LVU143
+ 577 0024 340A     		lsrs	r4, r6, #8
+ 578              	.LVL65:
+ 264:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x22,(uchar)(Shape&0xff));
+ 579              		.loc 1 264 2 view .LVU144
+ 580 0026 2146     		mov	r1, r4
+ 581 0028 2120     		movs	r0, #33
+ 582              	.LVL66:
+ 264:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x22,(uchar)(Shape&0xff));
+ 583              		.loc 1 264 2 view .LVU145
+ 584 002a FFF7FEFF 		bl	AD9854_WR_Byte
+ 585              	.LVL67:
+ 265:Core/Src/AD9854.c **** 	
+ 586              		.loc 1 265 2 is_stmt 1 view .LVU146
+ 587 002e F6B2     		uxtb	r6, r6
+ 588              	.LVL68:
+ 265:Core/Src/AD9854.c **** 	
+ 589              		.loc 1 265 2 is_stmt 0 view .LVU147
+ 590 0030 3146     		mov	r1, r6
+ 591 0032 2220     		movs	r0, #34
+ 592 0034 FFF7FEFF 		bl	AD9854_WR_Byte
+ 593              	.LVL69:
+ 267:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x24,(uchar)(Shape&0xff));
+ 594              		.loc 1 267 2 is_stmt 1 view .LVU148
+ 595 0038 2146     		mov	r1, r4
+ 596 003a 2320     		movs	r0, #35
+ 597 003c FFF7FEFF 		bl	AD9854_WR_Byte
+ 598              	.LVL70:
+ 268:Core/Src/AD9854.c **** 
+ 599              		.loc 1 268 2 view .LVU149
+ 600 0040 3146     		mov	r1, r6
+ 601 0042 2420     		movs	r0, #36
+ 602 0044 FFF7FEFF 		bl	AD9854_WR_Byte
+ 603              	.LVL71:
+ 270:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 604              		.loc 1 270 2 view .LVU150
+ 605 0048 074C     		ldr	r4, .L21+4
+ 606 004a 0022     		movs	r2, #0
+ARM GAS  /tmp/ccV45s2B.s 			page 18
+
+
+ 607 004c 4FF40071 		mov	r1, #512
+ 608 0050 2046     		mov	r0, r4
+ 609 0052 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 610              	.LVL72:
+ 271:Core/Src/AD9854.c **** }
+ 611              		.loc 1 271 5 view .LVU151
+ 612 0056 0122     		movs	r2, #1
+ 613 0058 4FF40071 		mov	r1, #512
+ 614 005c 2046     		mov	r0, r4
+ 615 005e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 616              	.LVL73:
+ 272:Core/Src/AD9854.c **** 
+ 617              		.loc 1 272 1 is_stmt 0 view .LVU152
+ 618 0062 70BD     		pop	{r4, r5, r6, pc}
+ 619              	.L22:
+ 620              		.align	2
+ 621              	.L21:
+ 622 0064 00000000 		.word	.LANCHOR0
+ 623 0068 00180240 		.word	1073879040
+ 624              		.cfi_endproc
+ 625              	.LFE238:
+ 627              		.section	.text.AD9854_SetSine_double,"ax",%progbits
+ 628              		.align	1
+ 629              		.global	AD9854_SetSine_double
+ 630              		.syntax unified
+ 631              		.thumb
+ 632              		.thumb_func
+ 633              		.fpu fpv4-sp-d16
+ 635              	AD9854_SetSine_double:
+ 636              	.LVL74:
+ 637              	.LFB240:
+ 303:Core/Src/AD9854.c **** //====================================================================================
+ 304:Core/Src/AD9854.c **** //函数名称:void AD9854_SetSine_double(double Freq,uint Shape)
+ 305:Core/Src/AD9854.c **** //函数功能:AD9854正弦波产生程序
+ 306:Core/Src/AD9854.c **** //入口参数:Freq   频率设置，取值范围为0~1/2*SYSCLK
+ 307:Core/Src/AD9854.c **** //         Shape  幅度设置. 为12 Bit,取值范围为(0~4095) 
+ 308:Core/Src/AD9854.c **** //出口参数:无
+ 309:Core/Src/AD9854.c **** //====================================================================================
+ 310:Core/Src/AD9854.c **** void AD9854_SetSine_double(double Freq,uint Shape)
+ 311:Core/Src/AD9854.c **** {
+ 638              		.loc 1 311 1 is_stmt 1 view -0
+ 639              		.cfi_startproc
+ 640              		@ args = 0, pretend = 0, frame = 0
+ 641              		@ frame_needed = 0, uses_anonymous_args = 0
+ 642              		.loc 1 311 1 is_stmt 0 view .LVU154
+ 643 0000 70B5     		push	{r4, r5, r6, lr}
+ 644              	.LCFI8:
+ 645              		.cfi_def_cfa_offset 16
+ 646              		.cfi_offset 4, -16
+ 647              		.cfi_offset 5, -12
+ 648              		.cfi_offset 6, -8
+ 649              		.cfi_offset 14, -4
+ 650 0002 0646     		mov	r6, r0
+ 312:Core/Src/AD9854.c **** 	uchar count=0;
+ 651              		.loc 1 312 2 is_stmt 1 view .LVU155
+ 652              	.LVL75:
+ 313:Core/Src/AD9854.c **** 	uchar Adress;
+ARM GAS  /tmp/ccV45s2B.s 			page 19
+
+
+ 653              		.loc 1 313 2 view .LVU156
+ 314:Core/Src/AD9854.c **** 
+ 315:Core/Src/AD9854.c **** 	Adress=0x04;						     //选择频率控制字1地址的初值
+ 654              		.loc 1 315 2 view .LVU157
+ 316:Core/Src/AD9854.c **** 
+ 317:Core/Src/AD9854.c **** 	Freq_double_convert(Freq);		           //频率转换
+ 655              		.loc 1 317 2 view .LVU158
+ 656 0004 51EC100B 		vmov	r0, r1, d0
+ 657              	.LVL76:
+ 658              		.loc 1 317 2 is_stmt 0 view .LVU159
+ 659 0008 FFF7FEFF 		bl	Freq_double_convert
+ 660              	.LVL77:
+ 318:Core/Src/AD9854.c **** 	 
+ 319:Core/Src/AD9854.c **** 	for(count=6;count>0;)	                    //写入6字节的频率控制字  
+ 661              		.loc 1 319 2 is_stmt 1 view .LVU160
+ 315:Core/Src/AD9854.c **** 
+ 662              		.loc 1 315 8 is_stmt 0 view .LVU161
+ 663 000c 0420     		movs	r0, #4
+ 664              		.loc 1 319 11 view .LVU162
+ 665 000e 0624     		movs	r4, #6
+ 666              		.loc 1 319 2 view .LVU163
+ 667 0010 08E0     		b	.L24
+ 668              	.LVL78:
+ 669              	.L25:
+ 320:Core/Src/AD9854.c ****     {
+ 321:Core/Src/AD9854.c **** 		AD9854_WR_Byte(Adress++,FreqWord[--count]);
+ 670              		.loc 1 321 3 is_stmt 1 view .LVU164
+ 671              		.loc 1 321 24 is_stmt 0 view .LVU165
+ 672 0012 451C     		adds	r5, r0, #1
+ 673 0014 EDB2     		uxtb	r5, r5
+ 674              	.LVL79:
+ 675              		.loc 1 321 3 view .LVU166
+ 676 0016 013C     		subs	r4, r4, #1
+ 677              	.LVL80:
+ 678              		.loc 1 321 3 view .LVU167
+ 679 0018 E4B2     		uxtb	r4, r4
+ 680              	.LVL81:
+ 681              		.loc 1 321 3 view .LVU168
+ 682 001a 134B     		ldr	r3, .L27
+ 683 001c 195D     		ldrb	r1, [r3, r4]	@ zero_extendqisi2
+ 684 001e FFF7FEFF 		bl	AD9854_WR_Byte
+ 685              	.LVL82:
+ 686              		.loc 1 321 24 view .LVU169
+ 687 0022 2846     		mov	r0, r5
+ 688              	.LVL83:
+ 689              	.L24:
+ 319:Core/Src/AD9854.c ****     {
+ 690              		.loc 1 319 14 is_stmt 1 discriminator 1 view .LVU170
+ 319:Core/Src/AD9854.c ****     {
+ 691              		.loc 1 319 2 is_stmt 0 discriminator 1 view .LVU171
+ 692 0024 002C     		cmp	r4, #0
+ 693 0026 F4D1     		bne	.L25
+ 322:Core/Src/AD9854.c ****     }
+ 323:Core/Src/AD9854.c **** 	
+ 324:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x21,Shape>>8);	  //设置I通道幅度
+ 694              		.loc 1 324 2 is_stmt 1 view .LVU172
+ 695              		.loc 1 324 27 is_stmt 0 view .LVU173
+ARM GAS  /tmp/ccV45s2B.s 			page 20
+
+
+ 696 0028 340A     		lsrs	r4, r6, #8
+ 697              	.LVL84:
+ 698              		.loc 1 324 2 view .LVU174
+ 699 002a 2146     		mov	r1, r4
+ 700 002c 2120     		movs	r0, #33
+ 701              	.LVL85:
+ 702              		.loc 1 324 2 view .LVU175
+ 703 002e FFF7FEFF 		bl	AD9854_WR_Byte
+ 704              	.LVL86:
+ 325:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x22,(uchar)(Shape&0xff));
+ 705              		.loc 1 325 2 is_stmt 1 view .LVU176
+ 706 0032 F6B2     		uxtb	r6, r6
+ 707              	.LVL87:
+ 708              		.loc 1 325 2 is_stmt 0 view .LVU177
+ 709 0034 3146     		mov	r1, r6
+ 710 0036 2220     		movs	r0, #34
+ 711 0038 FFF7FEFF 		bl	AD9854_WR_Byte
+ 712              	.LVL88:
+ 326:Core/Src/AD9854.c **** 	
+ 327:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x23,Shape>>8);	  //设置Q通道幅度
+ 713              		.loc 1 327 2 is_stmt 1 view .LVU178
+ 714 003c 2146     		mov	r1, r4
+ 715 003e 2320     		movs	r0, #35
+ 716 0040 FFF7FEFF 		bl	AD9854_WR_Byte
+ 717              	.LVL89:
+ 328:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x24,(uchar)(Shape&0xff));
+ 718              		.loc 1 328 2 view .LVU179
+ 719 0044 3146     		mov	r1, r6
+ 720 0046 2420     		movs	r0, #36
+ 721 0048 FFF7FEFF 		bl	AD9854_WR_Byte
+ 722              	.LVL90:
+ 329:Core/Src/AD9854.c **** 
+ 330:Core/Src/AD9854.c **** 	// HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);                    //更新AD9854输
+ 331:Core/Src/AD9854.c ****     // HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 332:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 723              		.loc 1 332 5 view .LVU180
+ 724 004c 074C     		ldr	r4, .L27+4
+ 725 004e 0122     		movs	r2, #1
+ 726 0050 4FF40071 		mov	r1, #512
+ 727 0054 2046     		mov	r0, r4
+ 728 0056 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 729              	.LVL91:
+ 333:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);
+ 730              		.loc 1 333 5 view .LVU181
+ 731 005a 0022     		movs	r2, #0
+ 732 005c 4FF40071 		mov	r1, #512
+ 733 0060 2046     		mov	r0, r4
+ 734 0062 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 735              	.LVL92:
+ 334:Core/Src/AD9854.c **** }
+ 736              		.loc 1 334 1 is_stmt 0 view .LVU182
+ 737 0066 70BD     		pop	{r4, r5, r6, pc}
+ 738              	.L28:
+ 739              		.align	2
+ 740              	.L27:
+ 741 0068 00000000 		.word	.LANCHOR0
+ 742 006c 00180240 		.word	1073879040
+ARM GAS  /tmp/ccV45s2B.s 			page 21
+
+
+ 743              		.cfi_endproc
+ 744              	.LFE240:
+ 746              		.section	.text.AD9854_InitFSK,"ax",%progbits
+ 747              		.align	1
+ 748              		.global	AD9854_InitFSK
+ 749              		.syntax unified
+ 750              		.thumb
+ 751              		.thumb_func
+ 752              		.fpu fpv4-sp-d16
+ 754              	AD9854_InitFSK:
+ 755              	.LFB241:
+ 335:Core/Src/AD9854.c **** 
+ 336:Core/Src/AD9854.c **** //====================================================================================
+ 337:Core/Src/AD9854.c **** //函数名称:void AD9854_InitFSK(void)
+ 338:Core/Src/AD9854.c **** //函数功能:AD9854的FSK初始化
+ 339:Core/Src/AD9854.c **** //入口参数:无
+ 340:Core/Src/AD9854.c **** //出口参数:无
+ 341:Core/Src/AD9854.c **** //====================================================================================
+ 342:Core/Src/AD9854.c **** void AD9854_InitFSK(void)
+ 343:Core/Src/AD9854.c **** {
+ 756              		.loc 1 343 1 is_stmt 1 view -0
+ 757              		.cfi_startproc
+ 758              		@ args = 0, pretend = 0, frame = 0
+ 759              		@ frame_needed = 0, uses_anonymous_args = 0
+ 760 0000 38B5     		push	{r3, r4, r5, lr}
+ 761              	.LCFI9:
+ 762              		.cfi_def_cfa_offset 16
+ 763              		.cfi_offset 3, -16
+ 764              		.cfi_offset 4, -12
+ 765              		.cfi_offset 5, -8
+ 766              		.cfi_offset 14, -4
+ 344:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(WD_GPIO_Port,WD_Pin,GPIO_PIN_SET);                        //将读、写控制�
+ 767              		.loc 1 344 2 view .LVU184
+ 768 0002 0122     		movs	r2, #1
+ 769 0004 4021     		movs	r1, #64
+ 770 0006 1C48     		ldr	r0, .L31
+ 771 0008 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 772              	.LVL93:
+ 345:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RD_GPIO_Port,RD_Pin,GPIO_PIN_SET);
+ 773              		.loc 1 345 5 view .LVU185
+ 774 000c 0122     		movs	r2, #1
+ 775 000e 4FF48071 		mov	r1, #256
+ 776 0012 1A48     		ldr	r0, .L31+4
+ 777 0014 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 778              	.LVL94:
+ 346:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 779              		.loc 1 346 5 view .LVU186
+ 780 0018 194C     		ldr	r4, .L31+8
+ 781 001a 0122     		movs	r2, #1
+ 782 001c 4FF40071 		mov	r1, #512
+ 783 0020 2046     		mov	r0, r4
+ 784 0022 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 785              	.LVL95:
+ 347:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_SET);                        //复位AD9854
+ 786              		.loc 1 347 5 view .LVU187
+ 787 0026 174D     		ldr	r5, .L31+12
+ 788 0028 0122     		movs	r2, #1
+ARM GAS  /tmp/ccV45s2B.s 			page 22
+
+
+ 789 002a 0221     		movs	r1, #2
+ 790 002c 2846     		mov	r0, r5
+ 791 002e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 792              	.LVL96:
+ 348:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_RESET);	
+ 793              		.loc 1 348 5 view .LVU188
+ 794 0032 0022     		movs	r2, #0
+ 795 0034 0221     		movs	r1, #2
+ 796 0036 2846     		mov	r0, r5
+ 797 0038 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 798              	.LVL97:
+ 349:Core/Src/AD9854.c **** 
+ 350:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1d,0x00);	       //关闭比较器
+ 799              		.loc 1 350 2 view .LVU189
+ 800 003c 0021     		movs	r1, #0
+ 801 003e 1D20     		movs	r0, #29
+ 802 0040 FFF7FEFF 		bl	AD9854_WR_Byte
+ 803              	.LVL98:
+ 351:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1e,CLK_Set);	   //设置系统时钟倍频
+ 804              		.loc 1 351 2 view .LVU190
+ 805 0044 0C21     		movs	r1, #12
+ 806 0046 1E20     		movs	r0, #30
+ 807 0048 FFF7FEFF 		bl	AD9854_WR_Byte
+ 808              	.LVL99:
+ 352:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1f,0x02);	       //设置系统为模式1，由外部更新
+ 809              		.loc 1 352 2 view .LVU191
+ 810 004c 0221     		movs	r1, #2
+ 811 004e 1F20     		movs	r0, #31
+ 812 0050 FFF7FEFF 		bl	AD9854_WR_Byte
+ 813              	.LVL100:
+ 353:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x20,0x60);	      //设置为可调节幅度，取消插值补偿
+ 814              		.loc 1 353 2 view .LVU192
+ 815 0054 6021     		movs	r1, #96
+ 816 0056 2020     		movs	r0, #32
+ 817 0058 FFF7FEFF 		bl	AD9854_WR_Byte
+ 818              	.LVL101:
+ 354:Core/Src/AD9854.c **** 
+ 355:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);                  //更新AD9854输出
+ 819              		.loc 1 355 2 view .LVU193
+ 820 005c 0022     		movs	r2, #0
+ 821 005e 4FF40071 		mov	r1, #512
+ 822 0062 2046     		mov	r0, r4
+ 823 0064 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 824              	.LVL102:
+ 356:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 825              		.loc 1 356 5 view .LVU194
+ 826 0068 0122     		movs	r2, #1
+ 827 006a 4FF40071 		mov	r1, #512
+ 828 006e 2046     		mov	r0, r4
+ 829 0070 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 830              	.LVL103:
+ 357:Core/Src/AD9854.c **** }
+ 831              		.loc 1 357 1 is_stmt 0 view .LVU195
+ 832 0074 38BD     		pop	{r3, r4, r5, pc}
+ 833              	.L32:
+ 834 0076 00BF     		.align	2
+ 835              	.L31:
+ARM GAS  /tmp/ccV45s2B.s 			page 23
+
+
+ 836 0078 000C0240 		.word	1073875968
+ 837 007c 00000240 		.word	1073872896
+ 838 0080 00180240 		.word	1073879040
+ 839 0084 00100240 		.word	1073876992
+ 840              		.cfi_endproc
+ 841              	.LFE241:
+ 843              		.section	.text.AD9854_SetFSK,"ax",%progbits
+ 844              		.align	1
+ 845              		.global	AD9854_SetFSK
+ 846              		.syntax unified
+ 847              		.thumb
+ 848              		.thumb_func
+ 849              		.fpu fpv4-sp-d16
+ 851              	AD9854_SetFSK:
+ 852              	.LVL104:
+ 853              	.LFB242:
+ 358:Core/Src/AD9854.c **** 
+ 359:Core/Src/AD9854.c **** //====================================================================================
+ 360:Core/Src/AD9854.c **** //函数名称:void AD9854_SetFSK(ulong Freq1,ulong Freq2)
+ 361:Core/Src/AD9854.c **** //函数功能:AD9854的FSK设置
+ 362:Core/Src/AD9854.c **** //入口参数:Freq1   FSK频率1
+ 363:Core/Src/AD9854.c **** //         Freq2   FSK频率2
+ 364:Core/Src/AD9854.c **** //出口参数:无
+ 365:Core/Src/AD9854.c **** //====================================================================================
+ 366:Core/Src/AD9854.c **** void AD9854_SetFSK(ulong Freq1,ulong Freq2)
+ 367:Core/Src/AD9854.c **** {
+ 854              		.loc 1 367 1 is_stmt 1 view -0
+ 855              		.cfi_startproc
+ 856              		@ args = 0, pretend = 0, frame = 0
+ 857              		@ frame_needed = 0, uses_anonymous_args = 0
+ 858              		.loc 1 367 1 is_stmt 0 view .LVU197
+ 859 0000 70B5     		push	{r4, r5, r6, lr}
+ 860              	.LCFI10:
+ 861              		.cfi_def_cfa_offset 16
+ 862              		.cfi_offset 4, -16
+ 863              		.cfi_offset 5, -12
+ 864              		.cfi_offset 6, -8
+ 865              		.cfi_offset 14, -4
+ 866 0002 0E46     		mov	r6, r1
+ 368:Core/Src/AD9854.c ****     uchar count=6;
+ 867              		.loc 1 368 5 is_stmt 1 view .LVU198
+ 868              	.LVL105:
+ 369:Core/Src/AD9854.c **** 	uchar Adress1,Adress2;
+ 869              		.loc 1 369 2 view .LVU199
+ 370:Core/Src/AD9854.c **** 
+ 371:Core/Src/AD9854.c **** 	const uint Shape=4000;	      //幅度设置. 为12 Bit,取值范围为(0~4095)
+ 870              		.loc 1 371 2 view .LVU200
+ 372:Core/Src/AD9854.c **** 	
+ 373:Core/Src/AD9854.c **** 	Adress1=0x04;				 //选择频率控制字1地址的初值
+ 871              		.loc 1 373 2 view .LVU201
+ 374:Core/Src/AD9854.c **** 	Adress2=0x0a;				 //选择频率控制字2地址的初值
+ 872              		.loc 1 374 2 view .LVU202
+ 375:Core/Src/AD9854.c **** 	
+ 376:Core/Src/AD9854.c **** 	Freq_convert(Freq1);               //频率转换1
+ 873              		.loc 1 376 2 view .LVU203
+ 874 0004 FFF7FEFF 		bl	Freq_convert
+ 875              	.LVL106:
+ARM GAS  /tmp/ccV45s2B.s 			page 24
+
+
+ 377:Core/Src/AD9854.c **** 	
+ 378:Core/Src/AD9854.c **** 	for(count=6;count>0;)	          //写入6字节的频率控制字  
+ 876              		.loc 1 378 2 view .LVU204
+ 373:Core/Src/AD9854.c **** 	Adress2=0x0a;				 //选择频率控制字2地址的初值
+ 877              		.loc 1 373 9 is_stmt 0 view .LVU205
+ 878 0008 0420     		movs	r0, #4
+ 879              		.loc 1 378 11 view .LVU206
+ 880 000a 0624     		movs	r4, #6
+ 881              		.loc 1 378 2 view .LVU207
+ 882 000c 08E0     		b	.L34
+ 883              	.LVL107:
+ 884              	.L35:
+ 379:Core/Src/AD9854.c ****     {
+ 380:Core/Src/AD9854.c **** 		AD9854_WR_Byte(Adress1++,FreqWord[--count]);
+ 885              		.loc 1 380 3 is_stmt 1 view .LVU208
+ 886              		.loc 1 380 25 is_stmt 0 view .LVU209
+ 887 000e 451C     		adds	r5, r0, #1
+ 888 0010 EDB2     		uxtb	r5, r5
+ 889              	.LVL108:
+ 890              		.loc 1 380 3 view .LVU210
+ 891 0012 013C     		subs	r4, r4, #1
+ 892              	.LVL109:
+ 893              		.loc 1 380 3 view .LVU211
+ 894 0014 E4B2     		uxtb	r4, r4
+ 895              	.LVL110:
+ 896              		.loc 1 380 3 view .LVU212
+ 897 0016 1B4B     		ldr	r3, .L39
+ 898 0018 195D     		ldrb	r1, [r3, r4]	@ zero_extendqisi2
+ 899 001a FFF7FEFF 		bl	AD9854_WR_Byte
+ 900              	.LVL111:
+ 901              		.loc 1 380 25 view .LVU213
+ 902 001e 2846     		mov	r0, r5
+ 903              	.LVL112:
+ 904              	.L34:
+ 378:Core/Src/AD9854.c ****     {
+ 905              		.loc 1 378 14 is_stmt 1 discriminator 1 view .LVU214
+ 378:Core/Src/AD9854.c ****     {
+ 906              		.loc 1 378 2 is_stmt 0 discriminator 1 view .LVU215
+ 907 0020 002C     		cmp	r4, #0
+ 908 0022 F4D1     		bne	.L35
+ 381:Core/Src/AD9854.c ****     }
+ 382:Core/Src/AD9854.c **** 	
+ 383:Core/Src/AD9854.c **** 	Freq_convert(Freq2);               //频率转换2
+ 909              		.loc 1 383 2 is_stmt 1 view .LVU216
+ 910 0024 3046     		mov	r0, r6
+ 911              	.LVL113:
+ 912              		.loc 1 383 2 is_stmt 0 view .LVU217
+ 913 0026 FFF7FEFF 		bl	Freq_convert
+ 914              	.LVL114:
+ 384:Core/Src/AD9854.c **** 
+ 385:Core/Src/AD9854.c **** 	for(count=6;count>0;)	          //写入6字节的频率控制字  
+ 915              		.loc 1 385 2 is_stmt 1 view .LVU218
+ 374:Core/Src/AD9854.c **** 	
+ 916              		.loc 1 374 9 is_stmt 0 view .LVU219
+ 917 002a 0A20     		movs	r0, #10
+ 918              		.loc 1 385 11 view .LVU220
+ 919 002c 0624     		movs	r4, #6
+ARM GAS  /tmp/ccV45s2B.s 			page 25
+
+
+ 920              		.loc 1 385 2 view .LVU221
+ 921 002e 08E0     		b	.L36
+ 922              	.LVL115:
+ 923              	.L37:
+ 386:Core/Src/AD9854.c ****     {
+ 387:Core/Src/AD9854.c **** 		AD9854_WR_Byte(Adress2++,FreqWord[--count]);
+ 924              		.loc 1 387 3 is_stmt 1 view .LVU222
+ 925              		.loc 1 387 25 is_stmt 0 view .LVU223
+ 926 0030 451C     		adds	r5, r0, #1
+ 927 0032 EDB2     		uxtb	r5, r5
+ 928              	.LVL116:
+ 929              		.loc 1 387 3 view .LVU224
+ 930 0034 013C     		subs	r4, r4, #1
+ 931              	.LVL117:
+ 932              		.loc 1 387 3 view .LVU225
+ 933 0036 E4B2     		uxtb	r4, r4
+ 934              	.LVL118:
+ 935              		.loc 1 387 3 view .LVU226
+ 936 0038 124B     		ldr	r3, .L39
+ 937 003a 195D     		ldrb	r1, [r3, r4]	@ zero_extendqisi2
+ 938 003c FFF7FEFF 		bl	AD9854_WR_Byte
+ 939              	.LVL119:
+ 940              		.loc 1 387 25 view .LVU227
+ 941 0040 2846     		mov	r0, r5
+ 942              	.LVL120:
+ 943              	.L36:
+ 385:Core/Src/AD9854.c ****     {
+ 944              		.loc 1 385 14 is_stmt 1 discriminator 1 view .LVU228
+ 385:Core/Src/AD9854.c ****     {
+ 945              		.loc 1 385 2 is_stmt 0 discriminator 1 view .LVU229
+ 946 0042 002C     		cmp	r4, #0
+ 947 0044 F4D1     		bne	.L37
+ 388:Core/Src/AD9854.c ****     }
+ 389:Core/Src/AD9854.c **** 
+ 390:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x21,Shape>>8);	      //设置I通道幅度
+ 948              		.loc 1 390 2 is_stmt 1 view .LVU230
+ 949 0046 0F21     		movs	r1, #15
+ 950 0048 2120     		movs	r0, #33
+ 951              	.LVL121:
+ 952              		.loc 1 390 2 is_stmt 0 view .LVU231
+ 953 004a FFF7FEFF 		bl	AD9854_WR_Byte
+ 954              	.LVL122:
+ 391:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x22,(uchar)(Shape&0xff));
+ 955              		.loc 1 391 2 is_stmt 1 view .LVU232
+ 956 004e A021     		movs	r1, #160
+ 957 0050 2220     		movs	r0, #34
+ 958 0052 FFF7FEFF 		bl	AD9854_WR_Byte
+ 959              	.LVL123:
+ 392:Core/Src/AD9854.c **** 	
+ 393:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x23,Shape>>8);	     //设置Q通道幅度
+ 960              		.loc 1 393 2 view .LVU233
+ 961 0056 0F21     		movs	r1, #15
+ 962 0058 2320     		movs	r0, #35
+ 963 005a FFF7FEFF 		bl	AD9854_WR_Byte
+ 964              	.LVL124:
+ 394:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x24,(uchar)(Shape&0xff));
+ 965              		.loc 1 394 2 view .LVU234
+ARM GAS  /tmp/ccV45s2B.s 			page 26
+
+
+ 966 005e A021     		movs	r1, #160
+ 967 0060 2420     		movs	r0, #36
+ 968 0062 FFF7FEFF 		bl	AD9854_WR_Byte
+ 969              	.LVL125:
+ 395:Core/Src/AD9854.c **** 
+ 396:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);                    //更新AD9854输出
+ 970              		.loc 1 396 2 view .LVU235
+ 971 0066 084C     		ldr	r4, .L39+4
+ 972              	.LVL126:
+ 973              		.loc 1 396 2 is_stmt 0 view .LVU236
+ 974 0068 0022     		movs	r2, #0
+ 975 006a 4FF40071 		mov	r1, #512
+ 976 006e 2046     		mov	r0, r4
+ 977 0070 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 978              	.LVL127:
+ 397:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);		
+ 979              		.loc 1 397 5 is_stmt 1 view .LVU237
+ 980 0074 0122     		movs	r2, #1
+ 981 0076 4FF40071 		mov	r1, #512
+ 982 007a 2046     		mov	r0, r4
+ 983 007c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 984              	.LVL128:
+ 398:Core/Src/AD9854.c **** }
+ 985              		.loc 1 398 1 is_stmt 0 view .LVU238
+ 986 0080 70BD     		pop	{r4, r5, r6, pc}
+ 987              	.LVL129:
+ 988              	.L40:
+ 989              		.loc 1 398 1 view .LVU239
+ 990 0082 00BF     		.align	2
+ 991              	.L39:
+ 992 0084 00000000 		.word	.LANCHOR0
+ 993 0088 00180240 		.word	1073879040
+ 994              		.cfi_endproc
+ 995              	.LFE242:
+ 997              		.section	.text.AD9854_InitBPSK,"ax",%progbits
+ 998              		.align	1
+ 999              		.global	AD9854_InitBPSK
+ 1000              		.syntax unified
+ 1001              		.thumb
+ 1002              		.thumb_func
+ 1003              		.fpu fpv4-sp-d16
+ 1005              	AD9854_InitBPSK:
+ 1006              	.LFB243:
+ 399:Core/Src/AD9854.c **** 
+ 400:Core/Src/AD9854.c **** //====================================================================================
+ 401:Core/Src/AD9854.c **** //函数名称:void AD9854_InitBPSK(void)
+ 402:Core/Src/AD9854.c **** //函数功能:AD9854的BPSK初始化
+ 403:Core/Src/AD9854.c **** //入口参数:无
+ 404:Core/Src/AD9854.c **** //出口参数:无
+ 405:Core/Src/AD9854.c **** //====================================================================================
+ 406:Core/Src/AD9854.c **** void AD9854_InitBPSK(void)
+ 407:Core/Src/AD9854.c **** {
+ 1007              		.loc 1 407 1 is_stmt 1 view -0
+ 1008              		.cfi_startproc
+ 1009              		@ args = 0, pretend = 0, frame = 0
+ 1010              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1011 0000 38B5     		push	{r3, r4, r5, lr}
+ARM GAS  /tmp/ccV45s2B.s 			page 27
+
+
+ 1012              	.LCFI11:
+ 1013              		.cfi_def_cfa_offset 16
+ 1014              		.cfi_offset 3, -16
+ 1015              		.cfi_offset 4, -12
+ 1016              		.cfi_offset 5, -8
+ 1017              		.cfi_offset 14, -4
+ 408:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(WD_GPIO_Port,WD_Pin,GPIO_PIN_SET);                    //将读、写控制端口
+ 1018              		.loc 1 408 2 view .LVU241
+ 1019 0002 0122     		movs	r2, #1
+ 1020 0004 4021     		movs	r1, #64
+ 1021 0006 1C48     		ldr	r0, .L43
+ 1022 0008 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1023              	.LVL130:
+ 409:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RD_GPIO_Port,RD_Pin,GPIO_PIN_SET);
+ 1024              		.loc 1 409 5 view .LVU242
+ 1025 000c 0122     		movs	r2, #1
+ 1026 000e 4FF48071 		mov	r1, #256
+ 1027 0012 1A48     		ldr	r0, .L43+4
+ 1028 0014 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1029              	.LVL131:
+ 410:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 1030              		.loc 1 410 5 view .LVU243
+ 1031 0018 194C     		ldr	r4, .L43+8
+ 1032 001a 0122     		movs	r2, #1
+ 1033 001c 4FF40071 		mov	r1, #512
+ 1034 0020 2046     		mov	r0, r4
+ 1035 0022 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1036              	.LVL132:
+ 411:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_SET);                   //复位AD9854
+ 1037              		.loc 1 411 5 view .LVU244
+ 1038 0026 174D     		ldr	r5, .L43+12
+ 1039 0028 0122     		movs	r2, #1
+ 1040 002a 0221     		movs	r1, #2
+ 1041 002c 2846     		mov	r0, r5
+ 1042 002e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1043              	.LVL133:
+ 412:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_RESET);
+ 1044              		.loc 1 412 5 view .LVU245
+ 1045 0032 0022     		movs	r2, #0
+ 1046 0034 0221     		movs	r1, #2
+ 1047 0036 2846     		mov	r0, r5
+ 1048 0038 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1049              	.LVL134:
+ 413:Core/Src/AD9854.c **** 
+ 414:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1d,0x00);	       //打开比较器，输出方波
+ 1050              		.loc 1 414 2 view .LVU246
+ 1051 003c 0021     		movs	r1, #0
+ 1052 003e 1D20     		movs	r0, #29
+ 1053 0040 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1054              	.LVL135:
+ 415:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1e,CLK_Set);	   //设置系统时钟倍频
+ 1055              		.loc 1 415 2 view .LVU247
+ 1056 0044 0C21     		movs	r1, #12
+ 1057 0046 1E20     		movs	r0, #30
+ 1058 0048 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1059              	.LVL136:
+ 416:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1f,0x08);	      //设置系统为模式4，由外部更新
+ARM GAS  /tmp/ccV45s2B.s 			page 28
+
+
+ 1060              		.loc 1 416 2 view .LVU248
+ 1061 004c 0821     		movs	r1, #8
+ 1062 004e 1F20     		movs	r0, #31
+ 1063 0050 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1064              	.LVL137:
+ 417:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x20,0x60);	      //设置为可调节幅度，取消插值补偿
+ 1065              		.loc 1 417 2 view .LVU249
+ 1066 0054 6021     		movs	r1, #96
+ 1067 0056 2020     		movs	r0, #32
+ 1068 0058 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1069              	.LVL138:
+ 418:Core/Src/AD9854.c **** 
+ 419:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);                //更新AD9854输出
+ 1070              		.loc 1 419 2 view .LVU250
+ 1071 005c 0022     		movs	r2, #0
+ 1072 005e 4FF40071 		mov	r1, #512
+ 1073 0062 2046     		mov	r0, r4
+ 1074 0064 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1075              	.LVL139:
+ 420:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 1076              		.loc 1 420 5 view .LVU251
+ 1077 0068 0122     		movs	r2, #1
+ 1078 006a 4FF40071 		mov	r1, #512
+ 1079 006e 2046     		mov	r0, r4
+ 1080 0070 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1081              	.LVL140:
+ 421:Core/Src/AD9854.c **** }
+ 1082              		.loc 1 421 1 is_stmt 0 view .LVU252
+ 1083 0074 38BD     		pop	{r3, r4, r5, pc}
+ 1084              	.L44:
+ 1085 0076 00BF     		.align	2
+ 1086              	.L43:
+ 1087 0078 000C0240 		.word	1073875968
+ 1088 007c 00000240 		.word	1073872896
+ 1089 0080 00180240 		.word	1073879040
+ 1090 0084 00100240 		.word	1073876992
+ 1091              		.cfi_endproc
+ 1092              	.LFE243:
+ 1094              		.section	.text.AD9854_SetBPSK,"ax",%progbits
+ 1095              		.align	1
+ 1096              		.global	AD9854_SetBPSK
+ 1097              		.syntax unified
+ 1098              		.thumb
+ 1099              		.thumb_func
+ 1100              		.fpu fpv4-sp-d16
+ 1102              	AD9854_SetBPSK:
+ 1103              	.LVL141:
+ 1104              	.LFB244:
+ 422:Core/Src/AD9854.c **** 
+ 423:Core/Src/AD9854.c **** //====================================================================================
+ 424:Core/Src/AD9854.c **** //函数名称:void AD9854_SetBPSK(uint Phase1,uint Phase2)
+ 425:Core/Src/AD9854.c **** //函数功能:AD9854的BPSK设置
+ 426:Core/Src/AD9854.c **** //入口参数:Phase1   调制相位1
+ 427:Core/Src/AD9854.c **** //         Phase2	调制相位2
+ 428:Core/Src/AD9854.c **** //出口参数:无
+ 429:Core/Src/AD9854.c **** //说明：   相位为14Bit，取值从0~16383，建议在用本函数的时候将Phase1设置为0
+ 430:Core/Src/AD9854.c **** //         将Phase1设置为8192，180°相位
+ARM GAS  /tmp/ccV45s2B.s 			page 29
+
+
+ 431:Core/Src/AD9854.c **** //====================================================================================
+ 432:Core/Src/AD9854.c **** void AD9854_SetBPSK(uint Phase1,uint Phase2)
+ 433:Core/Src/AD9854.c **** {
+ 1105              		.loc 1 433 1 is_stmt 1 view -0
+ 1106              		.cfi_startproc
+ 1107              		@ args = 0, pretend = 0, frame = 0
+ 1108              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1109              		.loc 1 433 1 is_stmt 0 view .LVU254
+ 1110 0000 38B5     		push	{r3, r4, r5, lr}
+ 1111              	.LCFI12:
+ 1112              		.cfi_def_cfa_offset 16
+ 1113              		.cfi_offset 3, -16
+ 1114              		.cfi_offset 4, -12
+ 1115              		.cfi_offset 5, -8
+ 1116              		.cfi_offset 14, -4
+ 1117 0002 0546     		mov	r5, r0
+ 1118 0004 0C46     		mov	r4, r1
+ 434:Core/Src/AD9854.c **** 	uchar count;
+ 1119              		.loc 1 434 2 is_stmt 1 view .LVU255
+ 435:Core/Src/AD9854.c **** 
+ 436:Core/Src/AD9854.c **** 	const ulong Freq=60000;
+ 1120              		.loc 1 436 2 view .LVU256
+ 1121              	.LVL142:
+ 437:Core/Src/AD9854.c ****     const uint Shape=4000;
+ 1122              		.loc 1 437 5 view .LVU257
+ 438:Core/Src/AD9854.c **** 
+ 439:Core/Src/AD9854.c **** 	uchar Adress;
+ 1123              		.loc 1 439 2 view .LVU258
+ 440:Core/Src/AD9854.c **** 	Adress=0x04;                           //选择频率控制字1地址的初值
+ 1124              		.loc 1 440 2 view .LVU259
+ 441:Core/Src/AD9854.c **** 
+ 442:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x00,Phase1>>8);	           //设置相位1
+ 1125              		.loc 1 442 2 view .LVU260
+ 1126 0006 010A     		lsrs	r1, r0, #8
+ 1127              	.LVL143:
+ 1128              		.loc 1 442 2 is_stmt 0 view .LVU261
+ 1129 0008 0020     		movs	r0, #0
+ 1130              	.LVL144:
+ 1131              		.loc 1 442 2 view .LVU262
+ 1132 000a FFF7FEFF 		bl	AD9854_WR_Byte
+ 1133              	.LVL145:
+ 443:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x01,(uchar)(Phase1&0xff));
+ 1134              		.loc 1 443 2 is_stmt 1 view .LVU263
+ 1135 000e E9B2     		uxtb	r1, r5
+ 1136 0010 0120     		movs	r0, #1
+ 1137 0012 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1138              	.LVL146:
+ 444:Core/Src/AD9854.c **** 	
+ 445:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x02,Phase2>>8);	          //设置相位2
+ 1139              		.loc 1 445 2 view .LVU264
+ 1140 0016 210A     		lsrs	r1, r4, #8
+ 1141 0018 0220     		movs	r0, #2
+ 1142 001a FFF7FEFF 		bl	AD9854_WR_Byte
+ 1143              	.LVL147:
+ 446:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x03,(uchar)(Phase2&0xff));
+ 1144              		.loc 1 446 2 view .LVU265
+ 1145 001e E1B2     		uxtb	r1, r4
+ARM GAS  /tmp/ccV45s2B.s 			page 30
+
+
+ 1146 0020 0320     		movs	r0, #3
+ 1147 0022 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1148              	.LVL148:
+ 447:Core/Src/AD9854.c **** 
+ 448:Core/Src/AD9854.c **** 	Freq_convert(Freq);                            //频率转换
+ 1149              		.loc 1 448 2 view .LVU266
+ 1150 0026 4EF66020 		movw	r0, #60000
+ 1151 002a FFF7FEFF 		bl	Freq_convert
+ 1152              	.LVL149:
+ 449:Core/Src/AD9854.c **** 
+ 450:Core/Src/AD9854.c **** 	for(count=6;count>0;)	                         //写入6字节的频率控制字  
+ 1153              		.loc 1 450 2 view .LVU267
+ 440:Core/Src/AD9854.c **** 
+ 1154              		.loc 1 440 8 is_stmt 0 view .LVU268
+ 1155 002e 0420     		movs	r0, #4
+ 1156              		.loc 1 450 11 view .LVU269
+ 1157 0030 0624     		movs	r4, #6
+ 1158              	.LVL150:
+ 1159              		.loc 1 450 2 view .LVU270
+ 1160 0032 08E0     		b	.L46
+ 1161              	.LVL151:
+ 1162              	.L47:
+ 451:Core/Src/AD9854.c ****     {
+ 452:Core/Src/AD9854.c **** 		AD9854_WR_Byte(Adress++,FreqWord[--count]);
+ 1163              		.loc 1 452 3 is_stmt 1 view .LVU271
+ 1164              		.loc 1 452 24 is_stmt 0 view .LVU272
+ 1165 0034 451C     		adds	r5, r0, #1
+ 1166 0036 EDB2     		uxtb	r5, r5
+ 1167              	.LVL152:
+ 1168              		.loc 1 452 3 view .LVU273
+ 1169 0038 013C     		subs	r4, r4, #1
+ 1170              	.LVL153:
+ 1171              		.loc 1 452 3 view .LVU274
+ 1172 003a E4B2     		uxtb	r4, r4
+ 1173              	.LVL154:
+ 1174              		.loc 1 452 3 view .LVU275
+ 1175 003c 124B     		ldr	r3, .L49
+ 1176 003e 195D     		ldrb	r1, [r3, r4]	@ zero_extendqisi2
+ 1177 0040 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1178              	.LVL155:
+ 1179              		.loc 1 452 24 view .LVU276
+ 1180 0044 2846     		mov	r0, r5
+ 1181              	.LVL156:
+ 1182              	.L46:
+ 450:Core/Src/AD9854.c ****     {
+ 1183              		.loc 1 450 14 is_stmt 1 discriminator 1 view .LVU277
+ 450:Core/Src/AD9854.c ****     {
+ 1184              		.loc 1 450 2 is_stmt 0 discriminator 1 view .LVU278
+ 1185 0046 002C     		cmp	r4, #0
+ 1186 0048 F4D1     		bne	.L47
+ 453:Core/Src/AD9854.c ****     }
+ 454:Core/Src/AD9854.c **** 
+ 455:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x21,Shape>>8);	                  //设置I通道幅度
+ 1187              		.loc 1 455 2 is_stmt 1 view .LVU279
+ 1188 004a 0F21     		movs	r1, #15
+ 1189 004c 2120     		movs	r0, #33
+ 1190              	.LVL157:
+ARM GAS  /tmp/ccV45s2B.s 			page 31
+
+
+ 1191              		.loc 1 455 2 is_stmt 0 view .LVU280
+ 1192 004e FFF7FEFF 		bl	AD9854_WR_Byte
+ 1193              	.LVL158:
+ 456:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x22,(uchar)(Shape&0xff));
+ 1194              		.loc 1 456 2 is_stmt 1 view .LVU281
+ 1195 0052 A021     		movs	r1, #160
+ 1196 0054 2220     		movs	r0, #34
+ 1197 0056 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1198              	.LVL159:
+ 457:Core/Src/AD9854.c **** 	
+ 458:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x23,Shape>>8);	               //设置Q通道幅度
+ 1199              		.loc 1 458 2 view .LVU282
+ 1200 005a 0F21     		movs	r1, #15
+ 1201 005c 2320     		movs	r0, #35
+ 1202 005e FFF7FEFF 		bl	AD9854_WR_Byte
+ 1203              	.LVL160:
+ 459:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x24,(uchar)(Shape&0xff));
+ 1204              		.loc 1 459 2 view .LVU283
+ 1205 0062 A021     		movs	r1, #160
+ 1206 0064 2420     		movs	r0, #36
+ 1207 0066 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1208              	.LVL161:
+ 460:Core/Src/AD9854.c **** 
+ 461:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);                                //更新
+ 1209              		.loc 1 461 2 view .LVU284
+ 1210 006a 084C     		ldr	r4, .L49+4
+ 1211              	.LVL162:
+ 1212              		.loc 1 461 2 is_stmt 0 view .LVU285
+ 1213 006c 0022     		movs	r2, #0
+ 1214 006e 4FF40071 		mov	r1, #512
+ 1215 0072 2046     		mov	r0, r4
+ 1216 0074 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1217              	.LVL163:
+ 462:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);	
+ 1218              		.loc 1 462 5 is_stmt 1 view .LVU286
+ 1219 0078 0122     		movs	r2, #1
+ 1220 007a 4FF40071 		mov	r1, #512
+ 1221 007e 2046     		mov	r0, r4
+ 1222 0080 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1223              	.LVL164:
+ 463:Core/Src/AD9854.c **** }
+ 1224              		.loc 1 463 1 is_stmt 0 view .LVU287
+ 1225 0084 38BD     		pop	{r3, r4, r5, pc}
+ 1226              	.L50:
+ 1227 0086 00BF     		.align	2
+ 1228              	.L49:
+ 1229 0088 00000000 		.word	.LANCHOR0
+ 1230 008c 00180240 		.word	1073879040
+ 1231              		.cfi_endproc
+ 1232              	.LFE244:
+ 1234              		.section	.text.AD9854_InitOSK,"ax",%progbits
+ 1235              		.align	1
+ 1236              		.global	AD9854_InitOSK
+ 1237              		.syntax unified
+ 1238              		.thumb
+ 1239              		.thumb_func
+ 1240              		.fpu fpv4-sp-d16
+ARM GAS  /tmp/ccV45s2B.s 			page 32
+
+
+ 1242              	AD9854_InitOSK:
+ 1243              	.LFB245:
+ 464:Core/Src/AD9854.c **** 
+ 465:Core/Src/AD9854.c **** //====================================================================================
+ 466:Core/Src/AD9854.c **** //函数名称:void AD9854_InitOSK(void)
+ 467:Core/Src/AD9854.c **** //函数功能:AD9854的OSK初始化
+ 468:Core/Src/AD9854.c **** //入口参数:无
+ 469:Core/Src/AD9854.c **** //出口参数:无
+ 470:Core/Src/AD9854.c **** //====================================================================================
+ 471:Core/Src/AD9854.c **** void AD9854_InitOSK(void)
+ 472:Core/Src/AD9854.c **** {
+ 1244              		.loc 1 472 1 is_stmt 1 view -0
+ 1245              		.cfi_startproc
+ 1246              		@ args = 0, pretend = 0, frame = 0
+ 1247              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1248 0000 38B5     		push	{r3, r4, r5, lr}
+ 1249              	.LCFI13:
+ 1250              		.cfi_def_cfa_offset 16
+ 1251              		.cfi_offset 3, -16
+ 1252              		.cfi_offset 4, -12
+ 1253              		.cfi_offset 5, -8
+ 1254              		.cfi_offset 14, -4
+ 473:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(WD_GPIO_Port,WD_Pin,GPIO_PIN_SET);                           //将读、写控�
+ 1255              		.loc 1 473 2 view .LVU289
+ 1256 0002 0122     		movs	r2, #1
+ 1257 0004 4021     		movs	r1, #64
+ 1258 0006 1C48     		ldr	r0, .L53
+ 1259 0008 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1260              	.LVL165:
+ 474:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(RD_GPIO_Port,RD_Pin,GPIO_PIN_SET);
+ 1261              		.loc 1 474 2 view .LVU290
+ 1262 000c 0122     		movs	r2, #1
+ 1263 000e 4FF48071 		mov	r1, #256
+ 1264 0012 1A48     		ldr	r0, .L53+4
+ 1265 0014 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1266              	.LVL166:
+ 475:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 1267              		.loc 1 475 2 view .LVU291
+ 1268 0018 194C     		ldr	r4, .L53+8
+ 1269 001a 0122     		movs	r2, #1
+ 1270 001c 4FF40071 		mov	r1, #512
+ 1271 0020 2046     		mov	r0, r4
+ 1272 0022 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1273              	.LVL167:
+ 476:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_SET);                          //复位AD9854
+ 1274              		.loc 1 476 2 view .LVU292
+ 1275 0026 174D     		ldr	r5, .L53+12
+ 1276 0028 0122     		movs	r2, #1
+ 1277 002a 0221     		movs	r1, #2
+ 1278 002c 2846     		mov	r0, r5
+ 1279 002e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1280              	.LVL168:
+ 477:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_RESET);
+ 1281              		.loc 1 477 2 view .LVU293
+ 1282 0032 0022     		movs	r2, #0
+ 1283 0034 0221     		movs	r1, #2
+ 1284 0036 2846     		mov	r0, r5
+ARM GAS  /tmp/ccV45s2B.s 			page 33
+
+
+ 1285 0038 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1286              	.LVL169:
+ 478:Core/Src/AD9854.c **** 
+ 479:Core/Src/AD9854.c ****     AD9854_WR_Byte(0x1d,0x00);	           //关闭比较器
+ 1287              		.loc 1 479 5 view .LVU294
+ 1288 003c 0021     		movs	r1, #0
+ 1289 003e 1D20     		movs	r0, #29
+ 1290 0040 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1291              	.LVL170:
+ 480:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1e,CLK_Set);	       //设置系统时钟倍频
+ 1292              		.loc 1 480 2 view .LVU295
+ 1293 0044 0C21     		movs	r1, #12
+ 1294 0046 1E20     		movs	r0, #30
+ 1295 0048 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1296              	.LVL171:
+ 481:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1f,0x00);	           //设置系统为模式0，由外部更新
+ 1297              		.loc 1 481 2 view .LVU296
+ 1298 004c 0021     		movs	r1, #0
+ 1299 004e 1F20     		movs	r0, #31
+ 1300 0050 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1301              	.LVL172:
+ 482:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x20,0x70);	           //设置为可调节幅度，取消插值补偿,通断整形
+ 1302              		.loc 1 482 2 view .LVU297
+ 1303 0054 7021     		movs	r1, #112
+ 1304 0056 2020     		movs	r0, #32
+ 1305 0058 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1306              	.LVL173:
+ 483:Core/Src/AD9854.c **** 
+ 484:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);                        //更新AD9854�
+ 1307              		.loc 1 484 2 view .LVU298
+ 1308 005c 0022     		movs	r2, #0
+ 1309 005e 4FF40071 		mov	r1, #512
+ 1310 0062 2046     		mov	r0, r4
+ 1311 0064 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1312              	.LVL174:
+ 485:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 1313              		.loc 1 485 2 view .LVU299
+ 1314 0068 0122     		movs	r2, #1
+ 1315 006a 4FF40071 		mov	r1, #512
+ 1316 006e 2046     		mov	r0, r4
+ 1317 0070 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1318              	.LVL175:
+ 486:Core/Src/AD9854.c **** }
+ 1319              		.loc 1 486 1 is_stmt 0 view .LVU300
+ 1320 0074 38BD     		pop	{r3, r4, r5, pc}
+ 1321              	.L54:
+ 1322 0076 00BF     		.align	2
+ 1323              	.L53:
+ 1324 0078 000C0240 		.word	1073875968
+ 1325 007c 00000240 		.word	1073872896
+ 1326 0080 00180240 		.word	1073879040
+ 1327 0084 00100240 		.word	1073876992
+ 1328              		.cfi_endproc
+ 1329              	.LFE245:
+ 1331              		.section	.text.AD9854_SetOSK,"ax",%progbits
+ 1332              		.align	1
+ 1333              		.global	AD9854_SetOSK
+ARM GAS  /tmp/ccV45s2B.s 			page 34
+
+
+ 1334              		.syntax unified
+ 1335              		.thumb
+ 1336              		.thumb_func
+ 1337              		.fpu fpv4-sp-d16
+ 1339              	AD9854_SetOSK:
+ 1340              	.LVL176:
+ 1341              	.LFB246:
+ 487:Core/Src/AD9854.c **** 
+ 488:Core/Src/AD9854.c **** //====================================================================================
+ 489:Core/Src/AD9854.c **** //函数名称:void AD9854_SetOSK(uchar RateShape)
+ 490:Core/Src/AD9854.c **** //函数功能:AD9854的OSK设置
+ 491:Core/Src/AD9854.c **** //入口参数: RateShape    OSK斜率,取值为4~255，小于4则无效
+ 492:Core/Src/AD9854.c **** //出口参数:无
+ 493:Core/Src/AD9854.c **** //====================================================================================
+ 494:Core/Src/AD9854.c **** void AD9854_SetOSK(uchar RateShape)
+ 495:Core/Src/AD9854.c **** {
+ 1342              		.loc 1 495 1 is_stmt 1 view -0
+ 1343              		.cfi_startproc
+ 1344              		@ args = 0, pretend = 0, frame = 0
+ 1345              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1346              		.loc 1 495 1 is_stmt 0 view .LVU302
+ 1347 0000 70B5     		push	{r4, r5, r6, lr}
+ 1348              	.LCFI14:
+ 1349              		.cfi_def_cfa_offset 16
+ 1350              		.cfi_offset 4, -16
+ 1351              		.cfi_offset 5, -12
+ 1352              		.cfi_offset 6, -8
+ 1353              		.cfi_offset 14, -4
+ 1354 0002 0646     		mov	r6, r0
+ 496:Core/Src/AD9854.c **** 	uchar count;
+ 1355              		.loc 1 496 2 is_stmt 1 view .LVU303
+ 497:Core/Src/AD9854.c **** 
+ 498:Core/Src/AD9854.c **** 	const ulong Freq=60000;			 //设置载频
+ 1356              		.loc 1 498 2 view .LVU304
+ 1357              	.LVL177:
+ 499:Core/Src/AD9854.c ****   const uint  Shape=4000;			//幅度设置. 为12 Bit,取值范围为(0~4095)
+ 1358              		.loc 1 499 3 view .LVU305
+ 500:Core/Src/AD9854.c **** 
+ 501:Core/Src/AD9854.c **** 	uchar Adress;
+ 1359              		.loc 1 501 2 view .LVU306
+ 502:Core/Src/AD9854.c **** 	Adress=0x04;               //选择频率控制字地址的初值
+ 1360              		.loc 1 502 2 view .LVU307
+ 503:Core/Src/AD9854.c **** 
+ 504:Core/Src/AD9854.c **** 	Freq_convert(Freq);                       //频率转换
+ 1361              		.loc 1 504 2 view .LVU308
+ 1362 0004 4EF66020 		movw	r0, #60000
+ 1363              	.LVL178:
+ 1364              		.loc 1 504 2 is_stmt 0 view .LVU309
+ 1365 0008 FFF7FEFF 		bl	Freq_convert
+ 1366              	.LVL179:
+ 505:Core/Src/AD9854.c **** 
+ 506:Core/Src/AD9854.c **** 	for(count=6;count>0;)	                         //写入6字节的频率控制字  
+ 1367              		.loc 1 506 2 is_stmt 1 view .LVU310
+ 502:Core/Src/AD9854.c **** 
+ 1368              		.loc 1 502 8 is_stmt 0 view .LVU311
+ 1369 000c 0420     		movs	r0, #4
+ 1370              		.loc 1 506 11 view .LVU312
+ARM GAS  /tmp/ccV45s2B.s 			page 35
+
+
+ 1371 000e 0624     		movs	r4, #6
+ 1372              		.loc 1 506 2 view .LVU313
+ 1373 0010 08E0     		b	.L56
+ 1374              	.LVL180:
+ 1375              	.L57:
+ 507:Core/Src/AD9854.c ****     {
+ 508:Core/Src/AD9854.c **** 		AD9854_WR_Byte(Adress++,FreqWord[--count]);
+ 1376              		.loc 1 508 3 is_stmt 1 view .LVU314
+ 1377              		.loc 1 508 24 is_stmt 0 view .LVU315
+ 1378 0012 451C     		adds	r5, r0, #1
+ 1379 0014 EDB2     		uxtb	r5, r5
+ 1380              	.LVL181:
+ 1381              		.loc 1 508 3 view .LVU316
+ 1382 0016 013C     		subs	r4, r4, #1
+ 1383              	.LVL182:
+ 1384              		.loc 1 508 3 view .LVU317
+ 1385 0018 E4B2     		uxtb	r4, r4
+ 1386              	.LVL183:
+ 1387              		.loc 1 508 3 view .LVU318
+ 1388 001a 144B     		ldr	r3, .L59
+ 1389 001c 195D     		ldrb	r1, [r3, r4]	@ zero_extendqisi2
+ 1390 001e FFF7FEFF 		bl	AD9854_WR_Byte
+ 1391              	.LVL184:
+ 1392              		.loc 1 508 24 view .LVU319
+ 1393 0022 2846     		mov	r0, r5
+ 1394              	.LVL185:
+ 1395              	.L56:
+ 506:Core/Src/AD9854.c ****     {
+ 1396              		.loc 1 506 14 is_stmt 1 discriminator 1 view .LVU320
+ 506:Core/Src/AD9854.c ****     {
+ 1397              		.loc 1 506 2 is_stmt 0 discriminator 1 view .LVU321
+ 1398 0024 002C     		cmp	r4, #0
+ 1399 0026 F4D1     		bne	.L57
+ 509:Core/Src/AD9854.c ****     }
+ 510:Core/Src/AD9854.c **** 
+ 511:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x21,Shape>>8);	                  //设置I通道幅度
+ 1400              		.loc 1 511 2 is_stmt 1 view .LVU322
+ 1401 0028 0F21     		movs	r1, #15
+ 1402 002a 2120     		movs	r0, #33
+ 1403              	.LVL186:
+ 1404              		.loc 1 511 2 is_stmt 0 view .LVU323
+ 1405 002c FFF7FEFF 		bl	AD9854_WR_Byte
+ 1406              	.LVL187:
+ 512:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x22,(uchar)(Shape&0xff));
+ 1407              		.loc 1 512 2 is_stmt 1 view .LVU324
+ 1408 0030 A021     		movs	r1, #160
+ 1409 0032 2220     		movs	r0, #34
+ 1410 0034 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1411              	.LVL188:
+ 513:Core/Src/AD9854.c **** 	
+ 514:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x23,Shape>>8);	                  //设置Q通道幅度
+ 1412              		.loc 1 514 2 view .LVU325
+ 1413 0038 0F21     		movs	r1, #15
+ 1414 003a 2320     		movs	r0, #35
+ 1415 003c FFF7FEFF 		bl	AD9854_WR_Byte
+ 1416              	.LVL189:
+ 515:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x24,(uchar)(Shape&0xff));  	 
+ARM GAS  /tmp/ccV45s2B.s 			page 36
+
+
+ 1417              		.loc 1 515 2 view .LVU326
+ 1418 0040 A021     		movs	r1, #160
+ 1419 0042 2420     		movs	r0, #36
+ 1420 0044 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1421              	.LVL190:
+ 516:Core/Src/AD9854.c **** 
+ 517:Core/Src/AD9854.c **** 
+ 518:Core/Src/AD9854.c ****     AD9854_WR_Byte(0x25,RateShape);				       //设置OSK斜率
+ 1422              		.loc 1 518 5 view .LVU327
+ 1423 0048 3146     		mov	r1, r6
+ 1424 004a 2520     		movs	r0, #37
+ 1425 004c FFF7FEFF 		bl	AD9854_WR_Byte
+ 1426              	.LVL191:
+ 519:Core/Src/AD9854.c **** 
+ 520:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);                                //更新
+ 1427              		.loc 1 520 2 view .LVU328
+ 1428 0050 074C     		ldr	r4, .L59+4
+ 1429              	.LVL192:
+ 1430              		.loc 1 520 2 is_stmt 0 view .LVU329
+ 1431 0052 0022     		movs	r2, #0
+ 1432 0054 4FF40071 		mov	r1, #512
+ 1433 0058 2046     		mov	r0, r4
+ 1434 005a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1435              	.LVL193:
+ 521:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);	
+ 1436              		.loc 1 521 5 is_stmt 1 view .LVU330
+ 1437 005e 0122     		movs	r2, #1
+ 1438 0060 4FF40071 		mov	r1, #512
+ 1439 0064 2046     		mov	r0, r4
+ 1440 0066 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1441              	.LVL194:
+ 522:Core/Src/AD9854.c **** }
+ 1442              		.loc 1 522 1 is_stmt 0 view .LVU331
+ 1443 006a 70BD     		pop	{r4, r5, r6, pc}
+ 1444              	.L60:
+ 1445              		.align	2
+ 1446              	.L59:
+ 1447 006c 00000000 		.word	.LANCHOR0
+ 1448 0070 00180240 		.word	1073879040
+ 1449              		.cfi_endproc
+ 1450              	.LFE246:
+ 1452              		.section	.text.AD9854_InitAM,"ax",%progbits
+ 1453              		.align	1
+ 1454              		.global	AD9854_InitAM
+ 1455              		.syntax unified
+ 1456              		.thumb
+ 1457              		.thumb_func
+ 1458              		.fpu fpv4-sp-d16
+ 1460              	AD9854_InitAM:
+ 1461              	.LFB247:
+ 523:Core/Src/AD9854.c **** 
+ 524:Core/Src/AD9854.c **** //====================================================================================
+ 525:Core/Src/AD9854.c **** //函数名称:void AD9854_InitAM(void)
+ 526:Core/Src/AD9854.c **** //函数功能:AD9854的AM初始化
+ 527:Core/Src/AD9854.c **** //入口参数:无
+ 528:Core/Src/AD9854.c **** //出口参数:无
+ 529:Core/Src/AD9854.c **** //====================================================================================
+ARM GAS  /tmp/ccV45s2B.s 			page 37
+
+
+ 530:Core/Src/AD9854.c **** void AD9854_InitAM(void)
+ 531:Core/Src/AD9854.c **** {
+ 1462              		.loc 1 531 1 is_stmt 1 view -0
+ 1463              		.cfi_startproc
+ 1464              		@ args = 0, pretend = 0, frame = 0
+ 1465              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1466 0000 38B5     		push	{r3, r4, r5, lr}
+ 1467              	.LCFI15:
+ 1468              		.cfi_def_cfa_offset 16
+ 1469              		.cfi_offset 3, -16
+ 1470              		.cfi_offset 4, -12
+ 1471              		.cfi_offset 5, -8
+ 1472              		.cfi_offset 14, -4
+ 532:Core/Src/AD9854.c **** 	uchar count;
+ 1473              		.loc 1 532 2 view .LVU333
+ 533:Core/Src/AD9854.c **** 
+ 534:Core/Src/AD9854.c **** 	const ulong Freq=60000;			 //设置载频
+ 1474              		.loc 1 534 2 view .LVU334
+ 1475              	.LVL195:
+ 535:Core/Src/AD9854.c **** 
+ 536:Core/Src/AD9854.c **** 	uchar  Adress;
+ 1476              		.loc 1 536 2 view .LVU335
+ 537:Core/Src/AD9854.c **** 	Adress=0x04;      //选择频率控制字地址的初值
+ 1477              		.loc 1 537 2 view .LVU336
+ 538:Core/Src/AD9854.c **** 	
+ 539:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(WD_GPIO_Port,WD_Pin,GPIO_PIN_SET);    //将读、写控制端口设为无效
+ 1478              		.loc 1 539 5 view .LVU337
+ 1479 0002 0122     		movs	r2, #1
+ 1480 0004 4021     		movs	r1, #64
+ 1481 0006 2548     		ldr	r0, .L65
+ 1482 0008 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1483              	.LVL196:
+ 540:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RD_GPIO_Port,RD_Pin,GPIO_PIN_SET);
+ 1484              		.loc 1 540 5 view .LVU338
+ 1485 000c 0122     		movs	r2, #1
+ 1486 000e 4FF48071 		mov	r1, #256
+ 1487 0012 2348     		ldr	r0, .L65+4
+ 1488 0014 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1489              	.LVL197:
+ 541:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 1490              		.loc 1 541 5 view .LVU339
+ 1491 0018 0122     		movs	r2, #1
+ 1492 001a 4FF40071 		mov	r1, #512
+ 1493 001e 2148     		ldr	r0, .L65+8
+ 1494 0020 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1495              	.LVL198:
+ 542:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_SET);     //复位AD9854
+ 1496              		.loc 1 542 5 view .LVU340
+ 1497 0024 204C     		ldr	r4, .L65+12
+ 1498 0026 0122     		movs	r2, #1
+ 1499 0028 0221     		movs	r1, #2
+ 1500 002a 2046     		mov	r0, r4
+ 1501 002c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1502              	.LVL199:
+ 543:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_RESET);
+ 1503              		.loc 1 543 5 view .LVU341
+ 1504 0030 0022     		movs	r2, #0
+ARM GAS  /tmp/ccV45s2B.s 			page 38
+
+
+ 1505 0032 0221     		movs	r1, #2
+ 1506 0034 2046     		mov	r0, r4
+ 1507 0036 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1508              	.LVL200:
+ 544:Core/Src/AD9854.c **** 
+ 545:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1d,0x00);	                  //关闭比较器
+ 1509              		.loc 1 545 2 view .LVU342
+ 1510 003a 0021     		movs	r1, #0
+ 1511 003c 1D20     		movs	r0, #29
+ 1512 003e FFF7FEFF 		bl	AD9854_WR_Byte
+ 1513              	.LVL201:
+ 546:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1e,CLK_Set);	             //设置系统时钟倍频
+ 1514              		.loc 1 546 2 view .LVU343
+ 1515 0042 0C21     		movs	r1, #12
+ 1516 0044 1E20     		movs	r0, #30
+ 1517 0046 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1518              	.LVL202:
+ 547:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1f,0x00);	                 //设置系统为模式0，由外部更新
+ 1519              		.loc 1 547 2 view .LVU344
+ 1520 004a 0021     		movs	r1, #0
+ 1521 004c 1F20     		movs	r0, #31
+ 1522 004e FFF7FEFF 		bl	AD9854_WR_Byte
+ 1523              	.LVL203:
+ 548:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x20,0x60);	                  //设置为可调节幅度，取消插值补偿
+ 1524              		.loc 1 548 2 view .LVU345
+ 1525 0052 6021     		movs	r1, #96
+ 1526 0054 2020     		movs	r0, #32
+ 1527 0056 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1528              	.LVL204:
+ 549:Core/Src/AD9854.c **** 
+ 550:Core/Src/AD9854.c **** 	Freq_convert(Freq);                            //频率转换
+ 1529              		.loc 1 550 2 view .LVU346
+ 1530 005a 4EF66020 		movw	r0, #60000
+ 1531 005e FFF7FEFF 		bl	Freq_convert
+ 1532              	.LVL205:
+ 551:Core/Src/AD9854.c **** 
+ 552:Core/Src/AD9854.c **** 	for(count=6;count>0;)	                         //写入6字节的频率控制字  
+ 1533              		.loc 1 552 2 view .LVU347
+ 537:Core/Src/AD9854.c **** 	
+ 1534              		.loc 1 537 8 is_stmt 0 view .LVU348
+ 1535 0062 0420     		movs	r0, #4
+ 1536              		.loc 1 552 11 view .LVU349
+ 1537 0064 0624     		movs	r4, #6
+ 1538              		.loc 1 552 2 view .LVU350
+ 1539 0066 08E0     		b	.L62
+ 1540              	.LVL206:
+ 1541              	.L63:
+ 553:Core/Src/AD9854.c ****     {
+ 554:Core/Src/AD9854.c **** 		AD9854_WR_Byte(Adress++,FreqWord[--count]);
+ 1542              		.loc 1 554 3 is_stmt 1 view .LVU351
+ 1543              		.loc 1 554 24 is_stmt 0 view .LVU352
+ 1544 0068 451C     		adds	r5, r0, #1
+ 1545 006a EDB2     		uxtb	r5, r5
+ 1546              	.LVL207:
+ 1547              		.loc 1 554 3 view .LVU353
+ 1548 006c 013C     		subs	r4, r4, #1
+ 1549              	.LVL208:
+ARM GAS  /tmp/ccV45s2B.s 			page 39
+
+
+ 1550              		.loc 1 554 3 view .LVU354
+ 1551 006e E4B2     		uxtb	r4, r4
+ 1552              	.LVL209:
+ 1553              		.loc 1 554 3 view .LVU355
+ 1554 0070 0E4B     		ldr	r3, .L65+16
+ 1555 0072 195D     		ldrb	r1, [r3, r4]	@ zero_extendqisi2
+ 1556 0074 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1557              	.LVL210:
+ 1558              		.loc 1 554 24 view .LVU356
+ 1559 0078 2846     		mov	r0, r5
+ 1560              	.LVL211:
+ 1561              	.L62:
+ 552:Core/Src/AD9854.c ****     {
+ 1562              		.loc 1 552 14 is_stmt 1 discriminator 1 view .LVU357
+ 552:Core/Src/AD9854.c ****     {
+ 1563              		.loc 1 552 2 is_stmt 0 discriminator 1 view .LVU358
+ 1564 007a 002C     		cmp	r4, #0
+ 1565 007c F4D1     		bne	.L63
+ 555:Core/Src/AD9854.c ****     }
+ 556:Core/Src/AD9854.c **** 
+ 557:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);                             //更新AD9
+ 1566              		.loc 1 557 2 is_stmt 1 view .LVU359
+ 1567 007e 094C     		ldr	r4, .L65+8
+ 1568              	.LVL212:
+ 1569              		.loc 1 557 2 is_stmt 0 view .LVU360
+ 1570 0080 0022     		movs	r2, #0
+ 1571 0082 4FF40071 		mov	r1, #512
+ 1572 0086 2046     		mov	r0, r4
+ 1573              	.LVL213:
+ 1574              		.loc 1 557 2 view .LVU361
+ 1575 0088 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1576              	.LVL214:
+ 558:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 1577              		.loc 1 558 5 is_stmt 1 view .LVU362
+ 1578 008c 0122     		movs	r2, #1
+ 1579 008e 4FF40071 		mov	r1, #512
+ 1580 0092 2046     		mov	r0, r4
+ 1581 0094 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1582              	.LVL215:
+ 559:Core/Src/AD9854.c **** }
+ 1583              		.loc 1 559 1 is_stmt 0 view .LVU363
+ 1584 0098 38BD     		pop	{r3, r4, r5, pc}
+ 1585              	.L66:
+ 1586 009a 00BF     		.align	2
+ 1587              	.L65:
+ 1588 009c 000C0240 		.word	1073875968
+ 1589 00a0 00000240 		.word	1073872896
+ 1590 00a4 00180240 		.word	1073879040
+ 1591 00a8 00100240 		.word	1073876992
+ 1592 00ac 00000000 		.word	.LANCHOR0
+ 1593              		.cfi_endproc
+ 1594              	.LFE247:
+ 1596              		.section	.text.AD9854_SetAM,"ax",%progbits
+ 1597              		.align	1
+ 1598              		.global	AD9854_SetAM
+ 1599              		.syntax unified
+ 1600              		.thumb
+ARM GAS  /tmp/ccV45s2B.s 			page 40
+
+
+ 1601              		.thumb_func
+ 1602              		.fpu fpv4-sp-d16
+ 1604              	AD9854_SetAM:
+ 1605              	.LVL216:
+ 1606              	.LFB248:
+ 560:Core/Src/AD9854.c **** 
+ 561:Core/Src/AD9854.c **** //====================================================================================
+ 562:Core/Src/AD9854.c **** //函数名称:void AD9854_SetAM(uchar Shape)
+ 563:Core/Src/AD9854.c **** //函数功能:AD9854的AM设置
+ 564:Core/Src/AD9854.c **** //入口参数:Shape   12Bit幅度,取值从0~4095   
+ 565:Core/Src/AD9854.c **** //出口参数:无
+ 566:Core/Src/AD9854.c **** //====================================================================================
+ 567:Core/Src/AD9854.c **** void AD9854_SetAM(uint Shape)
+ 568:Core/Src/AD9854.c **** {
+ 1607              		.loc 1 568 1 is_stmt 1 view -0
+ 1608              		.cfi_startproc
+ 1609              		@ args = 0, pretend = 0, frame = 0
+ 1610              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1611              		.loc 1 568 1 is_stmt 0 view .LVU365
+ 1612 0000 38B5     		push	{r3, r4, r5, lr}
+ 1613              	.LCFI16:
+ 1614              		.cfi_def_cfa_offset 16
+ 1615              		.cfi_offset 3, -16
+ 1616              		.cfi_offset 4, -12
+ 1617              		.cfi_offset 5, -8
+ 1618              		.cfi_offset 14, -4
+ 1619 0002 0446     		mov	r4, r0
+ 569:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x21,Shape>>8);	                  //设置I通道幅度
+ 1620              		.loc 1 569 2 is_stmt 1 view .LVU366
+ 1621              		.loc 1 569 27 is_stmt 0 view .LVU367
+ 1622 0004 050A     		lsrs	r5, r0, #8
+ 1623              		.loc 1 569 2 view .LVU368
+ 1624 0006 2946     		mov	r1, r5
+ 1625 0008 2120     		movs	r0, #33
+ 1626              	.LVL217:
+ 1627              		.loc 1 569 2 view .LVU369
+ 1628 000a FFF7FEFF 		bl	AD9854_WR_Byte
+ 1629              	.LVL218:
+ 570:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x22,(uchar)(Shape&0xff));
+ 1630              		.loc 1 570 2 is_stmt 1 view .LVU370
+ 1631 000e E4B2     		uxtb	r4, r4
+ 1632              	.LVL219:
+ 1633              		.loc 1 570 2 is_stmt 0 view .LVU371
+ 1634 0010 2146     		mov	r1, r4
+ 1635 0012 2220     		movs	r0, #34
+ 1636 0014 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1637              	.LVL220:
+ 571:Core/Src/AD9854.c **** 	
+ 572:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x23,Shape>>8);	                  //设置Q通道幅度
+ 1638              		.loc 1 572 2 is_stmt 1 view .LVU372
+ 1639 0018 2946     		mov	r1, r5
+ 1640 001a 2320     		movs	r0, #35
+ 1641 001c FFF7FEFF 		bl	AD9854_WR_Byte
+ 1642              	.LVL221:
+ 573:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x24,(uchar)(Shape&0xff));
+ 1643              		.loc 1 573 2 view .LVU373
+ 1644 0020 2146     		mov	r1, r4
+ARM GAS  /tmp/ccV45s2B.s 			page 41
+
+
+ 1645 0022 2420     		movs	r0, #36
+ 1646 0024 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1647              	.LVL222:
+ 574:Core/Src/AD9854.c **** 
+ 575:Core/Src/AD9854.c **** 	    HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 1648              		.loc 1 575 6 view .LVU374
+ 1649 0028 064C     		ldr	r4, .L69
+ 1650 002a 0122     		movs	r2, #1
+ 1651 002c 4FF40071 		mov	r1, #512
+ 1652 0030 2046     		mov	r0, r4
+ 1653 0032 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1654              	.LVL223:
+ 576:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);		
+ 1655              		.loc 1 576 5 view .LVU375
+ 1656 0036 0022     		movs	r2, #0
+ 1657 0038 4FF40071 		mov	r1, #512
+ 1658 003c 2046     		mov	r0, r4
+ 1659 003e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1660              	.LVL224:
+ 577:Core/Src/AD9854.c **** }
+ 1661              		.loc 1 577 1 is_stmt 0 view .LVU376
+ 1662 0042 38BD     		pop	{r3, r4, r5, pc}
+ 1663              	.L70:
+ 1664              		.align	2
+ 1665              	.L69:
+ 1666 0044 00180240 		.word	1073879040
+ 1667              		.cfi_endproc
+ 1668              	.LFE248:
+ 1670              		.section	.text.AD9854_InitRFSK,"ax",%progbits
+ 1671              		.align	1
+ 1672              		.global	AD9854_InitRFSK
+ 1673              		.syntax unified
+ 1674              		.thumb
+ 1675              		.thumb_func
+ 1676              		.fpu fpv4-sp-d16
+ 1678              	AD9854_InitRFSK:
+ 1679              	.LFB249:
+ 578:Core/Src/AD9854.c **** 
+ 579:Core/Src/AD9854.c **** //====================================================================================
+ 580:Core/Src/AD9854.c **** //函数名称:void AD9854_InitRFSK(void)
+ 581:Core/Src/AD9854.c **** //函数功能:AD9854的RFSK初始化
+ 582:Core/Src/AD9854.c **** //入口参数:无
+ 583:Core/Src/AD9854.c **** //出口参数:无
+ 584:Core/Src/AD9854.c **** //====================================================================================
+ 585:Core/Src/AD9854.c **** void AD9854_InitRFSK(void)
+ 586:Core/Src/AD9854.c **** {
+ 1680              		.loc 1 586 1 is_stmt 1 view -0
+ 1681              		.cfi_startproc
+ 1682              		@ args = 0, pretend = 0, frame = 0
+ 1683              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1684 0000 38B5     		push	{r3, r4, r5, lr}
+ 1685              	.LCFI17:
+ 1686              		.cfi_def_cfa_offset 16
+ 1687              		.cfi_offset 3, -16
+ 1688              		.cfi_offset 4, -12
+ 1689              		.cfi_offset 5, -8
+ 1690              		.cfi_offset 14, -4
+ARM GAS  /tmp/ccV45s2B.s 			page 42
+
+
+ 587:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(WD_GPIO_Port,WD_Pin,GPIO_PIN_SET);                      //将读、写控制端�
+ 1691              		.loc 1 587 2 view .LVU378
+ 1692 0002 0122     		movs	r2, #1
+ 1693 0004 4021     		movs	r1, #64
+ 1694 0006 1C48     		ldr	r0, .L73
+ 1695 0008 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1696              	.LVL225:
+ 588:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RD_GPIO_Port,RD_Pin,GPIO_PIN_SET);
+ 1697              		.loc 1 588 5 view .LVU379
+ 1698 000c 0122     		movs	r2, #1
+ 1699 000e 4FF48071 		mov	r1, #256
+ 1700 0012 1A48     		ldr	r0, .L73+4
+ 1701 0014 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1702              	.LVL226:
+ 589:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 1703              		.loc 1 589 5 view .LVU380
+ 1704 0018 194C     		ldr	r4, .L73+8
+ 1705 001a 0122     		movs	r2, #1
+ 1706 001c 4FF40071 		mov	r1, #512
+ 1707 0020 2046     		mov	r0, r4
+ 1708 0022 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1709              	.LVL227:
+ 590:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_SET);                     //复位AD9854
+ 1710              		.loc 1 590 5 view .LVU381
+ 1711 0026 174D     		ldr	r5, .L73+12
+ 1712 0028 0122     		movs	r2, #1
+ 1713 002a 0221     		movs	r1, #2
+ 1714 002c 2846     		mov	r0, r5
+ 1715 002e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1716              	.LVL228:
+ 591:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(RST_GPIO_Port,RST_Pin,GPIO_PIN_RESET);
+ 1717              		.loc 1 591 5 view .LVU382
+ 1718 0032 0022     		movs	r2, #0
+ 1719 0034 0221     		movs	r1, #2
+ 1720 0036 2846     		mov	r0, r5
+ 1721 0038 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1722              	.LVL229:
+ 592:Core/Src/AD9854.c **** 	
+ 593:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1d,0x00);	       //关闭比较器
+ 1723              		.loc 1 593 2 view .LVU383
+ 1724 003c 0021     		movs	r1, #0
+ 1725 003e 1D20     		movs	r0, #29
+ 1726 0040 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1727              	.LVL230:
+ 594:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1e,CLK_Set);	   //设置系统时钟倍频
+ 1728              		.loc 1 594 2 view .LVU384
+ 1729 0044 0C21     		movs	r1, #12
+ 1730 0046 1E20     		movs	r0, #30
+ 1731 0048 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1732              	.LVL231:
+ 595:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1f,0x24);	        //设置系统为模式2，由外部更新,使能三角波扫�
+ 1733              		.loc 1 595 2 view .LVU385
+ 1734 004c 2421     		movs	r1, #36
+ 1735 004e 1F20     		movs	r0, #31
+ 1736 0050 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1737              	.LVL232:
+ 596:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x20,0x60);	        //设置为可调节幅度，取消插值补偿	
+ARM GAS  /tmp/ccV45s2B.s 			page 43
+
+
+ 1738              		.loc 1 596 2 view .LVU386
+ 1739 0054 6021     		movs	r1, #96
+ 1740 0056 2020     		movs	r0, #32
+ 1741 0058 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1742              	.LVL233:
+ 597:Core/Src/AD9854.c **** 
+ 598:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);                   //更新AD9854输出
+ 1743              		.loc 1 598 2 view .LVU387
+ 1744 005c 0022     		movs	r2, #0
+ 1745 005e 4FF40071 		mov	r1, #512
+ 1746 0062 2046     		mov	r0, r4
+ 1747 0064 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1748              	.LVL234:
+ 599:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);
+ 1749              		.loc 1 599 5 view .LVU388
+ 1750 0068 0122     		movs	r2, #1
+ 1751 006a 4FF40071 		mov	r1, #512
+ 1752 006e 2046     		mov	r0, r4
+ 1753 0070 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1754              	.LVL235:
+ 600:Core/Src/AD9854.c **** }
+ 1755              		.loc 1 600 1 is_stmt 0 view .LVU389
+ 1756 0074 38BD     		pop	{r3, r4, r5, pc}
+ 1757              	.L74:
+ 1758 0076 00BF     		.align	2
+ 1759              	.L73:
+ 1760 0078 000C0240 		.word	1073875968
+ 1761 007c 00000240 		.word	1073872896
+ 1762 0080 00180240 		.word	1073879040
+ 1763 0084 00100240 		.word	1073876992
+ 1764              		.cfi_endproc
+ 1765              	.LFE249:
+ 1767              		.section	.text.AD9854_SetRFSK,"ax",%progbits
+ 1768              		.align	1
+ 1769              		.global	AD9854_SetRFSK
+ 1770              		.syntax unified
+ 1771              		.thumb
+ 1772              		.thumb_func
+ 1773              		.fpu fpv4-sp-d16
+ 1775              	AD9854_SetRFSK:
+ 1776              	.LVL236:
+ 1777              	.LFB250:
+ 601:Core/Src/AD9854.c **** 
+ 602:Core/Src/AD9854.c **** //====================================================================================
+ 603:Core/Src/AD9854.c **** //函数名称:void AD9854_SetRFSK(void)
+ 604:Core/Src/AD9854.c **** //函数功能:AD9854的RFSK设置
+ 605:Core/Src/AD9854.c **** //入口参数:Freq_Low          RFSK低频率	   48Bit
+ 606:Core/Src/AD9854.c **** //         Freq_High         RFSK高频率	   48Bit
+ 607:Core/Src/AD9854.c **** //         Freq_Up_Down		 步进频率	   48Bit
+ 608:Core/Src/AD9854.c **** //		   FreRate           斜率时钟控制  20Bit
+ 609:Core/Src/AD9854.c **** //出口参数:无
+ 610:Core/Src/AD9854.c **** //注：     每两个脉冲之间的时间周期用下式表示（FreRate +1）*（System Clock �
+ 611:Core/Src/AD9854.c **** //         频率 上升或者下降 一个步进频率
+ 612:Core/Src/AD9854.c **** //====================================================================================
+ 613:Core/Src/AD9854.c **** void AD9854_SetRFSK(ulong Freq_Low,ulong Freq_High,ulong Freq_Up_Down,ulong FreRate)
+ 614:Core/Src/AD9854.c **** {
+ 1778              		.loc 1 614 1 is_stmt 1 view -0
+ARM GAS  /tmp/ccV45s2B.s 			page 44
+
+
+ 1779              		.cfi_startproc
+ 1780              		@ args = 0, pretend = 0, frame = 0
+ 1781              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1782              		.loc 1 614 1 is_stmt 0 view .LVU391
+ 1783 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 1784              	.LCFI18:
+ 1785              		.cfi_def_cfa_offset 24
+ 1786              		.cfi_offset 4, -24
+ 1787              		.cfi_offset 5, -20
+ 1788              		.cfi_offset 6, -16
+ 1789              		.cfi_offset 7, -12
+ 1790              		.cfi_offset 8, -8
+ 1791              		.cfi_offset 14, -4
+ 1792 0004 8846     		mov	r8, r1
+ 1793 0006 1746     		mov	r7, r2
+ 1794 0008 1E46     		mov	r6, r3
+ 615:Core/Src/AD9854.c **** 	uchar count=6;
+ 1795              		.loc 1 615 2 is_stmt 1 view .LVU392
+ 1796              	.LVL237:
+ 616:Core/Src/AD9854.c **** 	uchar Adress1,Adress2,Adress3;
+ 1797              		.loc 1 616 2 view .LVU393
+ 617:Core/Src/AD9854.c ****     const uint  Shape=4000;			   //幅度设置. 为12 Bit,取值范围为(0~4095)
+ 1798              		.loc 1 617 5 view .LVU394
+ 618:Core/Src/AD9854.c **** 
+ 619:Core/Src/AD9854.c **** 	Adress1=0x04;		     //选择频率控制字地址的初值 
+ 1799              		.loc 1 619 2 view .LVU395
+ 620:Core/Src/AD9854.c **** 	Adress2=0x0a;
+ 1800              		.loc 1 620 2 view .LVU396
+ 621:Core/Src/AD9854.c **** 	Adress3=0x10;
+ 1801              		.loc 1 621 2 view .LVU397
+ 622:Core/Src/AD9854.c **** 
+ 623:Core/Src/AD9854.c **** 	Freq_convert(Freq_Low);                             //频率1转换
+ 1802              		.loc 1 623 2 view .LVU398
+ 1803 000a FFF7FEFF 		bl	Freq_convert
+ 1804              	.LVL238:
+ 624:Core/Src/AD9854.c **** 
+ 625:Core/Src/AD9854.c **** 	for(count=6;count>0;)	                         //写入6字节的频率控制字  
+ 1805              		.loc 1 625 2 view .LVU399
+ 619:Core/Src/AD9854.c **** 	Adress2=0x0a;
+ 1806              		.loc 1 619 9 is_stmt 0 view .LVU400
+ 1807 000e 0420     		movs	r0, #4
+ 1808              		.loc 1 625 11 view .LVU401
+ 1809 0010 0624     		movs	r4, #6
+ 1810              		.loc 1 625 2 view .LVU402
+ 1811 0012 08E0     		b	.L76
+ 1812              	.LVL239:
+ 1813              	.L77:
+ 626:Core/Src/AD9854.c ****     {
+ 627:Core/Src/AD9854.c **** 		AD9854_WR_Byte(Adress1++,FreqWord[--count]);
+ 1814              		.loc 1 627 3 is_stmt 1 view .LVU403
+ 1815              		.loc 1 627 25 is_stmt 0 view .LVU404
+ 1816 0014 451C     		adds	r5, r0, #1
+ 1817 0016 EDB2     		uxtb	r5, r5
+ 1818              	.LVL240:
+ 1819              		.loc 1 627 3 view .LVU405
+ 1820 0018 013C     		subs	r4, r4, #1
+ 1821              	.LVL241:
+ARM GAS  /tmp/ccV45s2B.s 			page 45
+
+
+ 1822              		.loc 1 627 3 view .LVU406
+ 1823 001a E4B2     		uxtb	r4, r4
+ 1824              	.LVL242:
+ 1825              		.loc 1 627 3 view .LVU407
+ 1826 001c 2A4B     		ldr	r3, .L83
+ 1827 001e 195D     		ldrb	r1, [r3, r4]	@ zero_extendqisi2
+ 1828 0020 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1829              	.LVL243:
+ 1830              		.loc 1 627 25 view .LVU408
+ 1831 0024 2846     		mov	r0, r5
+ 1832              	.LVL244:
+ 1833              	.L76:
+ 625:Core/Src/AD9854.c ****     {
+ 1834              		.loc 1 625 14 is_stmt 1 discriminator 1 view .LVU409
+ 625:Core/Src/AD9854.c ****     {
+ 1835              		.loc 1 625 2 is_stmt 0 discriminator 1 view .LVU410
+ 1836 0026 002C     		cmp	r4, #0
+ 1837 0028 F4D1     		bne	.L77
+ 628:Core/Src/AD9854.c ****     }
+ 629:Core/Src/AD9854.c **** 
+ 630:Core/Src/AD9854.c **** 	Freq_convert(Freq_High);                             //频率2转换
+ 1838              		.loc 1 630 2 is_stmt 1 view .LVU411
+ 1839 002a 4046     		mov	r0, r8
+ 1840              	.LVL245:
+ 1841              		.loc 1 630 2 is_stmt 0 view .LVU412
+ 1842 002c FFF7FEFF 		bl	Freq_convert
+ 1843              	.LVL246:
+ 631:Core/Src/AD9854.c **** 
+ 632:Core/Src/AD9854.c **** 	for(count=6;count>0;)	                         //写入6字节的频率控制字  
+ 1844              		.loc 1 632 2 is_stmt 1 view .LVU413
+ 620:Core/Src/AD9854.c **** 	Adress3=0x10;
+ 1845              		.loc 1 620 9 is_stmt 0 view .LVU414
+ 1846 0030 0A20     		movs	r0, #10
+ 1847              		.loc 1 632 11 view .LVU415
+ 1848 0032 0624     		movs	r4, #6
+ 1849              		.loc 1 632 2 view .LVU416
+ 1850 0034 08E0     		b	.L78
+ 1851              	.LVL247:
+ 1852              	.L79:
+ 633:Core/Src/AD9854.c ****     {
+ 634:Core/Src/AD9854.c **** 		AD9854_WR_Byte(Adress2++,FreqWord[--count]);
+ 1853              		.loc 1 634 3 is_stmt 1 view .LVU417
+ 1854              		.loc 1 634 25 is_stmt 0 view .LVU418
+ 1855 0036 451C     		adds	r5, r0, #1
+ 1856 0038 EDB2     		uxtb	r5, r5
+ 1857              	.LVL248:
+ 1858              		.loc 1 634 3 view .LVU419
+ 1859 003a 013C     		subs	r4, r4, #1
+ 1860              	.LVL249:
+ 1861              		.loc 1 634 3 view .LVU420
+ 1862 003c E4B2     		uxtb	r4, r4
+ 1863              	.LVL250:
+ 1864              		.loc 1 634 3 view .LVU421
+ 1865 003e 224B     		ldr	r3, .L83
+ 1866 0040 195D     		ldrb	r1, [r3, r4]	@ zero_extendqisi2
+ 1867 0042 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1868              	.LVL251:
+ARM GAS  /tmp/ccV45s2B.s 			page 46
+
+
+ 1869              		.loc 1 634 25 view .LVU422
+ 1870 0046 2846     		mov	r0, r5
+ 1871              	.LVL252:
+ 1872              	.L78:
+ 632:Core/Src/AD9854.c ****     {
+ 1873              		.loc 1 632 14 is_stmt 1 discriminator 1 view .LVU423
+ 632:Core/Src/AD9854.c ****     {
+ 1874              		.loc 1 632 2 is_stmt 0 discriminator 1 view .LVU424
+ 1875 0048 002C     		cmp	r4, #0
+ 1876 004a F4D1     		bne	.L79
+ 635:Core/Src/AD9854.c ****     }
+ 636:Core/Src/AD9854.c **** 
+ 637:Core/Src/AD9854.c **** 	Freq_convert(Freq_Up_Down);                             //步进频率转换
+ 1877              		.loc 1 637 2 is_stmt 1 view .LVU425
+ 1878 004c 3846     		mov	r0, r7
+ 1879              	.LVL253:
+ 1880              		.loc 1 637 2 is_stmt 0 view .LVU426
+ 1881 004e FFF7FEFF 		bl	Freq_convert
+ 1882              	.LVL254:
+ 638:Core/Src/AD9854.c **** 
+ 639:Core/Src/AD9854.c **** 	for(count=6;count>0;)	                               //写入6字节的频率控制字  
+ 1883              		.loc 1 639 2 is_stmt 1 view .LVU427
+ 621:Core/Src/AD9854.c **** 
+ 1884              		.loc 1 621 9 is_stmt 0 view .LVU428
+ 1885 0052 1020     		movs	r0, #16
+ 1886              		.loc 1 639 11 view .LVU429
+ 1887 0054 0624     		movs	r4, #6
+ 1888              		.loc 1 639 2 view .LVU430
+ 1889 0056 08E0     		b	.L80
+ 1890              	.LVL255:
+ 1891              	.L81:
+ 640:Core/Src/AD9854.c ****     {
+ 641:Core/Src/AD9854.c **** 		AD9854_WR_Byte(Adress3++,FreqWord[--count]);
+ 1892              		.loc 1 641 3 is_stmt 1 view .LVU431
+ 1893              		.loc 1 641 25 is_stmt 0 view .LVU432
+ 1894 0058 451C     		adds	r5, r0, #1
+ 1895 005a EDB2     		uxtb	r5, r5
+ 1896              	.LVL256:
+ 1897              		.loc 1 641 3 view .LVU433
+ 1898 005c 013C     		subs	r4, r4, #1
+ 1899              	.LVL257:
+ 1900              		.loc 1 641 3 view .LVU434
+ 1901 005e E4B2     		uxtb	r4, r4
+ 1902              	.LVL258:
+ 1903              		.loc 1 641 3 view .LVU435
+ 1904 0060 194B     		ldr	r3, .L83
+ 1905 0062 195D     		ldrb	r1, [r3, r4]	@ zero_extendqisi2
+ 1906 0064 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1907              	.LVL259:
+ 1908              		.loc 1 641 25 view .LVU436
+ 1909 0068 2846     		mov	r0, r5
+ 1910              	.LVL260:
+ 1911              	.L80:
+ 639:Core/Src/AD9854.c ****     {
+ 1912              		.loc 1 639 14 is_stmt 1 discriminator 1 view .LVU437
+ 639:Core/Src/AD9854.c ****     {
+ 1913              		.loc 1 639 2 is_stmt 0 discriminator 1 view .LVU438
+ARM GAS  /tmp/ccV45s2B.s 			page 47
+
+
+ 1914 006a 002C     		cmp	r4, #0
+ 1915 006c F4D1     		bne	.L81
+ 642:Core/Src/AD9854.c ****     }
+ 643:Core/Src/AD9854.c **** 
+ 644:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1a,(uchar)((FreRate>>16)&0x0f));				   //设置斜升速率
+ 1916              		.loc 1 644 2 is_stmt 1 view .LVU439
+ 1917 006e C6F30341 		ubfx	r1, r6, #16, #4
+ 1918 0072 1A20     		movs	r0, #26
+ 1919              	.LVL261:
+ 1920              		.loc 1 644 2 is_stmt 0 view .LVU440
+ 1921 0074 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1922              	.LVL262:
+ 645:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1b,(uchar)(FreRate>>8));
+ 1923              		.loc 1 645 2 is_stmt 1 view .LVU441
+ 1924 0078 C6F30721 		ubfx	r1, r6, #8, #8
+ 1925 007c 1B20     		movs	r0, #27
+ 1926 007e FFF7FEFF 		bl	AD9854_WR_Byte
+ 1927              	.LVL263:
+ 646:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x1c,(uchar)FreRate);				    
+ 1928              		.loc 1 646 2 view .LVU442
+ 1929 0082 F1B2     		uxtb	r1, r6
+ 1930 0084 1C20     		movs	r0, #28
+ 1931 0086 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1932              	.LVL264:
+ 647:Core/Src/AD9854.c **** 
+ 648:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x21,Shape>>8);	                  //设置I通道幅度
+ 1933              		.loc 1 648 2 view .LVU443
+ 1934 008a 0F21     		movs	r1, #15
+ 1935 008c 2120     		movs	r0, #33
+ 1936 008e FFF7FEFF 		bl	AD9854_WR_Byte
+ 1937              	.LVL265:
+ 649:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x22,(uchar)(Shape&0xff));
+ 1938              		.loc 1 649 2 view .LVU444
+ 1939 0092 A021     		movs	r1, #160
+ 1940 0094 2220     		movs	r0, #34
+ 1941 0096 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1942              	.LVL266:
+ 650:Core/Src/AD9854.c **** 	
+ 651:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x23,Shape>>8);	                  //设置Q通道幅度
+ 1943              		.loc 1 651 2 view .LVU445
+ 1944 009a 0F21     		movs	r1, #15
+ 1945 009c 2320     		movs	r0, #35
+ 1946 009e FFF7FEFF 		bl	AD9854_WR_Byte
+ 1947              	.LVL267:
+ 652:Core/Src/AD9854.c **** 	AD9854_WR_Byte(0x24,(uchar)(Shape&0xff));
+ 1948              		.loc 1 652 2 view .LVU446
+ 1949 00a2 A021     		movs	r1, #160
+ 1950 00a4 2420     		movs	r0, #36
+ 1951 00a6 FFF7FEFF 		bl	AD9854_WR_Byte
+ 1952              	.LVL268:
+ 653:Core/Src/AD9854.c **** 
+ 654:Core/Src/AD9854.c **** 	HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_RESET);                                //更新
+ 1953              		.loc 1 654 2 view .LVU447
+ 1954 00aa 084C     		ldr	r4, .L83+4
+ 1955              	.LVL269:
+ 1956              		.loc 1 654 2 is_stmt 0 view .LVU448
+ 1957 00ac 0022     		movs	r2, #0
+ARM GAS  /tmp/ccV45s2B.s 			page 48
+
+
+ 1958 00ae 4FF40071 		mov	r1, #512
+ 1959 00b2 2046     		mov	r0, r4
+ 1960 00b4 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1961              	.LVL270:
+ 655:Core/Src/AD9854.c ****     HAL_GPIO_WritePin(UCLK_GPIO_Port,UCLK_Pin,GPIO_PIN_SET);	
+ 1962              		.loc 1 655 5 is_stmt 1 view .LVU449
+ 1963 00b8 0122     		movs	r2, #1
+ 1964 00ba 4FF40071 		mov	r1, #512
+ 1965 00be 2046     		mov	r0, r4
+ 1966 00c0 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1967              	.LVL271:
+ 656:Core/Src/AD9854.c **** }
+ 1968              		.loc 1 656 1 is_stmt 0 view .LVU450
+ 1969 00c4 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 1970              	.LVL272:
+ 1971              	.L84:
+ 1972              		.loc 1 656 1 view .LVU451
+ 1973              		.align	2
+ 1974              	.L83:
+ 1975 00c8 00000000 		.word	.LANCHOR0
+ 1976 00cc 00180240 		.word	1073879040
+ 1977              		.cfi_endproc
+ 1978              	.LFE250:
+ 1980              		.global	dat2
+ 1981              		.global	dat1
+ 1982              		.global	Freq_mult_doulle
+ 1983              		.global	Freq_mult_ulong
+ 1984              		.global	FreqWord
+ 1985              		.section	.bss.FreqWord,"aw",%nobits
+ 1986              		.align	2
+ 1987              		.set	.LANCHOR0,. + 0
+ 1990              	FreqWord:
+ 1991 0000 00000000 		.space	6
+ 1991      0000
+ 1992              		.section	.bss.dat1,"aw",%nobits
+ 1993              		.align	2
+ 1994              		.set	.LANCHOR1,. + 0
+ 1997              	dat1:
+ 1998 0000 00000000 		.space	4
+ 1999              		.section	.bss.dat2,"aw",%nobits
+ 2000              		.align	2
+ 2003              	dat2:
+ 2004 0000 00000000 		.space	4
+ 2005              		.section	.rodata.Freq_mult_doulle,"a"
+ 2006              		.align	3
+ 2009              	Freq_mult_doulle:
+ 2010 0000 DC742867 		.word	1730704604
+ 2011 0004 4CE53141 		.word	1093789004
+ 2012              		.section	.rodata.Freq_mult_ulong,"a"
+ 2013              		.align	2
+ 2016              	Freq_mult_ulong:
+ 2017 0000 4CE51100 		.word	1172812
+ 2018              		.text
+ 2019              	.Letext0:
+ 2020              		.file 2 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 2021              		.file 3 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ 2022              		.file 4 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h"
+ARM GAS  /tmp/ccV45s2B.s 			page 49
+
+
+ 2023              		.file 5 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h"
+ARM GAS  /tmp/ccV45s2B.s 			page 50
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 AD9854.c
+     /tmp/ccV45s2B.s:18     .text.Freq_convert:0000000000000000 $t
+     /tmp/ccV45s2B.s:25     .text.Freq_convert:0000000000000000 Freq_convert
+     /tmp/ccV45s2B.s:136    .text.Freq_convert:0000000000000058 $d
+     /tmp/ccV45s2B.s:148    .text.Freq_double_convert:0000000000000000 $t
+     /tmp/ccV45s2B.s:154    .text.Freq_double_convert:0000000000000000 Freq_double_convert
+     /tmp/ccV45s2B.s:248    .text.Freq_double_convert:0000000000000058 $d
+     /tmp/ccV45s2B.s:257    .text.AD9854_WR_Byte:0000000000000000 $t
+     /tmp/ccV45s2B.s:263    .text.AD9854_WR_Byte:0000000000000000 AD9854_WR_Byte
+     /tmp/ccV45s2B.s:405    .text.AD9854_WR_Byte:00000000000000ec $d
+     /tmp/ccV45s2B.s:415    .text.AD9854_Init:0000000000000000 $t
+     /tmp/ccV45s2B.s:422    .text.AD9854_Init:0000000000000000 AD9854_Init
+     /tmp/ccV45s2B.s:504    .text.AD9854_Init:0000000000000078 $d
+     /tmp/ccV45s2B.s:512    .text.AD9854_SetSine:0000000000000000 $t
+     /tmp/ccV45s2B.s:519    .text.AD9854_SetSine:0000000000000000 AD9854_SetSine
+     /tmp/ccV45s2B.s:622    .text.AD9854_SetSine:0000000000000064 $d
+     /tmp/ccV45s2B.s:628    .text.AD9854_SetSine_double:0000000000000000 $t
+     /tmp/ccV45s2B.s:635    .text.AD9854_SetSine_double:0000000000000000 AD9854_SetSine_double
+     /tmp/ccV45s2B.s:741    .text.AD9854_SetSine_double:0000000000000068 $d
+     /tmp/ccV45s2B.s:747    .text.AD9854_InitFSK:0000000000000000 $t
+     /tmp/ccV45s2B.s:754    .text.AD9854_InitFSK:0000000000000000 AD9854_InitFSK
+     /tmp/ccV45s2B.s:836    .text.AD9854_InitFSK:0000000000000078 $d
+     /tmp/ccV45s2B.s:844    .text.AD9854_SetFSK:0000000000000000 $t
+     /tmp/ccV45s2B.s:851    .text.AD9854_SetFSK:0000000000000000 AD9854_SetFSK
+     /tmp/ccV45s2B.s:992    .text.AD9854_SetFSK:0000000000000084 $d
+     /tmp/ccV45s2B.s:998    .text.AD9854_InitBPSK:0000000000000000 $t
+     /tmp/ccV45s2B.s:1005   .text.AD9854_InitBPSK:0000000000000000 AD9854_InitBPSK
+     /tmp/ccV45s2B.s:1087   .text.AD9854_InitBPSK:0000000000000078 $d
+     /tmp/ccV45s2B.s:1095   .text.AD9854_SetBPSK:0000000000000000 $t
+     /tmp/ccV45s2B.s:1102   .text.AD9854_SetBPSK:0000000000000000 AD9854_SetBPSK
+     /tmp/ccV45s2B.s:1229   .text.AD9854_SetBPSK:0000000000000088 $d
+     /tmp/ccV45s2B.s:1235   .text.AD9854_InitOSK:0000000000000000 $t
+     /tmp/ccV45s2B.s:1242   .text.AD9854_InitOSK:0000000000000000 AD9854_InitOSK
+     /tmp/ccV45s2B.s:1324   .text.AD9854_InitOSK:0000000000000078 $d
+     /tmp/ccV45s2B.s:1332   .text.AD9854_SetOSK:0000000000000000 $t
+     /tmp/ccV45s2B.s:1339   .text.AD9854_SetOSK:0000000000000000 AD9854_SetOSK
+     /tmp/ccV45s2B.s:1447   .text.AD9854_SetOSK:000000000000006c $d
+     /tmp/ccV45s2B.s:1453   .text.AD9854_InitAM:0000000000000000 $t
+     /tmp/ccV45s2B.s:1460   .text.AD9854_InitAM:0000000000000000 AD9854_InitAM
+     /tmp/ccV45s2B.s:1588   .text.AD9854_InitAM:000000000000009c $d
+     /tmp/ccV45s2B.s:1597   .text.AD9854_SetAM:0000000000000000 $t
+     /tmp/ccV45s2B.s:1604   .text.AD9854_SetAM:0000000000000000 AD9854_SetAM
+     /tmp/ccV45s2B.s:1666   .text.AD9854_SetAM:0000000000000044 $d
+     /tmp/ccV45s2B.s:1671   .text.AD9854_InitRFSK:0000000000000000 $t
+     /tmp/ccV45s2B.s:1678   .text.AD9854_InitRFSK:0000000000000000 AD9854_InitRFSK
+     /tmp/ccV45s2B.s:1760   .text.AD9854_InitRFSK:0000000000000078 $d
+     /tmp/ccV45s2B.s:1768   .text.AD9854_SetRFSK:0000000000000000 $t
+     /tmp/ccV45s2B.s:1775   .text.AD9854_SetRFSK:0000000000000000 AD9854_SetRFSK
+     /tmp/ccV45s2B.s:1975   .text.AD9854_SetRFSK:00000000000000c8 $d
+     /tmp/ccV45s2B.s:2003   .bss.dat2:0000000000000000 dat2
+     /tmp/ccV45s2B.s:1997   .bss.dat1:0000000000000000 dat1
+     /tmp/ccV45s2B.s:2009   .rodata.Freq_mult_doulle:0000000000000000 Freq_mult_doulle
+     /tmp/ccV45s2B.s:2016   .rodata.Freq_mult_ulong:0000000000000000 Freq_mult_ulong
+     /tmp/ccV45s2B.s:1990   .bss.FreqWord:0000000000000000 FreqWord
+     /tmp/ccV45s2B.s:1986   .bss.FreqWord:0000000000000000 $d
+     /tmp/ccV45s2B.s:1993   .bss.dat1:0000000000000000 $d
+ARM GAS  /tmp/ccV45s2B.s 			page 51
+
+
+     /tmp/ccV45s2B.s:2000   .bss.dat2:0000000000000000 $d
+     /tmp/ccV45s2B.s:2006   .rodata.Freq_mult_doulle:0000000000000000 $d
+     /tmp/ccV45s2B.s:2013   .rodata.Freq_mult_ulong:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+__aeabi_dmul
+__aeabi_ddiv
+__aeabi_d2iz
+__aeabi_ui2d
+__aeabi_dsub
+__aeabi_d2uiz
+HAL_GPIO_WritePin
