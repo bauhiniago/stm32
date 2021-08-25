@@ -72,7 +72,7 @@ void RC522_Handle1(void){
                 printf("Select Card\r\n");
                 status = MI_ERR;
                 // 注意：此处的块地址0x0B即2扇区3区块，此块地址只需要指向某一扇区就可以了，即2扇区为0x08-0x0B这个范围都有效，且只能对验证过的扇区进行读写操作
-                status = PcdAuthState(KeyModeA, 0x0B, KEY_A, SN);
+                status = PcdAuthState(KeyModeA, 0x0B, KEY1_A, SN);
                 if(status == MI_OK)//验证成功
                 {
                     printf("PcdAuthState(A) success\r\n");
@@ -102,7 +102,7 @@ void RC522_Handle(void)
         status = MI_ERR;
         // 验证A密钥 块地址 密码 SN 
 		// 注意：此处的块地址0x0B即2扇区3区块，此块地址只需要指向某一扇区就可以了，即2扇区为0x08-0x0B这个范围都有效，且只能对验证过的扇区进行读写操作
-        status = PcdAuthState(0x60, 0x0B, KEY_A, SN);
+        status = PcdAuthState(0x60, 0x0B, KEY1_A, SN);
         if(status == MI_OK)//验证成功
         {
             printf("PcdAuthState(A) success\r\n");
@@ -112,7 +112,7 @@ void RC522_Handle(void)
             printf("PcdAuthState(A) failed\r\n");
         }
 		// 验证B密钥 块地址 密码 SN 
-		status = PcdAuthState(0x61, 0x0B, KEY_B, SN);
+		status = PcdAuthState(0x61, 0x0B, KEY1_B, SN);
         if(status == MI_OK)//验证成功
         {
             printf("PcdAuthState(B) success\r\n");
