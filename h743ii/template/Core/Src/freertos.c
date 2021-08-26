@@ -26,7 +26,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "LCD.h"
+#include "Mytouch.h"
+#include "lvgl.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,7 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define LVGL_TICK 5
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -47,26 +49,36 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 osThreadId BlinkTaskHandle;
-osThreadId Blink2TaskHandle;
+osThreadId lvglTaskHandle;
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
+void lvgl_init(void){
+  /* lvgl init */
+  lv_init();
+  lv_port_disp_init();        // 显示器初始化
+  lv_port_indev_init();       // 输入设备初始化（如果没有实现就注释掉）
+  // lv_port_fs_init();          // 文件系统设备初始化（如果没有实现就注释掉）
+  lv_example_keyboard_1();
+  // wave_chart_init();
+  // wave_btn();
+  // distortion_list();
+  // THD_label();
+  for (;;)
+  {
+    osDelay(LVGL_TICK);
+    lv_task_handler();
+  }
+}
+
 void LED_Blinks(void){
   for(;;)
   {
     HAL_GPIO_TogglePin(LED0_GPIO_Port,LED0_Pin);
     //printf("hello world\r\n");
-    osDelay(500);
-  }
-}
-void LED_Blinks2(void){
-  for(;;)
-  {
-    HAL_GPIO_TogglePin(LED1_GPIO_Port,LED1_Pin);
-    //printf("hello world\r\n");
-    osDelay(1500);
+    osDelay(250);
   }
 }
 /* USER CODE END FunctionPrototypes */
@@ -89,6 +101,7 @@ __weak void vApplicationTickHook( void )
    added here, but the tick hook is called from an interrupt context, so
    code must not attempt to block, and only the interrupt safe FreeRTOS API
    functions can be used (those that end in FromISR()). */
+   lv_tick_inc(1);
 }
 /* USER CODE END 3 */
 
@@ -112,7 +125,6 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackTy
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -135,13 +147,12 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of defaultTask */
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
-  osThreadDef(blink, LED_Blinks, osPriorityNormal, 0, 128);
-  BlinkTaskHandle = osThreadCreate(osThread(blink), NULL);
-  osThreadDef(blink2, LED_Blinks2, osPriorityNormal, 0, 128);
-  Blink2TaskHandle = osThreadCreate(osThread(blink2), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
+  osThreadDef(lvgl, lvgl_init, osPriorityRealtime , 0, 1024);
+  lvglTaskHandle = osThreadCreate(osThread(lvgl), NULL);
+  osThreadDef(Blink, LED_Blinks, osPriorityNormal, 0, 256);
+  BlinkTaskHandle = osThreadCreate(osThread(Blink), NULL);
   /* USER CODE END RTOS_THREADS */
 
 }
@@ -159,7 +170,7 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    osDelay(100);
   }
   /* USER CODE END StartDefaultTask */
 }

@@ -19,6 +19,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -85,8 +87,10 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  
+  uint8_t dat[] = "Hello, I am Mculover666\r\n";
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -96,6 +100,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    //HAL_UART_Transmit(&huart1, "test\r\n", 6,0xfff);
+    printf("hello world\r\n");
     HAL_GPIO_TogglePin(LED0_GPIO_Port,LED0_Pin);
     HAL_GPIO_TogglePin(LED1_GPIO_Port,LED1_Pin);
     HAL_Delay(1000);

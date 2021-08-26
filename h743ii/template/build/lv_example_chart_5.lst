@@ -1,0 +1,2156 @@
+ARM GAS  /tmp/ccMiYBEU.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.eabi_attribute 28, 1
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 1
+  10              		.eabi_attribute 34, 1
+  11              		.eabi_attribute 18, 4
+  12              		.file	"lv_example_chart_5.c"
+  13              		.text
+  14              	.Ltext0:
+  15              		.cfi_sections	.debug_frame
+  16              		.section	.text.slider_y_event_cb,"ax",%progbits
+  17              		.align	1
+  18              		.arch armv7e-m
+  19              		.syntax unified
+  20              		.thumb
+  21              		.thumb_func
+  22              		.fpu fpv5-d16
+  24              	slider_y_event_cb:
+  25              	.LVL0:
+  26              	.LFB185:
+  27              		.file 1 "Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c"
+   1:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** #include "../../lv_examples.h"
+   2:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** #if LV_USE_CHART && LV_USE_SLIDER && LV_BUILD_EXAMPLES
+   3:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** 
+   4:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** static lv_obj_t * chart;
+   5:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** /* Source: https://github.com/ankur219/ECG-Arrhythmia-classification/blob/642230149583adfae1e4bd26c
+   6:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** static const lv_coord_t ecg_sample[] = {
+   7:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -2, 2, 0, -15, -39, -63, -71, -68, -67, -69, -84, -95, -104, -107, -108, -107, -107, -107, -107
+   8:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -112, -100, -89, -83, -71, -64, -58, -58, -62, -62, -58, -51, -46, -39, -27, -10, 4, 7, 1, -3, 
+   9:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     13, 7, 12, 15, 18, 21, 13, 6, 9, 8, 17, 19, 13, 11, 11, 11, 23, 30, 37, 34, 25, 14, 15, 19, 28,
+  10:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     39, 37, 37, 34, 30, 32, 22, 29, 31, 33, 37, 23, 13, 7, 2, 4, -2, 2, 11, 22, 33, 19, -1, -27, -5
+  11:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -49, -18, 35, 113, 230, 369, 525, 651, 722, 730, 667, 563, 454, 357, 305, 288, 274, 255, 212, 1
+  12:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -13, -53, -78, -91, -101, -113, -124, -131, -131, -131, -129, -128, -129, -125, -123, -123, -12
+  13:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -159, -166, -183, -205, -227, -243, -248, -246, -254, -280, -327, -381, -429, -473, -517, -556,
+  14:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -620, -614, -604, -591, -574, -540, -497, -441, -389, -358, -336, -313, -284, -222, -167, -114,
+  15:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     38, 52, 58, 56, 56, 57, 68, 77, 86, 86, 80, 69, 67, 70, 82, 85, 89, 90, 89, 89, 88, 91, 96, 97,
+  16:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     96, 105, 106, 110, 102, 100, 96, 98, 97, 101, 98, 99, 100, 107, 113, 119, 115, 110, 96, 85, 73,
+  17:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     78, 75, 85, 100, 114, 113, 105, 96, 84, 74, 66, 60, 75, 85, 89, 83, 67, 61, 67, 73, 79, 74, 63,
+  18:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     48, 45, 46, 55, 62, 55, 49, 43, 50, 59, 63, 57, 40, 31, 23, 25, 27, 31, 35, 34, 30, 36, 34, 42,
+  19:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     47, 32, 30, 32, 52, 67, 73, 71, 63, 54, 53, 45, 41, 28, 13, 3, 1, 4, 4, -8, -23, -32, -31, -19,
+  20:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     24, 27, 29, 25, 22, 26, 32, 42, 51, 56, 60, 57, 55, 53, 53, 54, 59, 54, 49, 26, -3, -11, -20, -
+  21:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -212, -123, 8, 103, 142, 147, 120, 105, 98, 93, 81, 61, 40, 26, 28, 30, 30, 27, 19, 17, 21, 20,
+  22:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     35, 20, 7, 1, 10, 18, 27, 22, 6, -4, -2, 3, 6, -2, -13, -14, -10, -2, 3, 2, -1, -5, -10, -19, -
+  23:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -68, -77, -86, -101, -110, -117, -115, -104, -92, -84, -85, -84, -73, -65, -52, -50, -45, -35, 
+  24:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     26, 28, 28, 30, 28, 25, 28, 33, 42, 42, 36, 23, 9, 0, 1, -4, 1, -4, -4, 1, 5, 9, 9, -3, -1, -18
+  25:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -272, -340, -408, -446, -537, -643, -777, -894, -920, -853, -697, -461, -251, -60, 58, 103, 129
+  26:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     178, 185, 190, 193, 200, 208, 215, 225, 224, 232, 234, 240, 240, 236, 229, 226, 224, 232, 233, 
+  27:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     223, 231, 226, 223, 219, 218, 223, 223, 223, 233, 245, 268, 286, 296, 295, 283, 271, 263, 252, 
+  28:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     186, 171, 152, 133, 117, 114, 110, 107, 96, 80, 63, 48, 40, 38, 34, 28, 15, 2, -7, -11, -14, -1
+  29:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -58, -63, -61, -52, -50, -48, -61, -59, -58, -54, -47, -52, -62, -61, -64, -54, -52, -59, -69, 
+  30:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -74, -78, -81, -80, -73, -65, -57, -53, -51, -47, -35, -27, -22, -22, -24, -21, -17, -13, -10, 
+  31:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -12, -2, 7, -1, -12, -16, -13, -2, 2, -4, -5, -2, 9, 19, 19, 14, 11, 13, 19, 21, 20, 18, 19, 19
+ARM GAS  /tmp/ccMiYBEU.s 			page 2
+
+
+  32:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     9, 3, -5, -9, -5, -3, -2, -3, -3, 2, 8, 9, 9, 5, 6, 8, 8, 7, 4, 3, 4, 5, 3, 5, 5, 13, 13, 12, 1
+  33:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     14, 7, 10, 15, 16, 11, 12, 10, 13, 9, -2, -4, -2, 7, 16, 16, 17, 16, 7, -1, -16, -18, -16, -9, 
+  34:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -3, -4, -10, -19, -20, -16, -9, -9, -23, -40, -48, -43, -33, -19, -21, -26, -31, -33, -19, 0, 1
+  35:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -63, -67, -59, -52, -51, -50, -49, -42, -26, -21, -15, -20, -23, -22, -19, -12, -8, 5, 18, 27, 
+  36:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     23, 17, 14, 17, 21, 25, 2, -45, -121, -196, -226, -200, -118, -9, 73, 126, 131, 114, 87, 60, 42
+  37:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     25, 12, 9, 7, 3, 2, -8, -11, 2, 23, 38, 41, 23, 9, 10, 13, 16, 8, -8, -17, -23, -26, -25, -21, 
+  38:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -19, -22, -29, -40, -48, -48, -54, -55, -66, -82, -85, -90, -92, -98, -114, -119, -124, -129, -
+  39:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -124, -99, -85, -72, -65, -65, -65, -66, -63, -64, -64, -58, -46, -26, -9, 2, 2, 4, 0, 1, 4, 3,
+  40:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     0, 10, 18, 20, 6, 2, -9, -7, -3, -3, -2, -7, -12, -5, 5, 24, 36, 31, 25, 6, 3, 7, 12, 17, 11, 0
+  41:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -6, -2, -2, -6, -2, 2, 14, 24, 22, 15, 8, 4, 6, 7, 12, 16, 25, 20, 7, -16, -41, -60, -67, -65, 
+  42:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     84, 175, 302, 455, 603, 707, 743, 714, 625, 519, 414, 337, 300, 281, 263, 239, 197, 163, 136, 1
+  43:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -66, -74, -79, -92, -107, -117, -127, -129, -135, -139, -141, -155, -159, -167, -171, -169, -17
+  44:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -202, -223, -235, -243, -237, -240, -256, -298, -345, -393, -432, -475, -518, -565, -596, -619,
+  45:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     -599, -583, -559, -524, -477, -425, -383, -357, -331, -301, -252, -198, -143, -96, -57, -29, -8
+  46:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     70, 74, 76, 79, 82, 79, 75, 62,
+  47:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** };
+  48:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** 
+  49:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** static void slider_x_event_cb(lv_event_t * e)
+  50:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** {
+  51:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_obj_t * obj = lv_event_get_target(e);
+  52:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     int32_t v = lv_slider_get_value(obj);
+  53:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_chart_set_zoom_x(chart, v);
+  54:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** }
+  55:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** 
+  56:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** static void slider_y_event_cb(lv_event_t * e)
+  57:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** {
+  28              		.loc 1 57 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		.loc 1 57 1 is_stmt 0 view .LVU1
+  33 0000 08B5     		push	{r3, lr}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 8
+  36              		.cfi_offset 3, -8
+  37              		.cfi_offset 14, -4
+  58:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_obj_t * obj = lv_event_get_target(e);
+  38              		.loc 1 58 5 is_stmt 1 view .LVU2
+  39              		.loc 1 58 22 is_stmt 0 view .LVU3
+  40 0002 FFF7FEFF 		bl	lv_event_get_target
+  41              	.LVL1:
+  59:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     int32_t v = lv_slider_get_value(obj);
+  42              		.loc 1 59 5 is_stmt 1 view .LVU4
+  43              	.LBB10:
+  44              	.LBI10:
+  45              		.file 2 "Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h"
+   1:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** /**
+   2:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @file lv_slider.h
+   3:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  *
+   4:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  */
+   5:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+   6:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** #ifndef LV_SLIDER_H
+   7:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** #define LV_SLIDER_H
+   8:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+   9:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** #ifdef __cplusplus
+  10:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** extern "C" {
+  11:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** #endif
+ARM GAS  /tmp/ccMiYBEU.s 			page 3
+
+
+  12:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+  13:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** /*********************
+  14:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  *      INCLUDES
+  15:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  *********************/
+  16:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** #include "../lv_conf_internal.h"
+  17:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+  18:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** #if LV_USE_SLIDER != 0
+  19:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+  20:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** /*Testing of dependencies*/
+  21:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** #if LV_USE_BAR == 0
+  22:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** #error "lv_slider: lv_bar is required. Enable it in lv_conf.h (LV_USE_BAR 1)"
+  23:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** #endif
+  24:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+  25:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** #include "../core/lv_obj.h"
+  26:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** #include "lv_bar.h"
+  27:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+  28:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** /*********************
+  29:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  *      DEFINES
+  30:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  *********************/
+  31:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+  32:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** /**********************
+  33:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  *      TYPEDEFS
+  34:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  **********************/
+  35:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+  36:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** enum {
+  37:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****     LV_SLIDER_MODE_NORMAL = LV_BAR_MODE_NORMAL,
+  38:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****     LV_SLIDER_MODE_SYMMETRICAL = LV_BAR_MODE_SYMMETRICAL,
+  39:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****     LV_SLIDER_MODE_RANGE = LV_BAR_MODE_RANGE
+  40:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** };
+  41:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** typedef uint8_t lv_slider_mode_t;
+  42:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+  43:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** typedef struct {
+  44:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****     lv_bar_t bar;       /*Add the ancestor's type first*/
+  45:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****     lv_area_t left_knob_area;
+  46:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****     lv_area_t right_knob_area;
+  47:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****     int32_t * value_to_set; /*Which bar value to set*/
+  48:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****     uint8_t dragging : 1;       /*1: the slider is being dragged*/
+  49:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****     uint8_t left_knob_focus : 1; /*1: with encoder now the right knob can be adjusted*/
+  50:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** }lv_slider_t;
+  51:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+  52:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** extern const lv_obj_class_t lv_slider_class;
+  53:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+  54:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** /**********************
+  55:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * GLOBAL PROTOTYPES
+  56:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  **********************/
+  57:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+  58:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** /**
+  59:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * Create a slider objects
+  60:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @param parent    pointer to an object, it will be the parent of the new slider.
+  61:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @return          pointer to the created slider
+  62:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  */
+  63:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** lv_obj_t * lv_slider_create(lv_obj_t * parent);
+  64:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+  65:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** /*=====================
+  66:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * Setter functions
+  67:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  *====================*/
+  68:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+ARM GAS  /tmp/ccMiYBEU.s 			page 4
+
+
+  69:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** /**
+  70:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * Set a new value on the slider
+  71:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @param obj       pointer to a slider object
+  72:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @param value     the new value
+  73:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @param anim      LV_ANIM_ON: set the value with an animation; LV_ANIM_OFF: change the value imme
+  74:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  */
+  75:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** static inline void lv_slider_set_value(lv_obj_t * obj, int32_t value, lv_anim_enable_t anim)
+  76:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** {
+  77:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****     lv_bar_set_value(obj, value, anim);
+  78:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** }
+  79:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+  80:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** /**
+  81:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * Set a new value for the left knob of a slider
+  82:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @param obj       pointer to a slider object
+  83:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @param value     new value
+  84:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @param anim      LV_ANIM_ON: set the value with an animation; LV_ANIM_OFF: change the value imme
+  85:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  */
+  86:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** static inline void lv_slider_set_left_value(lv_obj_t * obj, int32_t value, lv_anim_enable_t anim)
+  87:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** {
+  88:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****     lv_bar_set_start_value(obj, value, anim);
+  89:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** }
+  90:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+  91:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** /**
+  92:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * Set minimum and the maximum values of a bar
+  93:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @param obj       pointer to the slider object
+  94:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @param min       minimum value
+  95:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @param max       maximum value
+  96:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  */
+  97:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** static inline void lv_slider_set_range(lv_obj_t * obj, int32_t min, int32_t max)
+  98:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** {
+  99:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****     lv_bar_set_range(obj, min, max);
+ 100:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** }
+ 101:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+ 102:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** /**
+ 103:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * Set the mode of slider.
+ 104:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @param obj       pointer to a slider object
+ 105:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @param mode      the mode of the slider. See ::lv_slider_mode_t
+ 106:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  */
+ 107:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** static inline void lv_slider_set_mode(lv_obj_t * obj, lv_slider_mode_t mode)
+ 108:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** {
+ 109:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****     lv_bar_set_mode(obj, (lv_bar_mode_t)mode);
+ 110:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** }
+ 111:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+ 112:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** /*=====================
+ 113:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * Getter functions
+ 114:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  *====================*/
+ 115:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** 
+ 116:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** /**
+ 117:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * Get the value of the main knob of a slider
+ 118:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @param obj       pointer to a slider object
+ 119:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  * @return          the value of the main knob of the slider
+ 120:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****  */
+ 121:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** static inline int32_t lv_slider_get_value(const lv_obj_t * obj)
+  46              		.loc 2 121 23 view .LVU5
+  47              	.LBB11:
+ 122:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** {
+ 123:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h ****     return lv_bar_get_value(obj);
+ARM GAS  /tmp/ccMiYBEU.s 			page 5
+
+
+  48              		.loc 2 123 5 view .LVU6
+  49              		.loc 2 123 12 is_stmt 0 view .LVU7
+  50 0006 FFF7FEFF 		bl	lv_bar_get_value
+  51              	.LVL2:
+  52              		.loc 2 123 12 view .LVU8
+  53              	.LBE11:
+  54              	.LBE10:
+  60:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_chart_set_zoom_y(chart, v);
+  55              		.loc 1 60 5 is_stmt 1 view .LVU9
+  56 000a 81B2     		uxth	r1, r0
+  57 000c 024B     		ldr	r3, .L3
+  58 000e 1868     		ldr	r0, [r3]
+  59              	.LVL3:
+  60              		.loc 1 60 5 is_stmt 0 view .LVU10
+  61 0010 FFF7FEFF 		bl	lv_chart_set_zoom_y
+  62              	.LVL4:
+  61:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** }
+  63              		.loc 1 61 1 view .LVU11
+  64 0014 08BD     		pop	{r3, pc}
+  65              	.L4:
+  66 0016 00BF     		.align	2
+  67              	.L3:
+  68 0018 00000000 		.word	.LANCHOR0
+  69              		.cfi_endproc
+  70              	.LFE185:
+  72              		.section	.text.slider_x_event_cb,"ax",%progbits
+  73              		.align	1
+  74              		.syntax unified
+  75              		.thumb
+  76              		.thumb_func
+  77              		.fpu fpv5-d16
+  79              	slider_x_event_cb:
+  80              	.LVL5:
+  81              	.LFB184:
+  50:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_obj_t * obj = lv_event_get_target(e);
+  82              		.loc 1 50 1 is_stmt 1 view -0
+  83              		.cfi_startproc
+  84              		@ args = 0, pretend = 0, frame = 0
+  85              		@ frame_needed = 0, uses_anonymous_args = 0
+  50:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_obj_t * obj = lv_event_get_target(e);
+  86              		.loc 1 50 1 is_stmt 0 view .LVU13
+  87 0000 08B5     		push	{r3, lr}
+  88              	.LCFI1:
+  89              		.cfi_def_cfa_offset 8
+  90              		.cfi_offset 3, -8
+  91              		.cfi_offset 14, -4
+  51:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     int32_t v = lv_slider_get_value(obj);
+  92              		.loc 1 51 5 is_stmt 1 view .LVU14
+  51:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     int32_t v = lv_slider_get_value(obj);
+  93              		.loc 1 51 22 is_stmt 0 view .LVU15
+  94 0002 FFF7FEFF 		bl	lv_event_get_target
+  95              	.LVL6:
+  52:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_chart_set_zoom_x(chart, v);
+  96              		.loc 1 52 5 is_stmt 1 view .LVU16
+  97              	.LBB12:
+  98              	.LBI12:
+ 121:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** {
+ARM GAS  /tmp/ccMiYBEU.s 			page 6
+
+
+  99              		.loc 2 121 23 view .LVU17
+ 100              	.LBB13:
+ 101              		.loc 2 123 5 view .LVU18
+ 102              		.loc 2 123 12 is_stmt 0 view .LVU19
+ 103 0006 FFF7FEFF 		bl	lv_bar_get_value
+ 104              	.LVL7:
+ 105              		.loc 2 123 12 view .LVU20
+ 106              	.LBE13:
+ 107              	.LBE12:
+  53:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** }
+ 108              		.loc 1 53 5 is_stmt 1 view .LVU21
+ 109 000a 81B2     		uxth	r1, r0
+ 110 000c 024B     		ldr	r3, .L7
+ 111 000e 1868     		ldr	r0, [r3]
+ 112              	.LVL8:
+  53:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** }
+ 113              		.loc 1 53 5 is_stmt 0 view .LVU22
+ 114 0010 FFF7FEFF 		bl	lv_chart_set_zoom_x
+ 115              	.LVL9:
+  54:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** 
+ 116              		.loc 1 54 1 view .LVU23
+ 117 0014 08BD     		pop	{r3, pc}
+ 118              	.L8:
+ 119 0016 00BF     		.align	2
+ 120              	.L7:
+ 121 0018 00000000 		.word	.LANCHOR0
+ 122              		.cfi_endproc
+ 123              	.LFE184:
+ 125              		.section	.text.lv_example_chart_5,"ax",%progbits
+ 126              		.align	1
+ 127              		.global	lv_example_chart_5
+ 128              		.syntax unified
+ 129              		.thumb
+ 130              		.thumb_func
+ 131              		.fpu fpv5-d16
+ 133              	lv_example_chart_5:
+ 134              	.LFB186:
+  62:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** 
+  63:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** /**
+  64:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****  * Display 1000 data points with zooming and scrolling.
+  65:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****  * See how the chart changes drawing mode (draw only vertical lines) when
+  66:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****  * the points get too crowded.
+  67:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****  */
+  68:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** void lv_example_chart_5(void)
+  69:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** {
+ 135              		.loc 1 69 1 is_stmt 1 view -0
+ 136              		.cfi_startproc
+ 137              		@ args = 0, pretend = 0, frame = 0
+ 138              		@ frame_needed = 0, uses_anonymous_args = 0
+ 139 0000 70B5     		push	{r4, r5, r6, lr}
+ 140              	.LCFI2:
+ 141              		.cfi_def_cfa_offset 16
+ 142              		.cfi_offset 4, -16
+ 143              		.cfi_offset 5, -12
+ 144              		.cfi_offset 6, -8
+ 145              		.cfi_offset 14, -4
+ 146 0002 82B0     		sub	sp, sp, #8
+ARM GAS  /tmp/ccMiYBEU.s 			page 7
+
+
+ 147              	.LCFI3:
+ 148              		.cfi_def_cfa_offset 24
+  70:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     /*Create a chart*/
+  71:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     chart = lv_chart_create(lv_scr_act());
+ 149              		.loc 1 71 5 view .LVU25
+ 150              	.LBB26:
+ 151              	.LBI26:
+ 152              		.file 3 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h"
+   1:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+   2:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @file lv_disp.h
+   3:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  *
+   4:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+   5:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+   6:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** #ifndef LV_DISP_H
+   7:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** #define LV_DISP_H
+   8:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+   9:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** #ifdef __cplusplus
+  10:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** extern "C" {
+  11:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** #endif
+  12:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  13:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /*********************
+  14:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  *      INCLUDES
+  15:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  *********************/
+  16:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** #include "../hal/lv_hal.h"
+  17:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** #include "lv_obj.h"
+  18:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** #include "lv_theme.h"
+  19:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  20:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /*********************
+  21:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  *      DEFINES
+  22:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  *********************/
+  23:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  24:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**********************
+  25:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  *      TYPEDEFS
+  26:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  **********************/
+  27:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  28:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** typedef enum {
+  29:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_NONE,
+  30:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_LEFT,
+  31:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_RIGHT,
+  32:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_TOP,
+  33:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_OVER_BOTTOM,
+  34:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_LEFT,
+  35:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_RIGHT,
+  36:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_TOP,
+  37:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_MOVE_BOTTOM,
+  38:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     LV_SCR_LOAD_ANIM_FADE_ON,
+  39:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** } lv_scr_load_anim_t;
+  40:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  41:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**********************
+  42:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * GLOBAL PROTOTYPES
+  43:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  **********************/
+  44:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  45:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  46:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Return with a pointer to the active screen
+  47:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to display which active screen should be get. (NULL to use the default
+  48:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * screen)
+  49:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return pointer to the active screen object (loaded by 'lv_scr_load()')
+ARM GAS  /tmp/ccMiYBEU.s 			page 8
+
+
+  50:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+  51:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** lv_obj_t * lv_disp_get_scr_act(lv_disp_t * disp);
+  52:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  53:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  54:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Return with a pointer to the previous screen. Only used during screen transitions.
+  55:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to display which previous screen should be get. (NULL to use the default
+  56:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * screen)
+  57:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return pointer to the previous screen object or NULL if not used now
+  58:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+  59:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** lv_obj_t * lv_disp_get_scr_prev(lv_disp_t * disp);
+  60:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  61:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  62:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Make a screen active
+  63:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param scr pointer to a screen
+  64:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+  65:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_disp_load_scr(lv_obj_t * scr);
+  66:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  67:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  68:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Return with the top layer. (Same on every screen and it is above the normal screen layer)
+  69:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to display which top layer should be get. (NULL to use the default screen)
+  70:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return pointer to the top layer object  (transparent screen sized lv_obj)
+  71:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+  72:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** lv_obj_t * lv_disp_get_layer_top(lv_disp_t * disp);
+  73:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  74:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  75:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Return with the sys. layer. (Same on every screen and it is above the normal screen and the top
+  76:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * layer)
+  77:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to display which sys. layer  should be get. (NULL to use the default screen)
+  78:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return pointer to the sys layer object  (transparent screen sized lv_obj)
+  79:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+  80:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** lv_obj_t * lv_disp_get_layer_sys(lv_disp_t * disp);
+  81:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  82:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  83:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Get the theme of a display
+  84:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+  85:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return the display's theme (can be NULL)
+  86:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+  87:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_disp_set_theme(lv_disp_t * disp, lv_theme_t * th);
+  88:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  89:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  90:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Get the theme of a display
+  91:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+  92:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return the display's theme (can be NULL)
+  93:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+  94:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** lv_theme_t * lv_disp_get_theme(lv_disp_t * disp);
+  95:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+  96:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+  97:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Set the background color of a display
+  98:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+  99:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param color color of the background
+ 100:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 101:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_disp_set_bg_color(lv_disp_t * disp, lv_color_t color);
+ 102:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 103:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 104:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Set the background image of a display
+ 105:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+ 106:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param img_src path to file or pointer to an `lv_img_dsc_t` variable
+ARM GAS  /tmp/ccMiYBEU.s 			page 9
+
+
+ 107:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 108:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_disp_set_bg_image(lv_disp_t * disp, const void  * img_src);
+ 109:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 110:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 111:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Opacity of the background
+ 112:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+ 113:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param opa opacity (0..255)
+ 114:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 115:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_disp_set_bg_opa(lv_disp_t * disp, lv_opa_t opa);
+ 116:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 117:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 118:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Switch screen with animation
+ 119:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param scr pointer to the new screen to load
+ 120:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param anim_type type of the animation from `lv_scr_load_anim_t`. E.g.  `LV_SCR_LOAD_ANIM_MOVE_L
+ 121:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param time time of the animation
+ 122:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param delay delay before the transition
+ 123:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param auto_del true: automatically delete the old screen
+ 124:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 125:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_scr_load_anim(lv_obj_t * scr, lv_scr_load_anim_t anim_type, uint32_t time, uint32_t delay, 
+ 126:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 127:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 128:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Get elapsed time since last user activity on a display (e.g. click)
+ 129:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to an display (NULL to get the overall smallest inactivity)
+ 130:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return elapsed ticks (milliseconds) since the last activity
+ 131:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 132:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** uint32_t lv_disp_get_inactive_time(const lv_disp_t * disp);
+ 133:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 134:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 135:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Manually trigger an activity on a display
+ 136:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to an display (NULL to use the default display)
+ 137:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 138:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_disp_trig_activity(lv_disp_t * disp);
+ 139:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 140:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 141:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Clean any CPU cache that is related to the display.
+ 142:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to an display (NULL to use the default display)
+ 143:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 144:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** void lv_disp_clean_dcache(lv_disp_t * disp);
+ 145:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 146:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 147:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Get a pointer to the screen refresher timer to
+ 148:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * modify its parameters with `lv_timer_...` functions.
+ 149:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @param disp pointer to a display
+ 150:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return pointer to the display refresher timer. (NULL on error)
+ 151:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 152:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** lv_timer_t * _lv_disp_get_refr_timer(lv_disp_t * disp);
+ 153:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 154:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /*------------------------------------------------
+ 155:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * To improve backward compatibility
+ 156:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Recommended only if you have one display
+ 157:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  *------------------------------------------------*/
+ 158:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** 
+ 159:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** /**
+ 160:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * Get the active screen of the default display
+ 161:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  * @return pointer to the active screen
+ 162:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****  */
+ 163:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** static inline lv_obj_t * lv_scr_act(void)
+ARM GAS  /tmp/ccMiYBEU.s 			page 10
+
+
+ 153              		.loc 3 163 26 view .LVU26
+ 154              	.LBB27:
+ 164:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** {
+ 165:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h ****     return lv_disp_get_scr_act(lv_disp_get_default());
+ 155              		.loc 3 165 5 view .LVU27
+ 156              		.loc 3 165 12 is_stmt 0 view .LVU28
+ 157 0004 FFF7FEFF 		bl	lv_disp_get_default
+ 158              	.LVL10:
+ 159 0008 FFF7FEFF 		bl	lv_disp_get_scr_act
+ 160              	.LVL11:
+ 161              	.LBE27:
+ 162              	.LBE26:
+ 163              		.loc 1 71 13 view .LVU29
+ 164 000c FFF7FEFF 		bl	lv_chart_create
+ 165              	.LVL12:
+ 166              		.loc 1 71 11 view .LVU30
+ 167 0010 3B4C     		ldr	r4, .L11
+ 168 0012 2060     		str	r0, [r4]
+  72:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_obj_set_size(chart, 200, 150);
+ 169              		.loc 1 72 5 is_stmt 1 view .LVU31
+ 170 0014 9622     		movs	r2, #150
+ 171 0016 C821     		movs	r1, #200
+ 172 0018 FFF7FEFF 		bl	lv_obj_set_size
+ 173              	.LVL13:
+  73:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_obj_align(chart, LV_ALIGN_CENTER, -30, -30);
+ 174              		.loc 1 73 5 view .LVU32
+ 175 001c 6FF01D03 		mvn	r3, #29
+ 176 0020 1A46     		mov	r2, r3
+ 177 0022 0921     		movs	r1, #9
+ 178 0024 2068     		ldr	r0, [r4]
+ 179 0026 FFF7FEFF 		bl	lv_obj_align
+ 180              	.LVL14:
+  74:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, -1000, 1000);
+ 181              		.loc 1 74 5 view .LVU33
+ 182 002a 4FF47A73 		mov	r3, #1000
+ 183 002e 354A     		ldr	r2, .L11+4
+ 184 0030 0021     		movs	r1, #0
+ 185 0032 2068     		ldr	r0, [r4]
+ 186 0034 FFF7FEFF 		bl	lv_chart_set_range
+ 187              	.LVL15:
+  75:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** 
+  76:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     /*Do not display points on the data*/
+  77:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_obj_set_style_size(chart, 0, LV_PART_INDICATOR);
+ 188              		.loc 1 77 5 view .LVU34
+ 189 0038 2568     		ldr	r5, [r4]
+ 190              	.LVL16:
+ 191              	.LBB28:
+ 192              	.LBI28:
+ 193              		.file 4 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h"
+   1:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+   2:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @file lv_obj_style.h
+   3:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  *
+   4:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+   5:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+   6:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** #ifndef LV_OBJ_STYLE_H
+   7:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** #define LV_OBJ_STYLE_H
+   8:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ARM GAS  /tmp/ccMiYBEU.s 			page 11
+
+
+   9:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** #ifdef __cplusplus
+  10:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** extern "C" {
+  11:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** #endif
+  12:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+  13:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /*********************
+  14:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  *      INCLUDES
+  15:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  *********************/
+  16:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** #include <stdint.h>
+  17:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** #include <stdbool.h>
+  18:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** #include "../misc/lv_bidi.h"
+  19:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+  20:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /*********************
+  21:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  *      DEFINES
+  22:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  *********************/
+  23:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+  24:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**********************
+  25:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  *      TYPEDEFS
+  26:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  **********************/
+  27:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /*Can't include lv_obj.h because it includes this header file*/
+  28:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** struct _lv_obj_t;
+  29:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+  30:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** typedef enum {
+  31:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     _LV_STYLE_STATE_CMP_SAME,           /*The style properties in the 2 states are identical*/
+  32:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     _LV_STYLE_STATE_CMP_DIFF_REDRAW,    /*The differences can be shown with a simple redraw*/
+  33:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     _LV_STYLE_STATE_CMP_DIFF_DRAW_PAD,  /*The differences can be shown with a simple redraw*/
+  34:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     _LV_STYLE_STATE_CMP_DIFF_LAYOUT,    /*The differences can be shown with a simple redraw*/
+  35:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** } _lv_style_state_cmp_t;
+  36:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+  37:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** typedef uint32_t lv_style_selector_t;
+  38:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+  39:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** typedef struct {
+  40:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_style_t * style;
+  41:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     uint32_t selector :24;
+  42:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     uint32_t is_local :1;
+  43:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     uint32_t is_trans :1;
+  44:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** }_lv_obj_style_t;
+  45:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+  46:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** typedef struct {
+  47:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     uint16_t time;
+  48:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     uint16_t delay;
+  49:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_style_selector_t selector;
+  50:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_style_prop_t prop;
+  51:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_anim_path_cb_t path_cb;
+  52:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** #if LV_USE_USER_DATA
+  53:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     void * user_data;
+  54:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** #endif
+  55:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** }_lv_obj_style_transition_dsc_t;
+  56:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+  57:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**********************
+  58:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * GLOBAL PROTOTYPES
+  59:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  **********************/
+  60:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+  61:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+  62:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Initialize the object related style manager module.
+  63:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Called by LVGL in `lv_init()`
+  64:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+  65:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** void _lv_obj_style_init(void);
+ARM GAS  /tmp/ccMiYBEU.s 			page 12
+
+
+  66:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+  67:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+  68:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Add a style to an object.
+  69:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param obj       pointer to an object
+  70:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param style     pointer to a style to add
+  71:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param selector  OR-ed value of parts and state to which the style should be added
+  72:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @example         lv_obj_add_style(btn, &style_btn, 0); //Default button style
+  73:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @example         lv_obj_add_style(btn, &btn_red, LV_STATE_PRESSED); //Overwrite only some colors
+  74:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+  75:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** void lv_obj_add_style(struct _lv_obj_t * obj, lv_style_t * style, lv_style_selector_t selector);
+  76:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+  77:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+  78:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Add a style to an object.
+  79:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param obj       pointer to an object
+  80:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param style     pointer to a style to remove. Can be NULL to check only the selector
+  81:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param selector  OR-ed values of states and a part to remove only styles with matching selectors
+  82:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @example lv_obj_remove_style(obj, &style, LV_PART_ANY | LV_STATE_ANY); //Remove a specific style
+  83:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @example lv_obj_remove_style(obj, NULL, LV_PART_MAIN | LV_STATE_ANY); //Remove all styles from t
+  84:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @example lv_obj_remove_style(obj, NULL, LV_PART_ANY | LV_STATE_ANY); //Remove all styles
+  85:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+  86:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** void lv_obj_remove_style(struct _lv_obj_t * obj, lv_style_t * style, lv_style_selector_t selector);
+  87:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+  88:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+  89:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Remove all styles from an object
+  90:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param obj       pointer to an object
+  91:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+  92:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** static inline void lv_obj_remove_style_all(struct _lv_obj_t * obj)
+  93:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** {
+  94:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_obj_remove_style(obj, NULL, LV_PART_ANY | LV_STATE_ANY);
+  95:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** }
+  96:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+  97:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+  98:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Notify all object if a style is modified
+  99:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param style     pointer to a style. Only the objects with this style will be notified
+ 100:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  *                  (NULL to notify all objects)
+ 101:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+ 102:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** void lv_obj_report_style_change(lv_style_t * style);
+ 103:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 104:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+ 105:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Notify an object and its children about its style is modified.
+ 106:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param obj       pointer to an object
+ 107:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param part      the part whose style was changed. E.g. `LV_PART_ANY`, `LV_PART_MAIN`
+ 108:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param prop      `LV_STYLE_PROP_ANY` or an `LV_STYLE_...` property.
+ 109:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  *                  It is used to optimize what needs to be refreshed.
+ 110:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  *                  `LV_STYLE_PROP_INV` to perform only a style cache update
+ 111:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+ 112:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** void lv_obj_refresh_style(struct _lv_obj_t * obj, lv_part_t part, lv_style_prop_t prop);
+ 113:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 114:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+ 115:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Enable or disable automatic style refreshing when a new style is added/removed to/from an object
+ 116:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * or any other style change happens.
+ 117:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param en        true: enable refreshing; false: disable refreshing
+ 118:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+ 119:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** void lv_obj_enable_style_refresh(bool en);
+ 120:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 121:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+ 122:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Get the value of a style property. The current state of the object will be considered.
+ARM GAS  /tmp/ccMiYBEU.s 			page 13
+
+
+ 123:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Inherited properties will be inherited.
+ 124:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * If a property is not set a default value will be returned.
+ 125:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param obj       pointer to an object
+ 126:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param part      a part from which the property should be get
+ 127:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param prop      the property to get
+ 128:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @return          the value of the property.
+ 129:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  *                  Should be read from the correct field of the `lv_style_value_t` according to th
+ 130:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+ 131:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** lv_style_value_t lv_obj_get_style_prop(const struct _lv_obj_t * obj, lv_part_t part, lv_style_prop_
+ 132:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 133:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+ 134:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Set local style property on an object's part and state.
+ 135:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param obj       pointer to an object
+ 136:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param part      a part to which the property should be added
+ 137:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param state     a state to which the property should be added
+ 138:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param prop      the property
+ 139:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param value     value of the property. The correct element should be set according to the type 
+ 140:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+ 141:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** void lv_obj_set_local_style_prop(struct _lv_obj_t * obj, lv_style_prop_t prop, lv_style_value_t val
+ 142:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 143:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** lv_res_t lv_obj_get_local_style_prop(struct _lv_obj_t * obj, lv_style_prop_t prop, lv_style_value_t
+ 144:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 145:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+ 146:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Remove a local style property from a part of an object with a given state.
+ 147:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param obj       pointer to an object
+ 148:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param part      the part of the object which style property should be removed.
+ 149:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param state     the state from which the property should be removed.
+ 150:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param prop      a style property to remove.
+ 151:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @return true     the property was found and removed; false: the property was not found
+ 152:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+ 153:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** bool lv_obj_remove_local_style_prop(struct _lv_obj_t * obj, lv_style_prop_t prop, lv_style_selector
+ 154:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 155:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+ 156:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Used internally to create a style tarnsition
+ 157:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param obj
+ 158:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param part
+ 159:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param prev_state
+ 160:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param new_state
+ 161:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param tr
+ 162:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+ 163:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** void _lv_obj_style_create_transition(struct _lv_obj_t * obj, lv_part_t part, lv_state_t prev_state,
+ 164:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 165:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+ 166:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Used internally to compare the appearance of an object in 2 states
+ 167:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param obj
+ 168:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param state1
+ 169:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param state2
+ 170:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @return
+ 171:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+ 172:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** _lv_style_state_cmp_t _lv_obj_style_state_compare(struct _lv_obj_t * obj, lv_state_t state1, lv_sta
+ 173:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 174:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+ 175:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Fade in an an object and all its children.
+ 176:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param obj       the object to fade in
+ 177:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param time      time of fade
+ 178:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param delay     delay to start the animation
+ 179:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+ARM GAS  /tmp/ccMiYBEU.s 			page 14
+
+
+ 180:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** void lv_obj_fade_in(struct _lv_obj_t * obj, uint32_t time, uint32_t delay);
+ 181:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 182:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** /**
+ 183:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * Fade out an an object and all its children.
+ 184:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param obj       the object to fade out
+ 185:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param time      time of fade
+ 186:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  * @param delay     delay to start the animation
+ 187:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****  */
+ 188:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** void lv_obj_fade_out(struct _lv_obj_t * obj, uint32_t time, uint32_t delay);
+ 189:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 190:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** lv_state_t lv_obj_style_get_selector_state(lv_style_selector_t selector);
+ 191:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 192:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** lv_part_t lv_obj_style_get_selector_part(lv_style_selector_t selector);
+ 193:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 194:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** #include "lv_obj_style_gen.h"
+ 195:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 196:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** static inline void lv_obj_set_style_pad_all(struct _lv_obj_t * obj, lv_coord_t value, lv_style_sele
+ 197:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_obj_set_style_pad_left(obj, value, selector);
+ 198:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_obj_set_style_pad_right(obj, value, selector);
+ 199:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_obj_set_style_pad_top(obj, value, selector);
+ 200:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_obj_set_style_pad_bottom(obj, value, selector);
+ 201:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** }
+ 202:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 203:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** static inline void lv_obj_set_style_pad_hor(struct _lv_obj_t * obj, lv_coord_t value, lv_style_sele
+ 204:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_obj_set_style_pad_left(obj, value, selector);
+ 205:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_obj_set_style_pad_right(obj, value, selector);
+ 206:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** }
+ 207:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 208:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** static inline void lv_obj_set_style_pad_ver(struct _lv_obj_t * obj, lv_coord_t value, lv_style_sele
+ 209:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_obj_set_style_pad_top(obj, value, selector);
+ 210:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_obj_set_style_pad_bottom(obj, value, selector);
+ 211:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** }
+ 212:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 213:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** static inline void lv_obj_set_style_pad_gap(struct _lv_obj_t * obj,  lv_coord_t value, lv_style_sel
+ 214:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_obj_set_style_pad_row(obj, value, selector);
+ 215:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_obj_set_style_pad_column(obj, value, selector);
+ 216:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** }
+ 217:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** 
+ 218:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h **** static inline void lv_obj_set_style_size(struct _lv_obj_t * obj,  lv_coord_t value, lv_style_select
+ 194              		.loc 4 218 20 view .LVU35
+ 195              	.LBB29:
+ 219:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_obj_set_style_width(obj, value, selector);
+ 196              		.loc 4 219 5 view .LVU36
+ 197 003a 4FF40032 		mov	r2, #131072
+ 198 003e 0021     		movs	r1, #0
+ 199 0040 2846     		mov	r0, r5
+ 200 0042 FFF7FEFF 		bl	lv_obj_set_style_width
+ 201              	.LVL17:
+ 220:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style.h ****     lv_obj_set_style_height(obj, value, selector);
+ 202              		.loc 4 220 5 view .LVU37
+ 203 0046 4FF40032 		mov	r2, #131072
+ 204 004a 0021     		movs	r1, #0
+ 205 004c 2846     		mov	r0, r5
+ 206 004e FFF7FEFF 		bl	lv_obj_set_style_height
+ 207              	.LVL18:
+ 208              		.loc 4 220 5 is_stmt 0 view .LVU38
+ 209              	.LBE29:
+ARM GAS  /tmp/ccMiYBEU.s 			page 15
+
+
+ 210              	.LBE28:
+  78:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** 
+  79:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_chart_series_t * ser = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_
+ 211              		.loc 1 79 5 is_stmt 1 view .LVU39
+ 212              		.loc 1 79 31 is_stmt 0 view .LVU40
+ 213 0052 2568     		ldr	r5, [r4]
+ 214 0054 0020     		movs	r0, #0
+ 215 0056 FFF7FEFF 		bl	lv_palette_main
+ 216              	.LVL19:
+ 217 005a 0146     		mov	r1, r0	@ movhi
+ 218 005c 0022     		movs	r2, #0
+ 219 005e 2846     		mov	r0, r5
+ 220 0060 FFF7FEFF 		bl	lv_chart_add_series
+ 221              	.LVL20:
+ 222 0064 0546     		mov	r5, r0
+ 223              	.LVL21:
+  80:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** 
+  81:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     uint32_t pcnt = sizeof(ecg_sample) / sizeof(ecg_sample[0]);
+ 224              		.loc 1 81 5 is_stmt 1 view .LVU41
+  82:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_chart_set_point_count(chart, pcnt);
+ 225              		.loc 1 82 5 view .LVU42
+ 226 0066 40F2E931 		movw	r1, #1001
+ 227 006a 2068     		ldr	r0, [r4]
+ 228              	.LVL22:
+ 229              		.loc 1 82 5 is_stmt 0 view .LVU43
+ 230 006c FFF7FEFF 		bl	lv_chart_set_point_count
+ 231              	.LVL23:
+  83:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_chart_set_ext_y_array(chart, ser, (lv_coord_t *)ecg_sample);
+ 232              		.loc 1 83 5 is_stmt 1 view .LVU44
+ 233 0070 254A     		ldr	r2, .L11+8
+ 234 0072 2946     		mov	r1, r5
+ 235 0074 2068     		ldr	r0, [r4]
+ 236 0076 FFF7FEFF 		bl	lv_chart_set_ext_y_array
+ 237              	.LVL24:
+  84:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** 
+  85:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_obj_t * slider;
+ 238              		.loc 1 85 5 view .LVU45
+  86:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     slider = lv_slider_create(lv_scr_act());
+ 239              		.loc 1 86 5 view .LVU46
+ 240              	.LBB30:
+ 241              	.LBI30:
+ 163:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** {
+ 242              		.loc 3 163 26 view .LVU47
+ 243              	.LBB31:
+ 244              		.loc 3 165 5 view .LVU48
+ 245              		.loc 3 165 12 is_stmt 0 view .LVU49
+ 246 007a FFF7FEFF 		bl	lv_disp_get_default
+ 247              	.LVL25:
+ 248 007e FFF7FEFF 		bl	lv_disp_get_scr_act
+ 249              	.LVL26:
+ 250              	.LBE31:
+ 251              	.LBE30:
+ 252              		.loc 1 86 14 view .LVU50
+ 253 0082 FFF7FEFF 		bl	lv_slider_create
+ 254              	.LVL27:
+ 255 0086 0546     		mov	r5, r0
+ 256              	.LVL28:
+ARM GAS  /tmp/ccMiYBEU.s 			page 16
+
+
+  87:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_slider_set_range(slider, LV_IMG_ZOOM_NONE, LV_IMG_ZOOM_NONE * 10);
+ 257              		.loc 1 87 5 is_stmt 1 view .LVU51
+ 258              	.LBB32:
+ 259              	.LBI32:
+  97:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** {
+ 260              		.loc 2 97 20 view .LVU52
+ 261              	.LBB33:
+  99:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** }
+ 262              		.loc 2 99 5 view .LVU53
+ 263 0088 4FF42062 		mov	r2, #2560
+ 264 008c 4FF48071 		mov	r1, #256
+ 265 0090 FFF7FEFF 		bl	lv_bar_set_range
+ 266              	.LVL29:
+  99:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** }
+ 267              		.loc 2 99 5 is_stmt 0 view .LVU54
+ 268              	.LBE33:
+ 269              	.LBE32:
+  88:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_obj_add_event_cb(slider, slider_x_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+ 270              		.loc 1 88 5 is_stmt 1 view .LVU55
+ 271 0094 0023     		movs	r3, #0
+ 272 0096 1C22     		movs	r2, #28
+ 273 0098 1C49     		ldr	r1, .L11+12
+ 274 009a 2846     		mov	r0, r5
+ 275 009c FFF7FEFF 		bl	lv_obj_add_event_cb
+ 276              	.LVL30:
+  89:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_obj_set_size(slider, 200, 10);
+ 277              		.loc 1 89 5 view .LVU56
+ 278 00a0 0A22     		movs	r2, #10
+ 279 00a2 C821     		movs	r1, #200
+ 280 00a4 2846     		mov	r0, r5
+ 281 00a6 FFF7FEFF 		bl	lv_obj_set_size
+ 282              	.LVL31:
+  90:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_obj_align_to(slider, chart, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
+ 283              		.loc 1 90 5 view .LVU57
+ 284 00aa 1426     		movs	r6, #20
+ 285 00ac 0096     		str	r6, [sp]
+ 286 00ae 0023     		movs	r3, #0
+ 287 00b0 0E22     		movs	r2, #14
+ 288 00b2 2168     		ldr	r1, [r4]
+ 289 00b4 2846     		mov	r0, r5
+ 290 00b6 FFF7FEFF 		bl	lv_obj_align_to
+ 291              	.LVL32:
+  91:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** 
+  92:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     slider = lv_slider_create(lv_scr_act());
+ 292              		.loc 1 92 5 view .LVU58
+ 293              	.LBB34:
+ 294              	.LBI34:
+ 163:Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_disp.h **** {
+ 295              		.loc 3 163 26 view .LVU59
+ 296              	.LBB35:
+ 297              		.loc 3 165 5 view .LVU60
+ 298              		.loc 3 165 12 is_stmt 0 view .LVU61
+ 299 00ba FFF7FEFF 		bl	lv_disp_get_default
+ 300              	.LVL33:
+ 301 00be FFF7FEFF 		bl	lv_disp_get_scr_act
+ 302              	.LVL34:
+ 303              	.LBE35:
+ARM GAS  /tmp/ccMiYBEU.s 			page 17
+
+
+ 304              	.LBE34:
+ 305              		.loc 1 92 14 view .LVU62
+ 306 00c2 FFF7FEFF 		bl	lv_slider_create
+ 307              	.LVL35:
+ 308 00c6 0546     		mov	r5, r0
+ 309              	.LVL36:
+  93:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_slider_set_range(slider, LV_IMG_ZOOM_NONE, LV_IMG_ZOOM_NONE * 10);
+ 310              		.loc 1 93 5 is_stmt 1 view .LVU63
+ 311              	.LBB36:
+ 312              	.LBI36:
+  97:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** {
+ 313              		.loc 2 97 20 view .LVU64
+ 314              	.LBB37:
+  99:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** }
+ 315              		.loc 2 99 5 view .LVU65
+ 316 00c8 4FF42062 		mov	r2, #2560
+ 317 00cc 4FF48071 		mov	r1, #256
+ 318 00d0 FFF7FEFF 		bl	lv_bar_set_range
+ 319              	.LVL37:
+  99:Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_slider.h **** }
+ 320              		.loc 2 99 5 is_stmt 0 view .LVU66
+ 321              	.LBE37:
+ 322              	.LBE36:
+  94:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_obj_add_event_cb(slider, slider_y_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+ 323              		.loc 1 94 5 is_stmt 1 view .LVU67
+ 324 00d4 0023     		movs	r3, #0
+ 325 00d6 1C22     		movs	r2, #28
+ 326 00d8 0D49     		ldr	r1, .L11+16
+ 327 00da 2846     		mov	r0, r5
+ 328 00dc FFF7FEFF 		bl	lv_obj_add_event_cb
+ 329              	.LVL38:
+  95:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_obj_set_size(slider, 10, 150);
+ 330              		.loc 1 95 5 view .LVU68
+ 331 00e0 9622     		movs	r2, #150
+ 332 00e2 0A21     		movs	r1, #10
+ 333 00e4 2846     		mov	r0, r5
+ 334 00e6 FFF7FEFF 		bl	lv_obj_set_size
+ 335              	.LVL39:
+  96:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c ****     lv_obj_align_to(slider, chart, LV_ALIGN_OUT_RIGHT_MID, 20, 0);
+ 336              		.loc 1 96 5 view .LVU69
+ 337 00ea 0023     		movs	r3, #0
+ 338 00ec 0093     		str	r3, [sp]
+ 339 00ee 3346     		mov	r3, r6
+ 340 00f0 3246     		mov	r2, r6
+ 341 00f2 2168     		ldr	r1, [r4]
+ 342 00f4 2846     		mov	r0, r5
+ 343 00f6 FFF7FEFF 		bl	lv_obj_align_to
+ 344              	.LVL40:
+  97:Middlewares/lvgl/examples/widgets/chart/lv_example_chart_5.c **** }
+ 345              		.loc 1 97 1 is_stmt 0 view .LVU70
+ 346 00fa 02B0     		add	sp, sp, #8
+ 347              	.LCFI4:
+ 348              		.cfi_def_cfa_offset 16
+ 349              		@ sp needed
+ 350 00fc 70BD     		pop	{r4, r5, r6, pc}
+ 351              	.LVL41:
+ 352              	.L12:
+ARM GAS  /tmp/ccMiYBEU.s 			page 18
+
+
+ 353              		.loc 1 97 1 view .LVU71
+ 354 00fe 00BF     		.align	2
+ 355              	.L11:
+ 356 0100 00000000 		.word	.LANCHOR0
+ 357 0104 18FCFFFF 		.word	-1000
+ 358 0108 00000000 		.word	.LANCHOR1
+ 359 010c 00000000 		.word	slider_x_event_cb
+ 360 0110 00000000 		.word	slider_y_event_cb
+ 361              		.cfi_endproc
+ 362              	.LFE186:
+ 364              		.section	.bss.chart,"aw",%nobits
+ 365              		.align	2
+ 366              		.set	.LANCHOR0,. + 0
+ 369              	chart:
+ 370 0000 00000000 		.space	4
+ 371              		.section	.rodata.ecg_sample,"a"
+ 372              		.align	2
+ 373              		.set	.LANCHOR1,. + 0
+ 376              	ecg_sample:
+ 377 0000 FEFF     		.short	-2
+ 378 0002 0200     		.short	2
+ 379 0004 0000     		.short	0
+ 380 0006 F1FF     		.short	-15
+ 381 0008 D9FF     		.short	-39
+ 382 000a C1FF     		.short	-63
+ 383 000c B9FF     		.short	-71
+ 384 000e BCFF     		.short	-68
+ 385 0010 BDFF     		.short	-67
+ 386 0012 BBFF     		.short	-69
+ 387 0014 ACFF     		.short	-84
+ 388 0016 A1FF     		.short	-95
+ 389 0018 98FF     		.short	-104
+ 390 001a 95FF     		.short	-107
+ 391 001c 94FF     		.short	-108
+ 392 001e 95FF     		.short	-107
+ 393 0020 95FF     		.short	-107
+ 394 0022 95FF     		.short	-107
+ 395 0024 95FF     		.short	-107
+ 396 0026 8EFF     		.short	-114
+ 397 0028 8AFF     		.short	-118
+ 398 002a 8BFF     		.short	-117
+ 399 002c 90FF     		.short	-112
+ 400 002e 9CFF     		.short	-100
+ 401 0030 A7FF     		.short	-89
+ 402 0032 ADFF     		.short	-83
+ 403 0034 B9FF     		.short	-71
+ 404 0036 C0FF     		.short	-64
+ 405 0038 C6FF     		.short	-58
+ 406 003a C6FF     		.short	-58
+ 407 003c C2FF     		.short	-62
+ 408 003e C2FF     		.short	-62
+ 409 0040 C6FF     		.short	-58
+ 410 0042 CDFF     		.short	-51
+ 411 0044 D2FF     		.short	-46
+ 412 0046 D9FF     		.short	-39
+ 413 0048 E5FF     		.short	-27
+ 414 004a F6FF     		.short	-10
+ARM GAS  /tmp/ccMiYBEU.s 			page 19
+
+
+ 415 004c 0400     		.short	4
+ 416 004e 0700     		.short	7
+ 417 0050 0100     		.short	1
+ 418 0052 FDFF     		.short	-3
+ 419 0054 0000     		.short	0
+ 420 0056 0E00     		.short	14
+ 421 0058 1800     		.short	24
+ 422 005a 1E00     		.short	30
+ 423 005c 1900     		.short	25
+ 424 005e 1300     		.short	19
+ 425 0060 0D00     		.short	13
+ 426 0062 0700     		.short	7
+ 427 0064 0C00     		.short	12
+ 428 0066 0F00     		.short	15
+ 429 0068 1200     		.short	18
+ 430 006a 1500     		.short	21
+ 431 006c 0D00     		.short	13
+ 432 006e 0600     		.short	6
+ 433 0070 0900     		.short	9
+ 434 0072 0800     		.short	8
+ 435 0074 1100     		.short	17
+ 436 0076 1300     		.short	19
+ 437 0078 0D00     		.short	13
+ 438 007a 0B00     		.short	11
+ 439 007c 0B00     		.short	11
+ 440 007e 0B00     		.short	11
+ 441 0080 1700     		.short	23
+ 442 0082 1E00     		.short	30
+ 443 0084 2500     		.short	37
+ 444 0086 2200     		.short	34
+ 445 0088 1900     		.short	25
+ 446 008a 0E00     		.short	14
+ 447 008c 0F00     		.short	15
+ 448 008e 1300     		.short	19
+ 449 0090 1C00     		.short	28
+ 450 0092 1F00     		.short	31
+ 451 0094 1A00     		.short	26
+ 452 0096 1700     		.short	23
+ 453 0098 1900     		.short	25
+ 454 009a 1F00     		.short	31
+ 455 009c 2700     		.short	39
+ 456 009e 2500     		.short	37
+ 457 00a0 2500     		.short	37
+ 458 00a2 2200     		.short	34
+ 459 00a4 1E00     		.short	30
+ 460 00a6 2000     		.short	32
+ 461 00a8 1600     		.short	22
+ 462 00aa 1D00     		.short	29
+ 463 00ac 1F00     		.short	31
+ 464 00ae 2100     		.short	33
+ 465 00b0 2500     		.short	37
+ 466 00b2 1700     		.short	23
+ 467 00b4 0D00     		.short	13
+ 468 00b6 0700     		.short	7
+ 469 00b8 0200     		.short	2
+ 470 00ba 0400     		.short	4
+ 471 00bc FEFF     		.short	-2
+ARM GAS  /tmp/ccMiYBEU.s 			page 20
+
+
+ 472 00be 0200     		.short	2
+ 473 00c0 0B00     		.short	11
+ 474 00c2 1600     		.short	22
+ 475 00c4 2100     		.short	33
+ 476 00c6 1300     		.short	19
+ 477 00c8 FFFF     		.short	-1
+ 478 00ca E5FF     		.short	-27
+ 479 00cc C9FF     		.short	-55
+ 480 00ce BDFF     		.short	-67
+ 481 00d0 B8FF     		.short	-72
+ 482 00d2 B9FF     		.short	-71
+ 483 00d4 C1FF     		.short	-63
+ 484 00d6 CFFF     		.short	-49
+ 485 00d8 EEFF     		.short	-18
+ 486 00da 2300     		.short	35
+ 487 00dc 7100     		.short	113
+ 488 00de E600     		.short	230
+ 489 00e0 7101     		.short	369
+ 490 00e2 0D02     		.short	525
+ 491 00e4 8B02     		.short	651
+ 492 00e6 D202     		.short	722
+ 493 00e8 DA02     		.short	730
+ 494 00ea 9B02     		.short	667
+ 495 00ec 3302     		.short	563
+ 496 00ee C601     		.short	454
+ 497 00f0 6501     		.short	357
+ 498 00f2 3101     		.short	305
+ 499 00f4 2001     		.short	288
+ 500 00f6 1201     		.short	274
+ 501 00f8 FF00     		.short	255
+ 502 00fa D400     		.short	212
+ 503 00fc AD00     		.short	173
+ 504 00fe 8F00     		.short	143
+ 505 0100 7500     		.short	117
+ 506 0102 5200     		.short	82
+ 507 0104 2700     		.short	39
+ 508 0106 F3FF     		.short	-13
+ 509 0108 CBFF     		.short	-53
+ 510 010a B2FF     		.short	-78
+ 511 010c A5FF     		.short	-91
+ 512 010e 9BFF     		.short	-101
+ 513 0110 8FFF     		.short	-113
+ 514 0112 84FF     		.short	-124
+ 515 0114 7DFF     		.short	-131
+ 516 0116 7DFF     		.short	-131
+ 517 0118 7DFF     		.short	-131
+ 518 011a 7FFF     		.short	-129
+ 519 011c 80FF     		.short	-128
+ 520 011e 7FFF     		.short	-129
+ 521 0120 83FF     		.short	-125
+ 522 0122 85FF     		.short	-123
+ 523 0124 85FF     		.short	-123
+ 524 0126 7FFF     		.short	-129
+ 525 0128 75FF     		.short	-139
+ 526 012a 6CFF     		.short	-148
+ 527 012c 67FF     		.short	-153
+ 528 012e 61FF     		.short	-159
+ARM GAS  /tmp/ccMiYBEU.s 			page 21
+
+
+ 529 0130 5AFF     		.short	-166
+ 530 0132 49FF     		.short	-183
+ 531 0134 33FF     		.short	-205
+ 532 0136 1DFF     		.short	-227
+ 533 0138 0DFF     		.short	-243
+ 534 013a 08FF     		.short	-248
+ 535 013c 0AFF     		.short	-246
+ 536 013e 02FF     		.short	-254
+ 537 0140 E8FE     		.short	-280
+ 538 0142 B9FE     		.short	-327
+ 539 0144 83FE     		.short	-381
+ 540 0146 53FE     		.short	-429
+ 541 0148 27FE     		.short	-473
+ 542 014a FBFD     		.short	-517
+ 543 014c D4FD     		.short	-556
+ 544 014e B0FD     		.short	-592
+ 545 0150 9CFD     		.short	-612
+ 546 0152 94FD     		.short	-620
+ 547 0154 94FD     		.short	-620
+ 548 0156 9AFD     		.short	-614
+ 549 0158 A4FD     		.short	-604
+ 550 015a B1FD     		.short	-591
+ 551 015c C2FD     		.short	-574
+ 552 015e E4FD     		.short	-540
+ 553 0160 0FFE     		.short	-497
+ 554 0162 47FE     		.short	-441
+ 555 0164 7BFE     		.short	-389
+ 556 0166 9AFE     		.short	-358
+ 557 0168 B0FE     		.short	-336
+ 558 016a C7FE     		.short	-313
+ 559 016c E4FE     		.short	-284
+ 560 016e 22FF     		.short	-222
+ 561 0170 59FF     		.short	-167
+ 562 0172 8EFF     		.short	-114
+ 563 0174 BAFF     		.short	-70
+ 564 0176 D1FF     		.short	-47
+ 565 0178 E4FF     		.short	-28
+ 566 017a FCFF     		.short	-4
+ 567 017c 0C00     		.short	12
+ 568 017e 2600     		.short	38
+ 569 0180 3400     		.short	52
+ 570 0182 3A00     		.short	58
+ 571 0184 3800     		.short	56
+ 572 0186 3800     		.short	56
+ 573 0188 3900     		.short	57
+ 574 018a 4400     		.short	68
+ 575 018c 4D00     		.short	77
+ 576 018e 5600     		.short	86
+ 577 0190 5600     		.short	86
+ 578 0192 5000     		.short	80
+ 579 0194 4500     		.short	69
+ 580 0196 4300     		.short	67
+ 581 0198 4600     		.short	70
+ 582 019a 5200     		.short	82
+ 583 019c 5500     		.short	85
+ 584 019e 5900     		.short	89
+ 585 01a0 5A00     		.short	90
+ARM GAS  /tmp/ccMiYBEU.s 			page 22
+
+
+ 586 01a2 5900     		.short	89
+ 587 01a4 5900     		.short	89
+ 588 01a6 5800     		.short	88
+ 589 01a8 5B00     		.short	91
+ 590 01aa 6000     		.short	96
+ 591 01ac 6100     		.short	97
+ 592 01ae 5B00     		.short	91
+ 593 01b0 5300     		.short	83
+ 594 01b2 4E00     		.short	78
+ 595 01b4 5200     		.short	82
+ 596 01b6 5800     		.short	88
+ 597 01b8 5F00     		.short	95
+ 598 01ba 6000     		.short	96
+ 599 01bc 6900     		.short	105
+ 600 01be 6A00     		.short	106
+ 601 01c0 6E00     		.short	110
+ 602 01c2 6600     		.short	102
+ 603 01c4 6400     		.short	100
+ 604 01c6 6000     		.short	96
+ 605 01c8 6200     		.short	98
+ 606 01ca 6100     		.short	97
+ 607 01cc 6500     		.short	101
+ 608 01ce 6200     		.short	98
+ 609 01d0 6300     		.short	99
+ 610 01d2 6400     		.short	100
+ 611 01d4 6B00     		.short	107
+ 612 01d6 7100     		.short	113
+ 613 01d8 7700     		.short	119
+ 614 01da 7300     		.short	115
+ 615 01dc 6E00     		.short	110
+ 616 01de 6000     		.short	96
+ 617 01e0 5500     		.short	85
+ 618 01e2 4900     		.short	73
+ 619 01e4 4000     		.short	64
+ 620 01e6 4500     		.short	69
+ 621 01e8 4C00     		.short	76
+ 622 01ea 4F00     		.short	79
+ 623 01ec 4E00     		.short	78
+ 624 01ee 4B00     		.short	75
+ 625 01f0 5500     		.short	85
+ 626 01f2 6400     		.short	100
+ 627 01f4 7200     		.short	114
+ 628 01f6 7100     		.short	113
+ 629 01f8 6900     		.short	105
+ 630 01fa 6000     		.short	96
+ 631 01fc 5400     		.short	84
+ 632 01fe 4A00     		.short	74
+ 633 0200 4200     		.short	66
+ 634 0202 3C00     		.short	60
+ 635 0204 4B00     		.short	75
+ 636 0206 5500     		.short	85
+ 637 0208 5900     		.short	89
+ 638 020a 5300     		.short	83
+ 639 020c 4300     		.short	67
+ 640 020e 3D00     		.short	61
+ 641 0210 4300     		.short	67
+ 642 0212 4900     		.short	73
+ARM GAS  /tmp/ccMiYBEU.s 			page 23
+
+
+ 643 0214 4F00     		.short	79
+ 644 0216 4A00     		.short	74
+ 645 0218 3F00     		.short	63
+ 646 021a 3900     		.short	57
+ 647 021c 3800     		.short	56
+ 648 021e 3A00     		.short	58
+ 649 0220 3D00     		.short	61
+ 650 0222 3700     		.short	55
+ 651 0224 3000     		.short	48
+ 652 0226 2D00     		.short	45
+ 653 0228 2E00     		.short	46
+ 654 022a 3700     		.short	55
+ 655 022c 3E00     		.short	62
+ 656 022e 3700     		.short	55
+ 657 0230 3100     		.short	49
+ 658 0232 2B00     		.short	43
+ 659 0234 3200     		.short	50
+ 660 0236 3B00     		.short	59
+ 661 0238 3F00     		.short	63
+ 662 023a 3900     		.short	57
+ 663 023c 2800     		.short	40
+ 664 023e 1F00     		.short	31
+ 665 0240 1700     		.short	23
+ 666 0242 1900     		.short	25
+ 667 0244 1B00     		.short	27
+ 668 0246 1F00     		.short	31
+ 669 0248 2300     		.short	35
+ 670 024a 2200     		.short	34
+ 671 024c 1E00     		.short	30
+ 672 024e 2400     		.short	36
+ 673 0250 2200     		.short	34
+ 674 0252 2A00     		.short	42
+ 675 0254 2600     		.short	38
+ 676 0256 2400     		.short	36
+ 677 0258 2800     		.short	40
+ 678 025a 2E00     		.short	46
+ 679 025c 3200     		.short	50
+ 680 025e 2F00     		.short	47
+ 681 0260 2000     		.short	32
+ 682 0262 1E00     		.short	30
+ 683 0264 2000     		.short	32
+ 684 0266 3400     		.short	52
+ 685 0268 4300     		.short	67
+ 686 026a 4900     		.short	73
+ 687 026c 4700     		.short	71
+ 688 026e 3F00     		.short	63
+ 689 0270 3600     		.short	54
+ 690 0272 3500     		.short	53
+ 691 0274 2D00     		.short	45
+ 692 0276 2900     		.short	41
+ 693 0278 1C00     		.short	28
+ 694 027a 0D00     		.short	13
+ 695 027c 0300     		.short	3
+ 696 027e 0100     		.short	1
+ 697 0280 0400     		.short	4
+ 698 0282 0400     		.short	4
+ 699 0284 F8FF     		.short	-8
+ARM GAS  /tmp/ccMiYBEU.s 			page 24
+
+
+ 700 0286 E9FF     		.short	-23
+ 701 0288 E0FF     		.short	-32
+ 702 028a E1FF     		.short	-31
+ 703 028c EDFF     		.short	-19
+ 704 028e FBFF     		.short	-5
+ 705 0290 0300     		.short	3
+ 706 0292 0900     		.short	9
+ 707 0294 0D00     		.short	13
+ 708 0296 1300     		.short	19
+ 709 0298 1800     		.short	24
+ 710 029a 1B00     		.short	27
+ 711 029c 1D00     		.short	29
+ 712 029e 1900     		.short	25
+ 713 02a0 1600     		.short	22
+ 714 02a2 1A00     		.short	26
+ 715 02a4 2000     		.short	32
+ 716 02a6 2A00     		.short	42
+ 717 02a8 3300     		.short	51
+ 718 02aa 3800     		.short	56
+ 719 02ac 3C00     		.short	60
+ 720 02ae 3900     		.short	57
+ 721 02b0 3700     		.short	55
+ 722 02b2 3500     		.short	53
+ 723 02b4 3500     		.short	53
+ 724 02b6 3600     		.short	54
+ 725 02b8 3B00     		.short	59
+ 726 02ba 3600     		.short	54
+ 727 02bc 3100     		.short	49
+ 728 02be 1A00     		.short	26
+ 729 02c0 FDFF     		.short	-3
+ 730 02c2 F5FF     		.short	-11
+ 731 02c4 ECFF     		.short	-20
+ 732 02c6 D1FF     		.short	-47
+ 733 02c8 9CFF     		.short	-100
+ 734 02ca 3EFF     		.short	-194
+ 735 02cc 14FF     		.short	-236
+ 736 02ce 2CFF     		.short	-212
+ 737 02d0 85FF     		.short	-123
+ 738 02d2 0800     		.short	8
+ 739 02d4 6700     		.short	103
+ 740 02d6 8E00     		.short	142
+ 741 02d8 9300     		.short	147
+ 742 02da 7800     		.short	120
+ 743 02dc 6900     		.short	105
+ 744 02de 6200     		.short	98
+ 745 02e0 5D00     		.short	93
+ 746 02e2 5100     		.short	81
+ 747 02e4 3D00     		.short	61
+ 748 02e6 2800     		.short	40
+ 749 02e8 1A00     		.short	26
+ 750 02ea 1C00     		.short	28
+ 751 02ec 1E00     		.short	30
+ 752 02ee 1E00     		.short	30
+ 753 02f0 1B00     		.short	27
+ 754 02f2 1300     		.short	19
+ 755 02f4 1100     		.short	17
+ 756 02f6 1500     		.short	21
+ARM GAS  /tmp/ccMiYBEU.s 			page 25
+
+
+ 757 02f8 1400     		.short	20
+ 758 02fa 1300     		.short	19
+ 759 02fc 1300     		.short	19
+ 760 02fe 1600     		.short	22
+ 761 0300 2400     		.short	36
+ 762 0302 2800     		.short	40
+ 763 0304 2300     		.short	35
+ 764 0306 1400     		.short	20
+ 765 0308 0700     		.short	7
+ 766 030a 0100     		.short	1
+ 767 030c 0A00     		.short	10
+ 768 030e 1200     		.short	18
+ 769 0310 1B00     		.short	27
+ 770 0312 1600     		.short	22
+ 771 0314 0600     		.short	6
+ 772 0316 FCFF     		.short	-4
+ 773 0318 FEFF     		.short	-2
+ 774 031a 0300     		.short	3
+ 775 031c 0600     		.short	6
+ 776 031e FEFF     		.short	-2
+ 777 0320 F3FF     		.short	-13
+ 778 0322 F2FF     		.short	-14
+ 779 0324 F6FF     		.short	-10
+ 780 0326 FEFF     		.short	-2
+ 781 0328 0300     		.short	3
+ 782 032a 0200     		.short	2
+ 783 032c FFFF     		.short	-1
+ 784 032e FBFF     		.short	-5
+ 785 0330 F6FF     		.short	-10
+ 786 0332 EDFF     		.short	-19
+ 787 0334 E0FF     		.short	-32
+ 788 0336 D6FF     		.short	-42
+ 789 0338 C9FF     		.short	-55
+ 790 033a C4FF     		.short	-60
+ 791 033c BCFF     		.short	-68
+ 792 033e B3FF     		.short	-77
+ 793 0340 AAFF     		.short	-86
+ 794 0342 9BFF     		.short	-101
+ 795 0344 92FF     		.short	-110
+ 796 0346 8BFF     		.short	-117
+ 797 0348 8DFF     		.short	-115
+ 798 034a 98FF     		.short	-104
+ 799 034c A4FF     		.short	-92
+ 800 034e ACFF     		.short	-84
+ 801 0350 ABFF     		.short	-85
+ 802 0352 ACFF     		.short	-84
+ 803 0354 B7FF     		.short	-73
+ 804 0356 BFFF     		.short	-65
+ 805 0358 CCFF     		.short	-52
+ 806 035a CEFF     		.short	-50
+ 807 035c D3FF     		.short	-45
+ 808 035e DDFF     		.short	-35
+ 809 0360 ECFF     		.short	-20
+ 810 0362 FDFF     		.short	-3
+ 811 0364 0C00     		.short	12
+ 812 0366 1400     		.short	20
+ 813 0368 1900     		.short	25
+ARM GAS  /tmp/ccMiYBEU.s 			page 26
+
+
+ 814 036a 1A00     		.short	26
+ 815 036c 1C00     		.short	28
+ 816 036e 1C00     		.short	28
+ 817 0370 1E00     		.short	30
+ 818 0372 1C00     		.short	28
+ 819 0374 1900     		.short	25
+ 820 0376 1C00     		.short	28
+ 821 0378 2100     		.short	33
+ 822 037a 2A00     		.short	42
+ 823 037c 2A00     		.short	42
+ 824 037e 2400     		.short	36
+ 825 0380 1700     		.short	23
+ 826 0382 0900     		.short	9
+ 827 0384 0000     		.short	0
+ 828 0386 0100     		.short	1
+ 829 0388 FCFF     		.short	-4
+ 830 038a 0100     		.short	1
+ 831 038c FCFF     		.short	-4
+ 832 038e FCFF     		.short	-4
+ 833 0390 0100     		.short	1
+ 834 0392 0500     		.short	5
+ 835 0394 0900     		.short	9
+ 836 0396 0900     		.short	9
+ 837 0398 FDFF     		.short	-3
+ 838 039a FFFF     		.short	-1
+ 839 039c EEFF     		.short	-18
+ 840 039e CEFF     		.short	-50
+ 841 03a0 94FF     		.short	-108
+ 842 03a2 42FF     		.short	-190
+ 843 03a4 F0FE     		.short	-272
+ 844 03a6 ACFE     		.short	-340
+ 845 03a8 68FE     		.short	-408
+ 846 03aa 42FE     		.short	-446
+ 847 03ac E7FD     		.short	-537
+ 848 03ae 7DFD     		.short	-643
+ 849 03b0 F7FC     		.short	-777
+ 850 03b2 82FC     		.short	-894
+ 851 03b4 68FC     		.short	-920
+ 852 03b6 ABFC     		.short	-853
+ 853 03b8 47FD     		.short	-697
+ 854 03ba 33FE     		.short	-461
+ 855 03bc 05FF     		.short	-251
+ 856 03be C4FF     		.short	-60
+ 857 03c0 3A00     		.short	58
+ 858 03c2 6700     		.short	103
+ 859 03c4 8100     		.short	129
+ 860 03c6 8B00     		.short	139
+ 861 03c8 9B00     		.short	155
+ 862 03ca AA00     		.short	170
+ 863 03cc AD00     		.short	173
+ 864 03ce B200     		.short	178
+ 865 03d0 B900     		.short	185
+ 866 03d2 BE00     		.short	190
+ 867 03d4 C100     		.short	193
+ 868 03d6 C800     		.short	200
+ 869 03d8 D000     		.short	208
+ 870 03da D700     		.short	215
+ARM GAS  /tmp/ccMiYBEU.s 			page 27
+
+
+ 871 03dc E100     		.short	225
+ 872 03de E000     		.short	224
+ 873 03e0 E800     		.short	232
+ 874 03e2 EA00     		.short	234
+ 875 03e4 F000     		.short	240
+ 876 03e6 F000     		.short	240
+ 877 03e8 EC00     		.short	236
+ 878 03ea E500     		.short	229
+ 879 03ec E200     		.short	226
+ 880 03ee E000     		.short	224
+ 881 03f0 E800     		.short	232
+ 882 03f2 E900     		.short	233
+ 883 03f4 E800     		.short	232
+ 884 03f6 E000     		.short	224
+ 885 03f8 DB00     		.short	219
+ 886 03fa DB00     		.short	219
+ 887 03fc DF00     		.short	223
+ 888 03fe E700     		.short	231
+ 889 0400 E200     		.short	226
+ 890 0402 DF00     		.short	223
+ 891 0404 DB00     		.short	219
+ 892 0406 DA00     		.short	218
+ 893 0408 DF00     		.short	223
+ 894 040a DF00     		.short	223
+ 895 040c DF00     		.short	223
+ 896 040e E900     		.short	233
+ 897 0410 F500     		.short	245
+ 898 0412 0C01     		.short	268
+ 899 0414 1E01     		.short	286
+ 900 0416 2801     		.short	296
+ 901 0418 2701     		.short	295
+ 902 041a 1B01     		.short	283
+ 903 041c 0F01     		.short	271
+ 904 041e 0701     		.short	263
+ 905 0420 FC00     		.short	252
+ 906 0422 F300     		.short	243
+ 907 0424 E200     		.short	226
+ 908 0426 D200     		.short	210
+ 909 0428 C500     		.short	197
+ 910 042a BA00     		.short	186
+ 911 042c AB00     		.short	171
+ 912 042e 9800     		.short	152
+ 913 0430 8500     		.short	133
+ 914 0432 7500     		.short	117
+ 915 0434 7200     		.short	114
+ 916 0436 6E00     		.short	110
+ 917 0438 6B00     		.short	107
+ 918 043a 6000     		.short	96
+ 919 043c 5000     		.short	80
+ 920 043e 3F00     		.short	63
+ 921 0440 3000     		.short	48
+ 922 0442 2800     		.short	40
+ 923 0444 2600     		.short	38
+ 924 0446 2200     		.short	34
+ 925 0448 1C00     		.short	28
+ 926 044a 0F00     		.short	15
+ 927 044c 0200     		.short	2
+ARM GAS  /tmp/ccMiYBEU.s 			page 28
+
+
+ 928 044e F9FF     		.short	-7
+ 929 0450 F5FF     		.short	-11
+ 930 0452 F2FF     		.short	-14
+ 931 0454 EEFF     		.short	-18
+ 932 0456 E3FF     		.short	-29
+ 933 0458 DBFF     		.short	-37
+ 934 045a D4FF     		.short	-44
+ 935 045c CEFF     		.short	-50
+ 936 045e C6FF     		.short	-58
+ 937 0460 C1FF     		.short	-63
+ 938 0462 C3FF     		.short	-61
+ 939 0464 CCFF     		.short	-52
+ 940 0466 CEFF     		.short	-50
+ 941 0468 D0FF     		.short	-48
+ 942 046a C3FF     		.short	-61
+ 943 046c C5FF     		.short	-59
+ 944 046e C6FF     		.short	-58
+ 945 0470 CAFF     		.short	-54
+ 946 0472 D1FF     		.short	-47
+ 947 0474 CCFF     		.short	-52
+ 948 0476 C2FF     		.short	-62
+ 949 0478 C3FF     		.short	-61
+ 950 047a C0FF     		.short	-64
+ 951 047c CAFF     		.short	-54
+ 952 047e CCFF     		.short	-52
+ 953 0480 C5FF     		.short	-59
+ 954 0482 BBFF     		.short	-69
+ 955 0484 B4FF     		.short	-76
+ 956 0486 B4FF     		.short	-76
+ 957 0488 BBFF     		.short	-69
+ 958 048a BDFF     		.short	-67
+ 959 048c B6FF     		.short	-74
+ 960 048e B2FF     		.short	-78
+ 961 0490 AFFF     		.short	-81
+ 962 0492 B0FF     		.short	-80
+ 963 0494 B7FF     		.short	-73
+ 964 0496 BFFF     		.short	-65
+ 965 0498 C7FF     		.short	-57
+ 966 049a CBFF     		.short	-53
+ 967 049c CDFF     		.short	-51
+ 968 049e D1FF     		.short	-47
+ 969 04a0 DDFF     		.short	-35
+ 970 04a2 E5FF     		.short	-27
+ 971 04a4 EAFF     		.short	-22
+ 972 04a6 EAFF     		.short	-22
+ 973 04a8 E8FF     		.short	-24
+ 974 04aa EBFF     		.short	-21
+ 975 04ac EFFF     		.short	-17
+ 976 04ae F3FF     		.short	-13
+ 977 04b0 F6FF     		.short	-10
+ 978 04b2 F5FF     		.short	-11
+ 979 04b4 F3FF     		.short	-13
+ 980 04b6 ECFF     		.short	-20
+ 981 04b8 ECFF     		.short	-20
+ 982 04ba F4FF     		.short	-12
+ 983 04bc FEFF     		.short	-2
+ 984 04be 0700     		.short	7
+ARM GAS  /tmp/ccMiYBEU.s 			page 29
+
+
+ 985 04c0 FFFF     		.short	-1
+ 986 04c2 F4FF     		.short	-12
+ 987 04c4 F0FF     		.short	-16
+ 988 04c6 F3FF     		.short	-13
+ 989 04c8 FEFF     		.short	-2
+ 990 04ca 0200     		.short	2
+ 991 04cc FCFF     		.short	-4
+ 992 04ce FBFF     		.short	-5
+ 993 04d0 FEFF     		.short	-2
+ 994 04d2 0900     		.short	9
+ 995 04d4 1300     		.short	19
+ 996 04d6 1300     		.short	19
+ 997 04d8 0E00     		.short	14
+ 998 04da 0B00     		.short	11
+ 999 04dc 0D00     		.short	13
+ 1000 04de 1300     		.short	19
+ 1001 04e0 1500     		.short	21
+ 1002 04e2 1400     		.short	20
+ 1003 04e4 1200     		.short	18
+ 1004 04e6 1300     		.short	19
+ 1005 04e8 1300     		.short	19
+ 1006 04ea 1300     		.short	19
+ 1007 04ec 1000     		.short	16
+ 1008 04ee 0F00     		.short	15
+ 1009 04f0 0D00     		.short	13
+ 1010 04f2 0E00     		.short	14
+ 1011 04f4 0900     		.short	9
+ 1012 04f6 0300     		.short	3
+ 1013 04f8 FBFF     		.short	-5
+ 1014 04fa F7FF     		.short	-9
+ 1015 04fc FBFF     		.short	-5
+ 1016 04fe FDFF     		.short	-3
+ 1017 0500 FEFF     		.short	-2
+ 1018 0502 FDFF     		.short	-3
+ 1019 0504 FDFF     		.short	-3
+ 1020 0506 0200     		.short	2
+ 1021 0508 0800     		.short	8
+ 1022 050a 0900     		.short	9
+ 1023 050c 0900     		.short	9
+ 1024 050e 0500     		.short	5
+ 1025 0510 0600     		.short	6
+ 1026 0512 0800     		.short	8
+ 1027 0514 0800     		.short	8
+ 1028 0516 0700     		.short	7
+ 1029 0518 0400     		.short	4
+ 1030 051a 0300     		.short	3
+ 1031 051c 0400     		.short	4
+ 1032 051e 0500     		.short	5
+ 1033 0520 0300     		.short	3
+ 1034 0522 0500     		.short	5
+ 1035 0524 0500     		.short	5
+ 1036 0526 0D00     		.short	13
+ 1037 0528 0D00     		.short	13
+ 1038 052a 0C00     		.short	12
+ 1039 052c 0A00     		.short	10
+ 1040 052e 0A00     		.short	10
+ 1041 0530 0F00     		.short	15
+ARM GAS  /tmp/ccMiYBEU.s 			page 30
+
+
+ 1042 0532 1600     		.short	22
+ 1043 0534 1100     		.short	17
+ 1044 0536 0E00     		.short	14
+ 1045 0538 0700     		.short	7
+ 1046 053a 0A00     		.short	10
+ 1047 053c 0F00     		.short	15
+ 1048 053e 1000     		.short	16
+ 1049 0540 0B00     		.short	11
+ 1050 0542 0C00     		.short	12
+ 1051 0544 0A00     		.short	10
+ 1052 0546 0D00     		.short	13
+ 1053 0548 0900     		.short	9
+ 1054 054a FEFF     		.short	-2
+ 1055 054c FCFF     		.short	-4
+ 1056 054e FEFF     		.short	-2
+ 1057 0550 0700     		.short	7
+ 1058 0552 1000     		.short	16
+ 1059 0554 1000     		.short	16
+ 1060 0556 1100     		.short	17
+ 1061 0558 1000     		.short	16
+ 1062 055a 0700     		.short	7
+ 1063 055c FFFF     		.short	-1
+ 1064 055e F0FF     		.short	-16
+ 1065 0560 EEFF     		.short	-18
+ 1066 0562 F0FF     		.short	-16
+ 1067 0564 F7FF     		.short	-9
+ 1068 0566 FCFF     		.short	-4
+ 1069 0568 FBFF     		.short	-5
+ 1070 056a F6FF     		.short	-10
+ 1071 056c F7FF     		.short	-9
+ 1072 056e F8FF     		.short	-8
+ 1073 0570 FDFF     		.short	-3
+ 1074 0572 FCFF     		.short	-4
+ 1075 0574 F6FF     		.short	-10
+ 1076 0576 EDFF     		.short	-19
+ 1077 0578 ECFF     		.short	-20
+ 1078 057a F0FF     		.short	-16
+ 1079 057c F7FF     		.short	-9
+ 1080 057e F7FF     		.short	-9
+ 1081 0580 E9FF     		.short	-23
+ 1082 0582 D8FF     		.short	-40
+ 1083 0584 D0FF     		.short	-48
+ 1084 0586 D5FF     		.short	-43
+ 1085 0588 DFFF     		.short	-33
+ 1086 058a EDFF     		.short	-19
+ 1087 058c EBFF     		.short	-21
+ 1088 058e E6FF     		.short	-26
+ 1089 0590 E1FF     		.short	-31
+ 1090 0592 DFFF     		.short	-33
+ 1091 0594 EDFF     		.short	-19
+ 1092 0596 0000     		.short	0
+ 1093 0598 1100     		.short	17
+ 1094 059a 1800     		.short	24
+ 1095 059c 0900     		.short	9
+ 1096 059e EFFF     		.short	-17
+ 1097 05a0 D1FF     		.short	-47
+ 1098 05a2 C1FF     		.short	-63
+ARM GAS  /tmp/ccMiYBEU.s 			page 31
+
+
+ 1099 05a4 BDFF     		.short	-67
+ 1100 05a6 C5FF     		.short	-59
+ 1101 05a8 CCFF     		.short	-52
+ 1102 05aa CDFF     		.short	-51
+ 1103 05ac CEFF     		.short	-50
+ 1104 05ae CFFF     		.short	-49
+ 1105 05b0 D6FF     		.short	-42
+ 1106 05b2 E6FF     		.short	-26
+ 1107 05b4 EBFF     		.short	-21
+ 1108 05b6 F1FF     		.short	-15
+ 1109 05b8 ECFF     		.short	-20
+ 1110 05ba E9FF     		.short	-23
+ 1111 05bc EAFF     		.short	-22
+ 1112 05be EDFF     		.short	-19
+ 1113 05c0 F4FF     		.short	-12
+ 1114 05c2 F8FF     		.short	-8
+ 1115 05c4 0500     		.short	5
+ 1116 05c6 1200     		.short	18
+ 1117 05c8 1B00     		.short	27
+ 1118 05ca 2000     		.short	32
+ 1119 05cc 1A00     		.short	26
+ 1120 05ce 1900     		.short	25
+ 1121 05d0 1A00     		.short	26
+ 1122 05d2 1600     		.short	22
+ 1123 05d4 1700     		.short	23
+ 1124 05d6 1100     		.short	17
+ 1125 05d8 0E00     		.short	14
+ 1126 05da 1100     		.short	17
+ 1127 05dc 1500     		.short	21
+ 1128 05de 1900     		.short	25
+ 1129 05e0 0200     		.short	2
+ 1130 05e2 D3FF     		.short	-45
+ 1131 05e4 87FF     		.short	-121
+ 1132 05e6 3CFF     		.short	-196
+ 1133 05e8 1EFF     		.short	-226
+ 1134 05ea 38FF     		.short	-200
+ 1135 05ec 8AFF     		.short	-118
+ 1136 05ee F7FF     		.short	-9
+ 1137 05f0 4900     		.short	73
+ 1138 05f2 7E00     		.short	126
+ 1139 05f4 8300     		.short	131
+ 1140 05f6 7200     		.short	114
+ 1141 05f8 5700     		.short	87
+ 1142 05fa 3C00     		.short	60
+ 1143 05fc 2A00     		.short	42
+ 1144 05fe 1D00     		.short	29
+ 1145 0600 1A00     		.short	26
+ 1146 0602 2200     		.short	34
+ 1147 0604 2300     		.short	35
+ 1148 0606 2200     		.short	34
+ 1149 0608 1900     		.short	25
+ 1150 060a 0C00     		.short	12
+ 1151 060c 0900     		.short	9
+ 1152 060e 0700     		.short	7
+ 1153 0610 0300     		.short	3
+ 1154 0612 0200     		.short	2
+ 1155 0614 F8FF     		.short	-8
+ARM GAS  /tmp/ccMiYBEU.s 			page 32
+
+
+ 1156 0616 F5FF     		.short	-11
+ 1157 0618 0200     		.short	2
+ 1158 061a 1700     		.short	23
+ 1159 061c 2600     		.short	38
+ 1160 061e 2900     		.short	41
+ 1161 0620 1700     		.short	23
+ 1162 0622 0900     		.short	9
+ 1163 0624 0A00     		.short	10
+ 1164 0626 0D00     		.short	13
+ 1165 0628 1000     		.short	16
+ 1166 062a 0800     		.short	8
+ 1167 062c F8FF     		.short	-8
+ 1168 062e EFFF     		.short	-17
+ 1169 0630 E9FF     		.short	-23
+ 1170 0632 E6FF     		.short	-26
+ 1171 0634 E7FF     		.short	-25
+ 1172 0636 EBFF     		.short	-21
+ 1173 0638 F1FF     		.short	-15
+ 1174 063a F6FF     		.short	-10
+ 1175 063c F3FF     		.short	-13
+ 1176 063e F3FF     		.short	-13
+ 1177 0640 EDFF     		.short	-19
+ 1178 0642 EAFF     		.short	-22
+ 1179 0644 E3FF     		.short	-29
+ 1180 0646 D8FF     		.short	-40
+ 1181 0648 D0FF     		.short	-48
+ 1182 064a D0FF     		.short	-48
+ 1183 064c CAFF     		.short	-54
+ 1184 064e C9FF     		.short	-55
+ 1185 0650 BEFF     		.short	-66
+ 1186 0652 AEFF     		.short	-82
+ 1187 0654 ABFF     		.short	-85
+ 1188 0656 A6FF     		.short	-90
+ 1189 0658 A4FF     		.short	-92
+ 1190 065a 9EFF     		.short	-98
+ 1191 065c 8EFF     		.short	-114
+ 1192 065e 89FF     		.short	-119
+ 1193 0660 84FF     		.short	-124
+ 1194 0662 7FFF     		.short	-129
+ 1195 0664 7CFF     		.short	-132
+ 1196 0666 6EFF     		.short	-146
+ 1197 0668 6EFF     		.short	-146
+ 1198 066a 76FF     		.short	-138
+ 1199 066c 84FF     		.short	-124
+ 1200 066e 9DFF     		.short	-99
+ 1201 0670 ABFF     		.short	-85
+ 1202 0672 B8FF     		.short	-72
+ 1203 0674 BFFF     		.short	-65
+ 1204 0676 BFFF     		.short	-65
+ 1205 0678 BFFF     		.short	-65
+ 1206 067a BEFF     		.short	-66
+ 1207 067c C1FF     		.short	-63
+ 1208 067e C0FF     		.short	-64
+ 1209 0680 C0FF     		.short	-64
+ 1210 0682 C6FF     		.short	-58
+ 1211 0684 D2FF     		.short	-46
+ 1212 0686 E6FF     		.short	-26
+ARM GAS  /tmp/ccMiYBEU.s 			page 33
+
+
+ 1213 0688 F7FF     		.short	-9
+ 1214 068a 0200     		.short	2
+ 1215 068c 0200     		.short	2
+ 1216 068e 0400     		.short	4
+ 1217 0690 0000     		.short	0
+ 1218 0692 0100     		.short	1
+ 1219 0694 0400     		.short	4
+ 1220 0696 0300     		.short	3
+ 1221 0698 0A00     		.short	10
+ 1222 069a 0B00     		.short	11
+ 1223 069c 0A00     		.short	10
+ 1224 069e 0200     		.short	2
+ 1225 06a0 FCFF     		.short	-4
+ 1226 06a2 0000     		.short	0
+ 1227 06a4 0A00     		.short	10
+ 1228 06a6 1200     		.short	18
+ 1229 06a8 1400     		.short	20
+ 1230 06aa 0600     		.short	6
+ 1231 06ac 0200     		.short	2
+ 1232 06ae F7FF     		.short	-9
+ 1233 06b0 F9FF     		.short	-7
+ 1234 06b2 FDFF     		.short	-3
+ 1235 06b4 FDFF     		.short	-3
+ 1236 06b6 FEFF     		.short	-2
+ 1237 06b8 F9FF     		.short	-7
+ 1238 06ba F4FF     		.short	-12
+ 1239 06bc FBFF     		.short	-5
+ 1240 06be 0500     		.short	5
+ 1241 06c0 1800     		.short	24
+ 1242 06c2 2400     		.short	36
+ 1243 06c4 1F00     		.short	31
+ 1244 06c6 1900     		.short	25
+ 1245 06c8 0600     		.short	6
+ 1246 06ca 0300     		.short	3
+ 1247 06cc 0700     		.short	7
+ 1248 06ce 0C00     		.short	12
+ 1249 06d0 1100     		.short	17
+ 1250 06d2 0B00     		.short	11
+ 1251 06d4 0000     		.short	0
+ 1252 06d6 FAFF     		.short	-6
+ 1253 06d8 F7FF     		.short	-9
+ 1254 06da F8FF     		.short	-8
+ 1255 06dc F9FF     		.short	-7
+ 1256 06de FBFF     		.short	-5
+ 1257 06e0 FAFF     		.short	-6
+ 1258 06e2 FEFF     		.short	-2
+ 1259 06e4 FEFF     		.short	-2
+ 1260 06e6 FAFF     		.short	-6
+ 1261 06e8 FEFF     		.short	-2
+ 1262 06ea 0200     		.short	2
+ 1263 06ec 0E00     		.short	14
+ 1264 06ee 1800     		.short	24
+ 1265 06f0 1600     		.short	22
+ 1266 06f2 0F00     		.short	15
+ 1267 06f4 0800     		.short	8
+ 1268 06f6 0400     		.short	4
+ 1269 06f8 0600     		.short	6
+ARM GAS  /tmp/ccMiYBEU.s 			page 34
+
+
+ 1270 06fa 0700     		.short	7
+ 1271 06fc 0C00     		.short	12
+ 1272 06fe 1000     		.short	16
+ 1273 0700 1900     		.short	25
+ 1274 0702 1400     		.short	20
+ 1275 0704 0700     		.short	7
+ 1276 0706 F0FF     		.short	-16
+ 1277 0708 D7FF     		.short	-41
+ 1278 070a C4FF     		.short	-60
+ 1279 070c BDFF     		.short	-67
+ 1280 070e BFFF     		.short	-65
+ 1281 0710 CAFF     		.short	-54
+ 1282 0712 DDFF     		.short	-35
+ 1283 0714 F5FF     		.short	-11
+ 1284 0716 1E00     		.short	30
+ 1285 0718 5400     		.short	84
+ 1286 071a AF00     		.short	175
+ 1287 071c 2E01     		.short	302
+ 1288 071e C701     		.short	455
+ 1289 0720 5B02     		.short	603
+ 1290 0722 C302     		.short	707
+ 1291 0724 E702     		.short	743
+ 1292 0726 CA02     		.short	714
+ 1293 0728 7102     		.short	625
+ 1294 072a 0702     		.short	519
+ 1295 072c 9E01     		.short	414
+ 1296 072e 5101     		.short	337
+ 1297 0730 2C01     		.short	300
+ 1298 0732 1901     		.short	281
+ 1299 0734 0701     		.short	263
+ 1300 0736 EF00     		.short	239
+ 1301 0738 C500     		.short	197
+ 1302 073a A300     		.short	163
+ 1303 073c 8800     		.short	136
+ 1304 073e 6D00     		.short	109
+ 1305 0740 4D00     		.short	77
+ 1306 0742 2200     		.short	34
+ 1307 0744 EEFF     		.short	-18
+ 1308 0746 CEFF     		.short	-50
+ 1309 0748 BEFF     		.short	-66
+ 1310 074a B6FF     		.short	-74
+ 1311 074c B1FF     		.short	-79
+ 1312 074e A4FF     		.short	-92
+ 1313 0750 95FF     		.short	-107
+ 1314 0752 8BFF     		.short	-117
+ 1315 0754 81FF     		.short	-127
+ 1316 0756 7FFF     		.short	-129
+ 1317 0758 79FF     		.short	-135
+ 1318 075a 75FF     		.short	-139
+ 1319 075c 73FF     		.short	-141
+ 1320 075e 65FF     		.short	-155
+ 1321 0760 61FF     		.short	-159
+ 1322 0762 59FF     		.short	-167
+ 1323 0764 55FF     		.short	-171
+ 1324 0766 57FF     		.short	-169
+ 1325 0768 52FF     		.short	-174
+ 1326 076a 51FF     		.short	-175
+ARM GAS  /tmp/ccMiYBEU.s 			page 35
+
+
+ 1327 076c 4EFF     		.short	-178
+ 1328 076e 41FF     		.short	-191
+ 1329 0770 36FF     		.short	-202
+ 1330 0772 21FF     		.short	-223
+ 1331 0774 15FF     		.short	-235
+ 1332 0776 0DFF     		.short	-243
+ 1333 0778 13FF     		.short	-237
+ 1334 077a 10FF     		.short	-240
+ 1335 077c 00FF     		.short	-256
+ 1336 077e D6FE     		.short	-298
+ 1337 0780 A7FE     		.short	-345
+ 1338 0782 77FE     		.short	-393
+ 1339 0784 50FE     		.short	-432
+ 1340 0786 25FE     		.short	-475
+ 1341 0788 FAFD     		.short	-518
+ 1342 078a CBFD     		.short	-565
+ 1343 078c ACFD     		.short	-596
+ 1344 078e 95FD     		.short	-619
+ 1345 0790 91FD     		.short	-623
+ 1346 0792 91FD     		.short	-623
+ 1347 0794 9AFD     		.short	-614
+ 1348 0796 A9FD     		.short	-599
+ 1349 0798 B9FD     		.short	-583
+ 1350 079a D1FD     		.short	-559
+ 1351 079c F4FD     		.short	-524
+ 1352 079e 23FE     		.short	-477
+ 1353 07a0 57FE     		.short	-425
+ 1354 07a2 81FE     		.short	-383
+ 1355 07a4 9BFE     		.short	-357
+ 1356 07a6 B5FE     		.short	-331
+ 1357 07a8 D3FE     		.short	-301
+ 1358 07aa 04FF     		.short	-252
+ 1359 07ac 3AFF     		.short	-198
+ 1360 07ae 71FF     		.short	-143
+ 1361 07b0 A0FF     		.short	-96
+ 1362 07b2 C7FF     		.short	-57
+ 1363 07b4 E3FF     		.short	-29
+ 1364 07b6 F8FF     		.short	-8
+ 1365 07b8 0A00     		.short	10
+ 1366 07ba 1F00     		.short	31
+ 1367 07bc 2D00     		.short	45
+ 1368 07be 3C00     		.short	60
+ 1369 07c0 4100     		.short	65
+ 1370 07c2 4600     		.short	70
+ 1371 07c4 4A00     		.short	74
+ 1372 07c6 4C00     		.short	76
+ 1373 07c8 4F00     		.short	79
+ 1374 07ca 5200     		.short	82
+ 1375 07cc 4F00     		.short	79
+ 1376 07ce 4B00     		.short	75
+ 1377 07d0 3E00     		.short	62
+ 1378              		.text
+ 1379              	.Letext0:
+ 1380              		.file 5 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 1381              		.file 6 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ 1382              		.file 7 "Middlewares/lvgl/examples/widgets/chart/../../../src/misc/lv_ll.h"
+ 1383              		.file 8 "Middlewares/lvgl/examples/widgets/chart/../../../src/hal/../misc/lv_color.h"
+ARM GAS  /tmp/ccMiYBEU.s 			page 36
+
+
+ 1384              		.file 9 "Middlewares/lvgl/examples/widgets/chart/../../../src/hal/../misc/lv_area.h"
+ 1385              		.file 10 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj.h"
+ 1386              		.file 11 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_group.h"
+ 1387              		.file 12 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/../misc/lv_style.h"
+ 1388              		.file 13 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_scroll.h"
+ 1389              		.file 14 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_class.h"
+ 1390              		.file 15 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_event.h"
+ 1391              		.file 16 "Middlewares/lvgl/examples/widgets/chart/../../../src/widgets/lv_bar.h"
+ 1392              		.file 17 "Middlewares/lvgl/examples/widgets/chart/../../../src/extra/widgets/chart/lv_chart.h"
+ 1393              		.file 18 "Middlewares/lvgl/examples/widgets/chart/../../../src/extra/widgets/imgbtn/lv_imgbtn.h"
+ 1394              		.file 19 "Middlewares/lvgl/examples/widgets/chart/../../../src/hal/lv_hal_disp.h"
+ 1395              		.file 20 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_style_gen.h"
+ 1396              		.file 21 "Middlewares/lvgl/examples/widgets/chart/../../../src/core/lv_obj_pos.h"
+ARM GAS  /tmp/ccMiYBEU.s 			page 37
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 lv_example_chart_5.c
+     /tmp/ccMiYBEU.s:17     .text.slider_y_event_cb:0000000000000000 $t
+     /tmp/ccMiYBEU.s:24     .text.slider_y_event_cb:0000000000000000 slider_y_event_cb
+     /tmp/ccMiYBEU.s:68     .text.slider_y_event_cb:0000000000000018 $d
+     /tmp/ccMiYBEU.s:73     .text.slider_x_event_cb:0000000000000000 $t
+     /tmp/ccMiYBEU.s:79     .text.slider_x_event_cb:0000000000000000 slider_x_event_cb
+     /tmp/ccMiYBEU.s:121    .text.slider_x_event_cb:0000000000000018 $d
+     /tmp/ccMiYBEU.s:126    .text.lv_example_chart_5:0000000000000000 $t
+     /tmp/ccMiYBEU.s:133    .text.lv_example_chart_5:0000000000000000 lv_example_chart_5
+     /tmp/ccMiYBEU.s:356    .text.lv_example_chart_5:0000000000000100 $d
+     /tmp/ccMiYBEU.s:365    .bss.chart:0000000000000000 $d
+     /tmp/ccMiYBEU.s:369    .bss.chart:0000000000000000 chart
+     /tmp/ccMiYBEU.s:372    .rodata.ecg_sample:0000000000000000 $d
+     /tmp/ccMiYBEU.s:376    .rodata.ecg_sample:0000000000000000 ecg_sample
+
+UNDEFINED SYMBOLS
+lv_event_get_target
+lv_bar_get_value
+lv_chart_set_zoom_y
+lv_chart_set_zoom_x
+lv_disp_get_default
+lv_disp_get_scr_act
+lv_chart_create
+lv_obj_set_size
+lv_obj_align
+lv_chart_set_range
+lv_obj_set_style_width
+lv_obj_set_style_height
+lv_palette_main
+lv_chart_add_series
+lv_chart_set_point_count
+lv_chart_set_ext_y_array
+lv_slider_create
+lv_bar_set_range
+lv_obj_add_event_cb
+lv_obj_align_to

@@ -1,0 +1,1931 @@
+ARM GAS  /tmp/ccuaXUIJ.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.eabi_attribute 28, 1
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 1
+  10              		.eabi_attribute 34, 1
+  11              		.eabi_attribute 18, 4
+  12              		.file	"lv_ll.c"
+  13              		.text
+  14              	.Ltext0:
+  15              		.cfi_sections	.debug_frame
+  16              		.section	.text.node_set_prev,"ax",%progbits
+  17              		.align	1
+  18              		.arch armv7e-m
+  19              		.syntax unified
+  20              		.thumb
+  21              		.thumb_func
+  22              		.fpu fpv5-d16
+  24              	node_set_prev:
+  25              	.LVL0:
+  26              	.LFB15:
+  27              		.file 1 "Middlewares/lvgl/src/misc/lv_ll.c"
+   1:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+   2:Middlewares/lvgl/src/misc/lv_ll.c ****  * @file lv_ll.c
+   3:Middlewares/lvgl/src/misc/lv_ll.c ****  * Handle linked lists.
+   4:Middlewares/lvgl/src/misc/lv_ll.c ****  * The nodes are dynamically allocated by the 'lv_mem' module,
+   5:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+   6:Middlewares/lvgl/src/misc/lv_ll.c **** 
+   7:Middlewares/lvgl/src/misc/lv_ll.c **** /*********************
+   8:Middlewares/lvgl/src/misc/lv_ll.c ****  *      INCLUDES
+   9:Middlewares/lvgl/src/misc/lv_ll.c ****  *********************/
+  10:Middlewares/lvgl/src/misc/lv_ll.c **** #include <stdint.h>
+  11:Middlewares/lvgl/src/misc/lv_ll.c **** #include <string.h>
+  12:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  13:Middlewares/lvgl/src/misc/lv_ll.c **** #include "lv_ll.h"
+  14:Middlewares/lvgl/src/misc/lv_ll.c **** #include "lv_mem.h"
+  15:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  16:Middlewares/lvgl/src/misc/lv_ll.c **** /*********************
+  17:Middlewares/lvgl/src/misc/lv_ll.c ****  *      DEFINES
+  18:Middlewares/lvgl/src/misc/lv_ll.c ****  *********************/
+  19:Middlewares/lvgl/src/misc/lv_ll.c **** #define LL_NODE_META_SIZE (sizeof(lv_ll_node_t *) + sizeof(lv_ll_node_t *))
+  20:Middlewares/lvgl/src/misc/lv_ll.c **** #define LL_PREV_P_OFFSET(ll_p) (ll_p->n_size)
+  21:Middlewares/lvgl/src/misc/lv_ll.c **** #define LL_NEXT_P_OFFSET(ll_p) (ll_p->n_size + sizeof(lv_ll_node_t *))
+  22:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  23:Middlewares/lvgl/src/misc/lv_ll.c **** /**********************
+  24:Middlewares/lvgl/src/misc/lv_ll.c ****  *      TYPEDEFS
+  25:Middlewares/lvgl/src/misc/lv_ll.c ****  **********************/
+  26:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  27:Middlewares/lvgl/src/misc/lv_ll.c **** /**********************
+  28:Middlewares/lvgl/src/misc/lv_ll.c ****  *  STATIC PROTOTYPES
+  29:Middlewares/lvgl/src/misc/lv_ll.c ****  **********************/
+  30:Middlewares/lvgl/src/misc/lv_ll.c **** static void node_set_prev(lv_ll_t * ll_p, lv_ll_node_t * act, lv_ll_node_t * prev);
+  31:Middlewares/lvgl/src/misc/lv_ll.c **** static void node_set_next(lv_ll_t * ll_p, lv_ll_node_t * act, lv_ll_node_t * next);
+ARM GAS  /tmp/ccuaXUIJ.s 			page 2
+
+
+  32:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  33:Middlewares/lvgl/src/misc/lv_ll.c **** /**********************
+  34:Middlewares/lvgl/src/misc/lv_ll.c ****  *  STATIC VARIABLES
+  35:Middlewares/lvgl/src/misc/lv_ll.c ****  **********************/
+  36:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  37:Middlewares/lvgl/src/misc/lv_ll.c **** /**********************
+  38:Middlewares/lvgl/src/misc/lv_ll.c ****  *      MACROS
+  39:Middlewares/lvgl/src/misc/lv_ll.c ****  **********************/
+  40:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  41:Middlewares/lvgl/src/misc/lv_ll.c **** /**********************
+  42:Middlewares/lvgl/src/misc/lv_ll.c ****  *   GLOBAL FUNCTIONS
+  43:Middlewares/lvgl/src/misc/lv_ll.c ****  **********************/
+  44:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  45:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+  46:Middlewares/lvgl/src/misc/lv_ll.c ****  * Initialize linked list
+  47:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_dsc pointer to ll_dsc variable
+  48:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param node_size the size of 1 node in bytes
+  49:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+  50:Middlewares/lvgl/src/misc/lv_ll.c **** void _lv_ll_init(lv_ll_t * ll_p, uint32_t node_size)
+  51:Middlewares/lvgl/src/misc/lv_ll.c **** {
+  52:Middlewares/lvgl/src/misc/lv_ll.c ****     ll_p->head = NULL;
+  53:Middlewares/lvgl/src/misc/lv_ll.c ****     ll_p->tail = NULL;
+  54:Middlewares/lvgl/src/misc/lv_ll.c **** #ifdef LV_ARCH_64
+  55:Middlewares/lvgl/src/misc/lv_ll.c ****     /*Round the size up to 8*/
+  56:Middlewares/lvgl/src/misc/lv_ll.c ****     node_size = (node_size + 7) & (~0x7);
+  57:Middlewares/lvgl/src/misc/lv_ll.c **** #else
+  58:Middlewares/lvgl/src/misc/lv_ll.c ****     /*Round the size up to 4*/
+  59:Middlewares/lvgl/src/misc/lv_ll.c ****     node_size = (node_size + 3) & (~0x3);
+  60:Middlewares/lvgl/src/misc/lv_ll.c **** #endif
+  61:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  62:Middlewares/lvgl/src/misc/lv_ll.c ****     ll_p->n_size = node_size;
+  63:Middlewares/lvgl/src/misc/lv_ll.c **** }
+  64:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  65:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+  66:Middlewares/lvgl/src/misc/lv_ll.c ****  * Add a new head to a linked list
+  67:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_p pointer to linked list
+  68:Middlewares/lvgl/src/misc/lv_ll.c ****  * @return pointer to the new head
+  69:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+  70:Middlewares/lvgl/src/misc/lv_ll.c **** void * _lv_ll_ins_head(lv_ll_t * ll_p)
+  71:Middlewares/lvgl/src/misc/lv_ll.c **** {
+  72:Middlewares/lvgl/src/misc/lv_ll.c ****     lv_ll_node_t * n_new;
+  73:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  74:Middlewares/lvgl/src/misc/lv_ll.c ****     n_new = lv_mem_alloc(ll_p->n_size + LL_NODE_META_SIZE);
+  75:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  76:Middlewares/lvgl/src/misc/lv_ll.c ****     if(n_new != NULL) {
+  77:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_p, n_new, NULL);       /*No prev. before the new head*/
+  78:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_p, n_new, ll_p->head); /*After new comes the old head*/
+  79:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  80:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->head != NULL) { /*If there is old head then before it goes the new*/
+  81:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_prev(ll_p, ll_p->head, n_new);
+  82:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+  83:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  84:Middlewares/lvgl/src/misc/lv_ll.c ****         ll_p->head = n_new;      /*Set the new head in the dsc.*/
+  85:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->tail == NULL) { /*If there is no tail (1. node) set the tail too*/
+  86:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_p->tail = n_new;
+  87:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+  88:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ARM GAS  /tmp/ccuaXUIJ.s 			page 3
+
+
+  89:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  90:Middlewares/lvgl/src/misc/lv_ll.c ****     return n_new;
+  91:Middlewares/lvgl/src/misc/lv_ll.c **** }
+  92:Middlewares/lvgl/src/misc/lv_ll.c **** 
+  93:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+  94:Middlewares/lvgl/src/misc/lv_ll.c ****  * Insert a new node in front of the n_act node
+  95:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_p pointer to linked list
+  96:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param n_act pointer a node
+  97:Middlewares/lvgl/src/misc/lv_ll.c ****  * @return pointer to the new head
+  98:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+  99:Middlewares/lvgl/src/misc/lv_ll.c **** void * _lv_ll_ins_prev(lv_ll_t * ll_p, void * n_act)
+ 100:Middlewares/lvgl/src/misc/lv_ll.c **** {
+ 101:Middlewares/lvgl/src/misc/lv_ll.c ****     lv_ll_node_t * n_new;
+ 102:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 103:Middlewares/lvgl/src/misc/lv_ll.c ****     if(NULL == ll_p || NULL == n_act) return NULL;
+ 104:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 105:Middlewares/lvgl/src/misc/lv_ll.c ****     if(_lv_ll_get_head(ll_p) == n_act) {
+ 106:Middlewares/lvgl/src/misc/lv_ll.c ****         n_new = _lv_ll_ins_head(ll_p);
+ 107:Middlewares/lvgl/src/misc/lv_ll.c ****         if(n_new == NULL) return NULL;
+ 108:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 109:Middlewares/lvgl/src/misc/lv_ll.c ****     else {
+ 110:Middlewares/lvgl/src/misc/lv_ll.c ****         n_new = lv_mem_alloc(ll_p->n_size + LL_NODE_META_SIZE);
+ 111:Middlewares/lvgl/src/misc/lv_ll.c ****         if(n_new == NULL) return NULL;
+ 112:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 113:Middlewares/lvgl/src/misc/lv_ll.c ****         lv_ll_node_t * n_prev;
+ 114:Middlewares/lvgl/src/misc/lv_ll.c ****         n_prev = _lv_ll_get_prev(ll_p, n_act);
+ 115:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_p, n_prev, n_new);
+ 116:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_p, n_new, n_prev);
+ 117:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_p, n_act, n_new);
+ 118:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_p, n_new, n_act);
+ 119:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 120:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 121:Middlewares/lvgl/src/misc/lv_ll.c ****     return n_new;
+ 122:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 123:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 124:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+ 125:Middlewares/lvgl/src/misc/lv_ll.c ****  * Add a new tail to a linked list
+ 126:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_p pointer to linked list
+ 127:Middlewares/lvgl/src/misc/lv_ll.c ****  * @return pointer to the new tail
+ 128:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+ 129:Middlewares/lvgl/src/misc/lv_ll.c **** void * _lv_ll_ins_tail(lv_ll_t * ll_p)
+ 130:Middlewares/lvgl/src/misc/lv_ll.c **** {
+ 131:Middlewares/lvgl/src/misc/lv_ll.c ****     lv_ll_node_t * n_new;
+ 132:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 133:Middlewares/lvgl/src/misc/lv_ll.c ****     n_new = lv_mem_alloc(ll_p->n_size + LL_NODE_META_SIZE);
+ 134:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 135:Middlewares/lvgl/src/misc/lv_ll.c ****     if(n_new != NULL) {
+ 136:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_p, n_new, NULL);       /*No next after the new tail*/
+ 137:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_p, n_new, ll_p->tail); /*The prev. before new is the old tail*/
+ 138:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->tail != NULL) {                /*If there is old tail then the new comes after it*
+ 139:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_next(ll_p, ll_p->tail, n_new);
+ 140:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 141:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 142:Middlewares/lvgl/src/misc/lv_ll.c ****         ll_p->tail = n_new;      /*Set the new tail in the dsc.*/
+ 143:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->head == NULL) { /*If there is no head (1. node) set the head too*/
+ 144:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_p->head = n_new;
+ 145:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ARM GAS  /tmp/ccuaXUIJ.s 			page 4
+
+
+ 146:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 147:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 148:Middlewares/lvgl/src/misc/lv_ll.c ****     return n_new;
+ 149:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 150:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 151:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+ 152:Middlewares/lvgl/src/misc/lv_ll.c ****  * Remove the node 'node_p' from 'll_p' linked list.
+ 153:Middlewares/lvgl/src/misc/lv_ll.c ****  * It does not free the memory of node.
+ 154:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_p pointer to the linked list of 'node_p'
+ 155:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param node_p pointer to node in 'll_p' linked list
+ 156:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+ 157:Middlewares/lvgl/src/misc/lv_ll.c **** void _lv_ll_remove(lv_ll_t * ll_p, void * node_p)
+ 158:Middlewares/lvgl/src/misc/lv_ll.c **** {
+ 159:Middlewares/lvgl/src/misc/lv_ll.c ****     if(ll_p == NULL) return;
+ 160:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 161:Middlewares/lvgl/src/misc/lv_ll.c ****     if(_lv_ll_get_head(ll_p) == node_p) {
+ 162:Middlewares/lvgl/src/misc/lv_ll.c ****         /*The new head will be the node after 'n_act'*/
+ 163:Middlewares/lvgl/src/misc/lv_ll.c ****         ll_p->head = _lv_ll_get_next(ll_p, node_p);
+ 164:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->head == NULL) {
+ 165:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_p->tail = NULL;
+ 166:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 167:Middlewares/lvgl/src/misc/lv_ll.c ****         else {
+ 168:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_prev(ll_p, ll_p->head, NULL);
+ 169:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 170:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 171:Middlewares/lvgl/src/misc/lv_ll.c ****     else if(_lv_ll_get_tail(ll_p) == node_p) {
+ 172:Middlewares/lvgl/src/misc/lv_ll.c ****         /*The new tail will be the node before 'n_act'*/
+ 173:Middlewares/lvgl/src/misc/lv_ll.c ****         ll_p->tail = _lv_ll_get_prev(ll_p, node_p);
+ 174:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->tail == NULL) {
+ 175:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_p->head = NULL;
+ 176:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 177:Middlewares/lvgl/src/misc/lv_ll.c ****         else {
+ 178:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_next(ll_p, ll_p->tail, NULL);
+ 179:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 180:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 181:Middlewares/lvgl/src/misc/lv_ll.c ****     else {
+ 182:Middlewares/lvgl/src/misc/lv_ll.c ****         lv_ll_node_t * n_prev = _lv_ll_get_prev(ll_p, node_p);
+ 183:Middlewares/lvgl/src/misc/lv_ll.c ****         lv_ll_node_t * n_next = _lv_ll_get_next(ll_p, node_p);
+ 184:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 185:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_p, n_prev, n_next);
+ 186:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_p, n_next, n_prev);
+ 187:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 188:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 189:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 190:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+ 191:Middlewares/lvgl/src/misc/lv_ll.c ****  * Remove and free all elements from a linked list. The list remain valid but become empty.
+ 192:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_p pointer to linked list
+ 193:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+ 194:Middlewares/lvgl/src/misc/lv_ll.c **** void _lv_ll_clear(lv_ll_t * ll_p)
+ 195:Middlewares/lvgl/src/misc/lv_ll.c **** {
+ 196:Middlewares/lvgl/src/misc/lv_ll.c ****     void * i;
+ 197:Middlewares/lvgl/src/misc/lv_ll.c ****     void * i_next;
+ 198:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 199:Middlewares/lvgl/src/misc/lv_ll.c ****     i      = _lv_ll_get_head(ll_p);
+ 200:Middlewares/lvgl/src/misc/lv_ll.c ****     i_next = NULL;
+ 201:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 202:Middlewares/lvgl/src/misc/lv_ll.c ****     while(i != NULL) {
+ARM GAS  /tmp/ccuaXUIJ.s 			page 5
+
+
+ 203:Middlewares/lvgl/src/misc/lv_ll.c ****         i_next = _lv_ll_get_next(ll_p, i);
+ 204:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 205:Middlewares/lvgl/src/misc/lv_ll.c ****         _lv_ll_remove(ll_p, i);
+ 206:Middlewares/lvgl/src/misc/lv_ll.c ****         lv_mem_free(i);
+ 207:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 208:Middlewares/lvgl/src/misc/lv_ll.c ****         i = i_next;
+ 209:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 210:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 211:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 212:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+ 213:Middlewares/lvgl/src/misc/lv_ll.c ****  * Move a node to a new linked list
+ 214:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_ori_p pointer to the original (old) linked list
+ 215:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_new_p pointer to the new linked list
+ 216:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param node pointer to a node
+ 217:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param head true: be the head in the new list
+ 218:Middlewares/lvgl/src/misc/lv_ll.c ****  *             false be the head in the new list
+ 219:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+ 220:Middlewares/lvgl/src/misc/lv_ll.c **** void _lv_ll_chg_list(lv_ll_t * ll_ori_p, lv_ll_t * ll_new_p, void * node, bool head)
+ 221:Middlewares/lvgl/src/misc/lv_ll.c **** {
+ 222:Middlewares/lvgl/src/misc/lv_ll.c ****     _lv_ll_remove(ll_ori_p, node);
+ 223:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 224:Middlewares/lvgl/src/misc/lv_ll.c ****     if(head) {
+ 225:Middlewares/lvgl/src/misc/lv_ll.c ****         /*Set node as head*/
+ 226:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_new_p, node, NULL);
+ 227:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_new_p, node, ll_new_p->head);
+ 228:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 229:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_new_p->head != NULL) { /*If there is old head then before it goes the new*/
+ 230:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_prev(ll_new_p, ll_new_p->head, node);
+ 231:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 232:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 233:Middlewares/lvgl/src/misc/lv_ll.c ****         ll_new_p->head = node;       /*Set the new head in the dsc.*/
+ 234:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_new_p->tail == NULL) { /*If there is no tail (first node) set the tail too*/
+ 235:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_new_p->tail = node;
+ 236:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 237:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 238:Middlewares/lvgl/src/misc/lv_ll.c ****     else {
+ 239:Middlewares/lvgl/src/misc/lv_ll.c ****         /*Set node as tail*/
+ 240:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_new_p, node, ll_new_p->tail);
+ 241:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_new_p, node, NULL);
+ 242:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 243:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_new_p->tail != NULL) { /*If there is old tail then after it goes the new*/
+ 244:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_next(ll_new_p, ll_new_p->tail, node);
+ 245:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 246:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 247:Middlewares/lvgl/src/misc/lv_ll.c ****         ll_new_p->tail = node;       /*Set the new tail in the dsc.*/
+ 248:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_new_p->head == NULL) { /*If there is no head (first node) set the head too*/
+ 249:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_new_p->head = node;
+ 250:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 251:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 252:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 253:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 254:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+ 255:Middlewares/lvgl/src/misc/lv_ll.c ****  * Return with head node of the linked list
+ 256:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_p pointer to linked list
+ 257:Middlewares/lvgl/src/misc/lv_ll.c ****  * @return pointer to the head of 'll_p'
+ 258:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+ 259:Middlewares/lvgl/src/misc/lv_ll.c **** void * _lv_ll_get_head(const lv_ll_t * ll_p)
+ARM GAS  /tmp/ccuaXUIJ.s 			page 6
+
+
+ 260:Middlewares/lvgl/src/misc/lv_ll.c **** {
+ 261:Middlewares/lvgl/src/misc/lv_ll.c ****     if(ll_p == NULL) return NULL;
+ 262:Middlewares/lvgl/src/misc/lv_ll.c ****     return ll_p->head;
+ 263:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 264:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 265:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+ 266:Middlewares/lvgl/src/misc/lv_ll.c ****  * Return with tail node of the linked list
+ 267:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_p pointer to linked list
+ 268:Middlewares/lvgl/src/misc/lv_ll.c ****  * @return pointer to the head of 'll_p'
+ 269:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+ 270:Middlewares/lvgl/src/misc/lv_ll.c **** void * _lv_ll_get_tail(const lv_ll_t * ll_p)
+ 271:Middlewares/lvgl/src/misc/lv_ll.c **** {
+ 272:Middlewares/lvgl/src/misc/lv_ll.c ****     if(ll_p == NULL) return NULL;
+ 273:Middlewares/lvgl/src/misc/lv_ll.c ****     return ll_p->tail;
+ 274:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 275:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 276:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+ 277:Middlewares/lvgl/src/misc/lv_ll.c ****  * Return with the pointer of the next node after 'n_act'
+ 278:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_p pointer to linked list
+ 279:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param n_act pointer a node
+ 280:Middlewares/lvgl/src/misc/lv_ll.c ****  * @return pointer to the next node
+ 281:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+ 282:Middlewares/lvgl/src/misc/lv_ll.c **** void * _lv_ll_get_next(const lv_ll_t * ll_p, const void * n_act)
+ 283:Middlewares/lvgl/src/misc/lv_ll.c **** {
+ 284:Middlewares/lvgl/src/misc/lv_ll.c ****     /*Pointer to the next node is stored in the end of this node.
+ 285:Middlewares/lvgl/src/misc/lv_ll.c ****      *Go there and return the address found there*/
+ 286:Middlewares/lvgl/src/misc/lv_ll.c ****     const lv_ll_node_t * n_act_d = n_act;
+ 287:Middlewares/lvgl/src/misc/lv_ll.c ****     n_act_d += LL_NEXT_P_OFFSET(ll_p);
+ 288:Middlewares/lvgl/src/misc/lv_ll.c ****     return *((lv_ll_node_t **)n_act_d);
+ 289:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 290:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 291:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+ 292:Middlewares/lvgl/src/misc/lv_ll.c ****  * Return with the pointer of the previous node after 'n_act'
+ 293:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_p pointer to linked list
+ 294:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param n_act pointer a node
+ 295:Middlewares/lvgl/src/misc/lv_ll.c ****  * @return pointer to the previous node
+ 296:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+ 297:Middlewares/lvgl/src/misc/lv_ll.c **** void * _lv_ll_get_prev(const lv_ll_t * ll_p, const void * n_act)
+ 298:Middlewares/lvgl/src/misc/lv_ll.c **** {
+ 299:Middlewares/lvgl/src/misc/lv_ll.c ****     /*Pointer to the prev. node is stored in the end of this node.
+ 300:Middlewares/lvgl/src/misc/lv_ll.c ****      *Go there and return the address found there*/
+ 301:Middlewares/lvgl/src/misc/lv_ll.c ****     const lv_ll_node_t * n_act_d = n_act;
+ 302:Middlewares/lvgl/src/misc/lv_ll.c ****     n_act_d += LL_PREV_P_OFFSET(ll_p);
+ 303:Middlewares/lvgl/src/misc/lv_ll.c ****     return *((lv_ll_node_t **)n_act_d);
+ 304:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 305:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 306:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+ 307:Middlewares/lvgl/src/misc/lv_ll.c ****  * Return the length of the linked list.
+ 308:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_p pointer to linked list
+ 309:Middlewares/lvgl/src/misc/lv_ll.c ****  * @return length of the linked list
+ 310:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+ 311:Middlewares/lvgl/src/misc/lv_ll.c **** uint32_t _lv_ll_get_len(const lv_ll_t * ll_p)
+ 312:Middlewares/lvgl/src/misc/lv_ll.c **** {
+ 313:Middlewares/lvgl/src/misc/lv_ll.c ****     uint32_t len = 0;
+ 314:Middlewares/lvgl/src/misc/lv_ll.c ****     void * node;
+ 315:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 316:Middlewares/lvgl/src/misc/lv_ll.c ****     for(node = _lv_ll_get_head(ll_p); node != NULL; node = _lv_ll_get_next(ll_p, node)) {
+ARM GAS  /tmp/ccuaXUIJ.s 			page 7
+
+
+ 317:Middlewares/lvgl/src/misc/lv_ll.c ****         len++;
+ 318:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 319:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 320:Middlewares/lvgl/src/misc/lv_ll.c ****     return len;
+ 321:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 322:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 323:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+ 324:Middlewares/lvgl/src/misc/lv_ll.c ****  * Move a node before an other node in the same linked list
+ 325:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_p pointer to a linked list
+ 326:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param n_act pointer to node to move
+ 327:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param n_after pointer to a node which should be after `n_act`
+ 328:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+ 329:Middlewares/lvgl/src/misc/lv_ll.c **** void _lv_ll_move_before(lv_ll_t * ll_p, void * n_act, void * n_after)
+ 330:Middlewares/lvgl/src/misc/lv_ll.c **** {
+ 331:Middlewares/lvgl/src/misc/lv_ll.c ****     if(n_act == n_after) return; /*Can't move before itself*/
+ 332:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 333:Middlewares/lvgl/src/misc/lv_ll.c ****     void * n_before;
+ 334:Middlewares/lvgl/src/misc/lv_ll.c ****     if(n_after != NULL)
+ 335:Middlewares/lvgl/src/misc/lv_ll.c ****         n_before = _lv_ll_get_prev(ll_p, n_after);
+ 336:Middlewares/lvgl/src/misc/lv_ll.c ****     else
+ 337:Middlewares/lvgl/src/misc/lv_ll.c ****         n_before = _lv_ll_get_tail(ll_p); /*if `n_after` is NULL `n_act` should be the new tail*/
+ 338:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 339:Middlewares/lvgl/src/misc/lv_ll.c ****     if(n_act == n_before) return; /*Already before `n_after`*/
+ 340:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 341:Middlewares/lvgl/src/misc/lv_ll.c ****     /*It's much easier to remove from the list and add again*/
+ 342:Middlewares/lvgl/src/misc/lv_ll.c ****     _lv_ll_remove(ll_p, n_act);
+ 343:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 344:Middlewares/lvgl/src/misc/lv_ll.c ****     /*Add again by setting the prev. and next nodes*/
+ 345:Middlewares/lvgl/src/misc/lv_ll.c ****     node_set_next(ll_p, n_before, n_act);
+ 346:Middlewares/lvgl/src/misc/lv_ll.c ****     node_set_prev(ll_p, n_act, n_before);
+ 347:Middlewares/lvgl/src/misc/lv_ll.c ****     node_set_prev(ll_p, n_after, n_act);
+ 348:Middlewares/lvgl/src/misc/lv_ll.c ****     node_set_next(ll_p, n_act, n_after);
+ 349:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 350:Middlewares/lvgl/src/misc/lv_ll.c ****     /*If `n_act` was moved before NULL then it become the new tail*/
+ 351:Middlewares/lvgl/src/misc/lv_ll.c ****     if(n_after == NULL) ll_p->tail = n_act;
+ 352:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 353:Middlewares/lvgl/src/misc/lv_ll.c ****     /*If `n_act` was moved before `NULL` then it's the new head*/
+ 354:Middlewares/lvgl/src/misc/lv_ll.c ****     if(n_before == NULL) ll_p->head = n_act;
+ 355:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 356:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 357:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+ 358:Middlewares/lvgl/src/misc/lv_ll.c ****  * Check if a linked list is empty
+ 359:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_p pointer to a linked list
+ 360:Middlewares/lvgl/src/misc/lv_ll.c ****  * @return true: the linked list is empty; false: not empty
+ 361:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+ 362:Middlewares/lvgl/src/misc/lv_ll.c **** bool _lv_ll_is_empty(lv_ll_t * ll_p)
+ 363:Middlewares/lvgl/src/misc/lv_ll.c **** {
+ 364:Middlewares/lvgl/src/misc/lv_ll.c ****     if(ll_p == NULL) return true;
+ 365:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 366:Middlewares/lvgl/src/misc/lv_ll.c ****     if(ll_p->head == NULL && ll_p->tail == NULL) return true;
+ 367:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 368:Middlewares/lvgl/src/misc/lv_ll.c ****     return false;
+ 369:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 370:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 371:Middlewares/lvgl/src/misc/lv_ll.c **** /**********************
+ 372:Middlewares/lvgl/src/misc/lv_ll.c ****  *   STATIC FUNCTIONS
+ 373:Middlewares/lvgl/src/misc/lv_ll.c ****  **********************/
+ARM GAS  /tmp/ccuaXUIJ.s 			page 8
+
+
+ 374:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 375:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+ 376:Middlewares/lvgl/src/misc/lv_ll.c ****  * Set the previous node pointer of a node
+ 377:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_p pointer to linked list
+ 378:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param act pointer to a node which prev. node pointer should be set
+ 379:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param prev pointer to a node which should be the previous node before 'act'
+ 380:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+ 381:Middlewares/lvgl/src/misc/lv_ll.c **** static void node_set_prev(lv_ll_t * ll_p, lv_ll_node_t * act, lv_ll_node_t * prev)
+ 382:Middlewares/lvgl/src/misc/lv_ll.c **** {
+  28              		.loc 1 382 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+ 383:Middlewares/lvgl/src/misc/lv_ll.c ****     if(act == NULL) return; /*Can't set the prev node of `NULL`*/
+  33              		.loc 1 383 5 view .LVU1
+  34              		.loc 1 383 7 is_stmt 0 view .LVU2
+  35 0000 0B46     		mov	r3, r1
+  36 0002 09B1     		cbz	r1, .L1
+ 384:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 385:Middlewares/lvgl/src/misc/lv_ll.c ****     uint8_t * act8 = (uint8_t *)act;
+  37              		.loc 1 385 5 is_stmt 1 view .LVU3
+  38              	.LVL1:
+ 386:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 387:Middlewares/lvgl/src/misc/lv_ll.c ****     act8 += LL_PREV_P_OFFSET(ll_p);
+  39              		.loc 1 387 5 view .LVU4
+  40              		.loc 1 387 13 is_stmt 0 view .LVU5
+  41 0004 0168     		ldr	r1, [r0]
+  42              	.LVL2:
+ 388:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 389:Middlewares/lvgl/src/misc/lv_ll.c ****     lv_ll_node_t ** act_node_p = (lv_ll_node_t **) act8;
+  43              		.loc 1 389 5 is_stmt 1 view .LVU6
+ 390:Middlewares/lvgl/src/misc/lv_ll.c ****     lv_ll_node_t ** prev_node_p = (lv_ll_node_t **) &prev;
+  44              		.loc 1 390 5 view .LVU7
+ 391:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 392:Middlewares/lvgl/src/misc/lv_ll.c ****     *act_node_p = *prev_node_p;
+  45              		.loc 1 392 5 view .LVU8
+  46              		.loc 1 392 17 is_stmt 0 view .LVU9
+  47 0006 5A50     		str	r2, [r3, r1]
+  48              	.LVL3:
+  49              	.L1:
+ 393:Middlewares/lvgl/src/misc/lv_ll.c **** }
+  50              		.loc 1 393 1 view .LVU10
+  51 0008 7047     		bx	lr
+  52              		.cfi_endproc
+  53              	.LFE15:
+  55              		.section	.text.node_set_next,"ax",%progbits
+  56              		.align	1
+  57              		.syntax unified
+  58              		.thumb
+  59              		.thumb_func
+  60              		.fpu fpv5-d16
+  62              	node_set_next:
+  63              	.LVL4:
+  64              	.LFB16:
+ 394:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 395:Middlewares/lvgl/src/misc/lv_ll.c **** /**
+ARM GAS  /tmp/ccuaXUIJ.s 			page 9
+
+
+ 396:Middlewares/lvgl/src/misc/lv_ll.c ****  * Set the 'next node pointer' of a node
+ 397:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param ll_p pointer to linked list
+ 398:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param act pointer to a node which next node pointer should be set
+ 399:Middlewares/lvgl/src/misc/lv_ll.c ****  * @param next pointer to a node which should be the next node before 'act'
+ 400:Middlewares/lvgl/src/misc/lv_ll.c ****  */
+ 401:Middlewares/lvgl/src/misc/lv_ll.c **** static void node_set_next(lv_ll_t * ll_p, lv_ll_node_t * act, lv_ll_node_t * next)
+ 402:Middlewares/lvgl/src/misc/lv_ll.c **** {
+  65              		.loc 1 402 1 is_stmt 1 view -0
+  66              		.cfi_startproc
+  67              		@ args = 0, pretend = 0, frame = 0
+  68              		@ frame_needed = 0, uses_anonymous_args = 0
+  69              		@ link register save eliminated.
+ 403:Middlewares/lvgl/src/misc/lv_ll.c ****     if(act == NULL) return; /*Can't set the next node of `NULL`*/
+  70              		.loc 1 403 5 view .LVU12
+  71              		.loc 1 403 7 is_stmt 0 view .LVU13
+  72 0000 11B1     		cbz	r1, .L3
+ 404:Middlewares/lvgl/src/misc/lv_ll.c ****     uint8_t * act8 = (uint8_t *)act;
+  73              		.loc 1 404 5 is_stmt 1 view .LVU14
+  74              	.LVL5:
+ 405:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 406:Middlewares/lvgl/src/misc/lv_ll.c ****     act8 += LL_NEXT_P_OFFSET(ll_p);
+  75              		.loc 1 406 5 view .LVU15
+  76              		.loc 1 406 13 is_stmt 0 view .LVU16
+  77 0002 0368     		ldr	r3, [r0]
+  78              		.loc 1 406 10 view .LVU17
+  79 0004 0433     		adds	r3, r3, #4
+  80              	.LVL6:
+ 407:Middlewares/lvgl/src/misc/lv_ll.c ****     lv_ll_node_t ** act_node_p = (lv_ll_node_t **) act8;
+  81              		.loc 1 407 5 is_stmt 1 view .LVU18
+ 408:Middlewares/lvgl/src/misc/lv_ll.c ****     lv_ll_node_t ** next_node_p = (lv_ll_node_t **) &next;
+  82              		.loc 1 408 5 view .LVU19
+ 409:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 410:Middlewares/lvgl/src/misc/lv_ll.c ****     *act_node_p = *next_node_p;
+  83              		.loc 1 410 5 view .LVU20
+  84              		.loc 1 410 17 is_stmt 0 view .LVU21
+  85 0006 CA50     		str	r2, [r1, r3]
+  86              	.LVL7:
+  87              	.L3:
+ 411:Middlewares/lvgl/src/misc/lv_ll.c **** }
+  88              		.loc 1 411 1 view .LVU22
+  89 0008 7047     		bx	lr
+  90              		.cfi_endproc
+  91              	.LFE16:
+  93              		.section	.text._lv_ll_init,"ax",%progbits
+  94              		.align	1
+  95              		.global	_lv_ll_init
+  96              		.syntax unified
+  97              		.thumb
+  98              		.thumb_func
+  99              		.fpu fpv5-d16
+ 101              	_lv_ll_init:
+ 102              	.LVL8:
+ 103              	.LFB1:
+  51:Middlewares/lvgl/src/misc/lv_ll.c ****     ll_p->head = NULL;
+ 104              		.loc 1 51 1 is_stmt 1 view -0
+ 105              		.cfi_startproc
+ 106              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  /tmp/ccuaXUIJ.s 			page 10
+
+
+ 107              		@ frame_needed = 0, uses_anonymous_args = 0
+ 108              		@ link register save eliminated.
+  52:Middlewares/lvgl/src/misc/lv_ll.c ****     ll_p->tail = NULL;
+ 109              		.loc 1 52 5 view .LVU24
+  52:Middlewares/lvgl/src/misc/lv_ll.c ****     ll_p->tail = NULL;
+ 110              		.loc 1 52 16 is_stmt 0 view .LVU25
+ 111 0000 0023     		movs	r3, #0
+ 112 0002 4360     		str	r3, [r0, #4]
+  53:Middlewares/lvgl/src/misc/lv_ll.c **** #ifdef LV_ARCH_64
+ 113              		.loc 1 53 5 is_stmt 1 view .LVU26
+  53:Middlewares/lvgl/src/misc/lv_ll.c **** #ifdef LV_ARCH_64
+ 114              		.loc 1 53 16 is_stmt 0 view .LVU27
+ 115 0004 8360     		str	r3, [r0, #8]
+  59:Middlewares/lvgl/src/misc/lv_ll.c **** #endif
+ 116              		.loc 1 59 5 is_stmt 1 view .LVU28
+  59:Middlewares/lvgl/src/misc/lv_ll.c **** #endif
+ 117              		.loc 1 59 28 is_stmt 0 view .LVU29
+ 118 0006 0331     		adds	r1, r1, #3
+ 119              	.LVL9:
+  59:Middlewares/lvgl/src/misc/lv_ll.c **** #endif
+ 120              		.loc 1 59 15 view .LVU30
+ 121 0008 21F00301 		bic	r1, r1, #3
+ 122              	.LVL10:
+  62:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 123              		.loc 1 62 5 is_stmt 1 view .LVU31
+  62:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 124              		.loc 1 62 18 is_stmt 0 view .LVU32
+ 125 000c 0160     		str	r1, [r0]
+  63:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 126              		.loc 1 63 1 view .LVU33
+ 127 000e 7047     		bx	lr
+ 128              		.cfi_endproc
+ 129              	.LFE1:
+ 131              		.section	.text._lv_ll_ins_head,"ax",%progbits
+ 132              		.align	1
+ 133              		.global	_lv_ll_ins_head
+ 134              		.syntax unified
+ 135              		.thumb
+ 136              		.thumb_func
+ 137              		.fpu fpv5-d16
+ 139              	_lv_ll_ins_head:
+ 140              	.LVL11:
+ 141              	.LFB2:
+  71:Middlewares/lvgl/src/misc/lv_ll.c ****     lv_ll_node_t * n_new;
+ 142              		.loc 1 71 1 is_stmt 1 view -0
+ 143              		.cfi_startproc
+ 144              		@ args = 0, pretend = 0, frame = 0
+ 145              		@ frame_needed = 0, uses_anonymous_args = 0
+  71:Middlewares/lvgl/src/misc/lv_ll.c ****     lv_ll_node_t * n_new;
+ 146              		.loc 1 71 1 is_stmt 0 view .LVU35
+ 147 0000 38B5     		push	{r3, r4, r5, lr}
+ 148              	.LCFI0:
+ 149              		.cfi_def_cfa_offset 16
+ 150              		.cfi_offset 3, -16
+ 151              		.cfi_offset 4, -12
+ 152              		.cfi_offset 5, -8
+ 153              		.cfi_offset 14, -4
+ARM GAS  /tmp/ccuaXUIJ.s 			page 11
+
+
+ 154 0002 0446     		mov	r4, r0
+  72:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 155              		.loc 1 72 5 is_stmt 1 view .LVU36
+  74:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 156              		.loc 1 74 5 view .LVU37
+  74:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 157              		.loc 1 74 30 is_stmt 0 view .LVU38
+ 158 0004 0068     		ldr	r0, [r0]
+ 159              	.LVL12:
+  74:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 160              		.loc 1 74 13 view .LVU39
+ 161 0006 0830     		adds	r0, r0, #8
+ 162 0008 FFF7FEFF 		bl	lv_mem_alloc
+ 163              	.LVL13:
+  76:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_p, n_new, NULL);       /*No prev. before the new head*/
+ 164              		.loc 1 76 5 is_stmt 1 view .LVU40
+  76:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_p, n_new, NULL);       /*No prev. before the new head*/
+ 165              		.loc 1 76 7 is_stmt 0 view .LVU41
+ 166 000c 0546     		mov	r5, r0
+ 167 000e 90B1     		cbz	r0, .L6
+  77:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_p, n_new, ll_p->head); /*After new comes the old head*/
+ 168              		.loc 1 77 9 is_stmt 1 view .LVU42
+ 169 0010 0022     		movs	r2, #0
+ 170 0012 0146     		mov	r1, r0
+ 171 0014 2046     		mov	r0, r4
+ 172              	.LVL14:
+  77:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_p, n_new, ll_p->head); /*After new comes the old head*/
+ 173              		.loc 1 77 9 is_stmt 0 view .LVU43
+ 174 0016 FFF7FEFF 		bl	node_set_prev
+ 175              	.LVL15:
+  78:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 176              		.loc 1 78 9 is_stmt 1 view .LVU44
+ 177 001a 6268     		ldr	r2, [r4, #4]
+ 178 001c 2946     		mov	r1, r5
+ 179 001e 2046     		mov	r0, r4
+ 180 0020 FFF7FEFF 		bl	node_set_next
+ 181              	.LVL16:
+  80:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_prev(ll_p, ll_p->head, n_new);
+ 182              		.loc 1 80 9 view .LVU45
+  80:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_prev(ll_p, ll_p->head, n_new);
+ 183              		.loc 1 80 16 is_stmt 0 view .LVU46
+ 184 0024 6168     		ldr	r1, [r4, #4]
+  80:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_prev(ll_p, ll_p->head, n_new);
+ 185              		.loc 1 80 11 view .LVU47
+ 186 0026 19B1     		cbz	r1, .L8
+  81:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 187              		.loc 1 81 13 is_stmt 1 view .LVU48
+ 188 0028 2A46     		mov	r2, r5
+ 189 002a 2046     		mov	r0, r4
+ 190 002c FFF7FEFF 		bl	node_set_prev
+ 191              	.LVL17:
+ 192              	.L8:
+  84:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->tail == NULL) { /*If there is no tail (1. node) set the tail too*/
+ 193              		.loc 1 84 9 view .LVU49
+  84:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->tail == NULL) { /*If there is no tail (1. node) set the tail too*/
+ 194              		.loc 1 84 20 is_stmt 0 view .LVU50
+ 195 0030 6560     		str	r5, [r4, #4]
+ARM GAS  /tmp/ccuaXUIJ.s 			page 12
+
+
+  85:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_p->tail = n_new;
+ 196              		.loc 1 85 9 is_stmt 1 view .LVU51
+  85:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_p->tail = n_new;
+ 197              		.loc 1 85 16 is_stmt 0 view .LVU52
+ 198 0032 A368     		ldr	r3, [r4, #8]
+  85:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_p->tail = n_new;
+ 199              		.loc 1 85 11 view .LVU53
+ 200 0034 0BB1     		cbz	r3, .L10
+ 201              	.L6:
+  91:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 202              		.loc 1 91 1 view .LVU54
+ 203 0036 2846     		mov	r0, r5
+ 204 0038 38BD     		pop	{r3, r4, r5, pc}
+ 205              	.LVL18:
+ 206              	.L10:
+  86:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 207              		.loc 1 86 13 is_stmt 1 view .LVU55
+  86:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 208              		.loc 1 86 24 is_stmt 0 view .LVU56
+ 209 003a A560     		str	r5, [r4, #8]
+  90:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 210              		.loc 1 90 5 is_stmt 1 view .LVU57
+  90:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 211              		.loc 1 90 12 is_stmt 0 view .LVU58
+ 212 003c FBE7     		b	.L6
+ 213              		.cfi_endproc
+ 214              	.LFE2:
+ 216              		.section	.text._lv_ll_ins_tail,"ax",%progbits
+ 217              		.align	1
+ 218              		.global	_lv_ll_ins_tail
+ 219              		.syntax unified
+ 220              		.thumb
+ 221              		.thumb_func
+ 222              		.fpu fpv5-d16
+ 224              	_lv_ll_ins_tail:
+ 225              	.LVL19:
+ 226              	.LFB4:
+ 130:Middlewares/lvgl/src/misc/lv_ll.c ****     lv_ll_node_t * n_new;
+ 227              		.loc 1 130 1 is_stmt 1 view -0
+ 228              		.cfi_startproc
+ 229              		@ args = 0, pretend = 0, frame = 0
+ 230              		@ frame_needed = 0, uses_anonymous_args = 0
+ 130:Middlewares/lvgl/src/misc/lv_ll.c ****     lv_ll_node_t * n_new;
+ 231              		.loc 1 130 1 is_stmt 0 view .LVU60
+ 232 0000 38B5     		push	{r3, r4, r5, lr}
+ 233              	.LCFI1:
+ 234              		.cfi_def_cfa_offset 16
+ 235              		.cfi_offset 3, -16
+ 236              		.cfi_offset 4, -12
+ 237              		.cfi_offset 5, -8
+ 238              		.cfi_offset 14, -4
+ 239 0002 0446     		mov	r4, r0
+ 131:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 240              		.loc 1 131 5 is_stmt 1 view .LVU61
+ 133:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 241              		.loc 1 133 5 view .LVU62
+ 133:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ARM GAS  /tmp/ccuaXUIJ.s 			page 13
+
+
+ 242              		.loc 1 133 30 is_stmt 0 view .LVU63
+ 243 0004 0068     		ldr	r0, [r0]
+ 244              	.LVL20:
+ 133:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 245              		.loc 1 133 13 view .LVU64
+ 246 0006 0830     		adds	r0, r0, #8
+ 247 0008 FFF7FEFF 		bl	lv_mem_alloc
+ 248              	.LVL21:
+ 135:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_p, n_new, NULL);       /*No next after the new tail*/
+ 249              		.loc 1 135 5 is_stmt 1 view .LVU65
+ 135:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_p, n_new, NULL);       /*No next after the new tail*/
+ 250              		.loc 1 135 7 is_stmt 0 view .LVU66
+ 251 000c 0546     		mov	r5, r0
+ 252 000e 90B1     		cbz	r0, .L11
+ 136:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_p, n_new, ll_p->tail); /*The prev. before new is the old tail*/
+ 253              		.loc 1 136 9 is_stmt 1 view .LVU67
+ 254 0010 0022     		movs	r2, #0
+ 255 0012 0146     		mov	r1, r0
+ 256 0014 2046     		mov	r0, r4
+ 257              	.LVL22:
+ 136:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_p, n_new, ll_p->tail); /*The prev. before new is the old tail*/
+ 258              		.loc 1 136 9 is_stmt 0 view .LVU68
+ 259 0016 FFF7FEFF 		bl	node_set_next
+ 260              	.LVL23:
+ 137:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->tail != NULL) {                /*If there is old tail then the new comes after it*
+ 261              		.loc 1 137 9 is_stmt 1 view .LVU69
+ 262 001a A268     		ldr	r2, [r4, #8]
+ 263 001c 2946     		mov	r1, r5
+ 264 001e 2046     		mov	r0, r4
+ 265 0020 FFF7FEFF 		bl	node_set_prev
+ 266              	.LVL24:
+ 138:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_next(ll_p, ll_p->tail, n_new);
+ 267              		.loc 1 138 9 view .LVU70
+ 138:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_next(ll_p, ll_p->tail, n_new);
+ 268              		.loc 1 138 16 is_stmt 0 view .LVU71
+ 269 0024 A168     		ldr	r1, [r4, #8]
+ 138:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_next(ll_p, ll_p->tail, n_new);
+ 270              		.loc 1 138 11 view .LVU72
+ 271 0026 19B1     		cbz	r1, .L13
+ 139:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 272              		.loc 1 139 13 is_stmt 1 view .LVU73
+ 273 0028 2A46     		mov	r2, r5
+ 274 002a 2046     		mov	r0, r4
+ 275 002c FFF7FEFF 		bl	node_set_next
+ 276              	.LVL25:
+ 277              	.L13:
+ 142:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->head == NULL) { /*If there is no head (1. node) set the head too*/
+ 278              		.loc 1 142 9 view .LVU74
+ 142:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->head == NULL) { /*If there is no head (1. node) set the head too*/
+ 279              		.loc 1 142 20 is_stmt 0 view .LVU75
+ 280 0030 A560     		str	r5, [r4, #8]
+ 143:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_p->head = n_new;
+ 281              		.loc 1 143 9 is_stmt 1 view .LVU76
+ 143:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_p->head = n_new;
+ 282              		.loc 1 143 16 is_stmt 0 view .LVU77
+ 283 0032 6368     		ldr	r3, [r4, #4]
+ 143:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_p->head = n_new;
+ARM GAS  /tmp/ccuaXUIJ.s 			page 14
+
+
+ 284              		.loc 1 143 11 view .LVU78
+ 285 0034 0BB1     		cbz	r3, .L15
+ 286              	.L11:
+ 149:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 287              		.loc 1 149 1 view .LVU79
+ 288 0036 2846     		mov	r0, r5
+ 289 0038 38BD     		pop	{r3, r4, r5, pc}
+ 290              	.LVL26:
+ 291              	.L15:
+ 144:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 292              		.loc 1 144 13 is_stmt 1 view .LVU80
+ 144:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 293              		.loc 1 144 24 is_stmt 0 view .LVU81
+ 294 003a 6560     		str	r5, [r4, #4]
+ 148:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 295              		.loc 1 148 5 is_stmt 1 view .LVU82
+ 148:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 296              		.loc 1 148 12 is_stmt 0 view .LVU83
+ 297 003c FBE7     		b	.L11
+ 298              		.cfi_endproc
+ 299              	.LFE4:
+ 301              		.section	.text._lv_ll_get_head,"ax",%progbits
+ 302              		.align	1
+ 303              		.global	_lv_ll_get_head
+ 304              		.syntax unified
+ 305              		.thumb
+ 306              		.thumb_func
+ 307              		.fpu fpv5-d16
+ 309              	_lv_ll_get_head:
+ 310              	.LVL27:
+ 311              	.LFB8:
+ 260:Middlewares/lvgl/src/misc/lv_ll.c ****     if(ll_p == NULL) return NULL;
+ 312              		.loc 1 260 1 is_stmt 1 view -0
+ 313              		.cfi_startproc
+ 314              		@ args = 0, pretend = 0, frame = 0
+ 315              		@ frame_needed = 0, uses_anonymous_args = 0
+ 316              		@ link register save eliminated.
+ 261:Middlewares/lvgl/src/misc/lv_ll.c ****     return ll_p->head;
+ 317              		.loc 1 261 5 view .LVU85
+ 261:Middlewares/lvgl/src/misc/lv_ll.c ****     return ll_p->head;
+ 318              		.loc 1 261 7 is_stmt 0 view .LVU86
+ 319 0000 08B1     		cbz	r0, .L18
+ 262:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 320              		.loc 1 262 5 is_stmt 1 view .LVU87
+ 262:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 321              		.loc 1 262 16 is_stmt 0 view .LVU88
+ 322 0002 4068     		ldr	r0, [r0, #4]
+ 323              	.LVL28:
+ 262:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 324              		.loc 1 262 16 view .LVU89
+ 325 0004 7047     		bx	lr
+ 326              	.LVL29:
+ 327              	.L18:
+ 263:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 328              		.loc 1 263 1 view .LVU90
+ 329 0006 7047     		bx	lr
+ 330              		.cfi_endproc
+ARM GAS  /tmp/ccuaXUIJ.s 			page 15
+
+
+ 331              	.LFE8:
+ 333              		.section	.text._lv_ll_get_tail,"ax",%progbits
+ 334              		.align	1
+ 335              		.global	_lv_ll_get_tail
+ 336              		.syntax unified
+ 337              		.thumb
+ 338              		.thumb_func
+ 339              		.fpu fpv5-d16
+ 341              	_lv_ll_get_tail:
+ 342              	.LVL30:
+ 343              	.LFB9:
+ 271:Middlewares/lvgl/src/misc/lv_ll.c ****     if(ll_p == NULL) return NULL;
+ 344              		.loc 1 271 1 is_stmt 1 view -0
+ 345              		.cfi_startproc
+ 346              		@ args = 0, pretend = 0, frame = 0
+ 347              		@ frame_needed = 0, uses_anonymous_args = 0
+ 348              		@ link register save eliminated.
+ 272:Middlewares/lvgl/src/misc/lv_ll.c ****     return ll_p->tail;
+ 349              		.loc 1 272 5 view .LVU92
+ 272:Middlewares/lvgl/src/misc/lv_ll.c ****     return ll_p->tail;
+ 350              		.loc 1 272 7 is_stmt 0 view .LVU93
+ 351 0000 08B1     		cbz	r0, .L21
+ 273:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 352              		.loc 1 273 5 is_stmt 1 view .LVU94
+ 273:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 353              		.loc 1 273 16 is_stmt 0 view .LVU95
+ 354 0002 8068     		ldr	r0, [r0, #8]
+ 355              	.LVL31:
+ 273:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 356              		.loc 1 273 16 view .LVU96
+ 357 0004 7047     		bx	lr
+ 358              	.LVL32:
+ 359              	.L21:
+ 274:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 360              		.loc 1 274 1 view .LVU97
+ 361 0006 7047     		bx	lr
+ 362              		.cfi_endproc
+ 363              	.LFE9:
+ 365              		.section	.text._lv_ll_get_next,"ax",%progbits
+ 366              		.align	1
+ 367              		.global	_lv_ll_get_next
+ 368              		.syntax unified
+ 369              		.thumb
+ 370              		.thumb_func
+ 371              		.fpu fpv5-d16
+ 373              	_lv_ll_get_next:
+ 374              	.LVL33:
+ 375              	.LFB10:
+ 283:Middlewares/lvgl/src/misc/lv_ll.c ****     /*Pointer to the next node is stored in the end of this node.
+ 376              		.loc 1 283 1 is_stmt 1 view -0
+ 377              		.cfi_startproc
+ 378              		@ args = 0, pretend = 0, frame = 0
+ 379              		@ frame_needed = 0, uses_anonymous_args = 0
+ 380              		@ link register save eliminated.
+ 286:Middlewares/lvgl/src/misc/lv_ll.c ****     n_act_d += LL_NEXT_P_OFFSET(ll_p);
+ 381              		.loc 1 286 5 view .LVU99
+ 287:Middlewares/lvgl/src/misc/lv_ll.c ****     return *((lv_ll_node_t **)n_act_d);
+ARM GAS  /tmp/ccuaXUIJ.s 			page 16
+
+
+ 382              		.loc 1 287 5 view .LVU100
+ 287:Middlewares/lvgl/src/misc/lv_ll.c ****     return *((lv_ll_node_t **)n_act_d);
+ 383              		.loc 1 287 16 is_stmt 0 view .LVU101
+ 384 0000 0368     		ldr	r3, [r0]
+ 287:Middlewares/lvgl/src/misc/lv_ll.c ****     return *((lv_ll_node_t **)n_act_d);
+ 385              		.loc 1 287 13 view .LVU102
+ 386 0002 0433     		adds	r3, r3, #4
+ 387              	.LVL34:
+ 288:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 388              		.loc 1 288 5 is_stmt 1 view .LVU103
+ 289:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 389              		.loc 1 289 1 is_stmt 0 view .LVU104
+ 390 0004 C858     		ldr	r0, [r1, r3]
+ 391              	.LVL35:
+ 289:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 392              		.loc 1 289 1 view .LVU105
+ 393 0006 7047     		bx	lr
+ 394              		.cfi_endproc
+ 395              	.LFE10:
+ 397              		.section	.text._lv_ll_get_prev,"ax",%progbits
+ 398              		.align	1
+ 399              		.global	_lv_ll_get_prev
+ 400              		.syntax unified
+ 401              		.thumb
+ 402              		.thumb_func
+ 403              		.fpu fpv5-d16
+ 405              	_lv_ll_get_prev:
+ 406              	.LVL36:
+ 407              	.LFB11:
+ 298:Middlewares/lvgl/src/misc/lv_ll.c ****     /*Pointer to the prev. node is stored in the end of this node.
+ 408              		.loc 1 298 1 is_stmt 1 view -0
+ 409              		.cfi_startproc
+ 410              		@ args = 0, pretend = 0, frame = 0
+ 411              		@ frame_needed = 0, uses_anonymous_args = 0
+ 412              		@ link register save eliminated.
+ 301:Middlewares/lvgl/src/misc/lv_ll.c ****     n_act_d += LL_PREV_P_OFFSET(ll_p);
+ 413              		.loc 1 301 5 view .LVU107
+ 302:Middlewares/lvgl/src/misc/lv_ll.c ****     return *((lv_ll_node_t **)n_act_d);
+ 414              		.loc 1 302 5 view .LVU108
+ 302:Middlewares/lvgl/src/misc/lv_ll.c ****     return *((lv_ll_node_t **)n_act_d);
+ 415              		.loc 1 302 16 is_stmt 0 view .LVU109
+ 416 0000 0368     		ldr	r3, [r0]
+ 417              	.LVL37:
+ 303:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 418              		.loc 1 303 5 is_stmt 1 view .LVU110
+ 304:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 419              		.loc 1 304 1 is_stmt 0 view .LVU111
+ 420 0002 C858     		ldr	r0, [r1, r3]
+ 421              	.LVL38:
+ 304:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 422              		.loc 1 304 1 view .LVU112
+ 423 0004 7047     		bx	lr
+ 424              		.cfi_endproc
+ 425              	.LFE11:
+ 427              		.section	.text._lv_ll_ins_prev,"ax",%progbits
+ 428              		.align	1
+ 429              		.global	_lv_ll_ins_prev
+ARM GAS  /tmp/ccuaXUIJ.s 			page 17
+
+
+ 430              		.syntax unified
+ 431              		.thumb
+ 432              		.thumb_func
+ 433              		.fpu fpv5-d16
+ 435              	_lv_ll_ins_prev:
+ 436              	.LVL39:
+ 437              	.LFB3:
+ 100:Middlewares/lvgl/src/misc/lv_ll.c ****     lv_ll_node_t * n_new;
+ 438              		.loc 1 100 1 is_stmt 1 view -0
+ 439              		.cfi_startproc
+ 440              		@ args = 0, pretend = 0, frame = 0
+ 441              		@ frame_needed = 0, uses_anonymous_args = 0
+ 100:Middlewares/lvgl/src/misc/lv_ll.c ****     lv_ll_node_t * n_new;
+ 442              		.loc 1 100 1 is_stmt 0 view .LVU114
+ 443 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 444              	.LCFI2:
+ 445              		.cfi_def_cfa_offset 24
+ 446              		.cfi_offset 3, -24
+ 447              		.cfi_offset 4, -20
+ 448              		.cfi_offset 5, -16
+ 449              		.cfi_offset 6, -12
+ 450              		.cfi_offset 7, -8
+ 451              		.cfi_offset 14, -4
+ 101:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 452              		.loc 1 101 5 is_stmt 1 view .LVU115
+ 103:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 453              		.loc 1 103 5 view .LVU116
+ 103:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 454              		.loc 1 103 7 is_stmt 0 view .LVU117
+ 455 0002 0029     		cmp	r1, #0
+ 456 0004 18BF     		it	ne
+ 457 0006 0028     		cmpne	r0, #0
+ 458 0008 2BD0     		beq	.L27
+ 459 000a 0446     		mov	r4, r0
+ 460 000c 0E46     		mov	r6, r1
+ 105:Middlewares/lvgl/src/misc/lv_ll.c ****         n_new = _lv_ll_ins_head(ll_p);
+ 461              		.loc 1 105 5 is_stmt 1 view .LVU118
+ 105:Middlewares/lvgl/src/misc/lv_ll.c ****         n_new = _lv_ll_ins_head(ll_p);
+ 462              		.loc 1 105 8 is_stmt 0 view .LVU119
+ 463 000e FFF7FEFF 		bl	_lv_ll_get_head
+ 464              	.LVL40:
+ 105:Middlewares/lvgl/src/misc/lv_ll.c ****         n_new = _lv_ll_ins_head(ll_p);
+ 465              		.loc 1 105 7 view .LVU120
+ 466 0012 8642     		cmp	r6, r0
+ 467 0014 20D0     		beq	.L29
+ 468              	.LBB2:
+ 110:Middlewares/lvgl/src/misc/lv_ll.c ****         if(n_new == NULL) return NULL;
+ 469              		.loc 1 110 9 is_stmt 1 view .LVU121
+ 110:Middlewares/lvgl/src/misc/lv_ll.c ****         if(n_new == NULL) return NULL;
+ 470              		.loc 1 110 34 is_stmt 0 view .LVU122
+ 471 0016 2068     		ldr	r0, [r4]
+ 110:Middlewares/lvgl/src/misc/lv_ll.c ****         if(n_new == NULL) return NULL;
+ 472              		.loc 1 110 17 view .LVU123
+ 473 0018 0830     		adds	r0, r0, #8
+ 474 001a FFF7FEFF 		bl	lv_mem_alloc
+ 475              	.LVL41:
+ 111:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ARM GAS  /tmp/ccuaXUIJ.s 			page 18
+
+
+ 476              		.loc 1 111 9 is_stmt 1 view .LVU124
+ 111:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 477              		.loc 1 111 11 is_stmt 0 view .LVU125
+ 478 001e 0546     		mov	r5, r0
+ 479 0020 C0B1     		cbz	r0, .L24
+ 113:Middlewares/lvgl/src/misc/lv_ll.c ****         n_prev = _lv_ll_get_prev(ll_p, n_act);
+ 480              		.loc 1 113 9 is_stmt 1 view .LVU126
+ 114:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_p, n_prev, n_new);
+ 481              		.loc 1 114 9 view .LVU127
+ 114:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_p, n_prev, n_new);
+ 482              		.loc 1 114 18 is_stmt 0 view .LVU128
+ 483 0022 3146     		mov	r1, r6
+ 484 0024 2046     		mov	r0, r4
+ 485              	.LVL42:
+ 114:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_p, n_prev, n_new);
+ 486              		.loc 1 114 18 view .LVU129
+ 487 0026 FFF7FEFF 		bl	_lv_ll_get_prev
+ 488              	.LVL43:
+ 489 002a 0746     		mov	r7, r0
+ 490              	.LVL44:
+ 115:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_p, n_new, n_prev);
+ 491              		.loc 1 115 9 is_stmt 1 view .LVU130
+ 492 002c 2A46     		mov	r2, r5
+ 493 002e 0146     		mov	r1, r0
+ 494 0030 2046     		mov	r0, r4
+ 495              	.LVL45:
+ 115:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_p, n_new, n_prev);
+ 496              		.loc 1 115 9 is_stmt 0 view .LVU131
+ 497 0032 FFF7FEFF 		bl	node_set_next
+ 498              	.LVL46:
+ 116:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_p, n_act, n_new);
+ 499              		.loc 1 116 9 is_stmt 1 view .LVU132
+ 500 0036 3A46     		mov	r2, r7
+ 501 0038 2946     		mov	r1, r5
+ 502 003a 2046     		mov	r0, r4
+ 503 003c FFF7FEFF 		bl	node_set_prev
+ 504              	.LVL47:
+ 117:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_p, n_new, n_act);
+ 505              		.loc 1 117 9 view .LVU133
+ 506 0040 2A46     		mov	r2, r5
+ 507 0042 3146     		mov	r1, r6
+ 508 0044 2046     		mov	r0, r4
+ 509 0046 FFF7FEFF 		bl	node_set_prev
+ 510              	.LVL48:
+ 118:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 511              		.loc 1 118 9 view .LVU134
+ 512 004a 3246     		mov	r2, r6
+ 513 004c 2946     		mov	r1, r5
+ 514 004e 2046     		mov	r0, r4
+ 515 0050 FFF7FEFF 		bl	node_set_next
+ 516              	.LVL49:
+ 517              	.L24:
+ 118:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 518              		.loc 1 118 9 is_stmt 0 view .LVU135
+ 519              	.LBE2:
+ 122:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 520              		.loc 1 122 1 view .LVU136
+ARM GAS  /tmp/ccuaXUIJ.s 			page 19
+
+
+ 521 0054 2846     		mov	r0, r5
+ 522 0056 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 523              	.LVL50:
+ 524              	.L29:
+ 106:Middlewares/lvgl/src/misc/lv_ll.c ****         if(n_new == NULL) return NULL;
+ 525              		.loc 1 106 9 is_stmt 1 view .LVU137
+ 106:Middlewares/lvgl/src/misc/lv_ll.c ****         if(n_new == NULL) return NULL;
+ 526              		.loc 1 106 17 is_stmt 0 view .LVU138
+ 527 0058 2046     		mov	r0, r4
+ 528 005a FFF7FEFF 		bl	_lv_ll_ins_head
+ 529              	.LVL51:
+ 530 005e 0546     		mov	r5, r0
+ 531              	.LVL52:
+ 107:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 532              		.loc 1 107 9 is_stmt 1 view .LVU139
+ 533 0060 F8E7     		b	.L24
+ 534              	.LVL53:
+ 535              	.L27:
+ 103:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 536              		.loc 1 103 46 is_stmt 0 view .LVU140
+ 537 0062 0025     		movs	r5, #0
+ 538 0064 F6E7     		b	.L24
+ 539              		.cfi_endproc
+ 540              	.LFE3:
+ 542              		.section	.text._lv_ll_remove,"ax",%progbits
+ 543              		.align	1
+ 544              		.global	_lv_ll_remove
+ 545              		.syntax unified
+ 546              		.thumb
+ 547              		.thumb_func
+ 548              		.fpu fpv5-d16
+ 550              	_lv_ll_remove:
+ 551              	.LVL54:
+ 552              	.LFB5:
+ 158:Middlewares/lvgl/src/misc/lv_ll.c ****     if(ll_p == NULL) return;
+ 553              		.loc 1 158 1 is_stmt 1 view -0
+ 554              		.cfi_startproc
+ 555              		@ args = 0, pretend = 0, frame = 0
+ 556              		@ frame_needed = 0, uses_anonymous_args = 0
+ 159:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 557              		.loc 1 159 5 view .LVU142
+ 159:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 558              		.loc 1 159 7 is_stmt 0 view .LVU143
+ 559 0000 0028     		cmp	r0, #0
+ 560 0002 3ED0     		beq	.L37
+ 158:Middlewares/lvgl/src/misc/lv_ll.c ****     if(ll_p == NULL) return;
+ 561              		.loc 1 158 1 view .LVU144
+ 562 0004 70B5     		push	{r4, r5, r6, lr}
+ 563              	.LCFI3:
+ 564              		.cfi_def_cfa_offset 16
+ 565              		.cfi_offset 4, -16
+ 566              		.cfi_offset 5, -12
+ 567              		.cfi_offset 6, -8
+ 568              		.cfi_offset 14, -4
+ 569 0006 0C46     		mov	r4, r1
+ 570 0008 0546     		mov	r5, r0
+ 161:Middlewares/lvgl/src/misc/lv_ll.c ****         /*The new head will be the node after 'n_act'*/
+ARM GAS  /tmp/ccuaXUIJ.s 			page 20
+
+
+ 571              		.loc 1 161 5 is_stmt 1 view .LVU145
+ 161:Middlewares/lvgl/src/misc/lv_ll.c ****         /*The new head will be the node after 'n_act'*/
+ 572              		.loc 1 161 8 is_stmt 0 view .LVU146
+ 573 000a FFF7FEFF 		bl	_lv_ll_get_head
+ 574              	.LVL55:
+ 161:Middlewares/lvgl/src/misc/lv_ll.c ****         /*The new head will be the node after 'n_act'*/
+ 575              		.loc 1 161 7 view .LVU147
+ 576 000e 8442     		cmp	r4, r0
+ 577 0010 19D0     		beq	.L40
+ 171:Middlewares/lvgl/src/misc/lv_ll.c ****         /*The new tail will be the node before 'n_act'*/
+ 578              		.loc 1 171 10 is_stmt 1 view .LVU148
+ 171:Middlewares/lvgl/src/misc/lv_ll.c ****         /*The new tail will be the node before 'n_act'*/
+ 579              		.loc 1 171 13 is_stmt 0 view .LVU149
+ 580 0012 2846     		mov	r0, r5
+ 581 0014 FFF7FEFF 		bl	_lv_ll_get_tail
+ 582              	.LVL56:
+ 171:Middlewares/lvgl/src/misc/lv_ll.c ****         /*The new tail will be the node before 'n_act'*/
+ 583              		.loc 1 171 12 view .LVU150
+ 584 0018 8442     		cmp	r4, r0
+ 585 001a 23D0     		beq	.L41
+ 586              	.LBB3:
+ 182:Middlewares/lvgl/src/misc/lv_ll.c ****         lv_ll_node_t * n_next = _lv_ll_get_next(ll_p, node_p);
+ 587              		.loc 1 182 9 is_stmt 1 view .LVU151
+ 182:Middlewares/lvgl/src/misc/lv_ll.c ****         lv_ll_node_t * n_next = _lv_ll_get_next(ll_p, node_p);
+ 588              		.loc 1 182 33 is_stmt 0 view .LVU152
+ 589 001c 2146     		mov	r1, r4
+ 590 001e 2846     		mov	r0, r5
+ 591 0020 FFF7FEFF 		bl	_lv_ll_get_prev
+ 592              	.LVL57:
+ 593 0024 0646     		mov	r6, r0
+ 594              	.LVL58:
+ 183:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 595              		.loc 1 183 9 is_stmt 1 view .LVU153
+ 183:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 596              		.loc 1 183 33 is_stmt 0 view .LVU154
+ 597 0026 2146     		mov	r1, r4
+ 598 0028 2846     		mov	r0, r5
+ 599              	.LVL59:
+ 183:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 600              		.loc 1 183 33 view .LVU155
+ 601 002a FFF7FEFF 		bl	_lv_ll_get_next
+ 602              	.LVL60:
+ 603 002e 0446     		mov	r4, r0
+ 604              	.LVL61:
+ 185:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_p, n_next, n_prev);
+ 605              		.loc 1 185 9 is_stmt 1 view .LVU156
+ 606 0030 0246     		mov	r2, r0
+ 607 0032 3146     		mov	r1, r6
+ 608 0034 2846     		mov	r0, r5
+ 609              	.LVL62:
+ 185:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_prev(ll_p, n_next, n_prev);
+ 610              		.loc 1 185 9 is_stmt 0 view .LVU157
+ 611 0036 FFF7FEFF 		bl	node_set_next
+ 612              	.LVL63:
+ 186:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 613              		.loc 1 186 9 is_stmt 1 view .LVU158
+ 614 003a 3246     		mov	r2, r6
+ARM GAS  /tmp/ccuaXUIJ.s 			page 21
+
+
+ 615 003c 2146     		mov	r1, r4
+ 616 003e 2846     		mov	r0, r5
+ 617 0040 FFF7FEFF 		bl	node_set_prev
+ 618              	.LVL64:
+ 619              	.L30:
+ 186:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 620              		.loc 1 186 9 is_stmt 0 view .LVU159
+ 621              	.LBE3:
+ 188:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 622              		.loc 1 188 1 view .LVU160
+ 623 0044 70BD     		pop	{r4, r5, r6, pc}
+ 624              	.LVL65:
+ 625              	.L40:
+ 163:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->head == NULL) {
+ 626              		.loc 1 163 9 is_stmt 1 view .LVU161
+ 163:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->head == NULL) {
+ 627              		.loc 1 163 22 is_stmt 0 view .LVU162
+ 628 0046 2146     		mov	r1, r4
+ 629 0048 2846     		mov	r0, r5
+ 630 004a FFF7FEFF 		bl	_lv_ll_get_next
+ 631              	.LVL66:
+ 632 004e 0146     		mov	r1, r0
+ 163:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->head == NULL) {
+ 633              		.loc 1 163 20 view .LVU163
+ 634 0050 6860     		str	r0, [r5, #4]
+ 164:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_p->tail = NULL;
+ 635              		.loc 1 164 9 is_stmt 1 view .LVU164
+ 164:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_p->tail = NULL;
+ 636              		.loc 1 164 11 is_stmt 0 view .LVU165
+ 637 0052 20B1     		cbz	r0, .L42
+ 168:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 638              		.loc 1 168 13 is_stmt 1 view .LVU166
+ 639 0054 0022     		movs	r2, #0
+ 640 0056 2846     		mov	r0, r5
+ 641 0058 FFF7FEFF 		bl	node_set_prev
+ 642              	.LVL67:
+ 643 005c F2E7     		b	.L30
+ 644              	.L42:
+ 165:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 645              		.loc 1 165 13 view .LVU167
+ 165:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 646              		.loc 1 165 24 is_stmt 0 view .LVU168
+ 647 005e 0023     		movs	r3, #0
+ 648 0060 AB60     		str	r3, [r5, #8]
+ 649 0062 EFE7     		b	.L30
+ 650              	.L41:
+ 173:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->tail == NULL) {
+ 651              		.loc 1 173 9 is_stmt 1 view .LVU169
+ 173:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->tail == NULL) {
+ 652              		.loc 1 173 22 is_stmt 0 view .LVU170
+ 653 0064 2146     		mov	r1, r4
+ 654 0066 2846     		mov	r0, r5
+ 655 0068 FFF7FEFF 		bl	_lv_ll_get_prev
+ 656              	.LVL68:
+ 657 006c 0146     		mov	r1, r0
+ 173:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_p->tail == NULL) {
+ 658              		.loc 1 173 20 view .LVU171
+ARM GAS  /tmp/ccuaXUIJ.s 			page 22
+
+
+ 659 006e A860     		str	r0, [r5, #8]
+ 174:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_p->head = NULL;
+ 660              		.loc 1 174 9 is_stmt 1 view .LVU172
+ 174:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_p->head = NULL;
+ 661              		.loc 1 174 11 is_stmt 0 view .LVU173
+ 662 0070 20B1     		cbz	r0, .L43
+ 178:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 663              		.loc 1 178 13 is_stmt 1 view .LVU174
+ 664 0072 0022     		movs	r2, #0
+ 665 0074 2846     		mov	r0, r5
+ 666 0076 FFF7FEFF 		bl	node_set_next
+ 667              	.LVL69:
+ 668 007a E3E7     		b	.L30
+ 669              	.L43:
+ 175:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 670              		.loc 1 175 13 view .LVU175
+ 175:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 671              		.loc 1 175 24 is_stmt 0 view .LVU176
+ 672 007c 0023     		movs	r3, #0
+ 673 007e 6B60     		str	r3, [r5, #4]
+ 674 0080 E0E7     		b	.L30
+ 675              	.LVL70:
+ 676              	.L37:
+ 677              	.LCFI4:
+ 678              		.cfi_def_cfa_offset 0
+ 679              		.cfi_restore 4
+ 680              		.cfi_restore 5
+ 681              		.cfi_restore 6
+ 682              		.cfi_restore 14
+ 175:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 683              		.loc 1 175 24 view .LVU177
+ 684 0082 7047     		bx	lr
+ 685              		.cfi_endproc
+ 686              	.LFE5:
+ 688              		.section	.text._lv_ll_clear,"ax",%progbits
+ 689              		.align	1
+ 690              		.global	_lv_ll_clear
+ 691              		.syntax unified
+ 692              		.thumb
+ 693              		.thumb_func
+ 694              		.fpu fpv5-d16
+ 696              	_lv_ll_clear:
+ 697              	.LVL71:
+ 698              	.LFB6:
+ 195:Middlewares/lvgl/src/misc/lv_ll.c ****     void * i;
+ 699              		.loc 1 195 1 is_stmt 1 view -0
+ 700              		.cfi_startproc
+ 701              		@ args = 0, pretend = 0, frame = 0
+ 702              		@ frame_needed = 0, uses_anonymous_args = 0
+ 195:Middlewares/lvgl/src/misc/lv_ll.c ****     void * i;
+ 703              		.loc 1 195 1 is_stmt 0 view .LVU179
+ 704 0000 70B5     		push	{r4, r5, r6, lr}
+ 705              	.LCFI5:
+ 706              		.cfi_def_cfa_offset 16
+ 707              		.cfi_offset 4, -16
+ 708              		.cfi_offset 5, -12
+ 709              		.cfi_offset 6, -8
+ARM GAS  /tmp/ccuaXUIJ.s 			page 23
+
+
+ 710              		.cfi_offset 14, -4
+ 711 0002 0646     		mov	r6, r0
+ 196:Middlewares/lvgl/src/misc/lv_ll.c ****     void * i_next;
+ 712              		.loc 1 196 5 is_stmt 1 view .LVU180
+ 197:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 713              		.loc 1 197 5 view .LVU181
+ 199:Middlewares/lvgl/src/misc/lv_ll.c ****     i_next = NULL;
+ 714              		.loc 1 199 5 view .LVU182
+ 199:Middlewares/lvgl/src/misc/lv_ll.c ****     i_next = NULL;
+ 715              		.loc 1 199 14 is_stmt 0 view .LVU183
+ 716 0004 FFF7FEFF 		bl	_lv_ll_get_head
+ 717              	.LVL72:
+ 199:Middlewares/lvgl/src/misc/lv_ll.c ****     i_next = NULL;
+ 718              		.loc 1 199 14 view .LVU184
+ 719 0008 0446     		mov	r4, r0
+ 720              	.LVL73:
+ 200:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 721              		.loc 1 200 5 is_stmt 1 view .LVU185
+ 202:Middlewares/lvgl/src/misc/lv_ll.c ****         i_next = _lv_ll_get_next(ll_p, i);
+ 722              		.loc 1 202 5 view .LVU186
+ 202:Middlewares/lvgl/src/misc/lv_ll.c ****         i_next = _lv_ll_get_next(ll_p, i);
+ 723              		.loc 1 202 10 is_stmt 0 view .LVU187
+ 724 000a 0CE0     		b	.L45
+ 725              	.LVL74:
+ 726              	.L46:
+ 203:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 727              		.loc 1 203 9 is_stmt 1 view .LVU188
+ 203:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 728              		.loc 1 203 18 is_stmt 0 view .LVU189
+ 729 000c 2146     		mov	r1, r4
+ 730 000e 3046     		mov	r0, r6
+ 731 0010 FFF7FEFF 		bl	_lv_ll_get_next
+ 732              	.LVL75:
+ 733 0014 0546     		mov	r5, r0
+ 734              	.LVL76:
+ 205:Middlewares/lvgl/src/misc/lv_ll.c ****         lv_mem_free(i);
+ 735              		.loc 1 205 9 is_stmt 1 view .LVU190
+ 736 0016 2146     		mov	r1, r4
+ 737 0018 3046     		mov	r0, r6
+ 738              	.LVL77:
+ 205:Middlewares/lvgl/src/misc/lv_ll.c ****         lv_mem_free(i);
+ 739              		.loc 1 205 9 is_stmt 0 view .LVU191
+ 740 001a FFF7FEFF 		bl	_lv_ll_remove
+ 741              	.LVL78:
+ 206:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 742              		.loc 1 206 9 is_stmt 1 view .LVU192
+ 743 001e 2046     		mov	r0, r4
+ 744 0020 FFF7FEFF 		bl	lv_mem_free
+ 745              	.LVL79:
+ 208:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 746              		.loc 1 208 9 view .LVU193
+ 208:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 747              		.loc 1 208 11 is_stmt 0 view .LVU194
+ 748 0024 2C46     		mov	r4, r5
+ 749              	.LVL80:
+ 750              	.L45:
+ 202:Middlewares/lvgl/src/misc/lv_ll.c ****         i_next = _lv_ll_get_next(ll_p, i);
+ARM GAS  /tmp/ccuaXUIJ.s 			page 24
+
+
+ 751              		.loc 1 202 10 is_stmt 1 view .LVU195
+ 752 0026 002C     		cmp	r4, #0
+ 753 0028 F0D1     		bne	.L46
+ 210:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 754              		.loc 1 210 1 is_stmt 0 view .LVU196
+ 755 002a 70BD     		pop	{r4, r5, r6, pc}
+ 210:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 756              		.loc 1 210 1 view .LVU197
+ 757              		.cfi_endproc
+ 758              	.LFE6:
+ 760              		.section	.text._lv_ll_chg_list,"ax",%progbits
+ 761              		.align	1
+ 762              		.global	_lv_ll_chg_list
+ 763              		.syntax unified
+ 764              		.thumb
+ 765              		.thumb_func
+ 766              		.fpu fpv5-d16
+ 768              	_lv_ll_chg_list:
+ 769              	.LVL81:
+ 770              	.LFB7:
+ 221:Middlewares/lvgl/src/misc/lv_ll.c ****     _lv_ll_remove(ll_ori_p, node);
+ 771              		.loc 1 221 1 is_stmt 1 view -0
+ 772              		.cfi_startproc
+ 773              		@ args = 0, pretend = 0, frame = 0
+ 774              		@ frame_needed = 0, uses_anonymous_args = 0
+ 221:Middlewares/lvgl/src/misc/lv_ll.c ****     _lv_ll_remove(ll_ori_p, node);
+ 775              		.loc 1 221 1 is_stmt 0 view .LVU199
+ 776 0000 70B5     		push	{r4, r5, r6, lr}
+ 777              	.LCFI6:
+ 778              		.cfi_def_cfa_offset 16
+ 779              		.cfi_offset 4, -16
+ 780              		.cfi_offset 5, -12
+ 781              		.cfi_offset 6, -8
+ 782              		.cfi_offset 14, -4
+ 783 0002 0C46     		mov	r4, r1
+ 784 0004 1546     		mov	r5, r2
+ 785 0006 1E46     		mov	r6, r3
+ 222:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 786              		.loc 1 222 5 is_stmt 1 view .LVU200
+ 787 0008 1146     		mov	r1, r2
+ 788              	.LVL82:
+ 222:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 789              		.loc 1 222 5 is_stmt 0 view .LVU201
+ 790 000a FFF7FEFF 		bl	_lv_ll_remove
+ 791              	.LVL83:
+ 224:Middlewares/lvgl/src/misc/lv_ll.c ****         /*Set node as head*/
+ 792              		.loc 1 224 5 is_stmt 1 view .LVU202
+ 224:Middlewares/lvgl/src/misc/lv_ll.c ****         /*Set node as head*/
+ 793              		.loc 1 224 7 is_stmt 0 view .LVU203
+ 794 000e AEB1     		cbz	r6, .L49
+ 226:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_new_p, node, ll_new_p->head);
+ 795              		.loc 1 226 9 is_stmt 1 view .LVU204
+ 796 0010 0022     		movs	r2, #0
+ 797 0012 2946     		mov	r1, r5
+ 798 0014 2046     		mov	r0, r4
+ 799 0016 FFF7FEFF 		bl	node_set_prev
+ 800              	.LVL84:
+ARM GAS  /tmp/ccuaXUIJ.s 			page 25
+
+
+ 227:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 801              		.loc 1 227 9 view .LVU205
+ 802 001a 6268     		ldr	r2, [r4, #4]
+ 803 001c 2946     		mov	r1, r5
+ 804 001e 2046     		mov	r0, r4
+ 805 0020 FFF7FEFF 		bl	node_set_next
+ 806              	.LVL85:
+ 229:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_prev(ll_new_p, ll_new_p->head, node);
+ 807              		.loc 1 229 9 view .LVU206
+ 229:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_prev(ll_new_p, ll_new_p->head, node);
+ 808              		.loc 1 229 20 is_stmt 0 view .LVU207
+ 809 0024 6168     		ldr	r1, [r4, #4]
+ 229:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_prev(ll_new_p, ll_new_p->head, node);
+ 810              		.loc 1 229 11 view .LVU208
+ 811 0026 19B1     		cbz	r1, .L50
+ 230:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 812              		.loc 1 230 13 is_stmt 1 view .LVU209
+ 813 0028 2A46     		mov	r2, r5
+ 814 002a 2046     		mov	r0, r4
+ 815 002c FFF7FEFF 		bl	node_set_prev
+ 816              	.LVL86:
+ 817              	.L50:
+ 233:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_new_p->tail == NULL) { /*If there is no tail (first node) set the tail too*/
+ 818              		.loc 1 233 9 view .LVU210
+ 233:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_new_p->tail == NULL) { /*If there is no tail (first node) set the tail too*/
+ 819              		.loc 1 233 24 is_stmt 0 view .LVU211
+ 820 0030 6560     		str	r5, [r4, #4]
+ 234:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_new_p->tail = node;
+ 821              		.loc 1 234 9 is_stmt 1 view .LVU212
+ 234:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_new_p->tail = node;
+ 822              		.loc 1 234 20 is_stmt 0 view .LVU213
+ 823 0032 A368     		ldr	r3, [r4, #8]
+ 234:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_new_p->tail = node;
+ 824              		.loc 1 234 11 view .LVU214
+ 825 0034 03B1     		cbz	r3, .L54
+ 826              	.L48:
+ 252:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 827              		.loc 1 252 1 view .LVU215
+ 828 0036 70BD     		pop	{r4, r5, r6, pc}
+ 829              	.LVL87:
+ 830              	.L54:
+ 235:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 831              		.loc 1 235 13 is_stmt 1 view .LVU216
+ 235:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 832              		.loc 1 235 28 is_stmt 0 view .LVU217
+ 833 0038 A560     		str	r5, [r4, #8]
+ 834 003a FCE7     		b	.L48
+ 835              	.L49:
+ 240:Middlewares/lvgl/src/misc/lv_ll.c ****         node_set_next(ll_new_p, node, NULL);
+ 836              		.loc 1 240 9 is_stmt 1 view .LVU218
+ 837 003c A268     		ldr	r2, [r4, #8]
+ 838 003e 2946     		mov	r1, r5
+ 839 0040 2046     		mov	r0, r4
+ 840 0042 FFF7FEFF 		bl	node_set_prev
+ 841              	.LVL88:
+ 241:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 842              		.loc 1 241 9 view .LVU219
+ARM GAS  /tmp/ccuaXUIJ.s 			page 26
+
+
+ 843 0046 0022     		movs	r2, #0
+ 844 0048 2946     		mov	r1, r5
+ 845 004a 2046     		mov	r0, r4
+ 846 004c FFF7FEFF 		bl	node_set_next
+ 847              	.LVL89:
+ 243:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_next(ll_new_p, ll_new_p->tail, node);
+ 848              		.loc 1 243 9 view .LVU220
+ 243:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_next(ll_new_p, ll_new_p->tail, node);
+ 849              		.loc 1 243 20 is_stmt 0 view .LVU221
+ 850 0050 A168     		ldr	r1, [r4, #8]
+ 243:Middlewares/lvgl/src/misc/lv_ll.c ****             node_set_next(ll_new_p, ll_new_p->tail, node);
+ 851              		.loc 1 243 11 view .LVU222
+ 852 0052 19B1     		cbz	r1, .L52
+ 244:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 853              		.loc 1 244 13 is_stmt 1 view .LVU223
+ 854 0054 2A46     		mov	r2, r5
+ 855 0056 2046     		mov	r0, r4
+ 856 0058 FFF7FEFF 		bl	node_set_next
+ 857              	.LVL90:
+ 858              	.L52:
+ 247:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_new_p->head == NULL) { /*If there is no head (first node) set the head too*/
+ 859              		.loc 1 247 9 view .LVU224
+ 247:Middlewares/lvgl/src/misc/lv_ll.c ****         if(ll_new_p->head == NULL) { /*If there is no head (first node) set the head too*/
+ 860              		.loc 1 247 24 is_stmt 0 view .LVU225
+ 861 005c A560     		str	r5, [r4, #8]
+ 248:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_new_p->head = node;
+ 862              		.loc 1 248 9 is_stmt 1 view .LVU226
+ 248:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_new_p->head = node;
+ 863              		.loc 1 248 20 is_stmt 0 view .LVU227
+ 864 005e 6368     		ldr	r3, [r4, #4]
+ 248:Middlewares/lvgl/src/misc/lv_ll.c ****             ll_new_p->head = node;
+ 865              		.loc 1 248 11 view .LVU228
+ 866 0060 002B     		cmp	r3, #0
+ 867 0062 E8D1     		bne	.L48
+ 249:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 868              		.loc 1 249 13 is_stmt 1 view .LVU229
+ 249:Middlewares/lvgl/src/misc/lv_ll.c ****         }
+ 869              		.loc 1 249 28 is_stmt 0 view .LVU230
+ 870 0064 6560     		str	r5, [r4, #4]
+ 252:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 871              		.loc 1 252 1 view .LVU231
+ 872 0066 E6E7     		b	.L48
+ 873              		.cfi_endproc
+ 874              	.LFE7:
+ 876              		.section	.text._lv_ll_get_len,"ax",%progbits
+ 877              		.align	1
+ 878              		.global	_lv_ll_get_len
+ 879              		.syntax unified
+ 880              		.thumb
+ 881              		.thumb_func
+ 882              		.fpu fpv5-d16
+ 884              	_lv_ll_get_len:
+ 885              	.LVL91:
+ 886              	.LFB12:
+ 312:Middlewares/lvgl/src/misc/lv_ll.c ****     uint32_t len = 0;
+ 887              		.loc 1 312 1 is_stmt 1 view -0
+ 888              		.cfi_startproc
+ARM GAS  /tmp/ccuaXUIJ.s 			page 27
+
+
+ 889              		@ args = 0, pretend = 0, frame = 0
+ 890              		@ frame_needed = 0, uses_anonymous_args = 0
+ 312:Middlewares/lvgl/src/misc/lv_ll.c ****     uint32_t len = 0;
+ 891              		.loc 1 312 1 is_stmt 0 view .LVU233
+ 892 0000 38B5     		push	{r3, r4, r5, lr}
+ 893              	.LCFI7:
+ 894              		.cfi_def_cfa_offset 16
+ 895              		.cfi_offset 3, -16
+ 896              		.cfi_offset 4, -12
+ 897              		.cfi_offset 5, -8
+ 898              		.cfi_offset 14, -4
+ 899 0002 0546     		mov	r5, r0
+ 313:Middlewares/lvgl/src/misc/lv_ll.c ****     void * node;
+ 900              		.loc 1 313 5 is_stmt 1 view .LVU234
+ 901              	.LVL92:
+ 314:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 902              		.loc 1 314 5 view .LVU235
+ 316:Middlewares/lvgl/src/misc/lv_ll.c ****         len++;
+ 903              		.loc 1 316 5 view .LVU236
+ 316:Middlewares/lvgl/src/misc/lv_ll.c ****         len++;
+ 904              		.loc 1 316 16 is_stmt 0 view .LVU237
+ 905 0004 FFF7FEFF 		bl	_lv_ll_get_head
+ 906              	.LVL93:
+ 316:Middlewares/lvgl/src/misc/lv_ll.c ****         len++;
+ 907              		.loc 1 316 16 view .LVU238
+ 908 0008 0146     		mov	r1, r0
+ 909              	.LVL94:
+ 313:Middlewares/lvgl/src/misc/lv_ll.c ****     void * node;
+ 910              		.loc 1 313 14 view .LVU239
+ 911 000a 0024     		movs	r4, #0
+ 316:Middlewares/lvgl/src/misc/lv_ll.c ****         len++;
+ 912              		.loc 1 316 5 view .LVU240
+ 913 000c 04E0     		b	.L56
+ 914              	.LVL95:
+ 915              	.L57:
+ 317:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 916              		.loc 1 317 9 is_stmt 1 discriminator 3 view .LVU241
+ 317:Middlewares/lvgl/src/misc/lv_ll.c ****     }
+ 917              		.loc 1 317 12 is_stmt 0 discriminator 3 view .LVU242
+ 918 000e 0134     		adds	r4, r4, #1
+ 919              	.LVL96:
+ 316:Middlewares/lvgl/src/misc/lv_ll.c ****         len++;
+ 920              		.loc 1 316 53 is_stmt 1 discriminator 3 view .LVU243
+ 316:Middlewares/lvgl/src/misc/lv_ll.c ****         len++;
+ 921              		.loc 1 316 60 is_stmt 0 discriminator 3 view .LVU244
+ 922 0010 2846     		mov	r0, r5
+ 923              	.LVL97:
+ 316:Middlewares/lvgl/src/misc/lv_ll.c ****         len++;
+ 924              		.loc 1 316 60 discriminator 3 view .LVU245
+ 925 0012 FFF7FEFF 		bl	_lv_ll_get_next
+ 926              	.LVL98:
+ 316:Middlewares/lvgl/src/misc/lv_ll.c ****         len++;
+ 927              		.loc 1 316 60 discriminator 3 view .LVU246
+ 928 0016 0146     		mov	r1, r0
+ 929              	.LVL99:
+ 930              	.L56:
+ 316:Middlewares/lvgl/src/misc/lv_ll.c ****         len++;
+ARM GAS  /tmp/ccuaXUIJ.s 			page 28
+
+
+ 931              		.loc 1 316 39 is_stmt 1 discriminator 1 view .LVU247
+ 316:Middlewares/lvgl/src/misc/lv_ll.c ****         len++;
+ 932              		.loc 1 316 5 is_stmt 0 discriminator 1 view .LVU248
+ 933 0018 0029     		cmp	r1, #0
+ 934 001a F8D1     		bne	.L57
+ 320:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 935              		.loc 1 320 5 is_stmt 1 view .LVU249
+ 321:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 936              		.loc 1 321 1 is_stmt 0 view .LVU250
+ 937 001c 2046     		mov	r0, r4
+ 938              	.LVL100:
+ 321:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 939              		.loc 1 321 1 view .LVU251
+ 940 001e 38BD     		pop	{r3, r4, r5, pc}
+ 321:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 941              		.loc 1 321 1 view .LVU252
+ 942              		.cfi_endproc
+ 943              	.LFE12:
+ 945              		.section	.text._lv_ll_move_before,"ax",%progbits
+ 946              		.align	1
+ 947              		.global	_lv_ll_move_before
+ 948              		.syntax unified
+ 949              		.thumb
+ 950              		.thumb_func
+ 951              		.fpu fpv5-d16
+ 953              	_lv_ll_move_before:
+ 954              	.LVL101:
+ 955              	.LFB13:
+ 330:Middlewares/lvgl/src/misc/lv_ll.c ****     if(n_act == n_after) return; /*Can't move before itself*/
+ 956              		.loc 1 330 1 is_stmt 1 view -0
+ 957              		.cfi_startproc
+ 958              		@ args = 0, pretend = 0, frame = 0
+ 959              		@ frame_needed = 0, uses_anonymous_args = 0
+ 331:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 960              		.loc 1 331 5 view .LVU254
+ 331:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 961              		.loc 1 331 7 is_stmt 0 view .LVU255
+ 962 0000 9142     		cmp	r1, r2
+ 963 0002 2DD0     		beq	.L65
+ 330:Middlewares/lvgl/src/misc/lv_ll.c ****     if(n_act == n_after) return; /*Can't move before itself*/
+ 964              		.loc 1 330 1 view .LVU256
+ 965 0004 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 966              	.LCFI8:
+ 967              		.cfi_def_cfa_offset 24
+ 968              		.cfi_offset 3, -24
+ 969              		.cfi_offset 4, -20
+ 970              		.cfi_offset 5, -16
+ 971              		.cfi_offset 6, -12
+ 972              		.cfi_offset 7, -8
+ 973              		.cfi_offset 14, -4
+ 974 0006 0646     		mov	r6, r0
+ 975 0008 0C46     		mov	r4, r1
+ 976 000a 1546     		mov	r5, r2
+ 333:Middlewares/lvgl/src/misc/lv_ll.c ****     if(n_after != NULL)
+ 977              		.loc 1 333 5 is_stmt 1 view .LVU257
+ 334:Middlewares/lvgl/src/misc/lv_ll.c ****         n_before = _lv_ll_get_prev(ll_p, n_after);
+ 978              		.loc 1 334 5 view .LVU258
+ARM GAS  /tmp/ccuaXUIJ.s 			page 29
+
+
+ 334:Middlewares/lvgl/src/misc/lv_ll.c ****         n_before = _lv_ll_get_prev(ll_p, n_after);
+ 979              		.loc 1 334 7 is_stmt 0 view .LVU259
+ 980 000c 02B3     		cbz	r2, .L61
+ 335:Middlewares/lvgl/src/misc/lv_ll.c ****     else
+ 981              		.loc 1 335 9 is_stmt 1 view .LVU260
+ 335:Middlewares/lvgl/src/misc/lv_ll.c ****     else
+ 982              		.loc 1 335 20 is_stmt 0 view .LVU261
+ 983 000e 1146     		mov	r1, r2
+ 984              	.LVL102:
+ 335:Middlewares/lvgl/src/misc/lv_ll.c ****     else
+ 985              		.loc 1 335 20 view .LVU262
+ 986 0010 FFF7FEFF 		bl	_lv_ll_get_prev
+ 987              	.LVL103:
+ 335:Middlewares/lvgl/src/misc/lv_ll.c ****     else
+ 988              		.loc 1 335 20 view .LVU263
+ 989 0014 0746     		mov	r7, r0
+ 990              	.LVL104:
+ 991              	.L62:
+ 339:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 992              		.loc 1 339 5 is_stmt 1 view .LVU264
+ 339:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 993              		.loc 1 339 7 is_stmt 0 view .LVU265
+ 994 0016 A742     		cmp	r7, r4
+ 995 0018 19D0     		beq	.L59
+ 342:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 996              		.loc 1 342 5 is_stmt 1 view .LVU266
+ 997 001a 2146     		mov	r1, r4
+ 998 001c 3046     		mov	r0, r6
+ 999              	.LVL105:
+ 342:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1000              		.loc 1 342 5 is_stmt 0 view .LVU267
+ 1001 001e FFF7FEFF 		bl	_lv_ll_remove
+ 1002              	.LVL106:
+ 345:Middlewares/lvgl/src/misc/lv_ll.c ****     node_set_prev(ll_p, n_act, n_before);
+ 1003              		.loc 1 345 5 is_stmt 1 view .LVU268
+ 1004 0022 2246     		mov	r2, r4
+ 1005 0024 3946     		mov	r1, r7
+ 1006 0026 3046     		mov	r0, r6
+ 1007 0028 FFF7FEFF 		bl	node_set_next
+ 1008              	.LVL107:
+ 346:Middlewares/lvgl/src/misc/lv_ll.c ****     node_set_prev(ll_p, n_after, n_act);
+ 1009              		.loc 1 346 5 view .LVU269
+ 1010 002c 3A46     		mov	r2, r7
+ 1011 002e 2146     		mov	r1, r4
+ 1012 0030 3046     		mov	r0, r6
+ 1013 0032 FFF7FEFF 		bl	node_set_prev
+ 1014              	.LVL108:
+ 347:Middlewares/lvgl/src/misc/lv_ll.c ****     node_set_next(ll_p, n_act, n_after);
+ 1015              		.loc 1 347 5 view .LVU270
+ 1016 0036 2246     		mov	r2, r4
+ 1017 0038 2946     		mov	r1, r5
+ 1018 003a 3046     		mov	r0, r6
+ 1019 003c FFF7FEFF 		bl	node_set_prev
+ 1020              	.LVL109:
+ 348:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1021              		.loc 1 348 5 view .LVU271
+ 1022 0040 2A46     		mov	r2, r5
+ARM GAS  /tmp/ccuaXUIJ.s 			page 30
+
+
+ 1023 0042 2146     		mov	r1, r4
+ 1024 0044 3046     		mov	r0, r6
+ 1025 0046 FFF7FEFF 		bl	node_set_next
+ 1026              	.LVL110:
+ 351:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1027              		.loc 1 351 5 view .LVU272
+ 351:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1028              		.loc 1 351 7 is_stmt 0 view .LVU273
+ 1029 004a 2DB1     		cbz	r5, .L68
+ 1030              	.L63:
+ 354:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 1031              		.loc 1 354 5 is_stmt 1 view .LVU274
+ 354:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 1032              		.loc 1 354 7 is_stmt 0 view .LVU275
+ 1033 004c 37B1     		cbz	r7, .L69
+ 1034              	.L59:
+ 355:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1035              		.loc 1 355 1 view .LVU276
+ 1036 004e F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 1037              	.LVL111:
+ 1038              	.L61:
+ 337:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1039              		.loc 1 337 9 is_stmt 1 view .LVU277
+ 337:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1040              		.loc 1 337 20 is_stmt 0 view .LVU278
+ 1041 0050 FFF7FEFF 		bl	_lv_ll_get_tail
+ 1042              	.LVL112:
+ 337:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1043              		.loc 1 337 20 view .LVU279
+ 1044 0054 0746     		mov	r7, r0
+ 1045              	.LVL113:
+ 337:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1046              		.loc 1 337 20 view .LVU280
+ 1047 0056 DEE7     		b	.L62
+ 1048              	.LVL114:
+ 1049              	.L68:
+ 351:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1050              		.loc 1 351 25 is_stmt 1 discriminator 1 view .LVU281
+ 351:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1051              		.loc 1 351 36 is_stmt 0 discriminator 1 view .LVU282
+ 1052 0058 B460     		str	r4, [r6, #8]
+ 1053 005a F7E7     		b	.L63
+ 1054              	.L69:
+ 354:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 1055              		.loc 1 354 26 is_stmt 1 discriminator 1 view .LVU283
+ 354:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 1056              		.loc 1 354 37 is_stmt 0 discriminator 1 view .LVU284
+ 1057 005c 7460     		str	r4, [r6, #4]
+ 1058 005e F6E7     		b	.L59
+ 1059              	.LVL115:
+ 1060              	.L65:
+ 1061              	.LCFI9:
+ 1062              		.cfi_def_cfa_offset 0
+ 1063              		.cfi_restore 3
+ 1064              		.cfi_restore 4
+ 1065              		.cfi_restore 5
+ 1066              		.cfi_restore 6
+ARM GAS  /tmp/ccuaXUIJ.s 			page 31
+
+
+ 1067              		.cfi_restore 7
+ 1068              		.cfi_restore 14
+ 354:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 1069              		.loc 1 354 37 discriminator 1 view .LVU285
+ 1070 0060 7047     		bx	lr
+ 1071              		.cfi_endproc
+ 1072              	.LFE13:
+ 1074              		.section	.text._lv_ll_is_empty,"ax",%progbits
+ 1075              		.align	1
+ 1076              		.global	_lv_ll_is_empty
+ 1077              		.syntax unified
+ 1078              		.thumb
+ 1079              		.thumb_func
+ 1080              		.fpu fpv5-d16
+ 1082              	_lv_ll_is_empty:
+ 1083              	.LVL116:
+ 1084              	.LFB14:
+ 363:Middlewares/lvgl/src/misc/lv_ll.c ****     if(ll_p == NULL) return true;
+ 1085              		.loc 1 363 1 is_stmt 1 view -0
+ 1086              		.cfi_startproc
+ 1087              		@ args = 0, pretend = 0, frame = 0
+ 1088              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1089              		@ link register save eliminated.
+ 364:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1090              		.loc 1 364 5 view .LVU287
+ 364:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1091              		.loc 1 364 7 is_stmt 0 view .LVU288
+ 1092 0000 38B1     		cbz	r0, .L72
+ 366:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1093              		.loc 1 366 5 is_stmt 1 view .LVU289
+ 366:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1094              		.loc 1 366 12 is_stmt 0 view .LVU290
+ 1095 0002 4268     		ldr	r2, [r0, #4]
+ 366:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1096              		.loc 1 366 7 view .LVU291
+ 1097 0004 0AB1     		cbz	r2, .L75
+ 368:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 1098              		.loc 1 368 12 view .LVU292
+ 1099 0006 0020     		movs	r0, #0
+ 1100              	.LVL117:
+ 368:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 1101              		.loc 1 368 12 view .LVU293
+ 1102 0008 7047     		bx	lr
+ 1103              	.LVL118:
+ 1104              	.L75:
+ 366:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1105              		.loc 1 366 34 discriminator 1 view .LVU294
+ 1106 000a 8368     		ldr	r3, [r0, #8]
+ 366:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1107              		.loc 1 366 27 discriminator 1 view .LVU295
+ 1108 000c 1BB1     		cbz	r3, .L74
+ 368:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 1109              		.loc 1 368 12 view .LVU296
+ 1110 000e 0020     		movs	r0, #0
+ 1111              	.LVL119:
+ 368:Middlewares/lvgl/src/misc/lv_ll.c **** }
+ 1112              		.loc 1 368 12 view .LVU297
+ARM GAS  /tmp/ccuaXUIJ.s 			page 32
+
+
+ 1113 0010 7047     		bx	lr
+ 1114              	.LVL120:
+ 1115              	.L72:
+ 364:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1116              		.loc 1 364 29 view .LVU298
+ 1117 0012 0120     		movs	r0, #1
+ 1118              	.LVL121:
+ 364:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1119              		.loc 1 364 29 view .LVU299
+ 1120 0014 7047     		bx	lr
+ 1121              	.LVL122:
+ 1122              	.L74:
+ 366:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1123              		.loc 1 366 57 view .LVU300
+ 1124 0016 0120     		movs	r0, #1
+ 1125              	.LVL123:
+ 369:Middlewares/lvgl/src/misc/lv_ll.c **** 
+ 1126              		.loc 1 369 1 view .LVU301
+ 1127 0018 7047     		bx	lr
+ 1128              		.cfi_endproc
+ 1129              	.LFE14:
+ 1131              		.text
+ 1132              	.Letext0:
+ 1133              		.file 2 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 1134              		.file 3 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ 1135              		.file 4 "Middlewares/lvgl/src/misc/lv_ll.h"
+ 1136              		.file 5 "Middlewares/lvgl/src/misc/lv_mem.h"
+ARM GAS  /tmp/ccuaXUIJ.s 			page 33
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 lv_ll.c
+     /tmp/ccuaXUIJ.s:17     .text.node_set_prev:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:24     .text.node_set_prev:0000000000000000 node_set_prev
+     /tmp/ccuaXUIJ.s:56     .text.node_set_next:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:62     .text.node_set_next:0000000000000000 node_set_next
+     /tmp/ccuaXUIJ.s:94     .text._lv_ll_init:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:101    .text._lv_ll_init:0000000000000000 _lv_ll_init
+     /tmp/ccuaXUIJ.s:132    .text._lv_ll_ins_head:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:139    .text._lv_ll_ins_head:0000000000000000 _lv_ll_ins_head
+     /tmp/ccuaXUIJ.s:217    .text._lv_ll_ins_tail:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:224    .text._lv_ll_ins_tail:0000000000000000 _lv_ll_ins_tail
+     /tmp/ccuaXUIJ.s:302    .text._lv_ll_get_head:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:309    .text._lv_ll_get_head:0000000000000000 _lv_ll_get_head
+     /tmp/ccuaXUIJ.s:334    .text._lv_ll_get_tail:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:341    .text._lv_ll_get_tail:0000000000000000 _lv_ll_get_tail
+     /tmp/ccuaXUIJ.s:366    .text._lv_ll_get_next:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:373    .text._lv_ll_get_next:0000000000000000 _lv_ll_get_next
+     /tmp/ccuaXUIJ.s:398    .text._lv_ll_get_prev:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:405    .text._lv_ll_get_prev:0000000000000000 _lv_ll_get_prev
+     /tmp/ccuaXUIJ.s:428    .text._lv_ll_ins_prev:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:435    .text._lv_ll_ins_prev:0000000000000000 _lv_ll_ins_prev
+     /tmp/ccuaXUIJ.s:543    .text._lv_ll_remove:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:550    .text._lv_ll_remove:0000000000000000 _lv_ll_remove
+     /tmp/ccuaXUIJ.s:689    .text._lv_ll_clear:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:696    .text._lv_ll_clear:0000000000000000 _lv_ll_clear
+     /tmp/ccuaXUIJ.s:761    .text._lv_ll_chg_list:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:768    .text._lv_ll_chg_list:0000000000000000 _lv_ll_chg_list
+     /tmp/ccuaXUIJ.s:877    .text._lv_ll_get_len:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:884    .text._lv_ll_get_len:0000000000000000 _lv_ll_get_len
+     /tmp/ccuaXUIJ.s:946    .text._lv_ll_move_before:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:953    .text._lv_ll_move_before:0000000000000000 _lv_ll_move_before
+     /tmp/ccuaXUIJ.s:1075   .text._lv_ll_is_empty:0000000000000000 $t
+     /tmp/ccuaXUIJ.s:1082   .text._lv_ll_is_empty:0000000000000000 _lv_ll_is_empty
+
+UNDEFINED SYMBOLS
+lv_mem_alloc
+lv_mem_free

@@ -1,0 +1,2825 @@
+ARM GAS  /tmp/ccbCcH82.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.eabi_attribute 28, 1
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 1
+  10              		.eabi_attribute 34, 1
+  11              		.eabi_attribute 18, 4
+  12              		.file	"lv_event.c"
+  13              		.text
+  14              	.Ltext0:
+  15              		.cfi_sections	.debug_frame
+  16              		.section	.text.lv_obj_get_event_dsc,"ax",%progbits
+  17              		.align	1
+  18              		.arch armv7e-m
+  19              		.syntax unified
+  20              		.thumb
+  21              		.thumb_func
+  22              		.fpu fpv5-d16
+  24              	lv_obj_get_event_dsc:
+  25              	.LVL0:
+  26              	.LFB170:
+  27              		.file 1 "Middlewares/lvgl/src/core/lv_event.c"
+   1:Middlewares/lvgl/src/core/lv_event.c **** /**
+   2:Middlewares/lvgl/src/core/lv_event.c ****  * @file lv_event.c
+   3:Middlewares/lvgl/src/core/lv_event.c ****  *
+   4:Middlewares/lvgl/src/core/lv_event.c ****  */
+   5:Middlewares/lvgl/src/core/lv_event.c **** 
+   6:Middlewares/lvgl/src/core/lv_event.c **** /*********************
+   7:Middlewares/lvgl/src/core/lv_event.c ****  *      INCLUDES
+   8:Middlewares/lvgl/src/core/lv_event.c ****  *********************/
+   9:Middlewares/lvgl/src/core/lv_event.c **** #include "lv_obj.h"
+  10:Middlewares/lvgl/src/core/lv_event.c **** #include "lv_indev.h"
+  11:Middlewares/lvgl/src/core/lv_event.c **** 
+  12:Middlewares/lvgl/src/core/lv_event.c **** /*********************
+  13:Middlewares/lvgl/src/core/lv_event.c ****  *      DEFINES
+  14:Middlewares/lvgl/src/core/lv_event.c ****  *********************/
+  15:Middlewares/lvgl/src/core/lv_event.c **** #define MY_CLASS &lv_obj_class
+  16:Middlewares/lvgl/src/core/lv_event.c **** 
+  17:Middlewares/lvgl/src/core/lv_event.c **** /**********************
+  18:Middlewares/lvgl/src/core/lv_event.c ****  *      TYPEDEFS
+  19:Middlewares/lvgl/src/core/lv_event.c ****  **********************/
+  20:Middlewares/lvgl/src/core/lv_event.c **** typedef struct _lv_event_dsc_t{
+  21:Middlewares/lvgl/src/core/lv_event.c ****     lv_event_cb_t cb;
+  22:Middlewares/lvgl/src/core/lv_event.c ****     void * user_data;
+  23:Middlewares/lvgl/src/core/lv_event.c ****     lv_event_code_t filter :8;
+  24:Middlewares/lvgl/src/core/lv_event.c **** }lv_event_dsc_t;
+  25:Middlewares/lvgl/src/core/lv_event.c **** 
+  26:Middlewares/lvgl/src/core/lv_event.c **** /**********************
+  27:Middlewares/lvgl/src/core/lv_event.c ****  *  STATIC PROTOTYPES
+  28:Middlewares/lvgl/src/core/lv_event.c ****  **********************/
+  29:Middlewares/lvgl/src/core/lv_event.c **** static lv_event_dsc_t * lv_obj_get_event_dsc(const lv_obj_t * obj, uint32_t id);
+  30:Middlewares/lvgl/src/core/lv_event.c **** static lv_res_t event_send_core(lv_event_t * e);
+  31:Middlewares/lvgl/src/core/lv_event.c **** static bool event_is_bubbled(lv_event_code_t e);
+ARM GAS  /tmp/ccbCcH82.s 			page 2
+
+
+  32:Middlewares/lvgl/src/core/lv_event.c **** 
+  33:Middlewares/lvgl/src/core/lv_event.c **** /**********************
+  34:Middlewares/lvgl/src/core/lv_event.c ****  *  STATIC VARIABLES
+  35:Middlewares/lvgl/src/core/lv_event.c ****  **********************/
+  36:Middlewares/lvgl/src/core/lv_event.c **** static lv_event_t * event_head;
+  37:Middlewares/lvgl/src/core/lv_event.c **** 
+  38:Middlewares/lvgl/src/core/lv_event.c **** /**********************
+  39:Middlewares/lvgl/src/core/lv_event.c ****  *      MACROS
+  40:Middlewares/lvgl/src/core/lv_event.c ****  **********************/
+  41:Middlewares/lvgl/src/core/lv_event.c **** #if LV_LOG_TRACE_EVENT
+  42:Middlewares/lvgl/src/core/lv_event.c **** #  define EVENT_TRACE(...) LV_LOG_TRACE( __VA_ARGS__)
+  43:Middlewares/lvgl/src/core/lv_event.c **** #else
+  44:Middlewares/lvgl/src/core/lv_event.c **** #  define EVENT_TRACE(...)
+  45:Middlewares/lvgl/src/core/lv_event.c **** #endif
+  46:Middlewares/lvgl/src/core/lv_event.c **** 
+  47:Middlewares/lvgl/src/core/lv_event.c **** /**********************
+  48:Middlewares/lvgl/src/core/lv_event.c ****  *   GLOBAL FUNCTIONS
+  49:Middlewares/lvgl/src/core/lv_event.c ****  **********************/
+  50:Middlewares/lvgl/src/core/lv_event.c **** 
+  51:Middlewares/lvgl/src/core/lv_event.c **** lv_res_t lv_event_send(lv_obj_t * obj, lv_event_code_t event_code, void * param)
+  52:Middlewares/lvgl/src/core/lv_event.c **** {
+  53:Middlewares/lvgl/src/core/lv_event.c ****     if(obj == NULL) return LV_RES_OK;
+  54:Middlewares/lvgl/src/core/lv_event.c **** 
+  55:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_OBJ(obj, MY_CLASS);
+  56:Middlewares/lvgl/src/core/lv_event.c **** 
+  57:Middlewares/lvgl/src/core/lv_event.c ****     lv_event_t e;
+  58:Middlewares/lvgl/src/core/lv_event.c ****     e.target = obj;
+  59:Middlewares/lvgl/src/core/lv_event.c ****     e.current_target = obj;
+  60:Middlewares/lvgl/src/core/lv_event.c ****     e.code = event_code;
+  61:Middlewares/lvgl/src/core/lv_event.c ****     e.user_data = NULL;
+  62:Middlewares/lvgl/src/core/lv_event.c ****     e.param = param;
+  63:Middlewares/lvgl/src/core/lv_event.c ****     e.deleted = 0;
+  64:Middlewares/lvgl/src/core/lv_event.c **** 
+  65:Middlewares/lvgl/src/core/lv_event.c **** 
+  66:Middlewares/lvgl/src/core/lv_event.c ****     /*Build a simple linked list from the objects used in the events
+  67:Middlewares/lvgl/src/core/lv_event.c ****      *It's important to know if an this object was deleted by a nested event
+  68:Middlewares/lvgl/src/core/lv_event.c ****      *called from this `event_cb`.*/
+  69:Middlewares/lvgl/src/core/lv_event.c ****     e.prev = event_head;
+  70:Middlewares/lvgl/src/core/lv_event.c ****     event_head = &e;
+  71:Middlewares/lvgl/src/core/lv_event.c **** 
+  72:Middlewares/lvgl/src/core/lv_event.c ****     /*Send the event*/
+  73:Middlewares/lvgl/src/core/lv_event.c ****     lv_res_t res = event_send_core(&e);
+  74:Middlewares/lvgl/src/core/lv_event.c **** 
+  75:Middlewares/lvgl/src/core/lv_event.c ****     /*Remove this element from the list*/
+  76:Middlewares/lvgl/src/core/lv_event.c ****     event_head = e.prev;
+  77:Middlewares/lvgl/src/core/lv_event.c **** 
+  78:Middlewares/lvgl/src/core/lv_event.c ****     return res;
+  79:Middlewares/lvgl/src/core/lv_event.c **** }
+  80:Middlewares/lvgl/src/core/lv_event.c **** 
+  81:Middlewares/lvgl/src/core/lv_event.c **** 
+  82:Middlewares/lvgl/src/core/lv_event.c **** lv_res_t lv_obj_event_base(const lv_obj_class_t * class_p, lv_event_t * e)
+  83:Middlewares/lvgl/src/core/lv_event.c **** {
+  84:Middlewares/lvgl/src/core/lv_event.c ****     const lv_obj_class_t * base;
+  85:Middlewares/lvgl/src/core/lv_event.c ****     if(class_p == NULL) base = e->current_target->class_p;
+  86:Middlewares/lvgl/src/core/lv_event.c ****     else base = class_p->base_class;
+  87:Middlewares/lvgl/src/core/lv_event.c **** 
+  88:Middlewares/lvgl/src/core/lv_event.c ****     /*Find a base in which Call the ancestor's event handler_cb is set*/
+ARM GAS  /tmp/ccbCcH82.s 			page 3
+
+
+  89:Middlewares/lvgl/src/core/lv_event.c ****     while(base && base->event_cb == NULL) base = base->base_class;
+  90:Middlewares/lvgl/src/core/lv_event.c **** 
+  91:Middlewares/lvgl/src/core/lv_event.c ****     if(base == NULL) return LV_RES_OK;
+  92:Middlewares/lvgl/src/core/lv_event.c ****     if(base->event_cb == NULL) return LV_RES_OK;
+  93:Middlewares/lvgl/src/core/lv_event.c **** 
+  94:Middlewares/lvgl/src/core/lv_event.c ****     /*Call the actual event callback*/
+  95:Middlewares/lvgl/src/core/lv_event.c ****     e->user_data = NULL;
+  96:Middlewares/lvgl/src/core/lv_event.c ****     base->event_cb(base, e);
+  97:Middlewares/lvgl/src/core/lv_event.c **** 
+  98:Middlewares/lvgl/src/core/lv_event.c ****     lv_res_t res = LV_RES_OK;
+  99:Middlewares/lvgl/src/core/lv_event.c ****     /*Stop if the object is deleted*/
+ 100:Middlewares/lvgl/src/core/lv_event.c ****     if(e->deleted) res = LV_RES_INV;
+ 101:Middlewares/lvgl/src/core/lv_event.c **** 
+ 102:Middlewares/lvgl/src/core/lv_event.c ****     return res;
+ 103:Middlewares/lvgl/src/core/lv_event.c **** }
+ 104:Middlewares/lvgl/src/core/lv_event.c **** 
+ 105:Middlewares/lvgl/src/core/lv_event.c **** 
+ 106:Middlewares/lvgl/src/core/lv_event.c **** lv_obj_t * lv_event_get_target(lv_event_t * e)
+ 107:Middlewares/lvgl/src/core/lv_event.c **** {
+ 108:Middlewares/lvgl/src/core/lv_event.c ****     return e->target;
+ 109:Middlewares/lvgl/src/core/lv_event.c **** }
+ 110:Middlewares/lvgl/src/core/lv_event.c **** 
+ 111:Middlewares/lvgl/src/core/lv_event.c **** lv_obj_t * lv_event_get_current_target(lv_event_t * e)
+ 112:Middlewares/lvgl/src/core/lv_event.c **** {
+ 113:Middlewares/lvgl/src/core/lv_event.c ****     return e->current_target;
+ 114:Middlewares/lvgl/src/core/lv_event.c **** }
+ 115:Middlewares/lvgl/src/core/lv_event.c **** 
+ 116:Middlewares/lvgl/src/core/lv_event.c **** lv_event_code_t lv_event_get_code(lv_event_t * e)
+ 117:Middlewares/lvgl/src/core/lv_event.c **** {
+ 118:Middlewares/lvgl/src/core/lv_event.c ****     return e->code;
+ 119:Middlewares/lvgl/src/core/lv_event.c **** }
+ 120:Middlewares/lvgl/src/core/lv_event.c **** 
+ 121:Middlewares/lvgl/src/core/lv_event.c **** void * lv_event_get_param(lv_event_t * e)
+ 122:Middlewares/lvgl/src/core/lv_event.c **** {
+ 123:Middlewares/lvgl/src/core/lv_event.c ****     return e->param;
+ 124:Middlewares/lvgl/src/core/lv_event.c **** }
+ 125:Middlewares/lvgl/src/core/lv_event.c **** 
+ 126:Middlewares/lvgl/src/core/lv_event.c **** void * lv_event_get_user_data(lv_event_t * e)
+ 127:Middlewares/lvgl/src/core/lv_event.c **** {
+ 128:Middlewares/lvgl/src/core/lv_event.c ****     return e->user_data;
+ 129:Middlewares/lvgl/src/core/lv_event.c **** }
+ 130:Middlewares/lvgl/src/core/lv_event.c **** 
+ 131:Middlewares/lvgl/src/core/lv_event.c **** 
+ 132:Middlewares/lvgl/src/core/lv_event.c **** uint32_t lv_event_register_id(void)
+ 133:Middlewares/lvgl/src/core/lv_event.c **** {
+ 134:Middlewares/lvgl/src/core/lv_event.c ****     static uint32_t last_id = _LV_EVENT_LAST;
+ 135:Middlewares/lvgl/src/core/lv_event.c ****     last_id ++;
+ 136:Middlewares/lvgl/src/core/lv_event.c ****     return last_id;
+ 137:Middlewares/lvgl/src/core/lv_event.c **** }
+ 138:Middlewares/lvgl/src/core/lv_event.c **** 
+ 139:Middlewares/lvgl/src/core/lv_event.c **** void _lv_event_mark_deleted(lv_obj_t * obj)
+ 140:Middlewares/lvgl/src/core/lv_event.c **** {
+ 141:Middlewares/lvgl/src/core/lv_event.c ****     lv_event_t * e = event_head;
+ 142:Middlewares/lvgl/src/core/lv_event.c **** 
+ 143:Middlewares/lvgl/src/core/lv_event.c ****     while(e) {
+ 144:Middlewares/lvgl/src/core/lv_event.c ****         if(e->current_target == obj || e->target == obj) e->deleted = 1;
+ 145:Middlewares/lvgl/src/core/lv_event.c ****         e = e->prev;
+ARM GAS  /tmp/ccbCcH82.s 			page 4
+
+
+ 146:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 147:Middlewares/lvgl/src/core/lv_event.c **** }
+ 148:Middlewares/lvgl/src/core/lv_event.c **** 
+ 149:Middlewares/lvgl/src/core/lv_event.c **** 
+ 150:Middlewares/lvgl/src/core/lv_event.c **** struct _lv_event_dsc_t * lv_obj_add_event_cb(lv_obj_t * obj, lv_event_cb_t event_cb, lv_event_code_
+ 151:Middlewares/lvgl/src/core/lv_event.c **** {
+ 152:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_OBJ(obj, MY_CLASS);
+ 153:Middlewares/lvgl/src/core/lv_event.c ****     lv_obj_allocate_spec_attr(obj);
+ 154:Middlewares/lvgl/src/core/lv_event.c **** 
+ 155:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc_cnt++;
+ 156:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc = lv_mem_realloc(obj->spec_attr->event_dsc, obj->spec_attr->event_dsc
+ 157:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 158:Middlewares/lvgl/src/core/lv_event.c **** 
+ 159:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc[obj->spec_attr->event_dsc_cnt - 1].cb = event_cb;
+ 160:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc[obj->spec_attr->event_dsc_cnt - 1].filter = filter;
+ 161:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc[obj->spec_attr->event_dsc_cnt - 1].user_data = user_data;
+ 162:Middlewares/lvgl/src/core/lv_event.c **** 
+ 163:Middlewares/lvgl/src/core/lv_event.c ****     return &obj->spec_attr->event_dsc[obj->spec_attr->event_dsc_cnt - 1];
+ 164:Middlewares/lvgl/src/core/lv_event.c **** }
+ 165:Middlewares/lvgl/src/core/lv_event.c **** 
+ 166:Middlewares/lvgl/src/core/lv_event.c **** bool lv_obj_remove_event_cb(lv_obj_t * obj, lv_event_cb_t event_cb)
+ 167:Middlewares/lvgl/src/core/lv_event.c **** {
+ 168:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_OBJ(obj, MY_CLASS);
+ 169:Middlewares/lvgl/src/core/lv_event.c ****     if(obj->spec_attr == NULL) return false;
+ 170:Middlewares/lvgl/src/core/lv_event.c **** 
+ 171:Middlewares/lvgl/src/core/lv_event.c ****     int32_t i = 0;
+ 172:Middlewares/lvgl/src/core/lv_event.c ****     for(i = 0; i < obj->spec_attr->event_dsc_cnt; i++) {
+ 173:Middlewares/lvgl/src/core/lv_event.c ****         if(obj->spec_attr->event_dsc[i].cb == event_cb) {
+ 174:Middlewares/lvgl/src/core/lv_event.c ****             /*Shift the remaining event handlers forward*/
+ 175:Middlewares/lvgl/src/core/lv_event.c ****             for(; i < (obj->spec_attr->event_dsc_cnt-1); i++) {
+ 176:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 177:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 178:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 179:Middlewares/lvgl/src/core/lv_event.c ****             obj->spec_attr->event_dsc_cnt--;
+ 180:Middlewares/lvgl/src/core/lv_event.c ****             obj->spec_attr->event_dsc = lv_mem_realloc(obj->spec_attr->event_dsc, obj->spec_attr->e
+ 181:Middlewares/lvgl/src/core/lv_event.c ****             LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 182:Middlewares/lvgl/src/core/lv_event.c ****             return true;
+ 183:Middlewares/lvgl/src/core/lv_event.c ****         }
+ 184:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 185:Middlewares/lvgl/src/core/lv_event.c **** 
+ 186:Middlewares/lvgl/src/core/lv_event.c ****     /*No event handler found*/
+ 187:Middlewares/lvgl/src/core/lv_event.c ****     return false;
+ 188:Middlewares/lvgl/src/core/lv_event.c **** }
+ 189:Middlewares/lvgl/src/core/lv_event.c **** 
+ 190:Middlewares/lvgl/src/core/lv_event.c **** bool lv_obj_remove_event_dsc(lv_obj_t * obj, struct _lv_event_dsc_t * event_dsc)
+ 191:Middlewares/lvgl/src/core/lv_event.c **** {
+ 192:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_OBJ(obj, MY_CLASS);
+ 193:Middlewares/lvgl/src/core/lv_event.c ****     if(obj->spec_attr == NULL) return false;
+ 194:Middlewares/lvgl/src/core/lv_event.c **** 
+ 195:Middlewares/lvgl/src/core/lv_event.c ****     int32_t i = 0;
+ 196:Middlewares/lvgl/src/core/lv_event.c ****     for(i = 0; i < obj->spec_attr->event_dsc_cnt; i++) {
+ 197:Middlewares/lvgl/src/core/lv_event.c ****         if(&obj->spec_attr->event_dsc[i] == event_dsc) {
+ 198:Middlewares/lvgl/src/core/lv_event.c ****             /*Shift the remaining event handlers forward*/
+ 199:Middlewares/lvgl/src/core/lv_event.c ****             for(; i < (obj->spec_attr->event_dsc_cnt-1); i++) {
+ 200:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 201:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 202:Middlewares/lvgl/src/core/lv_event.c ****             }
+ARM GAS  /tmp/ccbCcH82.s 			page 5
+
+
+ 203:Middlewares/lvgl/src/core/lv_event.c ****             obj->spec_attr->event_dsc_cnt--;
+ 204:Middlewares/lvgl/src/core/lv_event.c ****             obj->spec_attr->event_dsc = lv_mem_realloc(obj->spec_attr->event_dsc, obj->spec_attr->e
+ 205:Middlewares/lvgl/src/core/lv_event.c ****             LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 206:Middlewares/lvgl/src/core/lv_event.c ****             return true;
+ 207:Middlewares/lvgl/src/core/lv_event.c ****         }
+ 208:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 209:Middlewares/lvgl/src/core/lv_event.c **** 
+ 210:Middlewares/lvgl/src/core/lv_event.c ****     /*No event handler found*/
+ 211:Middlewares/lvgl/src/core/lv_event.c ****     return false;
+ 212:Middlewares/lvgl/src/core/lv_event.c **** }
+ 213:Middlewares/lvgl/src/core/lv_event.c **** 
+ 214:Middlewares/lvgl/src/core/lv_event.c **** lv_indev_t * lv_event_get_indev(lv_event_t * e)
+ 215:Middlewares/lvgl/src/core/lv_event.c **** {
+ 216:Middlewares/lvgl/src/core/lv_event.c **** 
+ 217:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_PRESSED ||
+ 218:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_PRESSING ||
+ 219:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_PRESS_LOST ||
+ 220:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_SHORT_CLICKED ||
+ 221:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_LONG_PRESSED ||
+ 222:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_LONG_PRESSED_REPEAT ||
+ 223:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_CLICKED ||
+ 224:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_RELEASED ||
+ 225:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_SCROLL_BEGIN ||
+ 226:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_SCROLL_END ||
+ 227:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_SCROLL ||
+ 228:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_GESTURE ||
+ 229:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_KEY ||
+ 230:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_FOCUSED ||
+ 231:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DEFOCUSED ||
+ 232:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_LEAVE)
+ 233:Middlewares/lvgl/src/core/lv_event.c ****     {
+ 234:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 235:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 236:Middlewares/lvgl/src/core/lv_event.c ****         LV_LOG_WARN("Not interpreted with this event code");
+ 237:Middlewares/lvgl/src/core/lv_event.c ****         return NULL;
+ 238:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 239:Middlewares/lvgl/src/core/lv_event.c **** }
+ 240:Middlewares/lvgl/src/core/lv_event.c **** 
+ 241:Middlewares/lvgl/src/core/lv_event.c **** lv_obj_draw_part_dsc_t * lv_event_get_draw_part_dsc(lv_event_t * e)
+ 242:Middlewares/lvgl/src/core/lv_event.c **** {
+ 243:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_DRAW_PART_BEGIN||
+ 244:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_PART_END)
+ 245:Middlewares/lvgl/src/core/lv_event.c ****     {
+ 246:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 247:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 248:Middlewares/lvgl/src/core/lv_event.c ****         LV_LOG_WARN("Not interpreted with this event code");
+ 249:Middlewares/lvgl/src/core/lv_event.c ****         return NULL;
+ 250:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 251:Middlewares/lvgl/src/core/lv_event.c **** }
+ 252:Middlewares/lvgl/src/core/lv_event.c **** 
+ 253:Middlewares/lvgl/src/core/lv_event.c **** const lv_area_t * lv_event_get_clip_area(lv_event_t * e)
+ 254:Middlewares/lvgl/src/core/lv_event.c **** {
+ 255:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_DRAW_MAIN ||
+ 256:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_MAIN_BEGIN ||
+ 257:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_MAIN_END ||
+ 258:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_POST ||
+ 259:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_POST_BEGIN ||
+ARM GAS  /tmp/ccbCcH82.s 			page 6
+
+
+ 260:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_POST_END)
+ 261:Middlewares/lvgl/src/core/lv_event.c ****     {
+ 262:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 263:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 264:Middlewares/lvgl/src/core/lv_event.c ****         LV_LOG_WARN("Not interpreted with this event code");
+ 265:Middlewares/lvgl/src/core/lv_event.c ****         return NULL;
+ 266:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 267:Middlewares/lvgl/src/core/lv_event.c **** }
+ 268:Middlewares/lvgl/src/core/lv_event.c **** 
+ 269:Middlewares/lvgl/src/core/lv_event.c **** const lv_area_t * lv_event_get_old_size(lv_event_t * e)
+ 270:Middlewares/lvgl/src/core/lv_event.c **** {
+ 271:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_SIZE_CHANGED) {
+ 272:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 273:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 274:Middlewares/lvgl/src/core/lv_event.c ****         LV_LOG_WARN("Not interpreted with this event code");
+ 275:Middlewares/lvgl/src/core/lv_event.c ****         return NULL;
+ 276:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 277:Middlewares/lvgl/src/core/lv_event.c **** }
+ 278:Middlewares/lvgl/src/core/lv_event.c **** 
+ 279:Middlewares/lvgl/src/core/lv_event.c **** uint32_t lv_event_get_key(lv_event_t * e)
+ 280:Middlewares/lvgl/src/core/lv_event.c **** {
+ 281:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_KEY) {
+ 282:Middlewares/lvgl/src/core/lv_event.c ****         uint32_t * k = lv_event_get_param(e);
+ 283:Middlewares/lvgl/src/core/lv_event.c ****         if(k) return *k;
+ 284:Middlewares/lvgl/src/core/lv_event.c ****         else return 0;
+ 285:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 286:Middlewares/lvgl/src/core/lv_event.c ****         LV_LOG_WARN("Not interpreted with this event code");
+ 287:Middlewares/lvgl/src/core/lv_event.c ****         return 0;
+ 288:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 289:Middlewares/lvgl/src/core/lv_event.c **** }
+ 290:Middlewares/lvgl/src/core/lv_event.c **** 
+ 291:Middlewares/lvgl/src/core/lv_event.c **** lv_anim_t * lv_event_get_scroll_anim(lv_event_t * e)
+ 292:Middlewares/lvgl/src/core/lv_event.c **** {
+ 293:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_SCROLL_BEGIN) {
+ 294:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 295:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 296:Middlewares/lvgl/src/core/lv_event.c ****         LV_LOG_WARN("Not interpreted with this event code");
+ 297:Middlewares/lvgl/src/core/lv_event.c ****         return 0;
+ 298:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 299:Middlewares/lvgl/src/core/lv_event.c **** }
+ 300:Middlewares/lvgl/src/core/lv_event.c **** 
+ 301:Middlewares/lvgl/src/core/lv_event.c **** void lv_event_set_ext_draw_size(lv_event_t * e, lv_coord_t size)
+ 302:Middlewares/lvgl/src/core/lv_event.c **** {
+ 303:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
+ 304:Middlewares/lvgl/src/core/lv_event.c ****         lv_coord_t * cur_size = lv_event_get_param(e);
+ 305:Middlewares/lvgl/src/core/lv_event.c ****         *cur_size = LV_MAX(*cur_size, size);
+ 306:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 307:Middlewares/lvgl/src/core/lv_event.c ****         LV_LOG_WARN("Not interpreted with this event code");
+ 308:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 309:Middlewares/lvgl/src/core/lv_event.c **** }
+ 310:Middlewares/lvgl/src/core/lv_event.c **** 
+ 311:Middlewares/lvgl/src/core/lv_event.c **** lv_point_t * lv_event_get_self_size_info(lv_event_t * e)
+ 312:Middlewares/lvgl/src/core/lv_event.c **** {
+ 313:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_GET_SELF_SIZE) {
+ 314:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 315:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 316:Middlewares/lvgl/src/core/lv_event.c ****         LV_LOG_WARN("Not interpreted with this event code");
+ARM GAS  /tmp/ccbCcH82.s 			page 7
+
+
+ 317:Middlewares/lvgl/src/core/lv_event.c ****         return 0;
+ 318:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 319:Middlewares/lvgl/src/core/lv_event.c **** }
+ 320:Middlewares/lvgl/src/core/lv_event.c **** 
+ 321:Middlewares/lvgl/src/core/lv_event.c **** lv_hit_test_info_t * lv_event_get_hit_test_info(lv_event_t * e)
+ 322:Middlewares/lvgl/src/core/lv_event.c **** {
+ 323:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_HIT_TEST) {
+ 324:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 325:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 326:Middlewares/lvgl/src/core/lv_event.c ****         LV_LOG_WARN("Not interpreted with this event code");
+ 327:Middlewares/lvgl/src/core/lv_event.c ****         return 0;
+ 328:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 329:Middlewares/lvgl/src/core/lv_event.c **** }
+ 330:Middlewares/lvgl/src/core/lv_event.c **** 
+ 331:Middlewares/lvgl/src/core/lv_event.c **** const lv_area_t * lv_event_get_cover_area(lv_event_t * e)
+ 332:Middlewares/lvgl/src/core/lv_event.c **** {
+ 333:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_COVER_CHECK) {
+ 334:Middlewares/lvgl/src/core/lv_event.c ****         lv_cover_check_info_t * p = lv_event_get_param(e);
+ 335:Middlewares/lvgl/src/core/lv_event.c ****         return p->area;
+ 336:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 337:Middlewares/lvgl/src/core/lv_event.c ****         LV_LOG_WARN("Not interpreted with this event code");
+ 338:Middlewares/lvgl/src/core/lv_event.c ****         return NULL;
+ 339:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 340:Middlewares/lvgl/src/core/lv_event.c **** }
+ 341:Middlewares/lvgl/src/core/lv_event.c **** 
+ 342:Middlewares/lvgl/src/core/lv_event.c **** void lv_event_set_cover_res(lv_event_t * e, lv_cover_res_t res)
+ 343:Middlewares/lvgl/src/core/lv_event.c **** {
+ 344:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_COVER_CHECK) {
+ 345:Middlewares/lvgl/src/core/lv_event.c ****         lv_cover_check_info_t * p = lv_event_get_param(e);
+ 346:Middlewares/lvgl/src/core/lv_event.c ****         if(res > p->res) p->res = res;  /*Save only "stronger" results*/
+ 347:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 348:Middlewares/lvgl/src/core/lv_event.c ****         LV_LOG_WARN("Not interpreted with this event code");
+ 349:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 350:Middlewares/lvgl/src/core/lv_event.c **** }
+ 351:Middlewares/lvgl/src/core/lv_event.c **** 
+ 352:Middlewares/lvgl/src/core/lv_event.c **** /**********************
+ 353:Middlewares/lvgl/src/core/lv_event.c ****  *   STATIC FUNCTIONS
+ 354:Middlewares/lvgl/src/core/lv_event.c ****  **********************/
+ 355:Middlewares/lvgl/src/core/lv_event.c **** 
+ 356:Middlewares/lvgl/src/core/lv_event.c **** static lv_event_dsc_t * lv_obj_get_event_dsc(const lv_obj_t * obj, uint32_t id)
+ 357:Middlewares/lvgl/src/core/lv_event.c **** {
+  28              		.loc 1 357 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+ 358:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_OBJ(obj, MY_CLASS);
+  33              		.loc 1 358 5 view .LVU1
+  34              		.loc 1 358 5 view .LVU2
+  35              		.loc 1 358 5 view .LVU3
+ 359:Middlewares/lvgl/src/core/lv_event.c **** 
+ 360:Middlewares/lvgl/src/core/lv_event.c ****     if(!obj->spec_attr) return NULL;
+  36              		.loc 1 360 5 view .LVU4
+  37              		.loc 1 360 12 is_stmt 0 view .LVU5
+  38 0000 8068     		ldr	r0, [r0, #8]
+  39              	.LVL1:
+  40              		.loc 1 360 7 view .LVU6
+ARM GAS  /tmp/ccbCcH82.s 			page 8
+
+
+  41 0002 48B1     		cbz	r0, .L1
+ 361:Middlewares/lvgl/src/core/lv_event.c ****     if(id >= obj->spec_attr->event_dsc_cnt) return NULL;
+  42              		.loc 1 361 5 is_stmt 1 view .LVU7
+  43              		.loc 1 361 28 is_stmt 0 view .LVU8
+  44 0004 837E     		ldrb	r3, [r0, #26]	@ zero_extendqisi2
+  45              		.loc 1 361 7 view .LVU9
+  46 0006 8B42     		cmp	r3, r1
+  47 0008 05D9     		bls	.L3
+ 362:Middlewares/lvgl/src/core/lv_event.c **** 
+ 363:Middlewares/lvgl/src/core/lv_event.c ****     return &obj->spec_attr->event_dsc[id];
+  48              		.loc 1 363 5 is_stmt 1 view .LVU10
+  49              		.loc 1 363 27 is_stmt 0 view .LVU11
+  50 000a C068     		ldr	r0, [r0, #12]
+  51              		.loc 1 363 38 view .LVU12
+  52 000c 01EB4101 		add	r1, r1, r1, lsl #1
+  53              	.LVL2:
+  54              		.loc 1 363 12 view .LVU13
+  55 0010 00EB8100 		add	r0, r0, r1, lsl #2
+  56 0014 7047     		bx	lr
+  57              	.LVL3:
+  58              	.L3:
+ 361:Middlewares/lvgl/src/core/lv_event.c ****     if(id >= obj->spec_attr->event_dsc_cnt) return NULL;
+  59              		.loc 1 361 52 view .LVU14
+  60 0016 0020     		movs	r0, #0
+  61              	.L1:
+ 364:Middlewares/lvgl/src/core/lv_event.c **** }
+  62              		.loc 1 364 1 view .LVU15
+  63 0018 7047     		bx	lr
+  64              		.cfi_endproc
+  65              	.LFE170:
+  67              		.section	.text.event_is_bubbled,"ax",%progbits
+  68              		.align	1
+  69              		.syntax unified
+  70              		.thumb
+  71              		.thumb_func
+  72              		.fpu fpv5-d16
+  74              	event_is_bubbled:
+  75              	.LVL4:
+  76              	.LFB172:
+ 365:Middlewares/lvgl/src/core/lv_event.c **** 
+ 366:Middlewares/lvgl/src/core/lv_event.c **** static lv_res_t event_send_core(lv_event_t * e)
+ 367:Middlewares/lvgl/src/core/lv_event.c **** {
+ 368:Middlewares/lvgl/src/core/lv_event.c ****     EVENT_TRACE("Sending event %d to %p with %p param", e->code, e->current_target, e->param);
+ 369:Middlewares/lvgl/src/core/lv_event.c **** 
+ 370:Middlewares/lvgl/src/core/lv_event.c ****     /*Call the input device's feedback callback if set*/
+ 371:Middlewares/lvgl/src/core/lv_event.c ****     lv_indev_t * indev_act = lv_indev_get_act();
+ 372:Middlewares/lvgl/src/core/lv_event.c ****     if(indev_act) {
+ 373:Middlewares/lvgl/src/core/lv_event.c ****         if(indev_act->driver->feedback_cb) indev_act->driver->feedback_cb(indev_act->driver, e->cod
+ 374:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 375:Middlewares/lvgl/src/core/lv_event.c **** 
+ 376:Middlewares/lvgl/src/core/lv_event.c ****     lv_event_dsc_t * event_dsc = lv_obj_get_event_dsc(e->current_target, 0);
+ 377:Middlewares/lvgl/src/core/lv_event.c ****     lv_res_t res = LV_RES_OK;
+ 378:Middlewares/lvgl/src/core/lv_event.c ****     res = lv_obj_event_base(NULL, e);
+ 379:Middlewares/lvgl/src/core/lv_event.c **** 
+ 380:Middlewares/lvgl/src/core/lv_event.c ****     uint32_t i = 0;
+ 381:Middlewares/lvgl/src/core/lv_event.c ****     while(event_dsc && res == LV_RES_OK) {
+ 382:Middlewares/lvgl/src/core/lv_event.c ****         if(event_dsc->cb && (event_dsc->filter == LV_EVENT_ALL || event_dsc->filter == e->code)) {
+ARM GAS  /tmp/ccbCcH82.s 			page 9
+
+
+ 383:Middlewares/lvgl/src/core/lv_event.c ****             e->user_data = event_dsc->user_data;
+ 384:Middlewares/lvgl/src/core/lv_event.c ****             event_dsc->cb(e);
+ 385:Middlewares/lvgl/src/core/lv_event.c **** 
+ 386:Middlewares/lvgl/src/core/lv_event.c ****             /*Stop if the object is deleted*/
+ 387:Middlewares/lvgl/src/core/lv_event.c ****             if(e->deleted) return LV_RES_INV;
+ 388:Middlewares/lvgl/src/core/lv_event.c ****         }
+ 389:Middlewares/lvgl/src/core/lv_event.c **** 
+ 390:Middlewares/lvgl/src/core/lv_event.c ****         i++;
+ 391:Middlewares/lvgl/src/core/lv_event.c ****         event_dsc = lv_obj_get_event_dsc(e->current_target, i);
+ 392:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 393:Middlewares/lvgl/src/core/lv_event.c **** 
+ 394:Middlewares/lvgl/src/core/lv_event.c ****     if(res == LV_RES_OK && event_is_bubbled(e->code)) {
+ 395:Middlewares/lvgl/src/core/lv_event.c ****         if(lv_obj_has_flag(e->current_target, LV_OBJ_FLAG_EVENT_BUBBLE) && e->current_target->paren
+ 396:Middlewares/lvgl/src/core/lv_event.c ****             e->current_target = e->current_target->parent;
+ 397:Middlewares/lvgl/src/core/lv_event.c ****             res = event_send_core(e);
+ 398:Middlewares/lvgl/src/core/lv_event.c ****             if(res != LV_RES_OK) return LV_RES_INV;
+ 399:Middlewares/lvgl/src/core/lv_event.c ****         }
+ 400:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 401:Middlewares/lvgl/src/core/lv_event.c **** 
+ 402:Middlewares/lvgl/src/core/lv_event.c ****     return res;
+ 403:Middlewares/lvgl/src/core/lv_event.c **** }
+ 404:Middlewares/lvgl/src/core/lv_event.c **** 
+ 405:Middlewares/lvgl/src/core/lv_event.c **** static bool event_is_bubbled(lv_event_code_t e)
+ 406:Middlewares/lvgl/src/core/lv_event.c **** {
+  77              		.loc 1 406 1 is_stmt 1 view -0
+  78              		.cfi_startproc
+  79              		@ args = 0, pretend = 0, frame = 0
+  80              		@ frame_needed = 0, uses_anonymous_args = 0
+  81              		@ link register save eliminated.
+ 407:Middlewares/lvgl/src/core/lv_event.c ****     switch(e) {
+  82              		.loc 1 407 5 view .LVU17
+  83 0000 1138     		subs	r0, r0, #17
+  84              	.LVL5:
+  85              		.loc 1 407 5 is_stmt 0 view .LVU18
+  86 0002 1528     		cmp	r0, #21
+  87 0004 0ED8     		bhi	.L8
+  88 0006 DFE800F0 		tbb	[pc, r0]
+  89              	.L7:
+  90 000a 0B       		.byte	(.L6-.L7)/2
+  91 000b 0B       		.byte	(.L6-.L7)/2
+  92 000c 0B       		.byte	(.L6-.L7)/2
+  93 000d 0B       		.byte	(.L6-.L7)/2
+  94 000e 0B       		.byte	(.L6-.L7)/2
+  95 000f 0B       		.byte	(.L6-.L7)/2
+  96 0010 0B       		.byte	(.L6-.L7)/2
+  97 0011 0B       		.byte	(.L6-.L7)/2
+  98 0012 0B       		.byte	(.L6-.L7)/2
+  99 0013 0B       		.byte	(.L6-.L7)/2
+ 100 0014 0B       		.byte	(.L6-.L7)/2
+ 101 0015 0D       		.byte	(.L8-.L7)/2
+ 102 0016 0D       		.byte	(.L8-.L7)/2
+ 103 0017 0B       		.byte	(.L6-.L7)/2
+ 104 0018 0D       		.byte	(.L8-.L7)/2
+ 105 0019 0D       		.byte	(.L8-.L7)/2
+ 106 001a 0B       		.byte	(.L6-.L7)/2
+ 107 001b 0B       		.byte	(.L6-.L7)/2
+ 108 001c 0B       		.byte	(.L6-.L7)/2
+ARM GAS  /tmp/ccbCcH82.s 			page 10
+
+
+ 109 001d 0B       		.byte	(.L6-.L7)/2
+ 110 001e 0D       		.byte	(.L8-.L7)/2
+ 111 001f 0B       		.byte	(.L6-.L7)/2
+ 112              		.p2align 1
+ 113              	.L6:
+ 114 0020 0020     		movs	r0, #0
+ 115 0022 7047     		bx	lr
+ 116              	.L8:
+ 408:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_HIT_TEST:
+ 409:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_COVER_CHECK:
+ 410:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_REFR_EXT_DRAW_SIZE:
+ 411:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_DRAW_MAIN_BEGIN:
+ 412:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_DRAW_MAIN:
+ 413:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_DRAW_MAIN_END:
+ 414:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_DRAW_POST_BEGIN:
+ 415:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_DRAW_POST:
+ 416:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_DRAW_POST_END:
+ 417:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_DRAW_PART_BEGIN:
+ 418:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_DRAW_PART_END:
+ 419:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_REFRESH:
+ 420:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_DELETE:
+ 421:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_CHILD_CHANGED:
+ 422:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_SIZE_CHANGED:
+ 423:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_STYLE_CHANGED:
+ 424:Middlewares/lvgl/src/core/lv_event.c ****     case LV_EVENT_GET_SELF_SIZE:
+ 425:Middlewares/lvgl/src/core/lv_event.c ****         return false;
+ 426:Middlewares/lvgl/src/core/lv_event.c ****     default:
+ 427:Middlewares/lvgl/src/core/lv_event.c ****         return true;
+ 117              		.loc 1 427 16 view .LVU19
+ 118 0024 0120     		movs	r0, #1
+ 428:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 429:Middlewares/lvgl/src/core/lv_event.c **** }
+ 119              		.loc 1 429 1 view .LVU20
+ 120 0026 7047     		bx	lr
+ 121              		.cfi_endproc
+ 122              	.LFE172:
+ 124              		.section	.text.lv_obj_event_base,"ax",%progbits
+ 125              		.align	1
+ 126              		.global	lv_obj_event_base
+ 127              		.syntax unified
+ 128              		.thumb
+ 129              		.thumb_func
+ 130              		.fpu fpv5-d16
+ 132              	lv_obj_event_base:
+ 133              	.LVL6:
+ 134              	.LFB148:
+  83:Middlewares/lvgl/src/core/lv_event.c ****     const lv_obj_class_t * base;
+ 135              		.loc 1 83 1 is_stmt 1 view -0
+ 136              		.cfi_startproc
+ 137              		@ args = 0, pretend = 0, frame = 0
+ 138              		@ frame_needed = 0, uses_anonymous_args = 0
+  83:Middlewares/lvgl/src/core/lv_event.c ****     const lv_obj_class_t * base;
+ 139              		.loc 1 83 1 is_stmt 0 view .LVU22
+ 140 0000 10B5     		push	{r4, lr}
+ 141              	.LCFI0:
+ 142              		.cfi_def_cfa_offset 8
+ 143              		.cfi_offset 4, -8
+ARM GAS  /tmp/ccbCcH82.s 			page 11
+
+
+ 144              		.cfi_offset 14, -4
+ 145 0002 0C46     		mov	r4, r1
+  84:Middlewares/lvgl/src/core/lv_event.c ****     if(class_p == NULL) base = e->current_target->class_p;
+ 146              		.loc 1 84 5 is_stmt 1 view .LVU23
+  85:Middlewares/lvgl/src/core/lv_event.c ****     else base = class_p->base_class;
+ 147              		.loc 1 85 5 view .LVU24
+  85:Middlewares/lvgl/src/core/lv_event.c ****     else base = class_p->base_class;
+ 148              		.loc 1 85 7 is_stmt 0 view .LVU25
+ 149 0004 08B1     		cbz	r0, .L20
+  86:Middlewares/lvgl/src/core/lv_event.c **** 
+ 150              		.loc 1 86 10 is_stmt 1 view .LVU26
+  86:Middlewares/lvgl/src/core/lv_event.c **** 
+ 151              		.loc 1 86 15 is_stmt 0 view .LVU27
+ 152 0006 0068     		ldr	r0, [r0]
+ 153              	.LVL7:
+  86:Middlewares/lvgl/src/core/lv_event.c **** 
+ 154              		.loc 1 86 15 view .LVU28
+ 155 0008 03E0     		b	.L12
+ 156              	.LVL8:
+ 157              	.L20:
+  85:Middlewares/lvgl/src/core/lv_event.c ****     else base = class_p->base_class;
+ 158              		.loc 1 85 25 is_stmt 1 discriminator 1 view .LVU29
+  85:Middlewares/lvgl/src/core/lv_event.c ****     else base = class_p->base_class;
+ 159              		.loc 1 85 33 is_stmt 0 discriminator 1 view .LVU30
+ 160 000a 4B68     		ldr	r3, [r1, #4]
+  85:Middlewares/lvgl/src/core/lv_event.c ****     else base = class_p->base_class;
+ 161              		.loc 1 85 30 discriminator 1 view .LVU31
+ 162 000c 1868     		ldr	r0, [r3]
+ 163              	.LVL9:
+  85:Middlewares/lvgl/src/core/lv_event.c ****     else base = class_p->base_class;
+ 164              		.loc 1 85 30 discriminator 1 view .LVU32
+ 165 000e 00E0     		b	.L12
+ 166              	.L14:
+  89:Middlewares/lvgl/src/core/lv_event.c **** 
+ 167              		.loc 1 89 43 is_stmt 1 discriminator 3 view .LVU33
+  89:Middlewares/lvgl/src/core/lv_event.c **** 
+ 168              		.loc 1 89 48 is_stmt 0 discriminator 3 view .LVU34
+ 169 0010 0068     		ldr	r0, [r0]
+ 170              	.LVL10:
+ 171              	.L12:
+  89:Middlewares/lvgl/src/core/lv_event.c **** 
+ 172              		.loc 1 89 10 is_stmt 1 discriminator 1 view .LVU35
+ 173 0012 10B1     		cbz	r0, .L13
+  89:Middlewares/lvgl/src/core/lv_event.c **** 
+ 174              		.loc 1 89 23 is_stmt 0 discriminator 2 view .LVU36
+ 175 0014 0369     		ldr	r3, [r0, #16]
+  89:Middlewares/lvgl/src/core/lv_event.c **** 
+ 176              		.loc 1 89 16 discriminator 2 view .LVU37
+ 177 0016 002B     		cmp	r3, #0
+ 178 0018 FAD0     		beq	.L14
+ 179              	.L13:
+  91:Middlewares/lvgl/src/core/lv_event.c ****     if(base->event_cb == NULL) return LV_RES_OK;
+ 180              		.loc 1 91 5 is_stmt 1 view .LVU38
+  91:Middlewares/lvgl/src/core/lv_event.c ****     if(base->event_cb == NULL) return LV_RES_OK;
+ 181              		.loc 1 91 7 is_stmt 0 view .LVU39
+ 182 001a 60B1     		cbz	r0, .L16
+  92:Middlewares/lvgl/src/core/lv_event.c **** 
+ARM GAS  /tmp/ccbCcH82.s 			page 12
+
+
+ 183              		.loc 1 92 5 is_stmt 1 view .LVU40
+  92:Middlewares/lvgl/src/core/lv_event.c **** 
+ 184              		.loc 1 92 12 is_stmt 0 view .LVU41
+ 185 001c 0369     		ldr	r3, [r0, #16]
+  92:Middlewares/lvgl/src/core/lv_event.c **** 
+ 186              		.loc 1 92 7 view .LVU42
+ 187 001e 63B1     		cbz	r3, .L17
+  95:Middlewares/lvgl/src/core/lv_event.c ****     base->event_cb(base, e);
+ 188              		.loc 1 95 5 is_stmt 1 view .LVU43
+  95:Middlewares/lvgl/src/core/lv_event.c ****     base->event_cb(base, e);
+ 189              		.loc 1 95 18 is_stmt 0 view .LVU44
+ 190 0020 0023     		movs	r3, #0
+ 191 0022 E360     		str	r3, [r4, #12]
+  96:Middlewares/lvgl/src/core/lv_event.c **** 
+ 192              		.loc 1 96 5 is_stmt 1 view .LVU45
+  96:Middlewares/lvgl/src/core/lv_event.c **** 
+ 193              		.loc 1 96 9 is_stmt 0 view .LVU46
+ 194 0024 0369     		ldr	r3, [r0, #16]
+  96:Middlewares/lvgl/src/core/lv_event.c **** 
+ 195              		.loc 1 96 5 view .LVU47
+ 196 0026 2146     		mov	r1, r4
+ 197              	.LVL11:
+  96:Middlewares/lvgl/src/core/lv_event.c **** 
+ 198              		.loc 1 96 5 view .LVU48
+ 199 0028 9847     		blx	r3
+ 200              	.LVL12:
+  98:Middlewares/lvgl/src/core/lv_event.c ****     /*Stop if the object is deleted*/
+ 201              		.loc 1 98 5 is_stmt 1 view .LVU49
+ 100:Middlewares/lvgl/src/core/lv_event.c **** 
+ 202              		.loc 1 100 5 view .LVU50
+ 100:Middlewares/lvgl/src/core/lv_event.c **** 
+ 203              		.loc 1 100 8 is_stmt 0 view .LVU51
+ 204 002a 237E     		ldrb	r3, [r4, #24]	@ zero_extendqisi2
+ 100:Middlewares/lvgl/src/core/lv_event.c **** 
+ 205              		.loc 1 100 7 view .LVU52
+ 206 002c 13F0010F 		tst	r3, #1
+ 207 0030 05D1     		bne	.L18
+  98:Middlewares/lvgl/src/core/lv_event.c ****     /*Stop if the object is deleted*/
+ 208              		.loc 1 98 14 view .LVU53
+ 209 0032 0120     		movs	r0, #1
+ 210              	.LVL13:
+ 211              	.L15:
+ 103:Middlewares/lvgl/src/core/lv_event.c **** 
+ 212              		.loc 1 103 1 view .LVU54
+ 213 0034 10BD     		pop	{r4, pc}
+ 214              	.LVL14:
+ 215              	.L16:
+  91:Middlewares/lvgl/src/core/lv_event.c ****     if(base->event_cb == NULL) return LV_RES_OK;
+ 216              		.loc 1 91 29 view .LVU55
+ 217 0036 0120     		movs	r0, #1
+ 218              	.LVL15:
+  91:Middlewares/lvgl/src/core/lv_event.c ****     if(base->event_cb == NULL) return LV_RES_OK;
+ 219              		.loc 1 91 29 view .LVU56
+ 220 0038 FCE7     		b	.L15
+ 221              	.LVL16:
+ 222              	.L17:
+  92:Middlewares/lvgl/src/core/lv_event.c **** 
+ARM GAS  /tmp/ccbCcH82.s 			page 13
+
+
+ 223              		.loc 1 92 39 view .LVU57
+ 224 003a 0120     		movs	r0, #1
+ 225              	.LVL17:
+  92:Middlewares/lvgl/src/core/lv_event.c **** 
+ 226              		.loc 1 92 39 view .LVU58
+ 227 003c FAE7     		b	.L15
+ 228              	.LVL18:
+ 229              	.L18:
+ 100:Middlewares/lvgl/src/core/lv_event.c **** 
+ 230              		.loc 1 100 24 view .LVU59
+ 231 003e 0020     		movs	r0, #0
+ 232 0040 F8E7     		b	.L15
+ 233              		.cfi_endproc
+ 234              	.LFE148:
+ 236              		.section	.text.event_send_core,"ax",%progbits
+ 237              		.align	1
+ 238              		.syntax unified
+ 239              		.thumb
+ 240              		.thumb_func
+ 241              		.fpu fpv5-d16
+ 243              	event_send_core:
+ 244              	.LVL19:
+ 245              	.LFB171:
+ 367:Middlewares/lvgl/src/core/lv_event.c ****     EVENT_TRACE("Sending event %d to %p with %p param", e->code, e->current_target, e->param);
+ 246              		.loc 1 367 1 is_stmt 1 view -0
+ 247              		.cfi_startproc
+ 248              		@ args = 0, pretend = 0, frame = 0
+ 249              		@ frame_needed = 0, uses_anonymous_args = 0
+ 367:Middlewares/lvgl/src/core/lv_event.c ****     EVENT_TRACE("Sending event %d to %p with %p param", e->code, e->current_target, e->param);
+ 250              		.loc 1 367 1 is_stmt 0 view .LVU61
+ 251 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 252              	.LCFI1:
+ 253              		.cfi_def_cfa_offset 24
+ 254              		.cfi_offset 3, -24
+ 255              		.cfi_offset 4, -20
+ 256              		.cfi_offset 5, -16
+ 257              		.cfi_offset 6, -12
+ 258              		.cfi_offset 7, -8
+ 259              		.cfi_offset 14, -4
+ 260 0002 0546     		mov	r5, r0
+ 368:Middlewares/lvgl/src/core/lv_event.c **** 
+ 261              		.loc 1 368 94 is_stmt 1 view .LVU62
+ 371:Middlewares/lvgl/src/core/lv_event.c ****     if(indev_act) {
+ 262              		.loc 1 371 5 view .LVU63
+ 371:Middlewares/lvgl/src/core/lv_event.c ****     if(indev_act) {
+ 263              		.loc 1 371 30 is_stmt 0 view .LVU64
+ 264 0004 FFF7FEFF 		bl	lv_indev_get_act
+ 265              	.LVL20:
+ 372:Middlewares/lvgl/src/core/lv_event.c ****         if(indev_act->driver->feedback_cb) indev_act->driver->feedback_cb(indev_act->driver, e->cod
+ 266              		.loc 1 372 5 is_stmt 1 view .LVU65
+ 372:Middlewares/lvgl/src/core/lv_event.c ****         if(indev_act->driver->feedback_cb) indev_act->driver->feedback_cb(indev_act->driver, e->cod
+ 267              		.loc 1 372 7 is_stmt 0 view .LVU66
+ 268 0008 20B1     		cbz	r0, .L22
+ 373:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 269              		.loc 1 373 9 is_stmt 1 view .LVU67
+ 373:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 270              		.loc 1 373 21 is_stmt 0 view .LVU68
+ARM GAS  /tmp/ccbCcH82.s 			page 14
+
+
+ 271 000a 0068     		ldr	r0, [r0]
+ 272              	.LVL21:
+ 373:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 273              		.loc 1 373 29 view .LVU69
+ 274 000c 8368     		ldr	r3, [r0, #8]
+ 373:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 275              		.loc 1 373 11 view .LVU70
+ 276 000e 0BB1     		cbz	r3, .L22
+ 373:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 277              		.loc 1 373 44 is_stmt 1 discriminator 1 view .LVU71
+ 278 0010 297A     		ldrb	r1, [r5, #8]	@ zero_extendqisi2
+ 279 0012 9847     		blx	r3
+ 280              	.LVL22:
+ 281              	.L22:
+ 376:Middlewares/lvgl/src/core/lv_event.c ****     lv_res_t res = LV_RES_OK;
+ 282              		.loc 1 376 5 view .LVU72
+ 376:Middlewares/lvgl/src/core/lv_event.c ****     lv_res_t res = LV_RES_OK;
+ 283              		.loc 1 376 34 is_stmt 0 view .LVU73
+ 284 0014 0021     		movs	r1, #0
+ 285 0016 6868     		ldr	r0, [r5, #4]
+ 286 0018 FFF7FEFF 		bl	lv_obj_get_event_dsc
+ 287              	.LVL23:
+ 288 001c 0446     		mov	r4, r0
+ 289              	.LVL24:
+ 377:Middlewares/lvgl/src/core/lv_event.c ****     res = lv_obj_event_base(NULL, e);
+ 290              		.loc 1 377 5 is_stmt 1 view .LVU74
+ 378:Middlewares/lvgl/src/core/lv_event.c **** 
+ 291              		.loc 1 378 5 view .LVU75
+ 378:Middlewares/lvgl/src/core/lv_event.c **** 
+ 292              		.loc 1 378 11 is_stmt 0 view .LVU76
+ 293 001e 2946     		mov	r1, r5
+ 294 0020 0020     		movs	r0, #0
+ 295              	.LVL25:
+ 378:Middlewares/lvgl/src/core/lv_event.c **** 
+ 296              		.loc 1 378 11 view .LVU77
+ 297 0022 FFF7FEFF 		bl	lv_obj_event_base
+ 298              	.LVL26:
+ 299 0026 0746     		mov	r7, r0
+ 300              	.LVL27:
+ 380:Middlewares/lvgl/src/core/lv_event.c ****     while(event_dsc && res == LV_RES_OK) {
+ 301              		.loc 1 380 5 is_stmt 1 view .LVU78
+ 381:Middlewares/lvgl/src/core/lv_event.c ****         if(event_dsc->cb && (event_dsc->filter == LV_EVENT_ALL || event_dsc->filter == e->code)) {
+ 302              		.loc 1 381 5 view .LVU79
+ 380:Middlewares/lvgl/src/core/lv_event.c ****     while(event_dsc && res == LV_RES_OK) {
+ 303              		.loc 1 380 14 is_stmt 0 view .LVU80
+ 304 0028 0026     		movs	r6, #0
+ 381:Middlewares/lvgl/src/core/lv_event.c ****         if(event_dsc->cb && (event_dsc->filter == LV_EVENT_ALL || event_dsc->filter == e->code)) {
+ 305              		.loc 1 381 10 view .LVU81
+ 306 002a 0EE0     		b	.L23
+ 307              	.LVL28:
+ 308              	.L25:
+ 383:Middlewares/lvgl/src/core/lv_event.c ****             event_dsc->cb(e);
+ 309              		.loc 1 383 13 is_stmt 1 view .LVU82
+ 383:Middlewares/lvgl/src/core/lv_event.c ****             event_dsc->cb(e);
+ 310              		.loc 1 383 37 is_stmt 0 view .LVU83
+ 311 002c 6368     		ldr	r3, [r4, #4]
+ 383:Middlewares/lvgl/src/core/lv_event.c ****             event_dsc->cb(e);
+ARM GAS  /tmp/ccbCcH82.s 			page 15
+
+
+ 312              		.loc 1 383 26 view .LVU84
+ 313 002e EB60     		str	r3, [r5, #12]
+ 384:Middlewares/lvgl/src/core/lv_event.c **** 
+ 314              		.loc 1 384 13 is_stmt 1 view .LVU85
+ 384:Middlewares/lvgl/src/core/lv_event.c **** 
+ 315              		.loc 1 384 22 is_stmt 0 view .LVU86
+ 316 0030 2368     		ldr	r3, [r4]
+ 384:Middlewares/lvgl/src/core/lv_event.c **** 
+ 317              		.loc 1 384 13 view .LVU87
+ 318 0032 2846     		mov	r0, r5
+ 319 0034 9847     		blx	r3
+ 320              	.LVL29:
+ 387:Middlewares/lvgl/src/core/lv_event.c ****         }
+ 321              		.loc 1 387 13 is_stmt 1 view .LVU88
+ 387:Middlewares/lvgl/src/core/lv_event.c ****         }
+ 322              		.loc 1 387 16 is_stmt 0 view .LVU89
+ 323 0036 2B7E     		ldrb	r3, [r5, #24]	@ zero_extendqisi2
+ 387:Middlewares/lvgl/src/core/lv_event.c ****         }
+ 324              		.loc 1 387 15 view .LVU90
+ 325 0038 13F0010F 		tst	r3, #1
+ 326 003c 33D1     		bne	.L28
+ 327              	.L24:
+ 390:Middlewares/lvgl/src/core/lv_event.c ****         event_dsc = lv_obj_get_event_dsc(e->current_target, i);
+ 328              		.loc 1 390 9 is_stmt 1 view .LVU91
+ 390:Middlewares/lvgl/src/core/lv_event.c ****         event_dsc = lv_obj_get_event_dsc(e->current_target, i);
+ 329              		.loc 1 390 10 is_stmt 0 view .LVU92
+ 330 003e 0136     		adds	r6, r6, #1
+ 331              	.LVL30:
+ 391:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 332              		.loc 1 391 9 is_stmt 1 view .LVU93
+ 391:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 333              		.loc 1 391 21 is_stmt 0 view .LVU94
+ 334 0040 3146     		mov	r1, r6
+ 335 0042 6868     		ldr	r0, [r5, #4]
+ 336 0044 FFF7FEFF 		bl	lv_obj_get_event_dsc
+ 337              	.LVL31:
+ 338 0048 0446     		mov	r4, r0
+ 339              	.LVL32:
+ 340              	.L23:
+ 381:Middlewares/lvgl/src/core/lv_event.c ****         if(event_dsc->cb && (event_dsc->filter == LV_EVENT_ALL || event_dsc->filter == e->code)) {
+ 341              		.loc 1 381 10 is_stmt 1 view .LVU95
+ 381:Middlewares/lvgl/src/core/lv_event.c ****         if(event_dsc->cb && (event_dsc->filter == LV_EVENT_ALL || event_dsc->filter == e->code)) {
+ 342              		.loc 1 381 21 is_stmt 0 view .LVU96
+ 343 004a 231E     		subs	r3, r4, #0
+ 344 004c 18BF     		it	ne
+ 345 004e 0123     		movne	r3, #1
+ 346 0050 012F     		cmp	r7, #1
+ 347 0052 18BF     		it	ne
+ 348 0054 0023     		movne	r3, #0
+ 381:Middlewares/lvgl/src/core/lv_event.c ****         if(event_dsc->cb && (event_dsc->filter == LV_EVENT_ALL || event_dsc->filter == e->code)) {
+ 349              		.loc 1 381 10 view .LVU97
+ 350 0056 4BB1     		cbz	r3, .L31
+ 382:Middlewares/lvgl/src/core/lv_event.c ****             e->user_data = event_dsc->user_data;
+ 351              		.loc 1 382 9 is_stmt 1 view .LVU98
+ 382:Middlewares/lvgl/src/core/lv_event.c ****             e->user_data = event_dsc->user_data;
+ 352              		.loc 1 382 21 is_stmt 0 view .LVU99
+ 353 0058 2368     		ldr	r3, [r4]
+ARM GAS  /tmp/ccbCcH82.s 			page 16
+
+
+ 382:Middlewares/lvgl/src/core/lv_event.c ****             e->user_data = event_dsc->user_data;
+ 354              		.loc 1 382 11 view .LVU100
+ 355 005a 002B     		cmp	r3, #0
+ 356 005c EFD0     		beq	.L24
+ 382:Middlewares/lvgl/src/core/lv_event.c ****             e->user_data = event_dsc->user_data;
+ 357              		.loc 1 382 39 discriminator 1 view .LVU101
+ 358 005e 237A     		ldrb	r3, [r4, #8]	@ zero_extendqisi2
+ 382:Middlewares/lvgl/src/core/lv_event.c ****             e->user_data = event_dsc->user_data;
+ 359              		.loc 1 382 26 discriminator 1 view .LVU102
+ 360 0060 002B     		cmp	r3, #0
+ 361 0062 E3D0     		beq	.L25
+ 382:Middlewares/lvgl/src/core/lv_event.c ****             e->user_data = event_dsc->user_data;
+ 362              		.loc 1 382 89 discriminator 2 view .LVU103
+ 363 0064 2A7A     		ldrb	r2, [r5, #8]	@ zero_extendqisi2
+ 382:Middlewares/lvgl/src/core/lv_event.c ****             e->user_data = event_dsc->user_data;
+ 364              		.loc 1 382 64 discriminator 2 view .LVU104
+ 365 0066 9342     		cmp	r3, r2
+ 366 0068 E9D1     		bne	.L24
+ 367 006a DFE7     		b	.L25
+ 368              	.L31:
+ 394:Middlewares/lvgl/src/core/lv_event.c ****         if(lv_obj_has_flag(e->current_target, LV_OBJ_FLAG_EVENT_BUBBLE) && e->current_target->paren
+ 369              		.loc 1 394 5 is_stmt 1 view .LVU105
+ 394:Middlewares/lvgl/src/core/lv_event.c ****         if(lv_obj_has_flag(e->current_target, LV_OBJ_FLAG_EVENT_BUBBLE) && e->current_target->paren
+ 370              		.loc 1 394 7 is_stmt 0 view .LVU106
+ 371 006c 012F     		cmp	r7, #1
+ 372 006e 01D0     		beq	.L32
+ 373              	.LVL33:
+ 374              	.L26:
+ 403:Middlewares/lvgl/src/core/lv_event.c **** 
+ 375              		.loc 1 403 1 view .LVU107
+ 376 0070 3846     		mov	r0, r7
+ 377 0072 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 378              	.LVL34:
+ 379              	.L32:
+ 394:Middlewares/lvgl/src/core/lv_event.c ****         if(lv_obj_has_flag(e->current_target, LV_OBJ_FLAG_EVENT_BUBBLE) && e->current_target->paren
+ 380              		.loc 1 394 28 discriminator 1 view .LVU108
+ 381 0074 287A     		ldrb	r0, [r5, #8]	@ zero_extendqisi2
+ 382 0076 FFF7FEFF 		bl	event_is_bubbled
+ 383              	.LVL35:
+ 394:Middlewares/lvgl/src/core/lv_event.c ****         if(lv_obj_has_flag(e->current_target, LV_OBJ_FLAG_EVENT_BUBBLE) && e->current_target->paren
+ 384              		.loc 1 394 25 discriminator 1 view .LVU109
+ 385 007a 0028     		cmp	r0, #0
+ 386 007c F8D0     		beq	.L26
+ 395:Middlewares/lvgl/src/core/lv_event.c ****             e->current_target = e->current_target->parent;
+ 387              		.loc 1 395 9 is_stmt 1 view .LVU110
+ 395:Middlewares/lvgl/src/core/lv_event.c ****             e->current_target = e->current_target->parent;
+ 388              		.loc 1 395 12 is_stmt 0 view .LVU111
+ 389 007e 4FF48051 		mov	r1, #4096
+ 390 0082 6868     		ldr	r0, [r5, #4]
+ 391 0084 FFF7FEFF 		bl	lv_obj_has_flag
+ 392              	.LVL36:
+ 395:Middlewares/lvgl/src/core/lv_event.c ****             e->current_target = e->current_target->parent;
+ 393              		.loc 1 395 11 view .LVU112
+ 394 0088 0028     		cmp	r0, #0
+ 395 008a F1D0     		beq	.L26
+ 395:Middlewares/lvgl/src/core/lv_event.c ****             e->current_target = e->current_target->parent;
+ 396              		.loc 1 395 77 discriminator 1 view .LVU113
+ARM GAS  /tmp/ccbCcH82.s 			page 17
+
+
+ 397 008c 6B68     		ldr	r3, [r5, #4]
+ 395:Middlewares/lvgl/src/core/lv_event.c ****             e->current_target = e->current_target->parent;
+ 398              		.loc 1 395 93 discriminator 1 view .LVU114
+ 399 008e 5B68     		ldr	r3, [r3, #4]
+ 395:Middlewares/lvgl/src/core/lv_event.c ****             e->current_target = e->current_target->parent;
+ 400              		.loc 1 395 73 discriminator 1 view .LVU115
+ 401 0090 002B     		cmp	r3, #0
+ 402 0092 EDD0     		beq	.L26
+ 396:Middlewares/lvgl/src/core/lv_event.c ****             res = event_send_core(e);
+ 403              		.loc 1 396 13 is_stmt 1 view .LVU116
+ 396:Middlewares/lvgl/src/core/lv_event.c ****             res = event_send_core(e);
+ 404              		.loc 1 396 31 is_stmt 0 view .LVU117
+ 405 0094 6B60     		str	r3, [r5, #4]
+ 397:Middlewares/lvgl/src/core/lv_event.c ****             if(res != LV_RES_OK) return LV_RES_INV;
+ 406              		.loc 1 397 13 is_stmt 1 view .LVU118
+ 397:Middlewares/lvgl/src/core/lv_event.c ****             if(res != LV_RES_OK) return LV_RES_INV;
+ 407              		.loc 1 397 19 is_stmt 0 view .LVU119
+ 408 0096 2846     		mov	r0, r5
+ 409 0098 FFF7B2FF 		bl	event_send_core
+ 410              	.LVL37:
+ 411 009c 0746     		mov	r7, r0
+ 412              	.LVL38:
+ 398:Middlewares/lvgl/src/core/lv_event.c ****         }
+ 413              		.loc 1 398 13 is_stmt 1 view .LVU120
+ 398:Middlewares/lvgl/src/core/lv_event.c ****         }
+ 414              		.loc 1 398 15 is_stmt 0 view .LVU121
+ 415 009e 0128     		cmp	r0, #1
+ 416 00a0 E6D0     		beq	.L26
+ 398:Middlewares/lvgl/src/core/lv_event.c ****         }
+ 417              		.loc 1 398 41 view .LVU122
+ 418 00a2 0027     		movs	r7, #0
+ 419 00a4 E4E7     		b	.L26
+ 420              	.LVL39:
+ 421              	.L28:
+ 387:Middlewares/lvgl/src/core/lv_event.c ****         }
+ 422              		.loc 1 387 35 view .LVU123
+ 423 00a6 0027     		movs	r7, #0
+ 424              	.LVL40:
+ 387:Middlewares/lvgl/src/core/lv_event.c ****         }
+ 425              		.loc 1 387 35 view .LVU124
+ 426 00a8 E2E7     		b	.L26
+ 427              		.cfi_endproc
+ 428              	.LFE171:
+ 430              		.section	.text.lv_event_send,"ax",%progbits
+ 431              		.align	1
+ 432              		.global	lv_event_send
+ 433              		.syntax unified
+ 434              		.thumb
+ 435              		.thumb_func
+ 436              		.fpu fpv5-d16
+ 438              	lv_event_send:
+ 439              	.LVL41:
+ 440              	.LFB147:
+  52:Middlewares/lvgl/src/core/lv_event.c ****     if(obj == NULL) return LV_RES_OK;
+ 441              		.loc 1 52 1 is_stmt 1 view -0
+ 442              		.cfi_startproc
+ 443              		@ args = 0, pretend = 0, frame = 32
+ARM GAS  /tmp/ccbCcH82.s 			page 18
+
+
+ 444              		@ frame_needed = 0, uses_anonymous_args = 0
+  53:Middlewares/lvgl/src/core/lv_event.c **** 
+ 445              		.loc 1 53 5 view .LVU126
+  53:Middlewares/lvgl/src/core/lv_event.c **** 
+ 446              		.loc 1 53 7 is_stmt 0 view .LVU127
+ 447 0000 C8B1     		cbz	r0, .L35
+  52:Middlewares/lvgl/src/core/lv_event.c ****     if(obj == NULL) return LV_RES_OK;
+ 448              		.loc 1 52 1 view .LVU128
+ 449 0002 10B5     		push	{r4, lr}
+ 450              	.LCFI2:
+ 451              		.cfi_def_cfa_offset 8
+ 452              		.cfi_offset 4, -8
+ 453              		.cfi_offset 14, -4
+ 454 0004 88B0     		sub	sp, sp, #32
+ 455              	.LCFI3:
+ 456              		.cfi_def_cfa_offset 40
+  55:Middlewares/lvgl/src/core/lv_event.c **** 
+ 457              		.loc 1 55 5 is_stmt 1 view .LVU129
+  55:Middlewares/lvgl/src/core/lv_event.c **** 
+ 458              		.loc 1 55 5 view .LVU130
+  55:Middlewares/lvgl/src/core/lv_event.c **** 
+ 459              		.loc 1 55 5 view .LVU131
+  57:Middlewares/lvgl/src/core/lv_event.c ****     e.target = obj;
+ 460              		.loc 1 57 5 view .LVU132
+  58:Middlewares/lvgl/src/core/lv_event.c ****     e.current_target = obj;
+ 461              		.loc 1 58 5 view .LVU133
+  58:Middlewares/lvgl/src/core/lv_event.c ****     e.current_target = obj;
+ 462              		.loc 1 58 14 is_stmt 0 view .LVU134
+ 463 0006 0190     		str	r0, [sp, #4]
+  59:Middlewares/lvgl/src/core/lv_event.c ****     e.code = event_code;
+ 464              		.loc 1 59 5 is_stmt 1 view .LVU135
+  59:Middlewares/lvgl/src/core/lv_event.c ****     e.code = event_code;
+ 465              		.loc 1 59 22 is_stmt 0 view .LVU136
+ 466 0008 0290     		str	r0, [sp, #8]
+  60:Middlewares/lvgl/src/core/lv_event.c ****     e.user_data = NULL;
+ 467              		.loc 1 60 5 is_stmt 1 view .LVU137
+  60:Middlewares/lvgl/src/core/lv_event.c ****     e.user_data = NULL;
+ 468              		.loc 1 60 12 is_stmt 0 view .LVU138
+ 469 000a 8DF80C10 		strb	r1, [sp, #12]
+  61:Middlewares/lvgl/src/core/lv_event.c ****     e.param = param;
+ 470              		.loc 1 61 5 is_stmt 1 view .LVU139
+  61:Middlewares/lvgl/src/core/lv_event.c ****     e.param = param;
+ 471              		.loc 1 61 17 is_stmt 0 view .LVU140
+ 472 000e 0021     		movs	r1, #0
+ 473              	.LVL42:
+  61:Middlewares/lvgl/src/core/lv_event.c ****     e.param = param;
+ 474              		.loc 1 61 17 view .LVU141
+ 475 0010 0491     		str	r1, [sp, #16]
+  62:Middlewares/lvgl/src/core/lv_event.c ****     e.deleted = 0;
+ 476              		.loc 1 62 5 is_stmt 1 view .LVU142
+  62:Middlewares/lvgl/src/core/lv_event.c ****     e.deleted = 0;
+ 477              		.loc 1 62 13 is_stmt 0 view .LVU143
+ 478 0012 0592     		str	r2, [sp, #20]
+  63:Middlewares/lvgl/src/core/lv_event.c **** 
+ 479              		.loc 1 63 5 is_stmt 1 view .LVU144
+  63:Middlewares/lvgl/src/core/lv_event.c **** 
+ 480              		.loc 1 63 15 is_stmt 0 view .LVU145
+ARM GAS  /tmp/ccbCcH82.s 			page 19
+
+
+ 481 0014 9DF81C30 		ldrb	r3, [sp, #28]	@ zero_extendqisi2
+ 482 0018 61F30003 		bfi	r3, r1, #0, #1
+ 483 001c 8DF81C30 		strb	r3, [sp, #28]
+  69:Middlewares/lvgl/src/core/lv_event.c ****     event_head = &e;
+ 484              		.loc 1 69 5 is_stmt 1 view .LVU146
+  69:Middlewares/lvgl/src/core/lv_event.c ****     event_head = &e;
+ 485              		.loc 1 69 12 is_stmt 0 view .LVU147
+ 486 0020 064C     		ldr	r4, .L40
+ 487 0022 2368     		ldr	r3, [r4]
+ 488 0024 0693     		str	r3, [sp, #24]
+  70:Middlewares/lvgl/src/core/lv_event.c **** 
+ 489              		.loc 1 70 5 is_stmt 1 view .LVU148
+  70:Middlewares/lvgl/src/core/lv_event.c **** 
+ 490              		.loc 1 70 16 is_stmt 0 view .LVU149
+ 491 0026 01A8     		add	r0, sp, #4
+ 492              	.LVL43:
+  70:Middlewares/lvgl/src/core/lv_event.c **** 
+ 493              		.loc 1 70 16 view .LVU150
+ 494 0028 2060     		str	r0, [r4]
+  73:Middlewares/lvgl/src/core/lv_event.c **** 
+ 495              		.loc 1 73 5 is_stmt 1 view .LVU151
+  73:Middlewares/lvgl/src/core/lv_event.c **** 
+ 496              		.loc 1 73 20 is_stmt 0 view .LVU152
+ 497 002a FFF7FEFF 		bl	event_send_core
+ 498              	.LVL44:
+  76:Middlewares/lvgl/src/core/lv_event.c **** 
+ 499              		.loc 1 76 5 is_stmt 1 view .LVU153
+  76:Middlewares/lvgl/src/core/lv_event.c **** 
+ 500              		.loc 1 76 19 is_stmt 0 view .LVU154
+ 501 002e 069B     		ldr	r3, [sp, #24]
+  76:Middlewares/lvgl/src/core/lv_event.c **** 
+ 502              		.loc 1 76 16 view .LVU155
+ 503 0030 2360     		str	r3, [r4]
+  78:Middlewares/lvgl/src/core/lv_event.c **** }
+ 504              		.loc 1 78 5 is_stmt 1 view .LVU156
+  79:Middlewares/lvgl/src/core/lv_event.c **** 
+ 505              		.loc 1 79 1 is_stmt 0 view .LVU157
+ 506 0032 08B0     		add	sp, sp, #32
+ 507              	.LCFI4:
+ 508              		.cfi_def_cfa_offset 8
+ 509              		@ sp needed
+ 510 0034 10BD     		pop	{r4, pc}
+ 511              	.LVL45:
+ 512              	.L35:
+ 513              	.LCFI5:
+ 514              		.cfi_def_cfa_offset 0
+ 515              		.cfi_restore 4
+ 516              		.cfi_restore 14
+  53:Middlewares/lvgl/src/core/lv_event.c **** 
+ 517              		.loc 1 53 28 view .LVU158
+ 518 0036 0120     		movs	r0, #1
+ 519              	.LVL46:
+  79:Middlewares/lvgl/src/core/lv_event.c **** 
+ 520              		.loc 1 79 1 view .LVU159
+ 521 0038 7047     		bx	lr
+ 522              	.L41:
+ 523 003a 00BF     		.align	2
+ARM GAS  /tmp/ccbCcH82.s 			page 20
+
+
+ 524              	.L40:
+ 525 003c 00000000 		.word	.LANCHOR0
+ 526              		.cfi_endproc
+ 527              	.LFE147:
+ 529              		.section	.text.lv_event_get_target,"ax",%progbits
+ 530              		.align	1
+ 531              		.global	lv_event_get_target
+ 532              		.syntax unified
+ 533              		.thumb
+ 534              		.thumb_func
+ 535              		.fpu fpv5-d16
+ 537              	lv_event_get_target:
+ 538              	.LVL47:
+ 539              	.LFB149:
+ 107:Middlewares/lvgl/src/core/lv_event.c ****     return e->target;
+ 540              		.loc 1 107 1 is_stmt 1 view -0
+ 541              		.cfi_startproc
+ 542              		@ args = 0, pretend = 0, frame = 0
+ 543              		@ frame_needed = 0, uses_anonymous_args = 0
+ 544              		@ link register save eliminated.
+ 108:Middlewares/lvgl/src/core/lv_event.c **** }
+ 545              		.loc 1 108 5 view .LVU161
+ 109:Middlewares/lvgl/src/core/lv_event.c **** 
+ 546              		.loc 1 109 1 is_stmt 0 view .LVU162
+ 547 0000 0068     		ldr	r0, [r0]
+ 548              	.LVL48:
+ 109:Middlewares/lvgl/src/core/lv_event.c **** 
+ 549              		.loc 1 109 1 view .LVU163
+ 550 0002 7047     		bx	lr
+ 551              		.cfi_endproc
+ 552              	.LFE149:
+ 554              		.section	.text.lv_event_get_current_target,"ax",%progbits
+ 555              		.align	1
+ 556              		.global	lv_event_get_current_target
+ 557              		.syntax unified
+ 558              		.thumb
+ 559              		.thumb_func
+ 560              		.fpu fpv5-d16
+ 562              	lv_event_get_current_target:
+ 563              	.LVL49:
+ 564              	.LFB150:
+ 112:Middlewares/lvgl/src/core/lv_event.c ****     return e->current_target;
+ 565              		.loc 1 112 1 is_stmt 1 view -0
+ 566              		.cfi_startproc
+ 567              		@ args = 0, pretend = 0, frame = 0
+ 568              		@ frame_needed = 0, uses_anonymous_args = 0
+ 569              		@ link register save eliminated.
+ 113:Middlewares/lvgl/src/core/lv_event.c **** }
+ 570              		.loc 1 113 5 view .LVU165
+ 114:Middlewares/lvgl/src/core/lv_event.c **** 
+ 571              		.loc 1 114 1 is_stmt 0 view .LVU166
+ 572 0000 4068     		ldr	r0, [r0, #4]
+ 573              	.LVL50:
+ 114:Middlewares/lvgl/src/core/lv_event.c **** 
+ 574              		.loc 1 114 1 view .LVU167
+ 575 0002 7047     		bx	lr
+ 576              		.cfi_endproc
+ARM GAS  /tmp/ccbCcH82.s 			page 21
+
+
+ 577              	.LFE150:
+ 579              		.section	.text.lv_event_get_code,"ax",%progbits
+ 580              		.align	1
+ 581              		.global	lv_event_get_code
+ 582              		.syntax unified
+ 583              		.thumb
+ 584              		.thumb_func
+ 585              		.fpu fpv5-d16
+ 587              	lv_event_get_code:
+ 588              	.LVL51:
+ 589              	.LFB151:
+ 117:Middlewares/lvgl/src/core/lv_event.c ****     return e->code;
+ 590              		.loc 1 117 1 is_stmt 1 view -0
+ 591              		.cfi_startproc
+ 592              		@ args = 0, pretend = 0, frame = 0
+ 593              		@ frame_needed = 0, uses_anonymous_args = 0
+ 594              		@ link register save eliminated.
+ 118:Middlewares/lvgl/src/core/lv_event.c **** }
+ 595              		.loc 1 118 5 view .LVU169
+ 119:Middlewares/lvgl/src/core/lv_event.c **** 
+ 596              		.loc 1 119 1 is_stmt 0 view .LVU170
+ 597 0000 007A     		ldrb	r0, [r0, #8]	@ zero_extendqisi2
+ 598              	.LVL52:
+ 119:Middlewares/lvgl/src/core/lv_event.c **** 
+ 599              		.loc 1 119 1 view .LVU171
+ 600 0002 7047     		bx	lr
+ 601              		.cfi_endproc
+ 602              	.LFE151:
+ 604              		.section	.text.lv_event_get_param,"ax",%progbits
+ 605              		.align	1
+ 606              		.global	lv_event_get_param
+ 607              		.syntax unified
+ 608              		.thumb
+ 609              		.thumb_func
+ 610              		.fpu fpv5-d16
+ 612              	lv_event_get_param:
+ 613              	.LVL53:
+ 614              	.LFB152:
+ 122:Middlewares/lvgl/src/core/lv_event.c ****     return e->param;
+ 615              		.loc 1 122 1 is_stmt 1 view -0
+ 616              		.cfi_startproc
+ 617              		@ args = 0, pretend = 0, frame = 0
+ 618              		@ frame_needed = 0, uses_anonymous_args = 0
+ 619              		@ link register save eliminated.
+ 123:Middlewares/lvgl/src/core/lv_event.c **** }
+ 620              		.loc 1 123 5 view .LVU173
+ 124:Middlewares/lvgl/src/core/lv_event.c **** 
+ 621              		.loc 1 124 1 is_stmt 0 view .LVU174
+ 622 0000 0069     		ldr	r0, [r0, #16]
+ 623              	.LVL54:
+ 124:Middlewares/lvgl/src/core/lv_event.c **** 
+ 624              		.loc 1 124 1 view .LVU175
+ 625 0002 7047     		bx	lr
+ 626              		.cfi_endproc
+ 627              	.LFE152:
+ 629              		.section	.text.lv_event_get_user_data,"ax",%progbits
+ 630              		.align	1
+ARM GAS  /tmp/ccbCcH82.s 			page 22
+
+
+ 631              		.global	lv_event_get_user_data
+ 632              		.syntax unified
+ 633              		.thumb
+ 634              		.thumb_func
+ 635              		.fpu fpv5-d16
+ 637              	lv_event_get_user_data:
+ 638              	.LVL55:
+ 639              	.LFB153:
+ 127:Middlewares/lvgl/src/core/lv_event.c ****     return e->user_data;
+ 640              		.loc 1 127 1 is_stmt 1 view -0
+ 641              		.cfi_startproc
+ 642              		@ args = 0, pretend = 0, frame = 0
+ 643              		@ frame_needed = 0, uses_anonymous_args = 0
+ 644              		@ link register save eliminated.
+ 128:Middlewares/lvgl/src/core/lv_event.c **** }
+ 645              		.loc 1 128 5 view .LVU177
+ 129:Middlewares/lvgl/src/core/lv_event.c **** 
+ 646              		.loc 1 129 1 is_stmt 0 view .LVU178
+ 647 0000 C068     		ldr	r0, [r0, #12]
+ 648              	.LVL56:
+ 129:Middlewares/lvgl/src/core/lv_event.c **** 
+ 649              		.loc 1 129 1 view .LVU179
+ 650 0002 7047     		bx	lr
+ 651              		.cfi_endproc
+ 652              	.LFE153:
+ 654              		.section	.text.lv_event_register_id,"ax",%progbits
+ 655              		.align	1
+ 656              		.global	lv_event_register_id
+ 657              		.syntax unified
+ 658              		.thumb
+ 659              		.thumb_func
+ 660              		.fpu fpv5-d16
+ 662              	lv_event_register_id:
+ 663              	.LFB154:
+ 133:Middlewares/lvgl/src/core/lv_event.c ****     static uint32_t last_id = _LV_EVENT_LAST;
+ 664              		.loc 1 133 1 is_stmt 1 view -0
+ 665              		.cfi_startproc
+ 666              		@ args = 0, pretend = 0, frame = 0
+ 667              		@ frame_needed = 0, uses_anonymous_args = 0
+ 668              		@ link register save eliminated.
+ 134:Middlewares/lvgl/src/core/lv_event.c ****     last_id ++;
+ 669              		.loc 1 134 5 view .LVU181
+ 135:Middlewares/lvgl/src/core/lv_event.c ****     return last_id;
+ 670              		.loc 1 135 5 view .LVU182
+ 135:Middlewares/lvgl/src/core/lv_event.c ****     return last_id;
+ 671              		.loc 1 135 13 is_stmt 0 view .LVU183
+ 672 0000 024B     		ldr	r3, .L48
+ 673 0002 1868     		ldr	r0, [r3]
+ 674 0004 0130     		adds	r0, r0, #1
+ 675 0006 1860     		str	r0, [r3]
+ 136:Middlewares/lvgl/src/core/lv_event.c **** }
+ 676              		.loc 1 136 5 is_stmt 1 view .LVU184
+ 137:Middlewares/lvgl/src/core/lv_event.c **** 
+ 677              		.loc 1 137 1 is_stmt 0 view .LVU185
+ 678 0008 7047     		bx	lr
+ 679              	.L49:
+ 680 000a 00BF     		.align	2
+ARM GAS  /tmp/ccbCcH82.s 			page 23
+
+
+ 681              	.L48:
+ 682 000c 00000000 		.word	.LANCHOR1
+ 683              		.cfi_endproc
+ 684              	.LFE154:
+ 686              		.section	.text._lv_event_mark_deleted,"ax",%progbits
+ 687              		.align	1
+ 688              		.global	_lv_event_mark_deleted
+ 689              		.syntax unified
+ 690              		.thumb
+ 691              		.thumb_func
+ 692              		.fpu fpv5-d16
+ 694              	_lv_event_mark_deleted:
+ 695              	.LVL57:
+ 696              	.LFB155:
+ 140:Middlewares/lvgl/src/core/lv_event.c ****     lv_event_t * e = event_head;
+ 697              		.loc 1 140 1 is_stmt 1 view -0
+ 698              		.cfi_startproc
+ 699              		@ args = 0, pretend = 0, frame = 0
+ 700              		@ frame_needed = 0, uses_anonymous_args = 0
+ 701              		@ link register save eliminated.
+ 141:Middlewares/lvgl/src/core/lv_event.c **** 
+ 702              		.loc 1 141 5 view .LVU187
+ 141:Middlewares/lvgl/src/core/lv_event.c **** 
+ 703              		.loc 1 141 18 is_stmt 0 view .LVU188
+ 704 0000 084B     		ldr	r3, .L56
+ 705 0002 1B68     		ldr	r3, [r3]
+ 706              	.LVL58:
+ 143:Middlewares/lvgl/src/core/lv_event.c ****         if(e->current_target == obj || e->target == obj) e->deleted = 1;
+ 707              		.loc 1 143 5 is_stmt 1 view .LVU189
+ 143:Middlewares/lvgl/src/core/lv_event.c ****         if(e->current_target == obj || e->target == obj) e->deleted = 1;
+ 708              		.loc 1 143 10 is_stmt 0 view .LVU190
+ 709 0004 04E0     		b	.L51
+ 710              	.L52:
+ 144:Middlewares/lvgl/src/core/lv_event.c ****         e = e->prev;
+ 711              		.loc 1 144 58 is_stmt 1 discriminator 3 view .LVU191
+ 144:Middlewares/lvgl/src/core/lv_event.c ****         e = e->prev;
+ 712              		.loc 1 144 69 is_stmt 0 discriminator 3 view .LVU192
+ 713 0006 1A7E     		ldrb	r2, [r3, #24]	@ zero_extendqisi2
+ 714 0008 42F00102 		orr	r2, r2, #1
+ 715 000c 1A76     		strb	r2, [r3, #24]
+ 716              	.L53:
+ 145:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 717              		.loc 1 145 9 is_stmt 1 view .LVU193
+ 145:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 718              		.loc 1 145 11 is_stmt 0 view .LVU194
+ 719 000e 5B69     		ldr	r3, [r3, #20]
+ 720              	.LVL59:
+ 721              	.L51:
+ 143:Middlewares/lvgl/src/core/lv_event.c ****         if(e->current_target == obj || e->target == obj) e->deleted = 1;
+ 722              		.loc 1 143 10 is_stmt 1 view .LVU195
+ 723 0010 33B1     		cbz	r3, .L55
+ 144:Middlewares/lvgl/src/core/lv_event.c ****         e = e->prev;
+ 724              		.loc 1 144 9 view .LVU196
+ 144:Middlewares/lvgl/src/core/lv_event.c ****         e = e->prev;
+ 725              		.loc 1 144 13 is_stmt 0 view .LVU197
+ 726 0012 5A68     		ldr	r2, [r3, #4]
+ 144:Middlewares/lvgl/src/core/lv_event.c ****         e = e->prev;
+ARM GAS  /tmp/ccbCcH82.s 			page 24
+
+
+ 727              		.loc 1 144 11 view .LVU198
+ 728 0014 8242     		cmp	r2, r0
+ 729 0016 F6D0     		beq	.L52
+ 144:Middlewares/lvgl/src/core/lv_event.c ****         e = e->prev;
+ 730              		.loc 1 144 41 discriminator 2 view .LVU199
+ 731 0018 1A68     		ldr	r2, [r3]
+ 144:Middlewares/lvgl/src/core/lv_event.c ****         e = e->prev;
+ 732              		.loc 1 144 37 discriminator 2 view .LVU200
+ 733 001a 8242     		cmp	r2, r0
+ 734 001c F7D1     		bne	.L53
+ 735 001e F2E7     		b	.L52
+ 736              	.L55:
+ 147:Middlewares/lvgl/src/core/lv_event.c **** 
+ 737              		.loc 1 147 1 view .LVU201
+ 738 0020 7047     		bx	lr
+ 739              	.L57:
+ 740 0022 00BF     		.align	2
+ 741              	.L56:
+ 742 0024 00000000 		.word	.LANCHOR0
+ 743              		.cfi_endproc
+ 744              	.LFE155:
+ 746              		.section	.text.lv_obj_add_event_cb,"ax",%progbits
+ 747              		.align	1
+ 748              		.global	lv_obj_add_event_cb
+ 749              		.syntax unified
+ 750              		.thumb
+ 751              		.thumb_func
+ 752              		.fpu fpv5-d16
+ 754              	lv_obj_add_event_cb:
+ 755              	.LVL60:
+ 756              	.LFB156:
+ 151:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_OBJ(obj, MY_CLASS);
+ 757              		.loc 1 151 1 is_stmt 1 view -0
+ 758              		.cfi_startproc
+ 759              		@ args = 0, pretend = 0, frame = 0
+ 760              		@ frame_needed = 0, uses_anonymous_args = 0
+ 151:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_OBJ(obj, MY_CLASS);
+ 761              		.loc 1 151 1 is_stmt 0 view .LVU203
+ 762 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 763              	.LCFI6:
+ 764              		.cfi_def_cfa_offset 24
+ 765              		.cfi_offset 4, -24
+ 766              		.cfi_offset 5, -20
+ 767              		.cfi_offset 6, -16
+ 768              		.cfi_offset 7, -12
+ 769              		.cfi_offset 8, -8
+ 770              		.cfi_offset 14, -4
+ 771 0004 0446     		mov	r4, r0
+ 772 0006 0F46     		mov	r7, r1
+ 773 0008 1646     		mov	r6, r2
+ 774 000a 1D46     		mov	r5, r3
+ 152:Middlewares/lvgl/src/core/lv_event.c ****     lv_obj_allocate_spec_attr(obj);
+ 775              		.loc 1 152 5 is_stmt 1 view .LVU204
+ 152:Middlewares/lvgl/src/core/lv_event.c ****     lv_obj_allocate_spec_attr(obj);
+ 776              		.loc 1 152 5 view .LVU205
+ 152:Middlewares/lvgl/src/core/lv_event.c ****     lv_obj_allocate_spec_attr(obj);
+ 777              		.loc 1 152 5 view .LVU206
+ARM GAS  /tmp/ccbCcH82.s 			page 25
+
+
+ 153:Middlewares/lvgl/src/core/lv_event.c **** 
+ 778              		.loc 1 153 5 view .LVU207
+ 779 000c FFF7FEFF 		bl	lv_obj_allocate_spec_attr
+ 780              	.LVL61:
+ 155:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc = lv_mem_realloc(obj->spec_attr->event_dsc, obj->spec_attr->event_dsc
+ 781              		.loc 1 155 5 view .LVU208
+ 155:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc = lv_mem_realloc(obj->spec_attr->event_dsc, obj->spec_attr->event_dsc
+ 782              		.loc 1 155 8 is_stmt 0 view .LVU209
+ 783 0010 A268     		ldr	r2, [r4, #8]
+ 155:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc = lv_mem_realloc(obj->spec_attr->event_dsc, obj->spec_attr->event_dsc
+ 784              		.loc 1 155 19 view .LVU210
+ 785 0012 937E     		ldrb	r3, [r2, #26]	@ zero_extendqisi2
+ 155:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc = lv_mem_realloc(obj->spec_attr->event_dsc, obj->spec_attr->event_dsc
+ 786              		.loc 1 155 34 view .LVU211
+ 787 0014 0133     		adds	r3, r3, #1
+ 788 0016 9376     		strb	r3, [r2, #26]
+ 156:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 789              		.loc 1 156 5 is_stmt 1 view .LVU212
+ 156:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 790              		.loc 1 156 51 is_stmt 0 view .LVU213
+ 791 0018 D4F80880 		ldr	r8, [r4, #8]
+ 156:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 792              		.loc 1 156 89 view .LVU214
+ 793 001c 98F81A10 		ldrb	r1, [r8, #26]	@ zero_extendqisi2
+ 156:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 794              		.loc 1 156 33 view .LVU215
+ 795 0020 01EB4101 		add	r1, r1, r1, lsl #1
+ 796 0024 8900     		lsls	r1, r1, #2
+ 797 0026 D8F80C00 		ldr	r0, [r8, #12]
+ 798 002a FFF7FEFF 		bl	lv_mem_realloc
+ 799              	.LVL62:
+ 156:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 800              		.loc 1 156 31 view .LVU216
+ 801 002e C8F80C00 		str	r0, [r8, #12]
+ 157:Middlewares/lvgl/src/core/lv_event.c **** 
+ 802              		.loc 1 157 5 is_stmt 1 view .LVU217
+ 157:Middlewares/lvgl/src/core/lv_event.c **** 
+ 803              		.loc 1 157 5 view .LVU218
+ 804 0032 A368     		ldr	r3, [r4, #8]
+ 805 0034 DA68     		ldr	r2, [r3, #12]
+ 806 0036 0AB3     		cbz	r2, .L60
+ 157:Middlewares/lvgl/src/core/lv_event.c **** 
+ 807              		.loc 1 157 5 discriminator 2 view .LVU219
+ 157:Middlewares/lvgl/src/core/lv_event.c **** 
+ 808              		.loc 1 157 48 discriminator 2 view .LVU220
+ 159:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc[obj->spec_attr->event_dsc_cnt - 1].filter = filter;
+ 809              		.loc 1 159 5 discriminator 2 view .LVU221
+ 159:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc[obj->spec_attr->event_dsc_cnt - 1].filter = filter;
+ 810              		.loc 1 159 45 is_stmt 0 discriminator 2 view .LVU222
+ 811 0038 9B7E     		ldrb	r3, [r3, #26]	@ zero_extendqisi2
+ 159:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc[obj->spec_attr->event_dsc_cnt - 1].filter = filter;
+ 812              		.loc 1 159 30 discriminator 2 view .LVU223
+ 813 003a 03EB4303 		add	r3, r3, r3, lsl #1
+ 814 003e 9B00     		lsls	r3, r3, #2
+ 815 0040 0C3B     		subs	r3, r3, #12
+ 159:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc[obj->spec_attr->event_dsc_cnt - 1].filter = filter;
+ 816              		.loc 1 159 69 discriminator 2 view .LVU224
+ARM GAS  /tmp/ccbCcH82.s 			page 26
+
+
+ 817 0042 D750     		str	r7, [r2, r3]
+ 160:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc[obj->spec_attr->event_dsc_cnt - 1].user_data = user_data;
+ 818              		.loc 1 160 5 is_stmt 1 discriminator 2 view .LVU225
+ 160:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc[obj->spec_attr->event_dsc_cnt - 1].user_data = user_data;
+ 819              		.loc 1 160 8 is_stmt 0 discriminator 2 view .LVU226
+ 820 0044 A268     		ldr	r2, [r4, #8]
+ 160:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc[obj->spec_attr->event_dsc_cnt - 1].user_data = user_data;
+ 821              		.loc 1 160 19 discriminator 2 view .LVU227
+ 822 0046 D368     		ldr	r3, [r2, #12]
+ 160:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc[obj->spec_attr->event_dsc_cnt - 1].user_data = user_data;
+ 823              		.loc 1 160 45 discriminator 2 view .LVU228
+ 824 0048 917E     		ldrb	r1, [r2, #26]	@ zero_extendqisi2
+ 160:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc[obj->spec_attr->event_dsc_cnt - 1].user_data = user_data;
+ 825              		.loc 1 160 30 discriminator 2 view .LVU229
+ 826 004a 01EB4101 		add	r1, r1, r1, lsl #1
+ 827 004e 8900     		lsls	r1, r1, #2
+ 828 0050 0C39     		subs	r1, r1, #12
+ 829 0052 1944     		add	r1, r1, r3
+ 160:Middlewares/lvgl/src/core/lv_event.c ****     obj->spec_attr->event_dsc[obj->spec_attr->event_dsc_cnt - 1].user_data = user_data;
+ 830              		.loc 1 160 73 discriminator 2 view .LVU230
+ 831 0054 0E72     		strb	r6, [r1, #8]
+ 161:Middlewares/lvgl/src/core/lv_event.c **** 
+ 832              		.loc 1 161 5 is_stmt 1 discriminator 2 view .LVU231
+ 161:Middlewares/lvgl/src/core/lv_event.c **** 
+ 833              		.loc 1 161 8 is_stmt 0 discriminator 2 view .LVU232
+ 834 0056 A268     		ldr	r2, [r4, #8]
+ 161:Middlewares/lvgl/src/core/lv_event.c **** 
+ 835              		.loc 1 161 19 discriminator 2 view .LVU233
+ 836 0058 D368     		ldr	r3, [r2, #12]
+ 161:Middlewares/lvgl/src/core/lv_event.c **** 
+ 837              		.loc 1 161 45 discriminator 2 view .LVU234
+ 838 005a 927E     		ldrb	r2, [r2, #26]	@ zero_extendqisi2
+ 161:Middlewares/lvgl/src/core/lv_event.c **** 
+ 839              		.loc 1 161 30 discriminator 2 view .LVU235
+ 840 005c 02EB4202 		add	r2, r2, r2, lsl #1
+ 841 0060 9200     		lsls	r2, r2, #2
+ 842 0062 0C3A     		subs	r2, r2, #12
+ 843 0064 1A44     		add	r2, r2, r3
+ 161:Middlewares/lvgl/src/core/lv_event.c **** 
+ 844              		.loc 1 161 76 discriminator 2 view .LVU236
+ 845 0066 5560     		str	r5, [r2, #4]
+ 163:Middlewares/lvgl/src/core/lv_event.c **** }
+ 846              		.loc 1 163 5 is_stmt 1 discriminator 2 view .LVU237
+ 163:Middlewares/lvgl/src/core/lv_event.c **** }
+ 847              		.loc 1 163 16 is_stmt 0 discriminator 2 view .LVU238
+ 848 0068 A368     		ldr	r3, [r4, #8]
+ 163:Middlewares/lvgl/src/core/lv_event.c **** }
+ 849              		.loc 1 163 27 discriminator 2 view .LVU239
+ 850 006a D868     		ldr	r0, [r3, #12]
+ 163:Middlewares/lvgl/src/core/lv_event.c **** }
+ 851              		.loc 1 163 53 discriminator 2 view .LVU240
+ 852 006c 9B7E     		ldrb	r3, [r3, #26]	@ zero_extendqisi2
+ 163:Middlewares/lvgl/src/core/lv_event.c **** }
+ 853              		.loc 1 163 38 discriminator 2 view .LVU241
+ 854 006e 03EB4303 		add	r3, r3, r3, lsl #1
+ 855 0072 9B00     		lsls	r3, r3, #2
+ 856 0074 0C3B     		subs	r3, r3, #12
+ARM GAS  /tmp/ccbCcH82.s 			page 27
+
+
+ 164:Middlewares/lvgl/src/core/lv_event.c **** 
+ 857              		.loc 1 164 1 discriminator 2 view .LVU242
+ 858 0076 1844     		add	r0, r0, r3
+ 859 0078 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 860              	.LVL63:
+ 861              	.L60:
+ 157:Middlewares/lvgl/src/core/lv_event.c **** 
+ 862              		.loc 1 157 5 is_stmt 1 discriminator 1 view .LVU243
+ 157:Middlewares/lvgl/src/core/lv_event.c **** 
+ 863              		.loc 1 157 5 discriminator 1 view .LVU244
+ 157:Middlewares/lvgl/src/core/lv_event.c **** 
+ 864              		.loc 1 157 5 discriminator 1 view .LVU245
+ 157:Middlewares/lvgl/src/core/lv_event.c **** 
+ 865              		.loc 1 157 5 discriminator 1 view .LVU246
+ 866 007c FEE7     		b	.L60
+ 867              		.cfi_endproc
+ 868              	.LFE156:
+ 870              		.section	.text.lv_obj_remove_event_cb,"ax",%progbits
+ 871              		.align	1
+ 872              		.global	lv_obj_remove_event_cb
+ 873              		.syntax unified
+ 874              		.thumb
+ 875              		.thumb_func
+ 876              		.fpu fpv5-d16
+ 878              	lv_obj_remove_event_cb:
+ 879              	.LVL64:
+ 880              	.LFB157:
+ 167:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_OBJ(obj, MY_CLASS);
+ 881              		.loc 1 167 1 view -0
+ 882              		.cfi_startproc
+ 883              		@ args = 0, pretend = 0, frame = 0
+ 884              		@ frame_needed = 0, uses_anonymous_args = 0
+ 168:Middlewares/lvgl/src/core/lv_event.c ****     if(obj->spec_attr == NULL) return false;
+ 885              		.loc 1 168 5 view .LVU248
+ 168:Middlewares/lvgl/src/core/lv_event.c ****     if(obj->spec_attr == NULL) return false;
+ 886              		.loc 1 168 5 view .LVU249
+ 168:Middlewares/lvgl/src/core/lv_event.c ****     if(obj->spec_attr == NULL) return false;
+ 887              		.loc 1 168 5 view .LVU250
+ 169:Middlewares/lvgl/src/core/lv_event.c **** 
+ 888              		.loc 1 169 5 view .LVU251
+ 169:Middlewares/lvgl/src/core/lv_event.c **** 
+ 889              		.loc 1 169 11 is_stmt 0 view .LVU252
+ 890 0000 8268     		ldr	r2, [r0, #8]
+ 169:Middlewares/lvgl/src/core/lv_event.c **** 
+ 891              		.loc 1 169 7 view .LVU253
+ 892 0002 002A     		cmp	r2, #0
+ 893 0004 37D0     		beq	.L70
+ 167:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_OBJ(obj, MY_CLASS);
+ 894              		.loc 1 167 1 view .LVU254
+ 895 0006 38B5     		push	{r3, r4, r5, lr}
+ 896              	.LCFI7:
+ 897              		.cfi_def_cfa_offset 16
+ 898              		.cfi_offset 3, -16
+ 899              		.cfi_offset 4, -12
+ 900              		.cfi_offset 5, -8
+ 901              		.cfi_offset 14, -4
+ 902 0008 0446     		mov	r4, r0
+ARM GAS  /tmp/ccbCcH82.s 			page 28
+
+
+ 172:Middlewares/lvgl/src/core/lv_event.c ****         if(obj->spec_attr->event_dsc[i].cb == event_cb) {
+ 903              		.loc 1 172 11 view .LVU255
+ 904 000a 0023     		movs	r3, #0
+ 905 000c 26E0     		b	.L64
+ 906              	.LVL65:
+ 907              	.L67:
+ 176:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 908              		.loc 1 176 17 is_stmt 1 discriminator 2 view .LVU256
+ 176:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 909              		.loc 1 176 65 is_stmt 0 discriminator 2 view .LVU257
+ 910 000e D168     		ldr	r1, [r2, #12]
+ 176:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 911              		.loc 1 176 76 discriminator 2 view .LVU258
+ 912 0010 581C     		adds	r0, r3, #1
+ 913 0012 00EB4002 		add	r2, r0, r0, lsl #1
+ 914 0016 9200     		lsls	r2, r2, #2
+ 176:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 915              		.loc 1 176 42 discriminator 2 view .LVU259
+ 916 0018 03EB4303 		add	r3, r3, r3, lsl #1
+ 917              	.LVL66:
+ 176:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 918              		.loc 1 176 42 discriminator 2 view .LVU260
+ 919 001c 9B00     		lsls	r3, r3, #2
+ 176:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 920              		.loc 1 176 49 discriminator 2 view .LVU261
+ 921 001e 8D58     		ldr	r5, [r1, r2]
+ 922 0020 CD50     		str	r5, [r1, r3]
+ 177:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 923              		.loc 1 177 17 is_stmt 1 discriminator 2 view .LVU262
+ 177:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 924              		.loc 1 177 61 is_stmt 0 discriminator 2 view .LVU263
+ 925 0022 A168     		ldr	r1, [r4, #8]
+ 177:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 926              		.loc 1 177 72 discriminator 2 view .LVU264
+ 927 0024 C968     		ldr	r1, [r1, #12]
+ 177:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 928              		.loc 1 177 83 discriminator 2 view .LVU265
+ 929 0026 0A44     		add	r2, r2, r1
+ 177:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 930              		.loc 1 177 42 discriminator 2 view .LVU266
+ 931 0028 1944     		add	r1, r1, r3
+ 177:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 932              		.loc 1 177 88 discriminator 2 view .LVU267
+ 933 002a 5368     		ldr	r3, [r2, #4]
+ 177:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 934              		.loc 1 177 56 discriminator 2 view .LVU268
+ 935 002c 4B60     		str	r3, [r1, #4]
+ 175:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 936              		.loc 1 175 58 is_stmt 1 discriminator 2 view .LVU269
+ 175:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 937              		.loc 1 175 59 is_stmt 0 discriminator 2 view .LVU270
+ 938 002e 0346     		mov	r3, r0
+ 939              	.LVL67:
+ 940              	.L65:
+ 175:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 941              		.loc 1 175 19 is_stmt 1 discriminator 1 view .LVU271
+ 175:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ARM GAS  /tmp/ccbCcH82.s 			page 29
+
+
+ 942              		.loc 1 175 27 is_stmt 0 discriminator 1 view .LVU272
+ 943 0030 A268     		ldr	r2, [r4, #8]
+ 175:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 944              		.loc 1 175 38 discriminator 1 view .LVU273
+ 945 0032 917E     		ldrb	r1, [r2, #26]	@ zero_extendqisi2
+ 175:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 946              		.loc 1 175 53 discriminator 1 view .LVU274
+ 947 0034 481E     		subs	r0, r1, #1
+ 175:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 948              		.loc 1 175 13 discriminator 1 view .LVU275
+ 949 0036 9842     		cmp	r0, r3
+ 950 0038 E9DC     		bgt	.L67
+ 179:Middlewares/lvgl/src/core/lv_event.c ****             obj->spec_attr->event_dsc = lv_mem_realloc(obj->spec_attr->event_dsc, obj->spec_attr->e
+ 951              		.loc 1 179 13 is_stmt 1 view .LVU276
+ 179:Middlewares/lvgl/src/core/lv_event.c ****             obj->spec_attr->event_dsc = lv_mem_realloc(obj->spec_attr->event_dsc, obj->spec_attr->e
+ 952              		.loc 1 179 42 is_stmt 0 view .LVU277
+ 953 003a 9076     		strb	r0, [r2, #26]
+ 180:Middlewares/lvgl/src/core/lv_event.c ****             LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 954              		.loc 1 180 13 is_stmt 1 view .LVU278
+ 180:Middlewares/lvgl/src/core/lv_event.c ****             LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 955              		.loc 1 180 59 is_stmt 0 view .LVU279
+ 956 003c A568     		ldr	r5, [r4, #8]
+ 180:Middlewares/lvgl/src/core/lv_event.c ****             LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 957              		.loc 1 180 97 view .LVU280
+ 958 003e A97E     		ldrb	r1, [r5, #26]	@ zero_extendqisi2
+ 180:Middlewares/lvgl/src/core/lv_event.c ****             LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 959              		.loc 1 180 41 view .LVU281
+ 960 0040 01EB4101 		add	r1, r1, r1, lsl #1
+ 961 0044 8900     		lsls	r1, r1, #2
+ 962 0046 E868     		ldr	r0, [r5, #12]
+ 963 0048 FFF7FEFF 		bl	lv_mem_realloc
+ 964              	.LVL68:
+ 180:Middlewares/lvgl/src/core/lv_event.c ****             LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 965              		.loc 1 180 39 view .LVU282
+ 966 004c E860     		str	r0, [r5, #12]
+ 181:Middlewares/lvgl/src/core/lv_event.c ****             return true;
+ 967              		.loc 1 181 13 is_stmt 1 view .LVU283
+ 181:Middlewares/lvgl/src/core/lv_event.c ****             return true;
+ 968              		.loc 1 181 13 view .LVU284
+ 969 004e A368     		ldr	r3, [r4, #8]
+ 970 0050 DB68     		ldr	r3, [r3, #12]
+ 971 0052 0BB1     		cbz	r3, .L68
+ 182:Middlewares/lvgl/src/core/lv_event.c ****         }
+ 972              		.loc 1 182 20 is_stmt 0 view .LVU285
+ 973 0054 0120     		movs	r0, #1
+ 974 0056 0DE0     		b	.L63
+ 975              	.L68:
+ 181:Middlewares/lvgl/src/core/lv_event.c ****             return true;
+ 976              		.loc 1 181 13 is_stmt 1 discriminator 1 view .LVU286
+ 181:Middlewares/lvgl/src/core/lv_event.c ****             return true;
+ 977              		.loc 1 181 13 discriminator 1 view .LVU287
+ 181:Middlewares/lvgl/src/core/lv_event.c ****             return true;
+ 978              		.loc 1 181 13 discriminator 1 view .LVU288
+ 181:Middlewares/lvgl/src/core/lv_event.c ****             return true;
+ 979              		.loc 1 181 13 discriminator 1 view .LVU289
+ 980 0058 FEE7     		b	.L68
+ 981              	.LVL69:
+ARM GAS  /tmp/ccbCcH82.s 			page 30
+
+
+ 982              	.L72:
+ 172:Middlewares/lvgl/src/core/lv_event.c ****         if(obj->spec_attr->event_dsc[i].cb == event_cb) {
+ 983              		.loc 1 172 51 discriminator 2 view .LVU290
+ 172:Middlewares/lvgl/src/core/lv_event.c ****         if(obj->spec_attr->event_dsc[i].cb == event_cb) {
+ 984              		.loc 1 172 52 is_stmt 0 discriminator 2 view .LVU291
+ 985 005a 0133     		adds	r3, r3, #1
+ 986              	.LVL70:
+ 987              	.L64:
+ 172:Middlewares/lvgl/src/core/lv_event.c ****         if(obj->spec_attr->event_dsc[i].cb == event_cb) {
+ 988              		.loc 1 172 16 is_stmt 1 discriminator 1 view .LVU292
+ 172:Middlewares/lvgl/src/core/lv_event.c ****         if(obj->spec_attr->event_dsc[i].cb == event_cb) {
+ 989              		.loc 1 172 34 is_stmt 0 discriminator 1 view .LVU293
+ 990 005c 907E     		ldrb	r0, [r2, #26]	@ zero_extendqisi2
+ 172:Middlewares/lvgl/src/core/lv_event.c ****         if(obj->spec_attr->event_dsc[i].cb == event_cb) {
+ 991              		.loc 1 172 5 discriminator 1 view .LVU294
+ 992 005e 9842     		cmp	r0, r3
+ 993 0060 07DD     		ble	.L77
+ 173:Middlewares/lvgl/src/core/lv_event.c ****             /*Shift the remaining event handlers forward*/
+ 994              		.loc 1 173 9 is_stmt 1 view .LVU295
+ 173:Middlewares/lvgl/src/core/lv_event.c ****             /*Shift the remaining event handlers forward*/
+ 995              		.loc 1 173 26 is_stmt 0 view .LVU296
+ 996 0062 D068     		ldr	r0, [r2, #12]
+ 173:Middlewares/lvgl/src/core/lv_event.c ****             /*Shift the remaining event handlers forward*/
+ 997              		.loc 1 173 37 view .LVU297
+ 998 0064 03EB430C 		add	ip, r3, r3, lsl #1
+ 173:Middlewares/lvgl/src/core/lv_event.c ****             /*Shift the remaining event handlers forward*/
+ 999              		.loc 1 173 40 view .LVU298
+ 1000 0068 50F82C00 		ldr	r0, [r0, ip, lsl #2]
+ 173:Middlewares/lvgl/src/core/lv_event.c ****             /*Shift the remaining event handlers forward*/
+ 1001              		.loc 1 173 11 view .LVU299
+ 1002 006c 8842     		cmp	r0, r1
+ 1003 006e F4D1     		bne	.L72
+ 1004 0070 DEE7     		b	.L65
+ 1005              	.L77:
+ 187:Middlewares/lvgl/src/core/lv_event.c **** }
+ 1006              		.loc 1 187 12 view .LVU300
+ 1007 0072 0020     		movs	r0, #0
+ 1008              	.LVL71:
+ 1009              	.L63:
+ 188:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1010              		.loc 1 188 1 view .LVU301
+ 1011 0074 38BD     		pop	{r3, r4, r5, pc}
+ 1012              	.LVL72:
+ 1013              	.L70:
+ 1014              	.LCFI8:
+ 1015              		.cfi_def_cfa_offset 0
+ 1016              		.cfi_restore 3
+ 1017              		.cfi_restore 4
+ 1018              		.cfi_restore 5
+ 1019              		.cfi_restore 14
+ 169:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1020              		.loc 1 169 39 view .LVU302
+ 1021 0076 0020     		movs	r0, #0
+ 1022              	.LVL73:
+ 188:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1023              		.loc 1 188 1 view .LVU303
+ 1024 0078 7047     		bx	lr
+ARM GAS  /tmp/ccbCcH82.s 			page 31
+
+
+ 1025              		.cfi_endproc
+ 1026              	.LFE157:
+ 1028              		.section	.text.lv_obj_remove_event_dsc,"ax",%progbits
+ 1029              		.align	1
+ 1030              		.global	lv_obj_remove_event_dsc
+ 1031              		.syntax unified
+ 1032              		.thumb
+ 1033              		.thumb_func
+ 1034              		.fpu fpv5-d16
+ 1036              	lv_obj_remove_event_dsc:
+ 1037              	.LVL74:
+ 1038              	.LFB158:
+ 191:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_OBJ(obj, MY_CLASS);
+ 1039              		.loc 1 191 1 is_stmt 1 view -0
+ 1040              		.cfi_startproc
+ 1041              		@ args = 0, pretend = 0, frame = 0
+ 1042              		@ frame_needed = 0, uses_anonymous_args = 0
+ 191:Middlewares/lvgl/src/core/lv_event.c ****     LV_ASSERT_OBJ(obj, MY_CLASS);
+ 1043              		.loc 1 191 1 is_stmt 0 view .LVU305
+ 1044 0000 38B5     		push	{r3, r4, r5, lr}
+ 1045              	.LCFI9:
+ 1046              		.cfi_def_cfa_offset 16
+ 1047              		.cfi_offset 3, -16
+ 1048              		.cfi_offset 4, -12
+ 1049              		.cfi_offset 5, -8
+ 1050              		.cfi_offset 14, -4
+ 192:Middlewares/lvgl/src/core/lv_event.c ****     if(obj->spec_attr == NULL) return false;
+ 1051              		.loc 1 192 5 is_stmt 1 view .LVU306
+ 192:Middlewares/lvgl/src/core/lv_event.c ****     if(obj->spec_attr == NULL) return false;
+ 1052              		.loc 1 192 5 view .LVU307
+ 192:Middlewares/lvgl/src/core/lv_event.c ****     if(obj->spec_attr == NULL) return false;
+ 1053              		.loc 1 192 5 view .LVU308
+ 193:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1054              		.loc 1 193 5 view .LVU309
+ 193:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1055              		.loc 1 193 11 is_stmt 0 view .LVU310
+ 1056 0002 8468     		ldr	r4, [r0, #8]
+ 193:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1057              		.loc 1 193 7 view .LVU311
+ 1058 0004 002C     		cmp	r4, #0
+ 1059 0006 36D0     		beq	.L86
+ 1060 0008 0546     		mov	r5, r0
+ 196:Middlewares/lvgl/src/core/lv_event.c ****         if(&obj->spec_attr->event_dsc[i] == event_dsc) {
+ 1061              		.loc 1 196 11 view .LVU312
+ 1062 000a 0023     		movs	r3, #0
+ 1063 000c 26E0     		b	.L80
+ 1064              	.LVL75:
+ 1065              	.L83:
+ 200:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 1066              		.loc 1 200 17 is_stmt 1 discriminator 2 view .LVU313
+ 200:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 1067              		.loc 1 200 65 is_stmt 0 discriminator 2 view .LVU314
+ 1068 000e D168     		ldr	r1, [r2, #12]
+ 200:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 1069              		.loc 1 200 76 discriminator 2 view .LVU315
+ 1070 0010 581C     		adds	r0, r3, #1
+ 1071 0012 00EB4002 		add	r2, r0, r0, lsl #1
+ARM GAS  /tmp/ccbCcH82.s 			page 32
+
+
+ 1072 0016 9200     		lsls	r2, r2, #2
+ 200:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 1073              		.loc 1 200 42 discriminator 2 view .LVU316
+ 1074 0018 03EB4303 		add	r3, r3, r3, lsl #1
+ 1075              	.LVL76:
+ 200:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 1076              		.loc 1 200 42 discriminator 2 view .LVU317
+ 1077 001c 9B00     		lsls	r3, r3, #2
+ 200:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 1078              		.loc 1 200 81 discriminator 2 view .LVU318
+ 1079 001e 8C58     		ldr	r4, [r1, r2]
+ 200:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].user_data = obj->spec_attr->event_dsc[i+1].user_data;
+ 1080              		.loc 1 200 49 discriminator 2 view .LVU319
+ 1081 0020 CC50     		str	r4, [r1, r3]
+ 201:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 1082              		.loc 1 201 17 is_stmt 1 discriminator 2 view .LVU320
+ 201:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 1083              		.loc 1 201 61 is_stmt 0 discriminator 2 view .LVU321
+ 1084 0022 A968     		ldr	r1, [r5, #8]
+ 201:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 1085              		.loc 1 201 72 discriminator 2 view .LVU322
+ 1086 0024 C968     		ldr	r1, [r1, #12]
+ 201:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 1087              		.loc 1 201 83 discriminator 2 view .LVU323
+ 1088 0026 0A44     		add	r2, r2, r1
+ 201:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 1089              		.loc 1 201 42 discriminator 2 view .LVU324
+ 1090 0028 1944     		add	r1, r1, r3
+ 201:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 1091              		.loc 1 201 88 discriminator 2 view .LVU325
+ 1092 002a 5368     		ldr	r3, [r2, #4]
+ 201:Middlewares/lvgl/src/core/lv_event.c ****             }
+ 1093              		.loc 1 201 56 discriminator 2 view .LVU326
+ 1094 002c 4B60     		str	r3, [r1, #4]
+ 199:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 1095              		.loc 1 199 58 is_stmt 1 discriminator 2 view .LVU327
+ 199:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 1096              		.loc 1 199 59 is_stmt 0 discriminator 2 view .LVU328
+ 1097 002e 0346     		mov	r3, r0
+ 1098              	.LVL77:
+ 1099              	.L81:
+ 199:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 1100              		.loc 1 199 19 is_stmt 1 discriminator 1 view .LVU329
+ 199:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 1101              		.loc 1 199 27 is_stmt 0 discriminator 1 view .LVU330
+ 1102 0030 AA68     		ldr	r2, [r5, #8]
+ 199:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 1103              		.loc 1 199 38 discriminator 1 view .LVU331
+ 1104 0032 917E     		ldrb	r1, [r2, #26]	@ zero_extendqisi2
+ 199:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 1105              		.loc 1 199 53 discriminator 1 view .LVU332
+ 1106 0034 481E     		subs	r0, r1, #1
+ 199:Middlewares/lvgl/src/core/lv_event.c ****                 obj->spec_attr->event_dsc[i].cb = obj->spec_attr->event_dsc[i+1].cb;
+ 1107              		.loc 1 199 13 discriminator 1 view .LVU333
+ 1108 0036 9842     		cmp	r0, r3
+ 1109 0038 E9DC     		bgt	.L83
+ 203:Middlewares/lvgl/src/core/lv_event.c ****             obj->spec_attr->event_dsc = lv_mem_realloc(obj->spec_attr->event_dsc, obj->spec_attr->e
+ARM GAS  /tmp/ccbCcH82.s 			page 33
+
+
+ 1110              		.loc 1 203 13 is_stmt 1 view .LVU334
+ 203:Middlewares/lvgl/src/core/lv_event.c ****             obj->spec_attr->event_dsc = lv_mem_realloc(obj->spec_attr->event_dsc, obj->spec_attr->e
+ 1111              		.loc 1 203 42 is_stmt 0 view .LVU335
+ 1112 003a 9076     		strb	r0, [r2, #26]
+ 204:Middlewares/lvgl/src/core/lv_event.c ****             LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 1113              		.loc 1 204 13 is_stmt 1 view .LVU336
+ 204:Middlewares/lvgl/src/core/lv_event.c ****             LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 1114              		.loc 1 204 59 is_stmt 0 view .LVU337
+ 1115 003c AC68     		ldr	r4, [r5, #8]
+ 204:Middlewares/lvgl/src/core/lv_event.c ****             LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 1116              		.loc 1 204 97 view .LVU338
+ 1117 003e A17E     		ldrb	r1, [r4, #26]	@ zero_extendqisi2
+ 204:Middlewares/lvgl/src/core/lv_event.c ****             LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 1118              		.loc 1 204 41 view .LVU339
+ 1119 0040 01EB4101 		add	r1, r1, r1, lsl #1
+ 1120 0044 8900     		lsls	r1, r1, #2
+ 1121 0046 E068     		ldr	r0, [r4, #12]
+ 1122 0048 FFF7FEFF 		bl	lv_mem_realloc
+ 1123              	.LVL78:
+ 204:Middlewares/lvgl/src/core/lv_event.c ****             LV_ASSERT_MALLOC(obj->spec_attr->event_dsc);
+ 1124              		.loc 1 204 39 view .LVU340
+ 1125 004c E060     		str	r0, [r4, #12]
+ 205:Middlewares/lvgl/src/core/lv_event.c ****             return true;
+ 1126              		.loc 1 205 13 is_stmt 1 view .LVU341
+ 205:Middlewares/lvgl/src/core/lv_event.c ****             return true;
+ 1127              		.loc 1 205 13 view .LVU342
+ 1128 004e AB68     		ldr	r3, [r5, #8]
+ 1129 0050 DB68     		ldr	r3, [r3, #12]
+ 1130 0052 0BB1     		cbz	r3, .L84
+ 206:Middlewares/lvgl/src/core/lv_event.c ****         }
+ 1131              		.loc 1 206 20 is_stmt 0 view .LVU343
+ 1132 0054 0120     		movs	r0, #1
+ 1133 0056 0DE0     		b	.L79
+ 1134              	.L84:
+ 205:Middlewares/lvgl/src/core/lv_event.c ****             return true;
+ 1135              		.loc 1 205 13 is_stmt 1 discriminator 1 view .LVU344
+ 205:Middlewares/lvgl/src/core/lv_event.c ****             return true;
+ 1136              		.loc 1 205 13 discriminator 1 view .LVU345
+ 205:Middlewares/lvgl/src/core/lv_event.c ****             return true;
+ 1137              		.loc 1 205 13 discriminator 1 view .LVU346
+ 205:Middlewares/lvgl/src/core/lv_event.c ****             return true;
+ 1138              		.loc 1 205 13 discriminator 1 view .LVU347
+ 1139 0058 FEE7     		b	.L84
+ 1140              	.LVL79:
+ 1141              	.L88:
+ 196:Middlewares/lvgl/src/core/lv_event.c ****         if(&obj->spec_attr->event_dsc[i] == event_dsc) {
+ 1142              		.loc 1 196 51 discriminator 2 view .LVU348
+ 196:Middlewares/lvgl/src/core/lv_event.c ****         if(&obj->spec_attr->event_dsc[i] == event_dsc) {
+ 1143              		.loc 1 196 52 is_stmt 0 discriminator 2 view .LVU349
+ 1144 005a 0133     		adds	r3, r3, #1
+ 1145              	.LVL80:
+ 1146              	.L80:
+ 196:Middlewares/lvgl/src/core/lv_event.c ****         if(&obj->spec_attr->event_dsc[i] == event_dsc) {
+ 1147              		.loc 1 196 16 is_stmt 1 discriminator 1 view .LVU350
+ 196:Middlewares/lvgl/src/core/lv_event.c ****         if(&obj->spec_attr->event_dsc[i] == event_dsc) {
+ 1148              		.loc 1 196 34 is_stmt 0 discriminator 1 view .LVU351
+ 1149 005c A27E     		ldrb	r2, [r4, #26]	@ zero_extendqisi2
+ARM GAS  /tmp/ccbCcH82.s 			page 34
+
+
+ 196:Middlewares/lvgl/src/core/lv_event.c ****         if(&obj->spec_attr->event_dsc[i] == event_dsc) {
+ 1150              		.loc 1 196 5 discriminator 1 view .LVU352
+ 1151 005e 9A42     		cmp	r2, r3
+ 1152 0060 07DD     		ble	.L90
+ 197:Middlewares/lvgl/src/core/lv_event.c ****             /*Shift the remaining event handlers forward*/
+ 1153              		.loc 1 197 9 is_stmt 1 view .LVU353
+ 197:Middlewares/lvgl/src/core/lv_event.c ****             /*Shift the remaining event handlers forward*/
+ 1154              		.loc 1 197 27 is_stmt 0 view .LVU354
+ 1155 0062 E268     		ldr	r2, [r4, #12]
+ 197:Middlewares/lvgl/src/core/lv_event.c ****             /*Shift the remaining event handlers forward*/
+ 1156              		.loc 1 197 38 view .LVU355
+ 1157 0064 03EB4300 		add	r0, r3, r3, lsl #1
+ 197:Middlewares/lvgl/src/core/lv_event.c ****             /*Shift the remaining event handlers forward*/
+ 1158              		.loc 1 197 12 view .LVU356
+ 1159 0068 02EB8002 		add	r2, r2, r0, lsl #2
+ 197:Middlewares/lvgl/src/core/lv_event.c ****             /*Shift the remaining event handlers forward*/
+ 1160              		.loc 1 197 11 view .LVU357
+ 1161 006c 8A42     		cmp	r2, r1
+ 1162 006e F4D1     		bne	.L88
+ 1163 0070 DEE7     		b	.L81
+ 1164              	.L90:
+ 211:Middlewares/lvgl/src/core/lv_event.c **** }
+ 1165              		.loc 1 211 12 view .LVU358
+ 1166 0072 0020     		movs	r0, #0
+ 1167              	.LVL81:
+ 1168              	.L79:
+ 212:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1169              		.loc 1 212 1 view .LVU359
+ 1170 0074 38BD     		pop	{r3, r4, r5, pc}
+ 1171              	.LVL82:
+ 1172              	.L86:
+ 193:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1173              		.loc 1 193 39 view .LVU360
+ 1174 0076 0020     		movs	r0, #0
+ 1175              	.LVL83:
+ 193:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1176              		.loc 1 193 39 view .LVU361
+ 1177 0078 FCE7     		b	.L79
+ 1178              		.cfi_endproc
+ 1179              	.LFE158:
+ 1181              		.section	.text.lv_event_get_indev,"ax",%progbits
+ 1182              		.align	1
+ 1183              		.global	lv_event_get_indev
+ 1184              		.syntax unified
+ 1185              		.thumb
+ 1186              		.thumb_func
+ 1187              		.fpu fpv5-d16
+ 1189              	lv_event_get_indev:
+ 1190              	.LVL84:
+ 1191              	.LFB159:
+ 215:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1192              		.loc 1 215 1 is_stmt 1 view -0
+ 1193              		.cfi_startproc
+ 1194              		@ args = 0, pretend = 0, frame = 0
+ 1195              		@ frame_needed = 0, uses_anonymous_args = 0
+ 215:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1196              		.loc 1 215 1 is_stmt 0 view .LVU363
+ARM GAS  /tmp/ccbCcH82.s 			page 35
+
+
+ 1197 0000 08B5     		push	{r3, lr}
+ 1198              	.LCFI10:
+ 1199              		.cfi_def_cfa_offset 8
+ 1200              		.cfi_offset 3, -8
+ 1201              		.cfi_offset 14, -4
+ 217:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_PRESSING ||
+ 1202              		.loc 1 217 5 is_stmt 1 view .LVU364
+ 217:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_PRESSING ||
+ 1203              		.loc 1 217 9 is_stmt 0 view .LVU365
+ 1204 0002 037A     		ldrb	r3, [r0, #8]	@ zero_extendqisi2
+ 231:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_LEAVE)
+ 1205              		.loc 1 231 39 view .LVU366
+ 1206 0004 013B     		subs	r3, r3, #1
+ 1207 0006 DBB2     		uxtb	r3, r3
+ 217:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_PRESSING ||
+ 1208              		.loc 1 217 7 view .LVU367
+ 1209 0008 0F2B     		cmp	r3, #15
+ 1210 000a 02D8     		bhi	.L93
+ 234:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1211              		.loc 1 234 9 is_stmt 1 view .LVU368
+ 234:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1212              		.loc 1 234 16 is_stmt 0 view .LVU369
+ 1213 000c FFF7FEFF 		bl	lv_event_get_param
+ 1214              	.LVL85:
+ 1215              	.L91:
+ 239:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1216              		.loc 1 239 1 view .LVU370
+ 1217 0010 08BD     		pop	{r3, pc}
+ 1218              	.LVL86:
+ 1219              	.L93:
+ 237:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1220              		.loc 1 237 16 view .LVU371
+ 1221 0012 0020     		movs	r0, #0
+ 1222              	.LVL87:
+ 237:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1223              		.loc 1 237 16 view .LVU372
+ 1224 0014 FCE7     		b	.L91
+ 1225              		.cfi_endproc
+ 1226              	.LFE159:
+ 1228              		.section	.text.lv_event_get_draw_part_dsc,"ax",%progbits
+ 1229              		.align	1
+ 1230              		.global	lv_event_get_draw_part_dsc
+ 1231              		.syntax unified
+ 1232              		.thumb
+ 1233              		.thumb_func
+ 1234              		.fpu fpv5-d16
+ 1236              	lv_event_get_draw_part_dsc:
+ 1237              	.LVL88:
+ 1238              	.LFB160:
+ 242:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_DRAW_PART_BEGIN||
+ 1239              		.loc 1 242 1 is_stmt 1 view -0
+ 1240              		.cfi_startproc
+ 1241              		@ args = 0, pretend = 0, frame = 0
+ 1242              		@ frame_needed = 0, uses_anonymous_args = 0
+ 242:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_DRAW_PART_BEGIN||
+ 1243              		.loc 1 242 1 is_stmt 0 view .LVU374
+ 1244 0000 08B5     		push	{r3, lr}
+ARM GAS  /tmp/ccbCcH82.s 			page 36
+
+
+ 1245              	.LCFI11:
+ 1246              		.cfi_def_cfa_offset 8
+ 1247              		.cfi_offset 3, -8
+ 1248              		.cfi_offset 14, -4
+ 243:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_PART_END)
+ 1249              		.loc 1 243 5 is_stmt 1 view .LVU375
+ 243:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_PART_END)
+ 1250              		.loc 1 243 9 is_stmt 0 view .LVU376
+ 1251 0002 037A     		ldrb	r3, [r0, #8]	@ zero_extendqisi2
+ 243:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_PART_END)
+ 1252              		.loc 1 243 43 view .LVU377
+ 1253 0004 1A3B     		subs	r3, r3, #26
+ 1254 0006 DBB2     		uxtb	r3, r3
+ 243:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_PART_END)
+ 1255              		.loc 1 243 7 view .LVU378
+ 1256 0008 012B     		cmp	r3, #1
+ 1257 000a 02D8     		bhi	.L97
+ 246:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1258              		.loc 1 246 9 is_stmt 1 view .LVU379
+ 246:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1259              		.loc 1 246 16 is_stmt 0 view .LVU380
+ 1260 000c FFF7FEFF 		bl	lv_event_get_param
+ 1261              	.LVL89:
+ 1262              	.L95:
+ 251:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1263              		.loc 1 251 1 view .LVU381
+ 1264 0010 08BD     		pop	{r3, pc}
+ 1265              	.LVL90:
+ 1266              	.L97:
+ 249:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1267              		.loc 1 249 16 view .LVU382
+ 1268 0012 0020     		movs	r0, #0
+ 1269              	.LVL91:
+ 249:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1270              		.loc 1 249 16 view .LVU383
+ 1271 0014 FCE7     		b	.L95
+ 1272              		.cfi_endproc
+ 1273              	.LFE160:
+ 1275              		.section	.text.lv_event_get_clip_area,"ax",%progbits
+ 1276              		.align	1
+ 1277              		.global	lv_event_get_clip_area
+ 1278              		.syntax unified
+ 1279              		.thumb
+ 1280              		.thumb_func
+ 1281              		.fpu fpv5-d16
+ 1283              	lv_event_get_clip_area:
+ 1284              	.LVL92:
+ 1285              	.LFB161:
+ 254:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_DRAW_MAIN ||
+ 1286              		.loc 1 254 1 is_stmt 1 view -0
+ 1287              		.cfi_startproc
+ 1288              		@ args = 0, pretend = 0, frame = 0
+ 1289              		@ frame_needed = 0, uses_anonymous_args = 0
+ 254:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_DRAW_MAIN ||
+ 1290              		.loc 1 254 1 is_stmt 0 view .LVU385
+ 1291 0000 08B5     		push	{r3, lr}
+ 1292              	.LCFI12:
+ARM GAS  /tmp/ccbCcH82.s 			page 37
+
+
+ 1293              		.cfi_def_cfa_offset 8
+ 1294              		.cfi_offset 3, -8
+ 1295              		.cfi_offset 14, -4
+ 255:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_MAIN_BEGIN ||
+ 1296              		.loc 1 255 5 is_stmt 1 view .LVU386
+ 255:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_MAIN_BEGIN ||
+ 1297              		.loc 1 255 9 is_stmt 0 view .LVU387
+ 1298 0002 037A     		ldrb	r3, [r0, #8]	@ zero_extendqisi2
+ 257:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_POST ||
+ 1299              		.loc 1 257 43 view .LVU388
+ 1300 0004 A3F11402 		sub	r2, r3, #20
+ 1301 0008 D2B2     		uxtb	r2, r2
+ 255:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_MAIN_BEGIN ||
+ 1302              		.loc 1 255 7 view .LVU389
+ 1303 000a 182B     		cmp	r3, #24
+ 1304 000c 18BF     		it	ne
+ 1305 000e 022A     		cmpne	r2, #2
+ 1306 0010 03D9     		bls	.L100
+ 258:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_POST_BEGIN ||
+ 1307              		.loc 1 258 39 view .LVU390
+ 1308 0012 172B     		cmp	r3, #23
+ 1309 0014 01D0     		beq	.L100
+ 259:Middlewares/lvgl/src/core/lv_event.c ****         e->code == LV_EVENT_DRAW_POST_END)
+ 1310              		.loc 1 259 45 view .LVU391
+ 1311 0016 192B     		cmp	r3, #25
+ 1312 0018 02D1     		bne	.L102
+ 1313              	.L100:
+ 262:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1314              		.loc 1 262 9 is_stmt 1 view .LVU392
+ 262:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1315              		.loc 1 262 16 is_stmt 0 view .LVU393
+ 1316 001a FFF7FEFF 		bl	lv_event_get_param
+ 1317              	.LVL93:
+ 1318              	.L99:
+ 267:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1319              		.loc 1 267 1 view .LVU394
+ 1320 001e 08BD     		pop	{r3, pc}
+ 1321              	.LVL94:
+ 1322              	.L102:
+ 265:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1323              		.loc 1 265 16 view .LVU395
+ 1324 0020 0020     		movs	r0, #0
+ 1325              	.LVL95:
+ 265:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1326              		.loc 1 265 16 view .LVU396
+ 1327 0022 FCE7     		b	.L99
+ 1328              		.cfi_endproc
+ 1329              	.LFE161:
+ 1331              		.section	.text.lv_event_get_old_size,"ax",%progbits
+ 1332              		.align	1
+ 1333              		.global	lv_event_get_old_size
+ 1334              		.syntax unified
+ 1335              		.thumb
+ 1336              		.thumb_func
+ 1337              		.fpu fpv5-d16
+ 1339              	lv_event_get_old_size:
+ 1340              	.LVL96:
+ARM GAS  /tmp/ccbCcH82.s 			page 38
+
+
+ 1341              	.LFB162:
+ 270:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_SIZE_CHANGED) {
+ 1342              		.loc 1 270 1 is_stmt 1 view -0
+ 1343              		.cfi_startproc
+ 1344              		@ args = 0, pretend = 0, frame = 0
+ 1345              		@ frame_needed = 0, uses_anonymous_args = 0
+ 270:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_SIZE_CHANGED) {
+ 1346              		.loc 1 270 1 is_stmt 0 view .LVU398
+ 1347 0000 08B5     		push	{r3, lr}
+ 1348              	.LCFI13:
+ 1349              		.cfi_def_cfa_offset 8
+ 1350              		.cfi_offset 3, -8
+ 1351              		.cfi_offset 14, -4
+ 271:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 1352              		.loc 1 271 5 is_stmt 1 view .LVU399
+ 271:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 1353              		.loc 1 271 9 is_stmt 0 view .LVU400
+ 1354 0002 037A     		ldrb	r3, [r0, #8]	@ zero_extendqisi2
+ 271:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 1355              		.loc 1 271 7 view .LVU401
+ 1356 0004 232B     		cmp	r3, #35
+ 1357 0006 02D1     		bne	.L106
+ 272:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1358              		.loc 1 272 9 is_stmt 1 view .LVU402
+ 272:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1359              		.loc 1 272 16 is_stmt 0 view .LVU403
+ 1360 0008 FFF7FEFF 		bl	lv_event_get_param
+ 1361              	.LVL97:
+ 1362              	.L104:
+ 277:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1363              		.loc 1 277 1 view .LVU404
+ 1364 000c 08BD     		pop	{r3, pc}
+ 1365              	.LVL98:
+ 1366              	.L106:
+ 275:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1367              		.loc 1 275 16 view .LVU405
+ 1368 000e 0020     		movs	r0, #0
+ 1369              	.LVL99:
+ 275:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1370              		.loc 1 275 16 view .LVU406
+ 1371 0010 FCE7     		b	.L104
+ 1372              		.cfi_endproc
+ 1373              	.LFE162:
+ 1375              		.section	.text.lv_event_get_key,"ax",%progbits
+ 1376              		.align	1
+ 1377              		.global	lv_event_get_key
+ 1378              		.syntax unified
+ 1379              		.thumb
+ 1380              		.thumb_func
+ 1381              		.fpu fpv5-d16
+ 1383              	lv_event_get_key:
+ 1384              	.LVL100:
+ 1385              	.LFB163:
+ 280:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_KEY) {
+ 1386              		.loc 1 280 1 is_stmt 1 view -0
+ 1387              		.cfi_startproc
+ 1388              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  /tmp/ccbCcH82.s 			page 39
+
+
+ 1389              		@ frame_needed = 0, uses_anonymous_args = 0
+ 280:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_KEY) {
+ 1390              		.loc 1 280 1 is_stmt 0 view .LVU408
+ 1391 0000 08B5     		push	{r3, lr}
+ 1392              	.LCFI14:
+ 1393              		.cfi_def_cfa_offset 8
+ 1394              		.cfi_offset 3, -8
+ 1395              		.cfi_offset 14, -4
+ 281:Middlewares/lvgl/src/core/lv_event.c ****         uint32_t * k = lv_event_get_param(e);
+ 1396              		.loc 1 281 5 is_stmt 1 view .LVU409
+ 281:Middlewares/lvgl/src/core/lv_event.c ****         uint32_t * k = lv_event_get_param(e);
+ 1397              		.loc 1 281 9 is_stmt 0 view .LVU410
+ 1398 0002 037A     		ldrb	r3, [r0, #8]	@ zero_extendqisi2
+ 281:Middlewares/lvgl/src/core/lv_event.c ****         uint32_t * k = lv_event_get_param(e);
+ 1399              		.loc 1 281 7 view .LVU411
+ 1400 0004 0D2B     		cmp	r3, #13
+ 1401 0006 04D1     		bne	.L110
+ 1402              	.LBB2:
+ 282:Middlewares/lvgl/src/core/lv_event.c ****         if(k) return *k;
+ 1403              		.loc 1 282 9 is_stmt 1 view .LVU412
+ 282:Middlewares/lvgl/src/core/lv_event.c ****         if(k) return *k;
+ 1404              		.loc 1 282 24 is_stmt 0 view .LVU413
+ 1405 0008 FFF7FEFF 		bl	lv_event_get_param
+ 1406              	.LVL101:
+ 283:Middlewares/lvgl/src/core/lv_event.c ****         else return 0;
+ 1407              		.loc 1 283 9 is_stmt 1 view .LVU414
+ 283:Middlewares/lvgl/src/core/lv_event.c ****         else return 0;
+ 1408              		.loc 1 283 11 is_stmt 0 view .LVU415
+ 1409 000c 18B1     		cbz	r0, .L111
+ 283:Middlewares/lvgl/src/core/lv_event.c ****         else return 0;
+ 1410              		.loc 1 283 15 is_stmt 1 discriminator 1 view .LVU416
+ 283:Middlewares/lvgl/src/core/lv_event.c ****         else return 0;
+ 1411              		.loc 1 283 22 is_stmt 0 discriminator 1 view .LVU417
+ 1412 000e 0068     		ldr	r0, [r0]
+ 1413              	.LVL102:
+ 283:Middlewares/lvgl/src/core/lv_event.c ****         else return 0;
+ 1414              		.loc 1 283 22 discriminator 1 view .LVU418
+ 1415 0010 00E0     		b	.L108
+ 1416              	.LVL103:
+ 1417              	.L110:
+ 283:Middlewares/lvgl/src/core/lv_event.c ****         else return 0;
+ 1418              		.loc 1 283 22 discriminator 1 view .LVU419
+ 1419              	.LBE2:
+ 287:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1420              		.loc 1 287 16 view .LVU420
+ 1421 0012 0020     		movs	r0, #0
+ 1422              	.LVL104:
+ 1423              	.L108:
+ 289:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1424              		.loc 1 289 1 view .LVU421
+ 1425 0014 08BD     		pop	{r3, pc}
+ 1426              	.LVL105:
+ 1427              	.L111:
+ 1428              	.LBB3:
+ 284:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1429              		.loc 1 284 21 view .LVU422
+ 1430 0016 0020     		movs	r0, #0
+ARM GAS  /tmp/ccbCcH82.s 			page 40
+
+
+ 1431              	.LVL106:
+ 284:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1432              		.loc 1 284 21 view .LVU423
+ 1433 0018 FCE7     		b	.L108
+ 1434              	.LBE3:
+ 1435              		.cfi_endproc
+ 1436              	.LFE163:
+ 1438              		.section	.text.lv_event_get_scroll_anim,"ax",%progbits
+ 1439              		.align	1
+ 1440              		.global	lv_event_get_scroll_anim
+ 1441              		.syntax unified
+ 1442              		.thumb
+ 1443              		.thumb_func
+ 1444              		.fpu fpv5-d16
+ 1446              	lv_event_get_scroll_anim:
+ 1447              	.LVL107:
+ 1448              	.LFB164:
+ 292:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_SCROLL_BEGIN) {
+ 1449              		.loc 1 292 1 is_stmt 1 view -0
+ 1450              		.cfi_startproc
+ 1451              		@ args = 0, pretend = 0, frame = 0
+ 1452              		@ frame_needed = 0, uses_anonymous_args = 0
+ 292:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_SCROLL_BEGIN) {
+ 1453              		.loc 1 292 1 is_stmt 0 view .LVU425
+ 1454 0000 08B5     		push	{r3, lr}
+ 1455              	.LCFI15:
+ 1456              		.cfi_def_cfa_offset 8
+ 1457              		.cfi_offset 3, -8
+ 1458              		.cfi_offset 14, -4
+ 293:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 1459              		.loc 1 293 5 is_stmt 1 view .LVU426
+ 293:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 1460              		.loc 1 293 9 is_stmt 0 view .LVU427
+ 1461 0002 037A     		ldrb	r3, [r0, #8]	@ zero_extendqisi2
+ 293:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 1462              		.loc 1 293 7 view .LVU428
+ 1463 0004 092B     		cmp	r3, #9
+ 1464 0006 02D1     		bne	.L115
+ 294:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1465              		.loc 1 294 9 is_stmt 1 view .LVU429
+ 294:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1466              		.loc 1 294 16 is_stmt 0 view .LVU430
+ 1467 0008 FFF7FEFF 		bl	lv_event_get_param
+ 1468              	.LVL108:
+ 1469              	.L113:
+ 299:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1470              		.loc 1 299 1 view .LVU431
+ 1471 000c 08BD     		pop	{r3, pc}
+ 1472              	.LVL109:
+ 1473              	.L115:
+ 297:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1474              		.loc 1 297 16 view .LVU432
+ 1475 000e 0020     		movs	r0, #0
+ 1476              	.LVL110:
+ 297:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1477              		.loc 1 297 16 view .LVU433
+ 1478 0010 FCE7     		b	.L113
+ARM GAS  /tmp/ccbCcH82.s 			page 41
+
+
+ 1479              		.cfi_endproc
+ 1480              	.LFE164:
+ 1482              		.section	.text.lv_event_set_ext_draw_size,"ax",%progbits
+ 1483              		.align	1
+ 1484              		.global	lv_event_set_ext_draw_size
+ 1485              		.syntax unified
+ 1486              		.thumb
+ 1487              		.thumb_func
+ 1488              		.fpu fpv5-d16
+ 1490              	lv_event_set_ext_draw_size:
+ 1491              	.LVL111:
+ 1492              	.LFB165:
+ 302:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
+ 1493              		.loc 1 302 1 is_stmt 1 view -0
+ 1494              		.cfi_startproc
+ 1495              		@ args = 0, pretend = 0, frame = 0
+ 1496              		@ frame_needed = 0, uses_anonymous_args = 0
+ 303:Middlewares/lvgl/src/core/lv_event.c ****         lv_coord_t * cur_size = lv_event_get_param(e);
+ 1497              		.loc 1 303 5 view .LVU435
+ 303:Middlewares/lvgl/src/core/lv_event.c ****         lv_coord_t * cur_size = lv_event_get_param(e);
+ 1498              		.loc 1 303 9 is_stmt 0 view .LVU436
+ 1499 0000 037A     		ldrb	r3, [r0, #8]	@ zero_extendqisi2
+ 303:Middlewares/lvgl/src/core/lv_event.c ****         lv_coord_t * cur_size = lv_event_get_param(e);
+ 1500              		.loc 1 303 7 view .LVU437
+ 1501 0002 132B     		cmp	r3, #19
+ 1502 0004 00D0     		beq	.L123
+ 1503 0006 7047     		bx	lr
+ 1504              	.L123:
+ 302:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
+ 1505              		.loc 1 302 1 view .LVU438
+ 1506 0008 10B5     		push	{r4, lr}
+ 1507              	.LCFI16:
+ 1508              		.cfi_def_cfa_offset 8
+ 1509              		.cfi_offset 4, -8
+ 1510              		.cfi_offset 14, -4
+ 1511 000a 0C46     		mov	r4, r1
+ 1512              	.LBB4:
+ 304:Middlewares/lvgl/src/core/lv_event.c ****         *cur_size = LV_MAX(*cur_size, size);
+ 1513              		.loc 1 304 9 is_stmt 1 view .LVU439
+ 304:Middlewares/lvgl/src/core/lv_event.c ****         *cur_size = LV_MAX(*cur_size, size);
+ 1514              		.loc 1 304 33 is_stmt 0 view .LVU440
+ 1515 000c FFF7FEFF 		bl	lv_event_get_param
+ 1516              	.LVL112:
+ 305:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1517              		.loc 1 305 9 is_stmt 1 view .LVU441
+ 305:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1518              		.loc 1 305 21 is_stmt 0 view .LVU442
+ 1519 0010 B0F90010 		ldrsh	r1, [r0]
+ 1520 0014 A142     		cmp	r1, r4
+ 1521 0016 B8BF     		it	lt
+ 1522 0018 2146     		movlt	r1, r4
+ 305:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1523              		.loc 1 305 19 view .LVU443
+ 1524 001a 0180     		strh	r1, [r0]	@ movhi
+ 1525              	.LBE4:
+ 307:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1526              		.loc 1 307 60 is_stmt 1 view .LVU444
+ARM GAS  /tmp/ccbCcH82.s 			page 42
+
+
+ 309:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1527              		.loc 1 309 1 is_stmt 0 view .LVU445
+ 1528 001c 10BD     		pop	{r4, pc}
+ 1529              		.cfi_endproc
+ 1530              	.LFE165:
+ 1532              		.section	.text.lv_event_get_self_size_info,"ax",%progbits
+ 1533              		.align	1
+ 1534              		.global	lv_event_get_self_size_info
+ 1535              		.syntax unified
+ 1536              		.thumb
+ 1537              		.thumb_func
+ 1538              		.fpu fpv5-d16
+ 1540              	lv_event_get_self_size_info:
+ 1541              	.LVL113:
+ 1542              	.LFB166:
+ 312:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_GET_SELF_SIZE) {
+ 1543              		.loc 1 312 1 is_stmt 1 view -0
+ 1544              		.cfi_startproc
+ 1545              		@ args = 0, pretend = 0, frame = 0
+ 1546              		@ frame_needed = 0, uses_anonymous_args = 0
+ 312:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_GET_SELF_SIZE) {
+ 1547              		.loc 1 312 1 is_stmt 0 view .LVU447
+ 1548 0000 08B5     		push	{r3, lr}
+ 1549              	.LCFI17:
+ 1550              		.cfi_def_cfa_offset 8
+ 1551              		.cfi_offset 3, -8
+ 1552              		.cfi_offset 14, -4
+ 313:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 1553              		.loc 1 313 5 is_stmt 1 view .LVU448
+ 313:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 1554              		.loc 1 313 9 is_stmt 0 view .LVU449
+ 1555 0002 037A     		ldrb	r3, [r0, #8]	@ zero_extendqisi2
+ 313:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 1556              		.loc 1 313 7 view .LVU450
+ 1557 0004 262B     		cmp	r3, #38
+ 1558 0006 02D1     		bne	.L126
+ 314:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1559              		.loc 1 314 9 is_stmt 1 view .LVU451
+ 314:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1560              		.loc 1 314 16 is_stmt 0 view .LVU452
+ 1561 0008 FFF7FEFF 		bl	lv_event_get_param
+ 1562              	.LVL114:
+ 1563              	.L124:
+ 319:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1564              		.loc 1 319 1 view .LVU453
+ 1565 000c 08BD     		pop	{r3, pc}
+ 1566              	.LVL115:
+ 1567              	.L126:
+ 317:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1568              		.loc 1 317 16 view .LVU454
+ 1569 000e 0020     		movs	r0, #0
+ 1570              	.LVL116:
+ 317:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1571              		.loc 1 317 16 view .LVU455
+ 1572 0010 FCE7     		b	.L124
+ 1573              		.cfi_endproc
+ 1574              	.LFE166:
+ARM GAS  /tmp/ccbCcH82.s 			page 43
+
+
+ 1576              		.section	.text.lv_event_get_hit_test_info,"ax",%progbits
+ 1577              		.align	1
+ 1578              		.global	lv_event_get_hit_test_info
+ 1579              		.syntax unified
+ 1580              		.thumb
+ 1581              		.thumb_func
+ 1582              		.fpu fpv5-d16
+ 1584              	lv_event_get_hit_test_info:
+ 1585              	.LVL117:
+ 1586              	.LFB167:
+ 322:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_HIT_TEST) {
+ 1587              		.loc 1 322 1 is_stmt 1 view -0
+ 1588              		.cfi_startproc
+ 1589              		@ args = 0, pretend = 0, frame = 0
+ 1590              		@ frame_needed = 0, uses_anonymous_args = 0
+ 322:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_HIT_TEST) {
+ 1591              		.loc 1 322 1 is_stmt 0 view .LVU457
+ 1592 0000 08B5     		push	{r3, lr}
+ 1593              	.LCFI18:
+ 1594              		.cfi_def_cfa_offset 8
+ 1595              		.cfi_offset 3, -8
+ 1596              		.cfi_offset 14, -4
+ 323:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 1597              		.loc 1 323 5 is_stmt 1 view .LVU458
+ 323:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 1598              		.loc 1 323 9 is_stmt 0 view .LVU459
+ 1599 0002 037A     		ldrb	r3, [r0, #8]	@ zero_extendqisi2
+ 323:Middlewares/lvgl/src/core/lv_event.c ****         return lv_event_get_param(e);
+ 1600              		.loc 1 323 7 view .LVU460
+ 1601 0004 112B     		cmp	r3, #17
+ 1602 0006 02D1     		bne	.L130
+ 324:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1603              		.loc 1 324 9 is_stmt 1 view .LVU461
+ 324:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1604              		.loc 1 324 16 is_stmt 0 view .LVU462
+ 1605 0008 FFF7FEFF 		bl	lv_event_get_param
+ 1606              	.LVL118:
+ 1607              	.L128:
+ 329:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1608              		.loc 1 329 1 view .LVU463
+ 1609 000c 08BD     		pop	{r3, pc}
+ 1610              	.LVL119:
+ 1611              	.L130:
+ 327:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1612              		.loc 1 327 16 view .LVU464
+ 1613 000e 0020     		movs	r0, #0
+ 1614              	.LVL120:
+ 327:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1615              		.loc 1 327 16 view .LVU465
+ 1616 0010 FCE7     		b	.L128
+ 1617              		.cfi_endproc
+ 1618              	.LFE167:
+ 1620              		.section	.text.lv_event_get_cover_area,"ax",%progbits
+ 1621              		.align	1
+ 1622              		.global	lv_event_get_cover_area
+ 1623              		.syntax unified
+ 1624              		.thumb
+ARM GAS  /tmp/ccbCcH82.s 			page 44
+
+
+ 1625              		.thumb_func
+ 1626              		.fpu fpv5-d16
+ 1628              	lv_event_get_cover_area:
+ 1629              	.LVL121:
+ 1630              	.LFB168:
+ 332:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_COVER_CHECK) {
+ 1631              		.loc 1 332 1 is_stmt 1 view -0
+ 1632              		.cfi_startproc
+ 1633              		@ args = 0, pretend = 0, frame = 0
+ 1634              		@ frame_needed = 0, uses_anonymous_args = 0
+ 332:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_COVER_CHECK) {
+ 1635              		.loc 1 332 1 is_stmt 0 view .LVU467
+ 1636 0000 08B5     		push	{r3, lr}
+ 1637              	.LCFI19:
+ 1638              		.cfi_def_cfa_offset 8
+ 1639              		.cfi_offset 3, -8
+ 1640              		.cfi_offset 14, -4
+ 333:Middlewares/lvgl/src/core/lv_event.c ****         lv_cover_check_info_t * p = lv_event_get_param(e);
+ 1641              		.loc 1 333 5 is_stmt 1 view .LVU468
+ 333:Middlewares/lvgl/src/core/lv_event.c ****         lv_cover_check_info_t * p = lv_event_get_param(e);
+ 1642              		.loc 1 333 9 is_stmt 0 view .LVU469
+ 1643 0002 037A     		ldrb	r3, [r0, #8]	@ zero_extendqisi2
+ 333:Middlewares/lvgl/src/core/lv_event.c ****         lv_cover_check_info_t * p = lv_event_get_param(e);
+ 1644              		.loc 1 333 7 view .LVU470
+ 1645 0004 122B     		cmp	r3, #18
+ 1646 0006 03D1     		bne	.L134
+ 1647              	.LBB5:
+ 334:Middlewares/lvgl/src/core/lv_event.c ****         return p->area;
+ 1648              		.loc 1 334 9 is_stmt 1 view .LVU471
+ 334:Middlewares/lvgl/src/core/lv_event.c ****         return p->area;
+ 1649              		.loc 1 334 37 is_stmt 0 view .LVU472
+ 1650 0008 FFF7FEFF 		bl	lv_event_get_param
+ 1651              	.LVL122:
+ 335:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1652              		.loc 1 335 9 is_stmt 1 view .LVU473
+ 335:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1653              		.loc 1 335 17 is_stmt 0 view .LVU474
+ 1654 000c 4068     		ldr	r0, [r0, #4]
+ 1655              	.LVL123:
+ 1656              	.L132:
+ 335:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1657              		.loc 1 335 17 view .LVU475
+ 1658              	.LBE5:
+ 340:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1659              		.loc 1 340 1 view .LVU476
+ 1660 000e 08BD     		pop	{r3, pc}
+ 1661              	.LVL124:
+ 1662              	.L134:
+ 338:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1663              		.loc 1 338 16 view .LVU477
+ 1664 0010 0020     		movs	r0, #0
+ 1665              	.LVL125:
+ 338:Middlewares/lvgl/src/core/lv_event.c ****     }
+ 1666              		.loc 1 338 16 view .LVU478
+ 1667 0012 FCE7     		b	.L132
+ 1668              		.cfi_endproc
+ 1669              	.LFE168:
+ARM GAS  /tmp/ccbCcH82.s 			page 45
+
+
+ 1671              		.section	.text.lv_event_set_cover_res,"ax",%progbits
+ 1672              		.align	1
+ 1673              		.global	lv_event_set_cover_res
+ 1674              		.syntax unified
+ 1675              		.thumb
+ 1676              		.thumb_func
+ 1677              		.fpu fpv5-d16
+ 1679              	lv_event_set_cover_res:
+ 1680              	.LVL126:
+ 1681              	.LFB169:
+ 343:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_COVER_CHECK) {
+ 1682              		.loc 1 343 1 is_stmt 1 view -0
+ 1683              		.cfi_startproc
+ 1684              		@ args = 0, pretend = 0, frame = 0
+ 1685              		@ frame_needed = 0, uses_anonymous_args = 0
+ 344:Middlewares/lvgl/src/core/lv_event.c ****         lv_cover_check_info_t * p = lv_event_get_param(e);
+ 1686              		.loc 1 344 5 view .LVU480
+ 344:Middlewares/lvgl/src/core/lv_event.c ****         lv_cover_check_info_t * p = lv_event_get_param(e);
+ 1687              		.loc 1 344 9 is_stmt 0 view .LVU481
+ 1688 0000 037A     		ldrb	r3, [r0, #8]	@ zero_extendqisi2
+ 344:Middlewares/lvgl/src/core/lv_event.c ****         lv_cover_check_info_t * p = lv_event_get_param(e);
+ 1689              		.loc 1 344 7 view .LVU482
+ 1690 0002 122B     		cmp	r3, #18
+ 1691 0004 00D0     		beq	.L142
+ 1692 0006 7047     		bx	lr
+ 1693              	.L142:
+ 343:Middlewares/lvgl/src/core/lv_event.c ****     if(e->code == LV_EVENT_COVER_CHECK) {
+ 1694              		.loc 1 343 1 view .LVU483
+ 1695 0008 10B5     		push	{r4, lr}
+ 1696              	.LCFI20:
+ 1697              		.cfi_def_cfa_offset 8
+ 1698              		.cfi_offset 4, -8
+ 1699              		.cfi_offset 14, -4
+ 1700 000a 0C46     		mov	r4, r1
+ 1701              	.LBB6:
+ 345:Middlewares/lvgl/src/core/lv_event.c ****         if(res > p->res) p->res = res;  /*Save only "stronger" results*/
+ 1702              		.loc 1 345 9 is_stmt 1 view .LVU484
+ 345:Middlewares/lvgl/src/core/lv_event.c ****         if(res > p->res) p->res = res;  /*Save only "stronger" results*/
+ 1703              		.loc 1 345 37 is_stmt 0 view .LVU485
+ 1704 000c FFF7FEFF 		bl	lv_event_get_param
+ 1705              	.LVL127:
+ 346:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1706              		.loc 1 346 9 is_stmt 1 view .LVU486
+ 346:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1707              		.loc 1 346 19 is_stmt 0 view .LVU487
+ 1708 0010 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ 346:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1709              		.loc 1 346 11 view .LVU488
+ 1710 0012 A342     		cmp	r3, r4
+ 1711 0014 00D2     		bcs	.L136
+ 346:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1712              		.loc 1 346 26 is_stmt 1 discriminator 1 view .LVU489
+ 346:Middlewares/lvgl/src/core/lv_event.c ****     } else {
+ 1713              		.loc 1 346 33 is_stmt 0 discriminator 1 view .LVU490
+ 1714 0016 0470     		strb	r4, [r0]
+ 1715              	.LBE6:
+ 348:Middlewares/lvgl/src/core/lv_event.c ****     }
+ARM GAS  /tmp/ccbCcH82.s 			page 46
+
+
+ 1716              		.loc 1 348 60 is_stmt 1 discriminator 1 view .LVU491
+ 1717              	.L136:
+ 350:Middlewares/lvgl/src/core/lv_event.c **** 
+ 1718              		.loc 1 350 1 is_stmt 0 view .LVU492
+ 1719 0018 10BD     		pop	{r4, pc}
+ 1720              		.cfi_endproc
+ 1721              	.LFE169:
+ 1723              		.section	.bss.event_head,"aw",%nobits
+ 1724              		.align	2
+ 1725              		.set	.LANCHOR0,. + 0
+ 1728              	event_head:
+ 1729 0000 00000000 		.space	4
+ 1730              		.section	.data.last_id.0,"aw"
+ 1731              		.align	2
+ 1732              		.set	.LANCHOR1,. + 0
+ 1735              	last_id.0:
+ 1736 0000 27000000 		.word	39
+ 1737              		.text
+ 1738              	.Letext0:
+ 1739              		.file 2 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 1740              		.file 3 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ 1741              		.file 4 "Middlewares/lvgl/src/core/../misc/../font/../misc/lv_area.h"
+ 1742              		.file 5 "Middlewares/lvgl/src/core/../misc/../font/lv_font.h"
+ 1743              		.file 6 "Middlewares/lvgl/src/core/../misc/lv_types.h"
+ 1744              		.file 7 "Middlewares/lvgl/src/core/../misc/lv_color.h"
+ 1745              		.file 8 "Middlewares/lvgl/src/core/../misc/lv_anim.h"
+ 1746              		.file 9 "Middlewares/lvgl/src/core/../misc/lv_txt.h"
+ 1747              		.file 10 "Middlewares/lvgl/src/core/../misc/lv_bidi.h"
+ 1748              		.file 11 "Middlewares/lvgl/src/core/../misc/lv_style.h"
+ 1749              		.file 12 "Middlewares/lvgl/src/core/../hal/../misc/lv_ll.h"
+ 1750              		.file 13 "Middlewares/lvgl/src/core/../hal/../misc/lv_timer.h"
+ 1751              		.file 14 "Middlewares/lvgl/src/core/../hal/lv_hal_disp.h"
+ 1752              		.file 15 "Middlewares/lvgl/src/core/lv_obj.h"
+ 1753              		.file 16 "Middlewares/lvgl/src/core/../hal/lv_hal_indev.h"
+ 1754              		.file 17 "Middlewares/lvgl/src/core/lv_group.h"
+ 1755              		.file 18 "Middlewares/lvgl/src/core/lv_obj_scroll.h"
+ 1756              		.file 19 "Middlewares/lvgl/src/core/lv_obj_style.h"
+ 1757              		.file 20 "Middlewares/lvgl/src/core/../draw/lv_draw_rect.h"
+ 1758              		.file 21 "Middlewares/lvgl/src/core/../draw/lv_draw_label.h"
+ 1759              		.file 22 "Middlewares/lvgl/src/core/../draw/lv_draw_img.h"
+ 1760              		.file 23 "Middlewares/lvgl/src/core/../draw/lv_draw_line.h"
+ 1761              		.file 24 "Middlewares/lvgl/src/core/../draw/lv_draw_arc.h"
+ 1762              		.file 25 "Middlewares/lvgl/src/core/lv_obj_draw.h"
+ 1763              		.file 26 "Middlewares/lvgl/src/core/lv_obj_class.h"
+ 1764              		.file 27 "Middlewares/lvgl/src/core/lv_event.h"
+ 1765              		.file 28 "Middlewares/lvgl/src/core/lv_indev.h"
+ 1766              		.file 29 "Middlewares/lvgl/src/core/../hal/../misc/lv_mem.h"
+ARM GAS  /tmp/ccbCcH82.s 			page 47
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 lv_event.c
+     /tmp/ccbCcH82.s:17     .text.lv_obj_get_event_dsc:0000000000000000 $t
+     /tmp/ccbCcH82.s:24     .text.lv_obj_get_event_dsc:0000000000000000 lv_obj_get_event_dsc
+     /tmp/ccbCcH82.s:68     .text.event_is_bubbled:0000000000000000 $t
+     /tmp/ccbCcH82.s:74     .text.event_is_bubbled:0000000000000000 event_is_bubbled
+     /tmp/ccbCcH82.s:90     .text.event_is_bubbled:000000000000000a $d
+     /tmp/ccbCcH82.s:112    .text.event_is_bubbled:0000000000000020 $t
+     /tmp/ccbCcH82.s:125    .text.lv_obj_event_base:0000000000000000 $t
+     /tmp/ccbCcH82.s:132    .text.lv_obj_event_base:0000000000000000 lv_obj_event_base
+     /tmp/ccbCcH82.s:237    .text.event_send_core:0000000000000000 $t
+     /tmp/ccbCcH82.s:243    .text.event_send_core:0000000000000000 event_send_core
+     /tmp/ccbCcH82.s:431    .text.lv_event_send:0000000000000000 $t
+     /tmp/ccbCcH82.s:438    .text.lv_event_send:0000000000000000 lv_event_send
+     /tmp/ccbCcH82.s:525    .text.lv_event_send:000000000000003c $d
+     /tmp/ccbCcH82.s:530    .text.lv_event_get_target:0000000000000000 $t
+     /tmp/ccbCcH82.s:537    .text.lv_event_get_target:0000000000000000 lv_event_get_target
+     /tmp/ccbCcH82.s:555    .text.lv_event_get_current_target:0000000000000000 $t
+     /tmp/ccbCcH82.s:562    .text.lv_event_get_current_target:0000000000000000 lv_event_get_current_target
+     /tmp/ccbCcH82.s:580    .text.lv_event_get_code:0000000000000000 $t
+     /tmp/ccbCcH82.s:587    .text.lv_event_get_code:0000000000000000 lv_event_get_code
+     /tmp/ccbCcH82.s:605    .text.lv_event_get_param:0000000000000000 $t
+     /tmp/ccbCcH82.s:612    .text.lv_event_get_param:0000000000000000 lv_event_get_param
+     /tmp/ccbCcH82.s:630    .text.lv_event_get_user_data:0000000000000000 $t
+     /tmp/ccbCcH82.s:637    .text.lv_event_get_user_data:0000000000000000 lv_event_get_user_data
+     /tmp/ccbCcH82.s:655    .text.lv_event_register_id:0000000000000000 $t
+     /tmp/ccbCcH82.s:662    .text.lv_event_register_id:0000000000000000 lv_event_register_id
+     /tmp/ccbCcH82.s:682    .text.lv_event_register_id:000000000000000c $d
+     /tmp/ccbCcH82.s:687    .text._lv_event_mark_deleted:0000000000000000 $t
+     /tmp/ccbCcH82.s:694    .text._lv_event_mark_deleted:0000000000000000 _lv_event_mark_deleted
+     /tmp/ccbCcH82.s:742    .text._lv_event_mark_deleted:0000000000000024 $d
+     /tmp/ccbCcH82.s:747    .text.lv_obj_add_event_cb:0000000000000000 $t
+     /tmp/ccbCcH82.s:754    .text.lv_obj_add_event_cb:0000000000000000 lv_obj_add_event_cb
+     /tmp/ccbCcH82.s:871    .text.lv_obj_remove_event_cb:0000000000000000 $t
+     /tmp/ccbCcH82.s:878    .text.lv_obj_remove_event_cb:0000000000000000 lv_obj_remove_event_cb
+     /tmp/ccbCcH82.s:1029   .text.lv_obj_remove_event_dsc:0000000000000000 $t
+     /tmp/ccbCcH82.s:1036   .text.lv_obj_remove_event_dsc:0000000000000000 lv_obj_remove_event_dsc
+     /tmp/ccbCcH82.s:1182   .text.lv_event_get_indev:0000000000000000 $t
+     /tmp/ccbCcH82.s:1189   .text.lv_event_get_indev:0000000000000000 lv_event_get_indev
+     /tmp/ccbCcH82.s:1229   .text.lv_event_get_draw_part_dsc:0000000000000000 $t
+     /tmp/ccbCcH82.s:1236   .text.lv_event_get_draw_part_dsc:0000000000000000 lv_event_get_draw_part_dsc
+     /tmp/ccbCcH82.s:1276   .text.lv_event_get_clip_area:0000000000000000 $t
+     /tmp/ccbCcH82.s:1283   .text.lv_event_get_clip_area:0000000000000000 lv_event_get_clip_area
+     /tmp/ccbCcH82.s:1332   .text.lv_event_get_old_size:0000000000000000 $t
+     /tmp/ccbCcH82.s:1339   .text.lv_event_get_old_size:0000000000000000 lv_event_get_old_size
+     /tmp/ccbCcH82.s:1376   .text.lv_event_get_key:0000000000000000 $t
+     /tmp/ccbCcH82.s:1383   .text.lv_event_get_key:0000000000000000 lv_event_get_key
+     /tmp/ccbCcH82.s:1439   .text.lv_event_get_scroll_anim:0000000000000000 $t
+     /tmp/ccbCcH82.s:1446   .text.lv_event_get_scroll_anim:0000000000000000 lv_event_get_scroll_anim
+     /tmp/ccbCcH82.s:1483   .text.lv_event_set_ext_draw_size:0000000000000000 $t
+     /tmp/ccbCcH82.s:1490   .text.lv_event_set_ext_draw_size:0000000000000000 lv_event_set_ext_draw_size
+     /tmp/ccbCcH82.s:1533   .text.lv_event_get_self_size_info:0000000000000000 $t
+     /tmp/ccbCcH82.s:1540   .text.lv_event_get_self_size_info:0000000000000000 lv_event_get_self_size_info
+     /tmp/ccbCcH82.s:1577   .text.lv_event_get_hit_test_info:0000000000000000 $t
+     /tmp/ccbCcH82.s:1584   .text.lv_event_get_hit_test_info:0000000000000000 lv_event_get_hit_test_info
+     /tmp/ccbCcH82.s:1621   .text.lv_event_get_cover_area:0000000000000000 $t
+     /tmp/ccbCcH82.s:1628   .text.lv_event_get_cover_area:0000000000000000 lv_event_get_cover_area
+ARM GAS  /tmp/ccbCcH82.s 			page 48
+
+
+     /tmp/ccbCcH82.s:1672   .text.lv_event_set_cover_res:0000000000000000 $t
+     /tmp/ccbCcH82.s:1679   .text.lv_event_set_cover_res:0000000000000000 lv_event_set_cover_res
+     /tmp/ccbCcH82.s:1724   .bss.event_head:0000000000000000 $d
+     /tmp/ccbCcH82.s:1728   .bss.event_head:0000000000000000 event_head
+     /tmp/ccbCcH82.s:1731   .data.last_id.0:0000000000000000 $d
+     /tmp/ccbCcH82.s:1735   .data.last_id.0:0000000000000000 last_id.0
+
+UNDEFINED SYMBOLS
+lv_indev_get_act
+lv_obj_has_flag
+lv_obj_allocate_spec_attr
+lv_mem_realloc
