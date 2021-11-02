@@ -132,6 +132,8 @@ int main(void)
     
     //SK_Watering_RGB();
     SK_Rainbow(40);
+    HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
+    HAL_Delay(3000);
     //HAL_TIM_PWM_Start_DMA(&htim2, TIM_CHANNEL_1, (uint32_t *)send_Buf2,5);
     //HAL_TIM_PWM_Start_DMA(&htim2, TIM_CHANNEL_1, (uint32_t *)send_Buf, NUM);
     

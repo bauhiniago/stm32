@@ -19,14 +19,12 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "RC522.h"
-#include <stdio.h>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -66,6 +64,7 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
+  
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -89,17 +88,16 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-  RC522_Init();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    RC522_Handle1();
-    
+    HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
+    HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
