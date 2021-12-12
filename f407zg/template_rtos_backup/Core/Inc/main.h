@@ -65,6 +65,8 @@ void FFT(void);
 /* Private defines -----------------------------------------------------------*/
 #define LED_Pin GPIO_PIN_9
 #define LED_GPIO_Port GPIOF
+#define CS_Pin GPIO_PIN_7
+#define CS_GPIO_Port GPIOA
 #define Cross1_Pin GPIO_PIN_13
 #define Cross1_GPIO_Port GPIOF
 #define Cross2_Pin GPIO_PIN_14

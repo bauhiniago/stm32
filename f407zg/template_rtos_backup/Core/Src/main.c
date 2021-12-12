@@ -20,10 +20,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "adc.h"
-#include "dac.h"
 #include "dma.h"
-#include "tim.h"
+#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 #include "fsmc.h"
@@ -58,131 +56,15 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t adc1CpltFlg=0;
-uint16_t wave[wave_num];
-uint16_t wave_auto_points[wave_num];
-uint16_t AD1[AD_num];
-uint16_t wave_auto_num=0;
-uint16_t wave_max;
-uint16_t wave_min;
-float fft_inputbuf[FFT_LENGTH*2];		// FFT输入数组
-float fft_outputbuf[FFT_LENGTH];		// FFT输出数组
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
-  if(hadc->Instance == ADC1){
-    adc1CpltFlg =1;
-    HAL_ADC_Stop_DMA(&hadc1);
-  }
-}
-extern uint8_t waveAutoFlg;
-void Wave_Data_Init(void){
-  //AD1_Max=0;
-  //AD1_Min=4096;
-  uint16_t Point_num=AD_num;
-  wave_max=0;
-  wave_min=3300;
-  for(int i = 0,k=0; i < Point_num;) {
-    wave[k]=0;
-    for (int j = 0; j < Point_num/wave_num; ++j) {
-      wave[k]+=AD1[i++];
-    }
-    //printf("%ld\r\n",AD1[i]);
-    wave[k]/=(Point_num/wave_num);
-    if (!waveAutoFlg){
-      wave[k]=(wave[k]/4096.0)*3300;
-    }
-    if(wave_max<wave[k]){
-      wave_max=wave[k];
-    }
-    if(wave_min>wave[k]){
-      wave_min=wave[k];
-    }
-    k++;
-  }
-}
-void Wave_Auto(void){
-  uint16_t wave_trigger;
-  uint8_t triggerFlg=0;
-  uint8_t endFlg=0;
-  uint8_t k=0;
-  wave_auto_num=0;
-  memset(wave_auto_points,0,wave_num);
-  wave_trigger=(wave_max-wave_min)/5*1+wave_min;
-  int i=0;
-  /* 
-  A<B<C
-  A<=B<C
-  A<B<=C
-   */
-  while (!(wave[i]<=wave_trigger&&wave_trigger<wave[i+1])&&i<wave_num)
-  {
-    i++;
-  }    
-  i+=1;
-  for (uint8_t j = 0; j < 3; j++)
-  {
-    wave_auto_points[wave_auto_num]=(wave[i]/4096.0)*3300;
-    wave_auto_num++;
-    i++;
-    while (!(wave[i]<=wave_trigger&&wave_trigger<wave[i+1])&&i<wave_num)
-    {
-      wave_auto_points[wave_auto_num]=(wave[i]/4096.0)*3300;
-      wave_auto_num++;
-      i++;
-    }
-  }
-  //printf("triggerFlg: %d\r\n",triggerFlg);
-}
 
-void FFT(void)
-{
-	int i = 0;
-	
-	for(i=0;i < FFT_LENGTH;i++)
-	{
-		fft_inputbuf[i*2] = AD1[i]*3.3/4095;
-		fft_inputbuf[2*i +1] = 0;
-	}
-	arm_cfft_f32(&arm_cfft_sR_f32_len1024,fft_inputbuf,0,1); //
-	arm_cmplx_mag_f32(fft_inputbuf,fft_outputbuf,FFT_LENGTH);    // 把运算结果复数求模得幅值
-  for (int i = 0; i < FFT_LENGTH/2; i++)
-  {
-    wave[i]=round(fft_outputbuf[i]);
-  }
 
-  // for (int i = 0; i < 120; i++)
-  // {
-  //   printf("%d : %f\r\n",i,fft_outputbuf[i]);
-  //   osDelay(15);
-  // }
-  
-  
-  // printf("\r\n\r\n");
-  // osDelay(2000);
-  extern lv_obj_t * THD_text;
-  float temp,THD;
-  temp=sqrt(fft_outputbuf[18]*fft_outputbuf[18]+fft_outputbuf[27]*fft_outputbuf[27]+fft_outputbuf[36]*fft_outputbuf[36]+fft_outputbuf[46]*fft_outputbuf[46]);
-  THD=temp/fft_outputbuf[9]*100;
-  char THD_temp[10];
-  sprintf(THD_temp,"THD:%.2f%%",THD);
-  lv_label_set_text(THD_text, THD_temp);
-  // for (int i = 0; i < 110; i++)
-  // {
-  //   printf("%.2f\r\n",fft_outputbuf[i]);
-  //   //osDelay(5);
-  // }
-    // printf("\r\n\r\n");
-  
-}
-
-void TIM2_Callback(){
-  //lv_task_handler();
-}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -221,9 +103,7 @@ int main(void)
   MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_FSMC_Init();
-  MX_TIM2_Init();
-  MX_DAC_Init();
-  MX_ADC1_Init();
+  MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
   // lv_init();
   // lv_port_disp_init();        // 显示器初始化
@@ -301,7 +181,7 @@ void SystemClock_Config(void)
 
 /* USER CODE END 4 */
 
- /**
+/**
   * @brief  Period elapsed callback in non blocking mode
   * @note   This function is called  when TIM14 interrupt took place, inside
   * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
@@ -318,8 +198,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-  if(htim->Instance == htim2.Instance)
-    TIM2_Callback();
+
   /* USER CODE END Callback 1 */
 }
 

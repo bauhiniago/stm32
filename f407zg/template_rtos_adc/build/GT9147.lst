@@ -1,0 +1,4015 @@
+ARM GAS  /tmp/ccUgw8VC.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"GT9147.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.delay_us,"ax",%progbits
+  20              		.align	1
+  21              		.global	delay_us
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	delay_us:
+  27              	.LVL0:
+  28              	.LFB133:
+  29              		.file 1 "Core/Src/GT9147.c"
+   1:Core/Src/GT9147.c **** //
+   2:Core/Src/GT9147.c **** // Created by wbh on 2021/2/14.
+   3:Core/Src/GT9147.c **** // 移植自正点原子HAL库实例
+   4:Core/Src/GT9147.c **** //
+   5:Core/Src/GT9147.c **** 
+   6:Core/Src/GT9147.c **** #include "GT9147.h"
+   7:Core/Src/GT9147.c **** //#include "myiic.h"
+   8:Core/Src/GT9147.c **** #include <stdio.h>
+   9:Core/Src/GT9147.c **** 
+  10:Core/Src/GT9147.c **** _m_touchdev touchdev=
+  11:Core/Src/GT9147.c **** {
+  12:Core/Src/GT9147.c ****   TP_Init,
+  13:Core/Src/GT9147.c ****   TP_Scan,
+  14:Core/Src/GT9147.c ****   0,
+  15:Core/Src/GT9147.c ****   0,
+  16:Core/Src/GT9147.c ****   0,
+  17:Core/Src/GT9147.c ****   0,
+  18:Core/Src/GT9147.c ****   0,
+  19:Core/Src/GT9147.c ****   0,
+  20:Core/Src/GT9147.c ****   0,
+  21:Core/Src/GT9147.c ****   0,
+  22:Core/Src/GT9147.c ****   0,
+  23:Core/Src/GT9147.c ****   0,
+  24:Core/Src/GT9147.c ****   0,
+  25:Core/Src/GT9147.c **** };
+  26:Core/Src/GT9147.c **** static uint32_t fac_us=0;
+  27:Core/Src/GT9147.c **** void delay_us(uint32_t nus) {
+  30              		.loc 1 27 29 view -0
+  31              		.cfi_startproc
+ARM GAS  /tmp/ccUgw8VC.s 			page 2
+
+
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		@ link register save eliminated.
+  28:Core/Src/GT9147.c ****   uint32_t ticks;
+  35              		.loc 1 28 3 view .LVU1
+  29:Core/Src/GT9147.c ****   uint32_t told, tnow, tcnt = 0;
+  36              		.loc 1 29 3 view .LVU2
+  30:Core/Src/GT9147.c ****   uint32_t reload = SysTick->LOAD;        //LOAD的值
+  37              		.loc 1 30 3 view .LVU3
+  38              		.loc 1 30 12 is_stmt 0 view .LVU4
+  39 0000 4FF0E023 		mov	r3, #-536813568
+  40 0004 5A69     		ldr	r2, [r3, #20]
+  31:Core/Src/GT9147.c ****   ticks = nus * fac_us;            //需要的节拍数
+  41              		.loc 1 31 3 is_stmt 1 view .LVU5
+  42              	.LVL1:
+  32:Core/Src/GT9147.c ****   told = SysTick->VAL;                //刚进入时的计数器值
+  43              		.loc 1 32 3 view .LVU6
+  44              		.loc 1 32 8 is_stmt 0 view .LVU7
+  45 0006 9A69     		ldr	r2, [r3, #24]
+  46              	.LVL2:
+  47              	.L2:
+  33:Core/Src/GT9147.c ****   while (1) {
+  48              		.loc 1 33 3 is_stmt 1 view .LVU8
+  34:Core/Src/GT9147.c ****     tnow = SysTick->VAL;
+  49              		.loc 1 34 5 view .LVU9
+  50              		.loc 1 34 10 is_stmt 0 view .LVU10
+  51 0008 4FF0E023 		mov	r3, #-536813568
+  52 000c 9B69     		ldr	r3, [r3, #24]
+  53              	.LVL3:
+  35:Core/Src/GT9147.c ****     if (tnow != told) {
+  54              		.loc 1 35 5 is_stmt 1 view .LVU11
+  55              		.loc 1 35 8 is_stmt 0 view .LVU12
+  56 000e 9A42     		cmp	r2, r3
+  57 0010 FAD0     		beq	.L2
+  36:Core/Src/GT9147.c ****       if (tnow < told)tcnt += told - tnow;  //这里注意一下SYSTICK是一个递减的计数器�
+  37:Core/Src/GT9147.c ****       else tcnt += reload - tnow + told;
+  38:Core/Src/GT9147.c ****       told = tnow;
+  39:Core/Src/GT9147.c ****       if (tcnt >= ticks)break;      //时间超过/等于要延迟的时间,则退出.
+  40:Core/Src/GT9147.c ****     }
+  41:Core/Src/GT9147.c ****   };
+  42:Core/Src/GT9147.c **** }
+  58              		.loc 1 42 1 view .LVU13
+  59 0012 7047     		bx	lr
+  60              		.cfi_endproc
+  61              	.LFE133:
+  63              		.section	.text.TP_Write_Byte,"ax",%progbits
+  64              		.align	1
+  65              		.global	TP_Write_Byte
+  66              		.syntax unified
+  67              		.thumb
+  68              		.thumb_func
+  70              	TP_Write_Byte:
+  71              	.LVL4:
+  72              	.LFB139:
+  43:Core/Src/GT9147.c **** 
+  44:Core/Src/GT9147.c **** //默认为touchtype=0的数据.
+  45:Core/Src/GT9147.c **** uint8_t CMD_RDX=0XD0;
+ARM GAS  /tmp/ccUgw8VC.s 			page 3
+
+
+  46:Core/Src/GT9147.c **** uint8_t CMD_RDY=0X90;
+  47:Core/Src/GT9147.c **** const uint8_t GT9147_CFG_TBL[]=
+  48:Core/Src/GT9147.c **** {
+  49:Core/Src/GT9147.c ****         0X60,0XE0,0X01,0X20,0X03,0X05,0X35,0X00,0X02,0X08,
+  50:Core/Src/GT9147.c ****         0X1E,0X08,0X50,0X3C,0X0F,0X05,0X00,0X00,0XFF,0X67,
+  51:Core/Src/GT9147.c ****         0X50,0X00,0X00,0X18,0X1A,0X1E,0X14,0X89,0X28,0X0A,
+  52:Core/Src/GT9147.c ****         0X30,0X2E,0XBB,0X0A,0X03,0X00,0X00,0X02,0X33,0X1D,
+  53:Core/Src/GT9147.c ****         0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X32,0X00,0X00,
+  54:Core/Src/GT9147.c ****         0X2A,0X1C,0X5A,0X94,0XC5,0X02,0X07,0X00,0X00,0X00,
+  55:Core/Src/GT9147.c ****         0XB5,0X1F,0X00,0X90,0X28,0X00,0X77,0X32,0X00,0X62,
+  56:Core/Src/GT9147.c ****         0X3F,0X00,0X52,0X50,0X00,0X52,0X00,0X00,0X00,0X00,
+  57:Core/Src/GT9147.c ****         0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,
+  58:Core/Src/GT9147.c ****         0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X0F,
+  59:Core/Src/GT9147.c ****         0X0F,0X03,0X06,0X10,0X42,0XF8,0X0F,0X14,0X00,0X00,
+  60:Core/Src/GT9147.c ****         0X00,0X00,0X1A,0X18,0X16,0X14,0X12,0X10,0X0E,0X0C,
+  61:Core/Src/GT9147.c ****         0X0A,0X08,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,
+  62:Core/Src/GT9147.c ****         0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,
+  63:Core/Src/GT9147.c ****         0X00,0X00,0X29,0X28,0X24,0X22,0X20,0X1F,0X1E,0X1D,
+  64:Core/Src/GT9147.c ****         0X0E,0X0C,0X0A,0X08,0X06,0X05,0X04,0X02,0X00,0XFF,
+  65:Core/Src/GT9147.c ****         0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,
+  66:Core/Src/GT9147.c ****         0X00,0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,
+  67:Core/Src/GT9147.c ****         0XFF,0XFF,0XFF,0XFF,
+  68:Core/Src/GT9147.c **** };
+  69:Core/Src/GT9147.c **** const uint16_t GT9147_TPX_TBL[5]={GT_TP1_REG,GT_TP2_REG,GT_TP3_REG,GT_TP4_REG,GT_TP5_REG};
+  70:Core/Src/GT9147.c **** uint8_t GT9147_Init(void)
+  71:Core/Src/GT9147.c **** {
+  72:Core/Src/GT9147.c **** 
+  73:Core/Src/GT9147.c ****   uint8_t temp[5];
+  74:Core/Src/GT9147.c **** 
+  75:Core/Src/GT9147.c ****   GPIO_InitTypeDef GPIO_Initure;
+  76:Core/Src/GT9147.c **** 	
+  77:Core/Src/GT9147.c **** 	__HAL_RCC_GPIOB_CLK_ENABLE();			//开启GPIOB时钟
+  78:Core/Src/GT9147.c ****   __HAL_RCC_GPIOC_CLK_ENABLE();			//开启GPIOC时钟
+  79:Core/Src/GT9147.c **** 
+  80:Core/Src/GT9147.c ****   //PB1
+  81:Core/Src/GT9147.c ****   GPIO_Initure.Pin=GPIO_PIN_1;           	//PB1设置为上拉输入
+  82:Core/Src/GT9147.c ****   GPIO_Initure.Mode=GPIO_MODE_INPUT;      //输入
+  83:Core/Src/GT9147.c ****   GPIO_Initure.Pull=GPIO_PULLUP;          //上拉
+  84:Core/Src/GT9147.c ****   GPIO_Initure.Speed=GPIO_SPEED_HIGH;     //高速
+  85:Core/Src/GT9147.c ****   HAL_GPIO_Init(GPIOB,&GPIO_Initure);     //初始化
+  86:Core/Src/GT9147.c ****           
+  87:Core/Src/GT9147.c ****   //PC13
+  88:Core/Src/GT9147.c ****   GPIO_Initure.Pin=GPIO_PIN_13;          	//PC13设置为推挽输出
+  89:Core/Src/GT9147.c ****   GPIO_Initure.Mode=GPIO_MODE_OUTPUT_PP;  //推挽输出
+  90:Core/Src/GT9147.c ****   HAL_GPIO_Init(GPIOC,&GPIO_Initure);     //初始化
+  91:Core/Src/GT9147.c **** 
+  92:Core/Src/GT9147.c ****   CT_IIC_Init();      	//初始化电容屏的I2C总线
+  93:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);  //复位C13
+  94:Core/Src/GT9147.c ****   HAL_Delay(10);
+  95:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);//释放复位
+  96:Core/Src/GT9147.c ****   HAL_Delay(10);
+  97:Core/Src/GT9147.c **** 
+  98:Core/Src/GT9147.c ****   GPIO_Initure.Pin=GPIO_PIN_1;           	//PB1设置为上拉输入
+  99:Core/Src/GT9147.c ****   GPIO_Initure.Mode=GPIO_MODE_OUTPUT_PP;  //输出模式
+ 100:Core/Src/GT9147.c ****   GPIO_Initure.Pull=GPIO_NOPULL;          //无上下拉
+ 101:Core/Src/GT9147.c ****   GPIO_Initure.Speed=GPIO_SPEED_HIGH;     //高速
+ 102:Core/Src/GT9147.c ****   HAL_GPIO_Init(GPIOB,&GPIO_Initure);     //初始化
+ARM GAS  /tmp/ccUgw8VC.s 			page 4
+
+
+ 103:Core/Src/GT9147.c **** 
+ 104:Core/Src/GT9147.c ****   HAL_Delay(100);
+ 105:Core/Src/GT9147.c ****   GT9147_RD_Reg(GT_PID_REG,temp,4);	//读取产品ID
+ 106:Core/Src/GT9147.c ****   temp[4]=0;
+ 107:Core/Src/GT9147.c ****   HAL_Delay(100);
+ 108:Core/Src/GT9147.c ****   printf("CTP ID:%s\r\n",temp);		//打印ID
+ 109:Core/Src/GT9147.c ****   if(strcmp((char*)temp,"9147")==0)	//ID==9147
+ 110:Core/Src/GT9147.c ****   {
+ 111:Core/Src/GT9147.c ****     temp[0]=0X02;
+ 112:Core/Src/GT9147.c ****     GT9147_WR_Reg(GT_CTRL_REG,temp,1);//软复位GT9147
+ 113:Core/Src/GT9147.c ****     GT9147_RD_Reg(GT_CFGS_REG,temp,1);//读取GT_CFGS_REG寄存器
+ 114:Core/Src/GT9147.c ****     if(temp[0]<0X60)//默认版本比较低,需要更新flash配置
+ 115:Core/Src/GT9147.c ****     {
+ 116:Core/Src/GT9147.c ****       printf("Default Ver:%d\r\n",temp[0]);
+ 117:Core/Src/GT9147.c ****       GT9147_Send_Cfg(1);//更新并保存配置
+ 118:Core/Src/GT9147.c ****     }
+ 119:Core/Src/GT9147.c ****     HAL_Delay(10);
+ 120:Core/Src/GT9147.c ****     temp[0]=0X00;
+ 121:Core/Src/GT9147.c ****     GT9147_WR_Reg(GT_CTRL_REG,temp,1);	//结束复位
+ 122:Core/Src/GT9147.c ****     return 0;
+ 123:Core/Src/GT9147.c ****   }
+ 124:Core/Src/GT9147.c ****   return 0;
+ 125:Core/Src/GT9147.c **** }uint8_t GT9147_WR_Reg(uint16_t reg,uint8_t *buf,uint8_t len)
+ 126:Core/Src/GT9147.c **** {
+ 127:Core/Src/GT9147.c ****   uint8_t i;
+ 128:Core/Src/GT9147.c ****   uint8_t ret=0;
+ 129:Core/Src/GT9147.c ****   CT_IIC_Start();
+ 130:Core/Src/GT9147.c ****   CT_IIC_Send_Byte(GT_CMD_WR);   	//发送写命令
+ 131:Core/Src/GT9147.c ****   CT_IIC_Wait_Ack();
+ 132:Core/Src/GT9147.c ****   CT_IIC_Send_Byte(reg>>8);   	//发送高8位地址
+ 133:Core/Src/GT9147.c ****   CT_IIC_Wait_Ack();
+ 134:Core/Src/GT9147.c ****   CT_IIC_Send_Byte(reg&0XFF);   	//发送低8位地址
+ 135:Core/Src/GT9147.c ****   CT_IIC_Wait_Ack();
+ 136:Core/Src/GT9147.c ****   for(i=0;i<len;i++)
+ 137:Core/Src/GT9147.c ****   {
+ 138:Core/Src/GT9147.c ****     CT_IIC_Send_Byte(buf[i]);  	//发数据
+ 139:Core/Src/GT9147.c ****     ret=CT_IIC_Wait_Ack();
+ 140:Core/Src/GT9147.c ****     if(ret)break;
+ 141:Core/Src/GT9147.c ****   }
+ 142:Core/Src/GT9147.c ****   CT_IIC_Stop();					//产生一个停止条件
+ 143:Core/Src/GT9147.c ****   return ret;
+ 144:Core/Src/GT9147.c **** }
+ 145:Core/Src/GT9147.c **** void GT9147_RD_Reg(uint16_t reg,uint8_t *buf,uint8_t len)
+ 146:Core/Src/GT9147.c **** {
+ 147:Core/Src/GT9147.c ****   uint8_t i;
+ 148:Core/Src/GT9147.c ****   CT_IIC_Start();
+ 149:Core/Src/GT9147.c ****   CT_IIC_Send_Byte(GT_CMD_WR);   //发送写命令
+ 150:Core/Src/GT9147.c ****   CT_IIC_Wait_Ack();
+ 151:Core/Src/GT9147.c ****   CT_IIC_Send_Byte(reg>>8);   	//发送高8位地址
+ 152:Core/Src/GT9147.c ****   CT_IIC_Wait_Ack();
+ 153:Core/Src/GT9147.c ****   CT_IIC_Send_Byte(reg&0XFF);   	//发送低8位地址
+ 154:Core/Src/GT9147.c ****   CT_IIC_Wait_Ack();
+ 155:Core/Src/GT9147.c ****   CT_IIC_Start();
+ 156:Core/Src/GT9147.c ****   CT_IIC_Send_Byte(GT_CMD_RD);   //发送读命令
+ 157:Core/Src/GT9147.c ****   CT_IIC_Wait_Ack();
+ 158:Core/Src/GT9147.c ****   for(i=0;i<len;i++)
+ 159:Core/Src/GT9147.c ****   {
+ARM GAS  /tmp/ccUgw8VC.s 			page 5
+
+
+ 160:Core/Src/GT9147.c ****     buf[i]=CT_IIC_Read_Byte(i==(len-1)?0:1); //发数据
+ 161:Core/Src/GT9147.c ****     //printf("%d\r\n",buf[i]);
+ 162:Core/Src/GT9147.c ****   }
+ 163:Core/Src/GT9147.c ****   CT_IIC_Stop();//产生一个停止条件
+ 164:Core/Src/GT9147.c **** }
+ 165:Core/Src/GT9147.c **** uint8_t GT9147_Send_Cfg(uint8_t mode)
+ 166:Core/Src/GT9147.c **** {
+ 167:Core/Src/GT9147.c ****   uint8_t buf[2];
+ 168:Core/Src/GT9147.c ****   uint8_t i=0;
+ 169:Core/Src/GT9147.c ****   buf[0]=0;
+ 170:Core/Src/GT9147.c ****   buf[1]=mode;	//是否写入到GT9147 FLASH?  即是否掉电保存
+ 171:Core/Src/GT9147.c ****   for(i=0;i<sizeof(GT9147_CFG_TBL);i++)buf[0]+=GT9147_CFG_TBL[i];//计算校验和
+ 172:Core/Src/GT9147.c ****   buf[0]=(~buf[0])+1;
+ 173:Core/Src/GT9147.c ****   GT9147_WR_Reg(GT_CFGS_REG,(uint8_t*)GT9147_CFG_TBL,sizeof(GT9147_CFG_TBL));//发送寄存器配�
+ 174:Core/Src/GT9147.c ****   GT9147_WR_Reg(GT_CHECK_REG,buf,2);//写入校验和,和配置更新标记
+ 175:Core/Src/GT9147.c ****   return 0;
+ 176:Core/Src/GT9147.c **** }
+ 177:Core/Src/GT9147.c **** uint8_t GT9147_Scan(uint8_t mode)
+ 178:Core/Src/GT9147.c **** {
+ 179:Core/Src/GT9147.c ****   uint8_t buf[4];
+ 180:Core/Src/GT9147.c ****   uint8_t i=0;
+ 181:Core/Src/GT9147.c ****   uint8_t res=0;
+ 182:Core/Src/GT9147.c ****   uint8_t temp;
+ 183:Core/Src/GT9147.c ****   uint8_t tempsta;
+ 184:Core/Src/GT9147.c ****   static uint8_t t=0;//控制查询间隔,从而降低CPU占用率
+ 185:Core/Src/GT9147.c ****   t++;
+ 186:Core/Src/GT9147.c ****   if((t%10)==0||t<10)//空闲时,每进入10次CTP_Scan函数才检测1次,从而节省CPU使用率
+ 187:Core/Src/GT9147.c ****   {
+ 188:Core/Src/GT9147.c ****     GT9147_RD_Reg(GT_GSTID_REG,&mode,1);	//读取触摸点的状态
+ 189:Core/Src/GT9147.c ****     if(mode&0X80&&((mode&0XF)<6))
+ 190:Core/Src/GT9147.c ****     {
+ 191:Core/Src/GT9147.c ****       temp=0;
+ 192:Core/Src/GT9147.c ****       GT9147_WR_Reg(GT_GSTID_REG,&temp,1);//清标志
+ 193:Core/Src/GT9147.c ****     }
+ 194:Core/Src/GT9147.c ****     if((mode&0XF)&&((mode&0XF)<6))
+ 195:Core/Src/GT9147.c ****     {
+ 196:Core/Src/GT9147.c ****       temp=0XFF<<(mode&0XF);		//将点的个数转换为1的位数,匹配touchdev.sta定义
+ 197:Core/Src/GT9147.c ****       tempsta=touchdev.sta;			//保存当前的touchdev.sta值
+ 198:Core/Src/GT9147.c ****       touchdev.sta=(~temp)|TP_PRES_DOWN|TP_CATH_PRES;
+ 199:Core/Src/GT9147.c ****       touchdev.x[4]=touchdev.x[0];	//保存触点0的数据
+ 200:Core/Src/GT9147.c ****       touchdev.y[4]=touchdev.y[0];
+ 201:Core/Src/GT9147.c ****       for(i=0;i<5;i++)
+ 202:Core/Src/GT9147.c ****       {
+ 203:Core/Src/GT9147.c ****         if(touchdev.sta&(1<<i))	//触摸有效?
+ 204:Core/Src/GT9147.c ****         {
+ 205:Core/Src/GT9147.c ****           GT9147_RD_Reg(GT9147_TPX_TBL[i],buf,4);	//读取XY坐标值
+ 206:Core/Src/GT9147.c ****           if(touchdev.touchtype&0X01)//横屏
+ 207:Core/Src/GT9147.c ****           {
+ 208:Core/Src/GT9147.c ****             touchdev.y[i]=((uint16_t)buf[1]<<8)+buf[0];
+ 209:Core/Src/GT9147.c ****             touchdev.x[i]=800-(((uint16_t)buf[3]<<8)+buf[2]);
+ 210:Core/Src/GT9147.c ****           }else
+ 211:Core/Src/GT9147.c ****           {
+ 212:Core/Src/GT9147.c ****             touchdev.x[i]=((uint16_t)buf[1]<<8)+buf[0];
+ 213:Core/Src/GT9147.c ****             touchdev.y[i]=((uint16_t)buf[3]<<8)+buf[2];
+ 214:Core/Src/GT9147.c ****           }
+ 215:Core/Src/GT9147.c ****           //printf("x[%d]:%d,y[%d]:%d\r\n",i,touchdev.x[i],i,touchdev.y[i]);
+ 216:Core/Src/GT9147.c ****         }
+ARM GAS  /tmp/ccUgw8VC.s 			page 6
+
+
+ 217:Core/Src/GT9147.c ****       }
+ 218:Core/Src/GT9147.c ****       res=1;
+ 219:Core/Src/GT9147.c ****       if(touchdev.x[0]>lcddev.width||touchdev.y[0]>lcddev.height)//非法数据(坐标超出了)
+ 220:Core/Src/GT9147.c ****       {
+ 221:Core/Src/GT9147.c ****         if((mode&0XF)>1)		//有其他点有数据,则复第二个触点的数据到第一个触点.
+ 222:Core/Src/GT9147.c ****         {
+ 223:Core/Src/GT9147.c ****           touchdev.x[0]=touchdev.x[1];
+ 224:Core/Src/GT9147.c ****           touchdev.y[0]=touchdev.y[1];
+ 225:Core/Src/GT9147.c ****           t=0;				//触发一次,则会最少连续监测10次,从而提高命中率
+ 226:Core/Src/GT9147.c ****         }else					//非法数据,则忽略此次数据(还原原来的)
+ 227:Core/Src/GT9147.c ****         {
+ 228:Core/Src/GT9147.c ****           touchdev.x[0]=touchdev.x[4];
+ 229:Core/Src/GT9147.c ****           touchdev.y[0]=touchdev.y[4];
+ 230:Core/Src/GT9147.c ****           mode=0X80;
+ 231:Core/Src/GT9147.c ****           touchdev.sta=tempsta;	//恢复touchdev.sta
+ 232:Core/Src/GT9147.c ****         }
+ 233:Core/Src/GT9147.c ****       }else t=0;					//触发一次,则会最少连续监测10次,从而提高命中率
+ 234:Core/Src/GT9147.c ****     }
+ 235:Core/Src/GT9147.c ****   }
+ 236:Core/Src/GT9147.c ****   if((mode&0X8F)==0X80)//无触摸点按下
+ 237:Core/Src/GT9147.c ****   {
+ 238:Core/Src/GT9147.c ****     if(touchdev.sta&TP_PRES_DOWN)	//之前是被按下的
+ 239:Core/Src/GT9147.c ****     {
+ 240:Core/Src/GT9147.c ****       touchdev.sta&=~(1<<7);	//标记按键松开
+ 241:Core/Src/GT9147.c ****     }else						//之前就没有被按下
+ 242:Core/Src/GT9147.c ****     {
+ 243:Core/Src/GT9147.c ****       touchdev.x[0]=0xffff;
+ 244:Core/Src/GT9147.c ****       touchdev.y[0]=0xffff;
+ 245:Core/Src/GT9147.c ****     }
+ 246:Core/Src/GT9147.c ****   }
+ 247:Core/Src/GT9147.c ****   if(t>240)t=10;//重新从10开始计数
+ 248:Core/Src/GT9147.c **** 
+ 249:Core/Src/GT9147.c ****   return res;
+ 250:Core/Src/GT9147.c **** }
+ 251:Core/Src/GT9147.c **** void TP_Write_Byte(uint8_t num)
+ 252:Core/Src/GT9147.c **** {
+  73              		.loc 1 252 1 is_stmt 1 view -0
+  74              		.cfi_startproc
+  75              		@ args = 0, pretend = 0, frame = 0
+  76              		@ frame_needed = 0, uses_anonymous_args = 0
+  77              		.loc 1 252 1 is_stmt 0 view .LVU15
+  78 0000 70B5     		push	{r4, r5, r6, lr}
+  79              	.LCFI0:
+  80              		.cfi_def_cfa_offset 16
+  81              		.cfi_offset 4, -16
+  82              		.cfi_offset 5, -12
+  83              		.cfi_offset 6, -8
+  84              		.cfi_offset 14, -4
+  85 0002 0446     		mov	r4, r0
+ 253:Core/Src/GT9147.c ****   uint8_t count=0;
+  86              		.loc 1 253 3 is_stmt 1 view .LVU16
+  87              	.LVL5:
+ 254:Core/Src/GT9147.c ****   for(count=0;count<8;count++)
+  88              		.loc 1 254 3 view .LVU17
+  89              		.loc 1 254 12 is_stmt 0 view .LVU18
+  90 0004 0025     		movs	r5, #0
+  91              		.loc 1 254 3 view .LVU19
+ARM GAS  /tmp/ccUgw8VC.s 			page 7
+
+
+  92 0006 17E0     		b	.L4
+  93              	.LVL6:
+  94              	.L5:
+ 255:Core/Src/GT9147.c ****   {
+ 256:Core/Src/GT9147.c ****     if(num&0x80)HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,GPIO_PIN_SET);
+ 257:Core/Src/GT9147.c ****     else HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,GPIO_PIN_RESET);
+  95              		.loc 1 257 10 is_stmt 1 view .LVU20
+  96 0008 0022     		movs	r2, #0
+  97 000a 4FF40061 		mov	r1, #2048
+  98 000e 1148     		ldr	r0, .L10
+  99 0010 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 100              	.LVL7:
+ 101              	.L6:
+ 258:Core/Src/GT9147.c ****     num<<=1;
+ 102              		.loc 1 258 5 discriminator 2 view .LVU21
+ 103              		.loc 1 258 8 is_stmt 0 discriminator 2 view .LVU22
+ 104 0014 6400     		lsls	r4, r4, #1
+ 105              	.LVL8:
+ 106              		.loc 1 258 8 discriminator 2 view .LVU23
+ 107 0016 E4B2     		uxtb	r4, r4
+ 108              	.LVL9:
+ 259:Core/Src/GT9147.c ****     HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);
+ 109              		.loc 1 259 5 is_stmt 1 discriminator 2 view .LVU24
+ 110 0018 0F4E     		ldr	r6, .L10+4
+ 111 001a 0022     		movs	r2, #0
+ 112 001c 0121     		movs	r1, #1
+ 113 001e 3046     		mov	r0, r6
+ 114 0020 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 115              	.LVL10:
+ 260:Core/Src/GT9147.c ****     delay_us(1);
+ 116              		.loc 1 260 5 discriminator 2 view .LVU25
+ 117 0024 0120     		movs	r0, #1
+ 118 0026 FFF7FEFF 		bl	delay_us
+ 119              	.LVL11:
+ 261:Core/Src/GT9147.c ****     HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);	//上升沿有效
+ 120              		.loc 1 261 5 discriminator 2 view .LVU26
+ 121 002a 0122     		movs	r2, #1
+ 122 002c 1146     		mov	r1, r2
+ 123 002e 3046     		mov	r0, r6
+ 124 0030 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 125              	.LVL12:
+ 254:Core/Src/GT9147.c ****   {
+ 126              		.loc 1 254 23 discriminator 2 view .LVU27
+ 254:Core/Src/GT9147.c ****   {
+ 127              		.loc 1 254 28 is_stmt 0 discriminator 2 view .LVU28
+ 128 0034 0135     		adds	r5, r5, #1
+ 129              	.LVL13:
+ 254:Core/Src/GT9147.c ****   {
+ 130              		.loc 1 254 28 discriminator 2 view .LVU29
+ 131 0036 EDB2     		uxtb	r5, r5
+ 132              	.LVL14:
+ 133              	.L4:
+ 254:Core/Src/GT9147.c ****   {
+ 134              		.loc 1 254 15 is_stmt 1 discriminator 1 view .LVU30
+ 254:Core/Src/GT9147.c ****   {
+ 135              		.loc 1 254 3 is_stmt 0 discriminator 1 view .LVU31
+ 136 0038 072D     		cmp	r5, #7
+ARM GAS  /tmp/ccUgw8VC.s 			page 8
+
+
+ 137 003a 09D8     		bhi	.L9
+ 256:Core/Src/GT9147.c ****     else HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,GPIO_PIN_RESET);
+ 138              		.loc 1 256 5 is_stmt 1 view .LVU32
+ 256:Core/Src/GT9147.c ****     else HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,GPIO_PIN_RESET);
+ 139              		.loc 1 256 7 is_stmt 0 view .LVU33
+ 140 003c 14F0800F 		tst	r4, #128
+ 141 0040 E2D0     		beq	.L5
+ 256:Core/Src/GT9147.c ****     else HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,GPIO_PIN_RESET);
+ 142              		.loc 1 256 17 is_stmt 1 discriminator 1 view .LVU34
+ 143 0042 0122     		movs	r2, #1
+ 144 0044 4FF40061 		mov	r1, #2048
+ 145 0048 0248     		ldr	r0, .L10
+ 146 004a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 147              	.LVL15:
+ 148 004e E1E7     		b	.L6
+ 149              	.L9:
+ 262:Core/Src/GT9147.c ****   }
+ 263:Core/Src/GT9147.c **** }
+ 150              		.loc 1 263 1 is_stmt 0 view .LVU35
+ 151 0050 70BD     		pop	{r4, r5, r6, pc}
+ 152              	.LVL16:
+ 153              	.L11:
+ 154              		.loc 1 263 1 view .LVU36
+ 155 0052 00BF     		.align	2
+ 156              	.L10:
+ 157 0054 00140240 		.word	1073878016
+ 158 0058 00040240 		.word	1073873920
+ 159              		.cfi_endproc
+ 160              	.LFE139:
+ 162              		.section	.text.TP_Read_AD,"ax",%progbits
+ 163              		.align	1
+ 164              		.global	TP_Read_AD
+ 165              		.syntax unified
+ 166              		.thumb
+ 167              		.thumb_func
+ 169              	TP_Read_AD:
+ 170              	.LVL17:
+ 171              	.LFB142:
+ 264:Core/Src/GT9147.c **** uint8_t TP_Init(void)
+ 265:Core/Src/GT9147.c **** {
+ 266:Core/Src/GT9147.c ****   if(lcddev.id==0X5510)				//4.3寸电容触摸屏
+ 267:Core/Src/GT9147.c ****   {
+ 268:Core/Src/GT9147.c ****     if(GT9147_Init()==0)			//是GT9147
+ 269:Core/Src/GT9147.c ****     {
+ 270:Core/Src/GT9147.c **** 
+ 271:Core/Src/GT9147.c ****       touchdev.scan=GT9147_Scan;	//扫描函数指向GT9147触摸屏扫描
+ 272:Core/Src/GT9147.c ****     }else
+ 273:Core/Src/GT9147.c ****     {
+ 274:Core/Src/GT9147.c ****       printf("unkonw dev!\r\n");
+ 275:Core/Src/GT9147.c ****     }
+ 276:Core/Src/GT9147.c ****     touchdev.touchtype|=0X80;			//电容屏
+ 277:Core/Src/GT9147.c ****     touchdev.touchtype|=lcddev.dir&0X01;//横屏还是竖屏
+ 278:Core/Src/GT9147.c ****     return 0;
+ 279:Core/Src/GT9147.c ****   }else {
+ 280:Core/Src/GT9147.c ****     printf("unkonw dev!\r\n");
+ 281:Core/Src/GT9147.c ****     return 1;
+ 282:Core/Src/GT9147.c ****   }
+ARM GAS  /tmp/ccUgw8VC.s 			page 9
+
+
+ 283:Core/Src/GT9147.c **** }
+ 284:Core/Src/GT9147.c **** uint8_t TP_Scan(uint8_t tp)
+ 285:Core/Src/GT9147.c **** {
+ 286:Core/Src/GT9147.c ****   if(HAL_GPIO_ReadPin(GPIOF,GPIO_PIN_10)==GPIO_PIN_RESET){//有按键按下
+ 287:Core/Src/GT9147.c ****     if(tp)TP_Read_XY2(&touchdev.x[0],&touchdev.y[0]);//读取物理坐标
+ 288:Core/Src/GT9147.c ****     else if(TP_Read_XY2(&touchdev.x[0],&touchdev.y[0]))//读取屏幕坐标
+ 289:Core/Src/GT9147.c ****     {
+ 290:Core/Src/GT9147.c ****       touchdev.x[0]=touchdev.xfac*touchdev.x[0]+touchdev.xoff;//将结果转换为屏幕坐标
+ 291:Core/Src/GT9147.c ****       touchdev.y[0]=touchdev.yfac*touchdev.y[0]+touchdev.yoff;
+ 292:Core/Src/GT9147.c ****     }
+ 293:Core/Src/GT9147.c ****     if((touchdev.sta&TP_PRES_DOWN)==0)//之前没有被按下
+ 294:Core/Src/GT9147.c ****     {
+ 295:Core/Src/GT9147.c ****       touchdev.sta=TP_PRES_DOWN|TP_CATH_PRES;//按键按下
+ 296:Core/Src/GT9147.c ****       touchdev.x[4]=touchdev.x[0];//记录第一次按下时的坐标
+ 297:Core/Src/GT9147.c ****       touchdev.y[4]=touchdev.y[0];
+ 298:Core/Src/GT9147.c ****     }
+ 299:Core/Src/GT9147.c ****   }else
+ 300:Core/Src/GT9147.c ****   {
+ 301:Core/Src/GT9147.c ****     if(touchdev.sta&TP_PRES_DOWN)//之前是被按下的
+ 302:Core/Src/GT9147.c ****     {
+ 303:Core/Src/GT9147.c ****       touchdev.sta&=~(1<<7);//标记按键松开
+ 304:Core/Src/GT9147.c ****     }else//之前就没有被按下
+ 305:Core/Src/GT9147.c ****     {
+ 306:Core/Src/GT9147.c ****       touchdev.x[4]=0;
+ 307:Core/Src/GT9147.c ****       touchdev.y[4]=0;
+ 308:Core/Src/GT9147.c ****       touchdev.x[0]=0xffff;
+ 309:Core/Src/GT9147.c ****       touchdev.y[0]=0xffff;
+ 310:Core/Src/GT9147.c ****     }
+ 311:Core/Src/GT9147.c ****   }
+ 312:Core/Src/GT9147.c ****   return touchdev.sta&TP_PRES_DOWN;//返回当前的触屏状态
+ 313:Core/Src/GT9147.c **** }
+ 314:Core/Src/GT9147.c **** uint16_t TP_Read_AD(uint8_t CMD)
+ 315:Core/Src/GT9147.c **** {
+ 172              		.loc 1 315 1 is_stmt 1 view -0
+ 173              		.cfi_startproc
+ 174              		@ args = 0, pretend = 0, frame = 0
+ 175              		@ frame_needed = 0, uses_anonymous_args = 0
+ 176              		.loc 1 315 1 is_stmt 0 view .LVU38
+ 177 0000 70B5     		push	{r4, r5, r6, lr}
+ 178              	.LCFI1:
+ 179              		.cfi_def_cfa_offset 16
+ 180              		.cfi_offset 4, -16
+ 181              		.cfi_offset 5, -12
+ 182              		.cfi_offset 6, -8
+ 183              		.cfi_offset 14, -4
+ 184 0002 0546     		mov	r5, r0
+ 316:Core/Src/GT9147.c ****   uint8_t count=0;
+ 185              		.loc 1 316 3 is_stmt 1 view .LVU39
+ 186              	.LVL18:
+ 317:Core/Src/GT9147.c ****   uint16_t Num=0;
+ 187              		.loc 1 317 3 view .LVU40
+ 318:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);		//先拉低时钟
+ 188              		.loc 1 318 3 view .LVU41
+ 189 0004 2A4C     		ldr	r4, .L18
+ 190 0006 0022     		movs	r2, #0
+ 191 0008 0121     		movs	r1, #1
+ 192 000a 2046     		mov	r0, r4
+ARM GAS  /tmp/ccUgw8VC.s 			page 10
+
+
+ 193              	.LVL19:
+ 194              		.loc 1 318 3 is_stmt 0 view .LVU42
+ 195 000c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 196              	.LVL20:
+ 319:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,GPIO_PIN_RESET); 	//拉低数据线
+ 197              		.loc 1 319 3 is_stmt 1 view .LVU43
+ 198 0010 0022     		movs	r2, #0
+ 199 0012 4FF40061 		mov	r1, #2048
+ 200 0016 2748     		ldr	r0, .L18+4
+ 201 0018 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 202              	.LVL21:
+ 320:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET); 		//选中触摸屏IC
+ 203              		.loc 1 320 3 view .LVU44
+ 204 001c 0022     		movs	r2, #0
+ 205 001e 4FF40051 		mov	r1, #8192
+ 206 0022 2548     		ldr	r0, .L18+8
+ 207 0024 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 208              	.LVL22:
+ 321:Core/Src/GT9147.c ****   TP_Write_Byte(CMD);//发送命令字
+ 209              		.loc 1 321 3 view .LVU45
+ 210 0028 2846     		mov	r0, r5
+ 211 002a FFF7FEFF 		bl	TP_Write_Byte
+ 212              	.LVL23:
+ 322:Core/Src/GT9147.c ****   delay_us(6);//ADS7846的转换时间最长为6us
+ 213              		.loc 1 322 3 view .LVU46
+ 214 002e 0620     		movs	r0, #6
+ 215 0030 FFF7FEFF 		bl	delay_us
+ 216              	.LVL24:
+ 323:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);
+ 217              		.loc 1 323 3 view .LVU47
+ 218 0034 0022     		movs	r2, #0
+ 219 0036 0121     		movs	r1, #1
+ 220 0038 2046     		mov	r0, r4
+ 221 003a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 222              	.LVL25:
+ 324:Core/Src/GT9147.c ****   delay_us(1);
+ 223              		.loc 1 324 3 view .LVU48
+ 224 003e 0120     		movs	r0, #1
+ 225 0040 FFF7FEFF 		bl	delay_us
+ 226              	.LVL26:
+ 325:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);		//给1个时钟，清除BUSY
+ 227              		.loc 1 325 3 view .LVU49
+ 228 0044 0122     		movs	r2, #1
+ 229 0046 1146     		mov	r1, r2
+ 230 0048 2046     		mov	r0, r4
+ 231 004a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 232              	.LVL27:
+ 326:Core/Src/GT9147.c ****   delay_us(1);
+ 233              		.loc 1 326 3 view .LVU50
+ 234 004e 0120     		movs	r0, #1
+ 235 0050 FFF7FEFF 		bl	delay_us
+ 236              	.LVL28:
+ 327:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);
+ 237              		.loc 1 327 3 view .LVU51
+ 238 0054 0022     		movs	r2, #0
+ 239 0056 0121     		movs	r1, #1
+ 240 0058 2046     		mov	r0, r4
+ARM GAS  /tmp/ccUgw8VC.s 			page 11
+
+
+ 241 005a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 242              	.LVL29:
+ 328:Core/Src/GT9147.c ****   for(count=0;count<16;count++)//读出16位数据,只有高12位有效
+ 243              		.loc 1 328 3 view .LVU52
+ 317:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);		//先拉低时钟
+ 244              		.loc 1 317 12 is_stmt 0 view .LVU53
+ 245 005e 0024     		movs	r4, #0
+ 246              		.loc 1 328 12 view .LVU54
+ 247 0060 2546     		mov	r5, r4
+ 248              		.loc 1 328 3 view .LVU55
+ 249 0062 01E0     		b	.L13
+ 250              	.LVL30:
+ 251              	.L14:
+ 252              		.loc 1 328 24 is_stmt 1 discriminator 2 view .LVU56
+ 253              		.loc 1 328 29 is_stmt 0 discriminator 2 view .LVU57
+ 254 0064 0135     		adds	r5, r5, #1
+ 255              	.LVL31:
+ 256              		.loc 1 328 29 discriminator 2 view .LVU58
+ 257 0066 EDB2     		uxtb	r5, r5
+ 258              	.LVL32:
+ 259              	.L13:
+ 260              		.loc 1 328 15 is_stmt 1 discriminator 1 view .LVU59
+ 261              		.loc 1 328 3 is_stmt 0 discriminator 1 view .LVU60
+ 262 0068 0F2D     		cmp	r5, #15
+ 263 006a 18D8     		bhi	.L17
+ 329:Core/Src/GT9147.c ****   {
+ 330:Core/Src/GT9147.c ****     Num<<=1;
+ 264              		.loc 1 330 5 is_stmt 1 view .LVU61
+ 265              		.loc 1 330 8 is_stmt 0 view .LVU62
+ 266 006c 6400     		lsls	r4, r4, #1
+ 267              	.LVL33:
+ 268              		.loc 1 330 8 view .LVU63
+ 269 006e A4B2     		uxth	r4, r4
+ 270              	.LVL34:
+ 331:Core/Src/GT9147.c ****     HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);	//下降沿有效
+ 271              		.loc 1 331 5 is_stmt 1 view .LVU64
+ 272 0070 0F4E     		ldr	r6, .L18
+ 273 0072 0022     		movs	r2, #0
+ 274 0074 0121     		movs	r1, #1
+ 275 0076 3046     		mov	r0, r6
+ 276 0078 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 277              	.LVL35:
+ 332:Core/Src/GT9147.c ****     delay_us(1);
+ 278              		.loc 1 332 5 view .LVU65
+ 279 007c 0120     		movs	r0, #1
+ 280 007e FFF7FEFF 		bl	delay_us
+ 281              	.LVL36:
+ 333:Core/Src/GT9147.c ****     HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);
+ 282              		.loc 1 333 5 view .LVU66
+ 283 0082 0122     		movs	r2, #1
+ 284 0084 1146     		mov	r1, r2
+ 285 0086 3046     		mov	r0, r6
+ 286 0088 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 287              	.LVL37:
+ 334:Core/Src/GT9147.c ****     if(HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_2))Num++;
+ 288              		.loc 1 334 5 view .LVU67
+ 289              		.loc 1 334 8 is_stmt 0 view .LVU68
+ARM GAS  /tmp/ccUgw8VC.s 			page 12
+
+
+ 290 008c 0421     		movs	r1, #4
+ 291 008e 3046     		mov	r0, r6
+ 292 0090 FFF7FEFF 		bl	HAL_GPIO_ReadPin
+ 293              	.LVL38:
+ 294              		.loc 1 334 7 view .LVU69
+ 295 0094 0028     		cmp	r0, #0
+ 296 0096 E5D0     		beq	.L14
+ 297              		.loc 1 334 43 is_stmt 1 discriminator 1 view .LVU70
+ 298              		.loc 1 334 46 is_stmt 0 discriminator 1 view .LVU71
+ 299 0098 0134     		adds	r4, r4, #1
+ 300              	.LVL39:
+ 301              		.loc 1 334 46 discriminator 1 view .LVU72
+ 302 009a A4B2     		uxth	r4, r4
+ 303              	.LVL40:
+ 304              		.loc 1 334 46 discriminator 1 view .LVU73
+ 305 009c E2E7     		b	.L14
+ 306              	.L17:
+ 335:Core/Src/GT9147.c ****   }
+ 336:Core/Src/GT9147.c ****   Num>>=4;   	//只有高12位有效.
+ 307              		.loc 1 336 3 is_stmt 1 view .LVU74
+ 308              		.loc 1 336 6 is_stmt 0 view .LVU75
+ 309 009e 2409     		lsrs	r4, r4, #4
+ 310              	.LVL41:
+ 337:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);		//释放片选
+ 311              		.loc 1 337 3 is_stmt 1 view .LVU76
+ 312 00a0 0122     		movs	r2, #1
+ 313 00a2 4FF40051 		mov	r1, #8192
+ 314 00a6 0448     		ldr	r0, .L18+8
+ 315 00a8 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 316              	.LVL42:
+ 338:Core/Src/GT9147.c ****   return(Num);
+ 317              		.loc 1 338 3 view .LVU77
+ 339:Core/Src/GT9147.c **** }
+ 318              		.loc 1 339 1 is_stmt 0 view .LVU78
+ 319 00ac 2046     		mov	r0, r4
+ 320 00ae 70BD     		pop	{r4, r5, r6, pc}
+ 321              	.LVL43:
+ 322              	.L19:
+ 323              		.loc 1 339 1 view .LVU79
+ 324              		.align	2
+ 325              	.L18:
+ 326 00b0 00040240 		.word	1073873920
+ 327 00b4 00140240 		.word	1073878016
+ 328 00b8 00080240 		.word	1073874944
+ 329              		.cfi_endproc
+ 330              	.LFE142:
+ 332              		.section	.text.TP_Read_XOY,"ax",%progbits
+ 333              		.align	1
+ 334              		.global	TP_Read_XOY
+ 335              		.syntax unified
+ 336              		.thumb
+ 337              		.thumb_func
+ 339              	TP_Read_XOY:
+ 340              	.LVL44:
+ 341              	.LFB143:
+ 340:Core/Src/GT9147.c **** 
+ 341:Core/Src/GT9147.c **** #define READ_TIMES 5 	//读取次数
+ARM GAS  /tmp/ccUgw8VC.s 			page 13
+
+
+ 342:Core/Src/GT9147.c **** #define LOST_VAL 1	  	//丢弃值
+ 343:Core/Src/GT9147.c **** uint16_t TP_Read_XOY(uint8_t xy)
+ 344:Core/Src/GT9147.c **** {
+ 342              		.loc 1 344 1 is_stmt 1 view -0
+ 343              		.cfi_startproc
+ 344              		@ args = 0, pretend = 0, frame = 16
+ 345              		@ frame_needed = 0, uses_anonymous_args = 0
+ 346              		.loc 1 344 1 is_stmt 0 view .LVU81
+ 347 0000 30B5     		push	{r4, r5, lr}
+ 348              	.LCFI2:
+ 349              		.cfi_def_cfa_offset 12
+ 350              		.cfi_offset 4, -12
+ 351              		.cfi_offset 5, -8
+ 352              		.cfi_offset 14, -4
+ 353 0002 85B0     		sub	sp, sp, #20
+ 354              	.LCFI3:
+ 355              		.cfi_def_cfa_offset 32
+ 356 0004 0546     		mov	r5, r0
+ 345:Core/Src/GT9147.c ****   uint16_t i, j;
+ 357              		.loc 1 345 3 is_stmt 1 view .LVU82
+ 346:Core/Src/GT9147.c ****   uint16_t buf[READ_TIMES];
+ 358              		.loc 1 346 3 view .LVU83
+ 347:Core/Src/GT9147.c ****   uint16_t sum=0;
+ 359              		.loc 1 347 3 view .LVU84
+ 360              	.LVL45:
+ 348:Core/Src/GT9147.c ****   uint16_t temp;
+ 361              		.loc 1 348 3 view .LVU85
+ 349:Core/Src/GT9147.c ****   for(i=0;i<READ_TIMES;i++)buf[i]=TP_Read_AD(xy);
+ 362              		.loc 1 349 3 view .LVU86
+ 363              		.loc 1 349 8 is_stmt 0 view .LVU87
+ 364 0006 0024     		movs	r4, #0
+ 365              		.loc 1 349 3 view .LVU88
+ 366 0008 09E0     		b	.L21
+ 367              	.LVL46:
+ 368              	.L22:
+ 369              		.loc 1 349 28 is_stmt 1 discriminator 3 view .LVU89
+ 370              		.loc 1 349 35 is_stmt 0 discriminator 3 view .LVU90
+ 371 000a 2846     		mov	r0, r5
+ 372 000c FFF7FEFF 		bl	TP_Read_AD
+ 373              	.LVL47:
+ 374              		.loc 1 349 34 discriminator 3 view .LVU91
+ 375 0010 04AB     		add	r3, sp, #16
+ 376 0012 03EB4403 		add	r3, r3, r4, lsl #1
+ 377 0016 23F80C0C 		strh	r0, [r3, #-12]	@ movhi
+ 378              		.loc 1 349 24 is_stmt 1 discriminator 3 view .LVU92
+ 379              		.loc 1 349 25 is_stmt 0 discriminator 3 view .LVU93
+ 380 001a 0134     		adds	r4, r4, #1
+ 381              	.LVL48:
+ 382              		.loc 1 349 25 discriminator 3 view .LVU94
+ 383 001c A4B2     		uxth	r4, r4
+ 384              	.LVL49:
+ 385              	.L21:
+ 386              		.loc 1 349 11 is_stmt 1 discriminator 1 view .LVU95
+ 387              		.loc 1 349 3 is_stmt 0 discriminator 1 view .LVU96
+ 388 001e 042C     		cmp	r4, #4
+ 389 0020 F3D9     		bls	.L22
+ 350:Core/Src/GT9147.c ****   for(i=0;i<READ_TIMES-1; i++)//排序
+ARM GAS  /tmp/ccUgw8VC.s 			page 14
+
+
+ 390              		.loc 1 350 8 view .LVU97
+ 391 0022 0020     		movs	r0, #0
+ 392 0024 1AE0     		b	.L23
+ 393              	.LVL50:
+ 394              	.L25:
+ 351:Core/Src/GT9147.c ****   {
+ 352:Core/Src/GT9147.c ****     for(j=i+1;j<READ_TIMES;j++)
+ 395              		.loc 1 352 28 is_stmt 1 discriminator 2 view .LVU98
+ 396              		.loc 1 352 29 is_stmt 0 discriminator 2 view .LVU99
+ 397 0026 0133     		adds	r3, r3, #1
+ 398              	.LVL51:
+ 399              		.loc 1 352 29 discriminator 2 view .LVU100
+ 400 0028 9BB2     		uxth	r3, r3
+ 401              	.LVL52:
+ 402              	.L24:
+ 403              		.loc 1 352 15 is_stmt 1 discriminator 1 view .LVU101
+ 404              		.loc 1 352 5 is_stmt 0 discriminator 1 view .LVU102
+ 405 002a 042B     		cmp	r3, #4
+ 406 002c 15D8     		bhi	.L31
+ 353:Core/Src/GT9147.c ****     {
+ 354:Core/Src/GT9147.c ****       if(buf[i]>buf[j])//升序排列
+ 407              		.loc 1 354 7 is_stmt 1 view .LVU103
+ 408              		.loc 1 354 13 is_stmt 0 view .LVU104
+ 409 002e 04AA     		add	r2, sp, #16
+ 410 0030 02EB4002 		add	r2, r2, r0, lsl #1
+ 411 0034 32F80C2C 		ldrh	r2, [r2, #-12]
+ 412              		.loc 1 354 20 view .LVU105
+ 413 0038 04A9     		add	r1, sp, #16
+ 414 003a 01EB4301 		add	r1, r1, r3, lsl #1
+ 415 003e 31F80C1C 		ldrh	r1, [r1, #-12]
+ 416              		.loc 1 354 9 view .LVU106
+ 417 0042 8A42     		cmp	r2, r1
+ 418 0044 EFD9     		bls	.L25
+ 355:Core/Src/GT9147.c ****       {
+ 356:Core/Src/GT9147.c ****         temp=buf[i];
+ 419              		.loc 1 356 9 is_stmt 1 view .LVU107
+ 420              	.LVL53:
+ 357:Core/Src/GT9147.c ****         buf[i]=buf[j];
+ 421              		.loc 1 357 9 view .LVU108
+ 422              		.loc 1 357 15 is_stmt 0 view .LVU109
+ 423 0046 04AD     		add	r5, sp, #16
+ 424 0048 05EB400C 		add	ip, r5, r0, lsl #1
+ 425 004c 2CF80C1C 		strh	r1, [ip, #-12]	@ movhi
+ 358:Core/Src/GT9147.c ****         buf[j]=temp;
+ 426              		.loc 1 358 9 is_stmt 1 view .LVU110
+ 427              		.loc 1 358 15 is_stmt 0 view .LVU111
+ 428 0050 05EB4301 		add	r1, r5, r3, lsl #1
+ 429 0054 21F80C2C 		strh	r2, [r1, #-12]	@ movhi
+ 430 0058 E5E7     		b	.L25
+ 431              	.LVL54:
+ 432              	.L31:
+ 350:Core/Src/GT9147.c ****   {
+ 433              		.loc 1 350 28 view .LVU112
+ 434 005a 2046     		mov	r0, r4
+ 435              	.LVL55:
+ 436              	.L23:
+ 350:Core/Src/GT9147.c ****   {
+ARM GAS  /tmp/ccUgw8VC.s 			page 15
+
+
+ 437              		.loc 1 350 11 is_stmt 1 discriminator 1 view .LVU113
+ 350:Core/Src/GT9147.c ****   {
+ 438              		.loc 1 350 3 is_stmt 0 discriminator 1 view .LVU114
+ 439 005c 0328     		cmp	r0, #3
+ 440 005e 03D8     		bhi	.L32
+ 352:Core/Src/GT9147.c ****     {
+ 441              		.loc 1 352 5 is_stmt 1 view .LVU115
+ 352:Core/Src/GT9147.c ****     {
+ 442              		.loc 1 352 10 is_stmt 0 view .LVU116
+ 443 0060 441C     		adds	r4, r0, #1
+ 444 0062 A4B2     		uxth	r4, r4
+ 445              	.LVL56:
+ 352:Core/Src/GT9147.c ****     {
+ 446              		.loc 1 352 10 view .LVU117
+ 447 0064 2346     		mov	r3, r4
+ 352:Core/Src/GT9147.c ****     {
+ 448              		.loc 1 352 5 view .LVU118
+ 449 0066 E0E7     		b	.L24
+ 450              	.LVL57:
+ 451              	.L32:
+ 359:Core/Src/GT9147.c ****       }
+ 360:Core/Src/GT9147.c ****     }
+ 361:Core/Src/GT9147.c ****   }
+ 362:Core/Src/GT9147.c ****   sum=0;
+ 452              		.loc 1 362 6 view .LVU119
+ 453 0068 0020     		movs	r0, #0
+ 454              	.LVL58:
+ 363:Core/Src/GT9147.c ****   for(i=LOST_VAL;i<READ_TIMES-LOST_VAL;i++)sum+=buf[i];
+ 455              		.loc 1 363 8 view .LVU120
+ 456 006a 0123     		movs	r3, #1
+ 457 006c 08E0     		b	.L28
+ 458              	.LVL59:
+ 459              	.L29:
+ 460              		.loc 1 363 44 is_stmt 1 discriminator 3 view .LVU121
+ 461              		.loc 1 363 52 is_stmt 0 discriminator 3 view .LVU122
+ 462 006e 04AA     		add	r2, sp, #16
+ 463 0070 02EB4302 		add	r2, r2, r3, lsl #1
+ 464 0074 32F80C2C 		ldrh	r2, [r2, #-12]
+ 465              		.loc 1 363 47 discriminator 3 view .LVU123
+ 466 0078 1044     		add	r0, r0, r2
+ 467              	.LVL60:
+ 468              		.loc 1 363 47 discriminator 3 view .LVU124
+ 469 007a 80B2     		uxth	r0, r0
+ 470              	.LVL61:
+ 471              		.loc 1 363 40 is_stmt 1 discriminator 3 view .LVU125
+ 472              		.loc 1 363 41 is_stmt 0 discriminator 3 view .LVU126
+ 473 007c 0133     		adds	r3, r3, #1
+ 474              	.LVL62:
+ 475              		.loc 1 363 41 discriminator 3 view .LVU127
+ 476 007e 9BB2     		uxth	r3, r3
+ 477              	.LVL63:
+ 478              	.L28:
+ 479              		.loc 1 363 18 is_stmt 1 discriminator 1 view .LVU128
+ 480              		.loc 1 363 3 is_stmt 0 discriminator 1 view .LVU129
+ 481 0080 032B     		cmp	r3, #3
+ 482 0082 F4D9     		bls	.L29
+ 364:Core/Src/GT9147.c ****   temp=sum/(READ_TIMES-2*LOST_VAL);
+ARM GAS  /tmp/ccUgw8VC.s 			page 16
+
+
+ 483              		.loc 1 364 3 is_stmt 1 view .LVU130
+ 484              		.loc 1 364 7 is_stmt 0 view .LVU131
+ 485 0084 034B     		ldr	r3, .L33
+ 486              	.LVL64:
+ 487              		.loc 1 364 7 view .LVU132
+ 488 0086 A3FB0030 		umull	r3, r0, r3, r0
+ 489              	.LVL65:
+ 365:Core/Src/GT9147.c ****   return temp;
+ 490              		.loc 1 365 3 is_stmt 1 view .LVU133
+ 366:Core/Src/GT9147.c **** }
+ 491              		.loc 1 366 1 is_stmt 0 view .LVU134
+ 492 008a C0F34F00 		ubfx	r0, r0, #1, #16
+ 493              	.LVL66:
+ 494              		.loc 1 366 1 view .LVU135
+ 495 008e 05B0     		add	sp, sp, #20
+ 496              	.LCFI4:
+ 497              		.cfi_def_cfa_offset 12
+ 498              		@ sp needed
+ 499 0090 30BD     		pop	{r4, r5, pc}
+ 500              	.L34:
+ 501 0092 00BF     		.align	2
+ 502              	.L33:
+ 503 0094 ABAAAAAA 		.word	-1431655765
+ 504              		.cfi_endproc
+ 505              	.LFE143:
+ 507              		.section	.text.TP_Read_XY,"ax",%progbits
+ 508              		.align	1
+ 509              		.global	TP_Read_XY
+ 510              		.syntax unified
+ 511              		.thumb
+ 512              		.thumb_func
+ 514              	TP_Read_XY:
+ 515              	.LVL67:
+ 516              	.LFB144:
+ 367:Core/Src/GT9147.c **** uint8_t TP_Read_XY(uint16_t *x,uint16_t *y)
+ 368:Core/Src/GT9147.c **** {
+ 517              		.loc 1 368 1 is_stmt 1 view -0
+ 518              		.cfi_startproc
+ 519              		@ args = 0, pretend = 0, frame = 0
+ 520              		@ frame_needed = 0, uses_anonymous_args = 0
+ 521              		.loc 1 368 1 is_stmt 0 view .LVU137
+ 522 0000 70B5     		push	{r4, r5, r6, lr}
+ 523              	.LCFI5:
+ 524              		.cfi_def_cfa_offset 16
+ 525              		.cfi_offset 4, -16
+ 526              		.cfi_offset 5, -12
+ 527              		.cfi_offset 6, -8
+ 528              		.cfi_offset 14, -4
+ 529 0002 0546     		mov	r5, r0
+ 530 0004 0C46     		mov	r4, r1
+ 369:Core/Src/GT9147.c ****   uint16_t xtemp,ytemp;
+ 531              		.loc 1 369 3 is_stmt 1 view .LVU138
+ 370:Core/Src/GT9147.c ****   xtemp=TP_Read_XOY(CMD_RDX);
+ 532              		.loc 1 370 3 view .LVU139
+ 533              		.loc 1 370 9 is_stmt 0 view .LVU140
+ 534 0006 064B     		ldr	r3, .L37
+ 535 0008 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ARM GAS  /tmp/ccUgw8VC.s 			page 17
+
+
+ 536              	.LVL68:
+ 537              		.loc 1 370 9 view .LVU141
+ 538 000a FFF7FEFF 		bl	TP_Read_XOY
+ 539              	.LVL69:
+ 540              		.loc 1 370 9 view .LVU142
+ 541 000e 0646     		mov	r6, r0
+ 542              	.LVL70:
+ 371:Core/Src/GT9147.c ****   ytemp=TP_Read_XOY(CMD_RDY);
+ 543              		.loc 1 371 3 is_stmt 1 view .LVU143
+ 544              		.loc 1 371 9 is_stmt 0 view .LVU144
+ 545 0010 044B     		ldr	r3, .L37+4
+ 546 0012 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 547 0014 FFF7FEFF 		bl	TP_Read_XOY
+ 548              	.LVL71:
+ 372:Core/Src/GT9147.c ****   //if(xtemp<100||ytemp<100)return 0;//读数失败
+ 373:Core/Src/GT9147.c ****   *x=xtemp;
+ 549              		.loc 1 373 3 is_stmt 1 view .LVU145
+ 550              		.loc 1 373 5 is_stmt 0 view .LVU146
+ 551 0018 2E80     		strh	r6, [r5]	@ movhi
+ 374:Core/Src/GT9147.c ****   *y=ytemp;
+ 552              		.loc 1 374 3 is_stmt 1 view .LVU147
+ 553              		.loc 1 374 5 is_stmt 0 view .LVU148
+ 554 001a 2080     		strh	r0, [r4]	@ movhi
+ 375:Core/Src/GT9147.c ****   return 1;//读数成功
+ 555              		.loc 1 375 3 is_stmt 1 view .LVU149
+ 376:Core/Src/GT9147.c **** }
+ 556              		.loc 1 376 1 is_stmt 0 view .LVU150
+ 557 001c 0120     		movs	r0, #1
+ 558              	.LVL72:
+ 559              		.loc 1 376 1 view .LVU151
+ 560 001e 70BD     		pop	{r4, r5, r6, pc}
+ 561              	.LVL73:
+ 562              	.L38:
+ 563              		.loc 1 376 1 view .LVU152
+ 564              		.align	2
+ 565              	.L37:
+ 566 0020 00000000 		.word	.LANCHOR0
+ 567 0024 00000000 		.word	.LANCHOR1
+ 568              		.cfi_endproc
+ 569              	.LFE144:
+ 571              		.section	.text.TP_Read_XY2,"ax",%progbits
+ 572              		.align	1
+ 573              		.global	TP_Read_XY2
+ 574              		.syntax unified
+ 575              		.thumb
+ 576              		.thumb_func
+ 578              	TP_Read_XY2:
+ 579              	.LVL74:
+ 580              	.LFB145:
+ 377:Core/Src/GT9147.c **** #define ERR_RANGE 50 //误差范围
+ 378:Core/Src/GT9147.c **** uint8_t TP_Read_XY2(uint16_t *x,uint16_t *y)
+ 379:Core/Src/GT9147.c **** {
+ 581              		.loc 1 379 1 is_stmt 1 view -0
+ 582              		.cfi_startproc
+ 583              		@ args = 0, pretend = 0, frame = 8
+ 584              		@ frame_needed = 0, uses_anonymous_args = 0
+ 585              		.loc 1 379 1 is_stmt 0 view .LVU154
+ARM GAS  /tmp/ccUgw8VC.s 			page 18
+
+
+ 586 0000 30B5     		push	{r4, r5, lr}
+ 587              	.LCFI6:
+ 588              		.cfi_def_cfa_offset 12
+ 589              		.cfi_offset 4, -12
+ 590              		.cfi_offset 5, -8
+ 591              		.cfi_offset 14, -4
+ 592 0002 83B0     		sub	sp, sp, #12
+ 593              	.LCFI7:
+ 594              		.cfi_def_cfa_offset 24
+ 595 0004 0546     		mov	r5, r0
+ 596 0006 0C46     		mov	r4, r1
+ 380:Core/Src/GT9147.c ****   uint16_t x1,y1;
+ 597              		.loc 1 380 3 is_stmt 1 view .LVU155
+ 381:Core/Src/GT9147.c ****   uint16_t x2,y2;
+ 598              		.loc 1 381 3 view .LVU156
+ 382:Core/Src/GT9147.c ****   uint8_t flag;
+ 599              		.loc 1 382 3 view .LVU157
+ 383:Core/Src/GT9147.c ****   flag=TP_Read_XY(&x1,&y1);
+ 600              		.loc 1 383 3 view .LVU158
+ 601              		.loc 1 383 8 is_stmt 0 view .LVU159
+ 602 0008 01A9     		add	r1, sp, #4
+ 603              	.LVL75:
+ 604              		.loc 1 383 8 view .LVU160
+ 605 000a 0DF10600 		add	r0, sp, #6
+ 606              	.LVL76:
+ 607              		.loc 1 383 8 view .LVU161
+ 608 000e FFF7FEFF 		bl	TP_Read_XY
+ 609              	.LVL77:
+ 384:Core/Src/GT9147.c ****   if(flag==0)return(0);
+ 610              		.loc 1 384 3 is_stmt 1 view .LVU162
+ 611              		.loc 1 384 5 is_stmt 0 view .LVU163
+ 612 0012 08B9     		cbnz	r0, .L50
+ 613              	.L40:
+ 385:Core/Src/GT9147.c ****   flag=TP_Read_XY(&x2,&y2);
+ 386:Core/Src/GT9147.c ****   if(flag==0)return(0);
+ 387:Core/Src/GT9147.c ****   if(((x2<=x1&&x1<x2+ERR_RANGE)||(x1<=x2&&x2<x1+ERR_RANGE))//前后两次采样在+-50内
+ 388:Core/Src/GT9147.c ****      &&((y2<=y1&&y1<y2+ERR_RANGE)||(y1<=y2&&y2<y1+ERR_RANGE)))
+ 389:Core/Src/GT9147.c ****   {
+ 390:Core/Src/GT9147.c ****     *x=(x1+x2)/2;
+ 391:Core/Src/GT9147.c ****     *y=(y1+y2)/2;
+ 392:Core/Src/GT9147.c ****     return 1;
+ 393:Core/Src/GT9147.c ****   }else return 0;
+ 394:Core/Src/GT9147.c **** }
+ 614              		.loc 1 394 1 view .LVU164
+ 615 0014 03B0     		add	sp, sp, #12
+ 616              	.LCFI8:
+ 617              		.cfi_remember_state
+ 618              		.cfi_def_cfa_offset 12
+ 619              		@ sp needed
+ 620 0016 30BD     		pop	{r4, r5, pc}
+ 621              	.LVL78:
+ 622              	.L50:
+ 623              	.LCFI9:
+ 624              		.cfi_restore_state
+ 385:Core/Src/GT9147.c ****   flag=TP_Read_XY(&x2,&y2);
+ 625              		.loc 1 385 3 is_stmt 1 view .LVU165
+ 385:Core/Src/GT9147.c ****   flag=TP_Read_XY(&x2,&y2);
+ARM GAS  /tmp/ccUgw8VC.s 			page 19
+
+
+ 626              		.loc 1 385 8 is_stmt 0 view .LVU166
+ 627 0018 6946     		mov	r1, sp
+ 628 001a 0DF10200 		add	r0, sp, #2
+ 629 001e FFF7FEFF 		bl	TP_Read_XY
+ 630              	.LVL79:
+ 386:Core/Src/GT9147.c ****   if(((x2<=x1&&x1<x2+ERR_RANGE)||(x1<=x2&&x2<x1+ERR_RANGE))//前后两次采样在+-50内
+ 631              		.loc 1 386 3 is_stmt 1 view .LVU167
+ 386:Core/Src/GT9147.c ****   if(((x2<=x1&&x1<x2+ERR_RANGE)||(x1<=x2&&x2<x1+ERR_RANGE))//前后两次采样在+-50内
+ 632              		.loc 1 386 5 is_stmt 0 view .LVU168
+ 633 0022 0028     		cmp	r0, #0
+ 634 0024 F6D0     		beq	.L40
+ 387:Core/Src/GT9147.c ****      &&((y2<=y1&&y1<y2+ERR_RANGE)||(y1<=y2&&y2<y1+ERR_RANGE)))
+ 635              		.loc 1 387 3 is_stmt 1 view .LVU169
+ 387:Core/Src/GT9147.c ****      &&((y2<=y1&&y1<y2+ERR_RANGE)||(y1<=y2&&y2<y1+ERR_RANGE)))
+ 636              		.loc 1 387 10 is_stmt 0 view .LVU170
+ 637 0026 BDF80230 		ldrh	r3, [sp, #2]
+ 638 002a BDF80620 		ldrh	r2, [sp, #6]
+ 387:Core/Src/GT9147.c ****      &&((y2<=y1&&y1<y2+ERR_RANGE)||(y1<=y2&&y2<y1+ERR_RANGE)))
+ 639              		.loc 1 387 5 view .LVU171
+ 640 002e 9342     		cmp	r3, r2
+ 641 0030 03D8     		bhi	.L41
+ 387:Core/Src/GT9147.c ****      &&((y2<=y1&&y1<y2+ERR_RANGE)||(y1<=y2&&y2<y1+ERR_RANGE)))
+ 642              		.loc 1 387 18 discriminator 1 view .LVU172
+ 643 0032 03F13101 		add	r1, r3, #49
+ 387:Core/Src/GT9147.c ****      &&((y2<=y1&&y1<y2+ERR_RANGE)||(y1<=y2&&y2<y1+ERR_RANGE)))
+ 644              		.loc 1 387 14 discriminator 1 view .LVU173
+ 645 0036 9142     		cmp	r1, r2
+ 646 0038 05DA     		bge	.L42
+ 647              	.L41:
+ 387:Core/Src/GT9147.c ****      &&((y2<=y1&&y1<y2+ERR_RANGE)||(y1<=y2&&y2<y1+ERR_RANGE)))
+ 648              		.loc 1 387 32 discriminator 3 view .LVU174
+ 649 003a 9342     		cmp	r3, r2
+ 650 003c 1ED3     		bcc	.L45
+ 387:Core/Src/GT9147.c ****      &&((y2<=y1&&y1<y2+ERR_RANGE)||(y1<=y2&&y2<y1+ERR_RANGE)))
+ 651              		.loc 1 387 45 discriminator 4 view .LVU175
+ 652 003e 02F13101 		add	r1, r2, #49
+ 387:Core/Src/GT9147.c ****      &&((y2<=y1&&y1<y2+ERR_RANGE)||(y1<=y2&&y2<y1+ERR_RANGE)))
+ 653              		.loc 1 387 41 discriminator 4 view .LVU176
+ 654 0042 9942     		cmp	r1, r3
+ 655 0044 1CDB     		blt	.L46
+ 656              	.L42:
+ 388:Core/Src/GT9147.c ****   {
+ 657              		.loc 1 388 12 view .LVU177
+ 658 0046 BDF80000 		ldrh	r0, [sp]
+ 659              	.LVL80:
+ 388:Core/Src/GT9147.c ****   {
+ 660              		.loc 1 388 12 view .LVU178
+ 661 004a BDF80410 		ldrh	r1, [sp, #4]
+ 388:Core/Src/GT9147.c ****   {
+ 662              		.loc 1 388 6 view .LVU179
+ 663 004e 8842     		cmp	r0, r1
+ 664 0050 03D8     		bhi	.L43
+ 388:Core/Src/GT9147.c ****   {
+ 665              		.loc 1 388 20 discriminator 1 view .LVU180
+ 666 0052 00F1310C 		add	ip, r0, #49
+ 388:Core/Src/GT9147.c ****   {
+ 667              		.loc 1 388 16 discriminator 1 view .LVU181
+ARM GAS  /tmp/ccUgw8VC.s 			page 20
+
+
+ 668 0056 8C45     		cmp	ip, r1
+ 669 0058 04DA     		bge	.L44
+ 670              	.L43:
+ 388:Core/Src/GT9147.c ****   {
+ 671              		.loc 1 388 34 discriminator 3 view .LVU182
+ 672 005a 8842     		cmp	r0, r1
+ 673 005c 12D3     		bcc	.L47
+ 388:Core/Src/GT9147.c ****   {
+ 674              		.loc 1 388 47 discriminator 4 view .LVU183
+ 675 005e 3131     		adds	r1, r1, #49
+ 388:Core/Src/GT9147.c ****   {
+ 676              		.loc 1 388 43 discriminator 4 view .LVU184
+ 677 0060 8142     		cmp	r1, r0
+ 678 0062 11DB     		blt	.L48
+ 679              	.L44:
+ 390:Core/Src/GT9147.c ****     *y=(y1+y2)/2;
+ 680              		.loc 1 390 5 is_stmt 1 view .LVU185
+ 390:Core/Src/GT9147.c ****     *y=(y1+y2)/2;
+ 681              		.loc 1 390 15 is_stmt 0 view .LVU186
+ 682 0064 1344     		add	r3, r3, r2
+ 683 0066 5B10     		asrs	r3, r3, #1
+ 390:Core/Src/GT9147.c ****     *y=(y1+y2)/2;
+ 684              		.loc 1 390 7 view .LVU187
+ 685 0068 2B80     		strh	r3, [r5]	@ movhi
+ 391:Core/Src/GT9147.c ****     return 1;
+ 686              		.loc 1 391 5 is_stmt 1 view .LVU188
+ 391:Core/Src/GT9147.c ****     return 1;
+ 687              		.loc 1 391 11 is_stmt 0 view .LVU189
+ 688 006a BDF80430 		ldrh	r3, [sp, #4]
+ 689 006e BDF80020 		ldrh	r2, [sp]
+ 391:Core/Src/GT9147.c ****     return 1;
+ 690              		.loc 1 391 15 view .LVU190
+ 691 0072 1344     		add	r3, r3, r2
+ 692 0074 5B10     		asrs	r3, r3, #1
+ 391:Core/Src/GT9147.c ****     return 1;
+ 693              		.loc 1 391 7 view .LVU191
+ 694 0076 2380     		strh	r3, [r4]	@ movhi
+ 392:Core/Src/GT9147.c ****   }else return 0;
+ 695              		.loc 1 392 5 is_stmt 1 view .LVU192
+ 392:Core/Src/GT9147.c ****   }else return 0;
+ 696              		.loc 1 392 12 is_stmt 0 view .LVU193
+ 697 0078 0120     		movs	r0, #1
+ 698 007a CBE7     		b	.L40
+ 699              	.LVL81:
+ 700              	.L45:
+ 393:Core/Src/GT9147.c **** }
+ 701              		.loc 1 393 16 view .LVU194
+ 702 007c 0020     		movs	r0, #0
+ 703              	.LVL82:
+ 393:Core/Src/GT9147.c **** }
+ 704              		.loc 1 393 16 view .LVU195
+ 705 007e C9E7     		b	.L40
+ 706              	.LVL83:
+ 707              	.L46:
+ 393:Core/Src/GT9147.c **** }
+ 708              		.loc 1 393 16 view .LVU196
+ 709 0080 0020     		movs	r0, #0
+ARM GAS  /tmp/ccUgw8VC.s 			page 21
+
+
+ 710              	.LVL84:
+ 393:Core/Src/GT9147.c **** }
+ 711              		.loc 1 393 16 view .LVU197
+ 712 0082 C7E7     		b	.L40
+ 713              	.L47:
+ 714 0084 0020     		movs	r0, #0
+ 715 0086 C5E7     		b	.L40
+ 716              	.L48:
+ 717 0088 0020     		movs	r0, #0
+ 718 008a C3E7     		b	.L40
+ 719              		.cfi_endproc
+ 720              	.LFE145:
+ 722              		.section	.text.TP_Scan,"ax",%progbits
+ 723              		.align	1
+ 724              		.global	TP_Scan
+ 725              		.syntax unified
+ 726              		.thumb
+ 727              		.thumb_func
+ 729              	TP_Scan:
+ 730              	.LVL85:
+ 731              	.LFB141:
+ 285:Core/Src/GT9147.c ****   if(HAL_GPIO_ReadPin(GPIOF,GPIO_PIN_10)==GPIO_PIN_RESET){//有按键按下
+ 732              		.loc 1 285 1 is_stmt 1 view -0
+ 733              		.cfi_startproc
+ 734              		@ args = 0, pretend = 0, frame = 0
+ 735              		@ frame_needed = 0, uses_anonymous_args = 0
+ 285:Core/Src/GT9147.c ****   if(HAL_GPIO_ReadPin(GPIOF,GPIO_PIN_10)==GPIO_PIN_RESET){//有按键按下
+ 736              		.loc 1 285 1 is_stmt 0 view .LVU199
+ 737 0000 10B5     		push	{r4, lr}
+ 738              	.LCFI10:
+ 739              		.cfi_def_cfa_offset 8
+ 740              		.cfi_offset 4, -8
+ 741              		.cfi_offset 14, -4
+ 742 0002 0446     		mov	r4, r0
+ 286:Core/Src/GT9147.c ****     if(tp)TP_Read_XY2(&touchdev.x[0],&touchdev.y[0]);//读取物理坐标
+ 743              		.loc 1 286 3 is_stmt 1 view .LVU200
+ 286:Core/Src/GT9147.c ****     if(tp)TP_Read_XY2(&touchdev.x[0],&touchdev.y[0]);//读取物理坐标
+ 744              		.loc 1 286 6 is_stmt 0 view .LVU201
+ 745 0004 4FF48061 		mov	r1, #1024
+ 746 0008 3548     		ldr	r0, .L59
+ 747              	.LVL86:
+ 286:Core/Src/GT9147.c ****     if(tp)TP_Read_XY2(&touchdev.x[0],&touchdev.y[0]);//读取物理坐标
+ 748              		.loc 1 286 6 view .LVU202
+ 749 000a FFF7FEFF 		bl	HAL_GPIO_ReadPin
+ 750              	.LVL87:
+ 286:Core/Src/GT9147.c ****     if(tp)TP_Read_XY2(&touchdev.x[0],&touchdev.y[0]);//读取物理坐标
+ 751              		.loc 1 286 5 view .LVU203
+ 752 000e 0028     		cmp	r0, #0
+ 753 0010 4FD1     		bne	.L52
+ 287:Core/Src/GT9147.c ****     else if(TP_Read_XY2(&touchdev.x[0],&touchdev.y[0]))//读取屏幕坐标
+ 754              		.loc 1 287 5 is_stmt 1 view .LVU204
+ 287:Core/Src/GT9147.c ****     else if(TP_Read_XY2(&touchdev.x[0],&touchdev.y[0]))//读取屏幕坐标
+ 755              		.loc 1 287 7 is_stmt 0 view .LVU205
+ 756 0012 C4B1     		cbz	r4, .L53
+ 287:Core/Src/GT9147.c ****     else if(TP_Read_XY2(&touchdev.x[0],&touchdev.y[0]))//读取屏幕坐标
+ 757              		.loc 1 287 11 is_stmt 1 discriminator 1 view .LVU206
+ 758 0014 3348     		ldr	r0, .L59+4
+ARM GAS  /tmp/ccUgw8VC.s 			page 22
+
+
+ 759 0016 00F11601 		add	r1, r0, #22
+ 760 001a 0C30     		adds	r0, r0, #12
+ 761 001c FFF7FEFF 		bl	TP_Read_XY2
+ 762              	.LVL88:
+ 763              	.L54:
+ 293:Core/Src/GT9147.c ****     {
+ 764              		.loc 1 293 5 view .LVU207
+ 293:Core/Src/GT9147.c ****     {
+ 765              		.loc 1 293 35 is_stmt 0 view .LVU208
+ 766 0020 304B     		ldr	r3, .L59+4
+ 767 0022 93F92030 		ldrsb	r3, [r3, #32]
+ 293:Core/Src/GT9147.c ****     {
+ 768              		.loc 1 293 7 view .LVU209
+ 769 0026 002B     		cmp	r3, #0
+ 770 0028 07DB     		blt	.L55
+ 295:Core/Src/GT9147.c ****       touchdev.x[4]=touchdev.x[0];//记录第一次按下时的坐标
+ 771              		.loc 1 295 7 is_stmt 1 view .LVU210
+ 295:Core/Src/GT9147.c ****       touchdev.x[4]=touchdev.x[0];//记录第一次按下时的坐标
+ 772              		.loc 1 295 19 is_stmt 0 view .LVU211
+ 773 002a 2E4B     		ldr	r3, .L59+4
+ 774 002c C022     		movs	r2, #192
+ 775 002e 83F82020 		strb	r2, [r3, #32]
+ 296:Core/Src/GT9147.c ****       touchdev.y[4]=touchdev.y[0];
+ 776              		.loc 1 296 7 is_stmt 1 view .LVU212
+ 296:Core/Src/GT9147.c ****       touchdev.y[4]=touchdev.y[0];
+ 777              		.loc 1 296 31 is_stmt 0 view .LVU213
+ 778 0032 9A89     		ldrh	r2, [r3, #12]
+ 296:Core/Src/GT9147.c ****       touchdev.y[4]=touchdev.y[0];
+ 779              		.loc 1 296 20 view .LVU214
+ 780 0034 9A82     		strh	r2, [r3, #20]	@ movhi
+ 297:Core/Src/GT9147.c ****     }
+ 781              		.loc 1 297 7 is_stmt 1 view .LVU215
+ 297:Core/Src/GT9147.c ****     }
+ 782              		.loc 1 297 31 is_stmt 0 view .LVU216
+ 783 0036 DA8A     		ldrh	r2, [r3, #22]
+ 297:Core/Src/GT9147.c ****     }
+ 784              		.loc 1 297 20 view .LVU217
+ 785 0038 DA83     		strh	r2, [r3, #30]	@ movhi
+ 786              	.L55:
+ 312:Core/Src/GT9147.c **** }
+ 787              		.loc 1 312 3 is_stmt 1 view .LVU218
+ 312:Core/Src/GT9147.c **** }
+ 788              		.loc 1 312 18 is_stmt 0 view .LVU219
+ 789 003a 2A4B     		ldr	r3, .L59+4
+ 790 003c 93F82000 		ldrb	r0, [r3, #32]	@ zero_extendqisi2
+ 313:Core/Src/GT9147.c **** uint16_t TP_Read_AD(uint8_t CMD)
+ 791              		.loc 1 313 1 view .LVU220
+ 792 0040 00F08000 		and	r0, r0, #128
+ 793 0044 10BD     		pop	{r4, pc}
+ 794              	.L53:
+ 288:Core/Src/GT9147.c ****     {
+ 795              		.loc 1 288 10 is_stmt 1 view .LVU221
+ 288:Core/Src/GT9147.c ****     {
+ 796              		.loc 1 288 13 is_stmt 0 view .LVU222
+ 797 0046 2748     		ldr	r0, .L59+4
+ 798 0048 00F11601 		add	r1, r0, #22
+ 799 004c 0C30     		adds	r0, r0, #12
+ARM GAS  /tmp/ccUgw8VC.s 			page 23
+
+
+ 800 004e FFF7FEFF 		bl	TP_Read_XY2
+ 801              	.LVL89:
+ 288:Core/Src/GT9147.c ****     {
+ 802              		.loc 1 288 12 view .LVU223
+ 803 0052 0028     		cmp	r0, #0
+ 804 0054 E4D0     		beq	.L54
+ 290:Core/Src/GT9147.c ****       touchdev.y[0]=touchdev.yfac*touchdev.y[0]+touchdev.yoff;
+ 805              		.loc 1 290 7 is_stmt 1 view .LVU224
+ 290:Core/Src/GT9147.c ****       touchdev.y[0]=touchdev.yfac*touchdev.y[0]+touchdev.yoff;
+ 806              		.loc 1 290 29 is_stmt 0 view .LVU225
+ 807 0056 234B     		ldr	r3, .L59+4
+ 808 0058 93ED097A 		vldr.32	s14, [r3, #36]
+ 290:Core/Src/GT9147.c ****       touchdev.y[0]=touchdev.yfac*touchdev.y[0]+touchdev.yoff;
+ 809              		.loc 1 290 45 view .LVU226
+ 810 005c 9A89     		ldrh	r2, [r3, #12]
+ 811 005e 07EE902A 		vmov	s15, r2	@ int
+ 290:Core/Src/GT9147.c ****       touchdev.y[0]=touchdev.yfac*touchdev.y[0]+touchdev.yoff;
+ 812              		.loc 1 290 34 view .LVU227
+ 813 0062 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 814 0066 27EE877A 		vmul.f32	s14, s15, s14
+ 290:Core/Src/GT9147.c ****       touchdev.y[0]=touchdev.yfac*touchdev.y[0]+touchdev.yoff;
+ 815              		.loc 1 290 57 view .LVU228
+ 816 006a B3F92C20 		ldrsh	r2, [r3, #44]
+ 817 006e 07EE902A 		vmov	s15, r2	@ int
+ 290:Core/Src/GT9147.c ****       touchdev.y[0]=touchdev.yfac*touchdev.y[0]+touchdev.yoff;
+ 818              		.loc 1 290 48 view .LVU229
+ 819 0072 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 820 0076 77EE877A 		vadd.f32	s15, s15, s14
+ 290:Core/Src/GT9147.c ****       touchdev.y[0]=touchdev.yfac*touchdev.y[0]+touchdev.yoff;
+ 821              		.loc 1 290 20 view .LVU230
+ 822 007a FCEEE77A 		vcvt.u32.f32	s15, s15
+ 823 007e 17EE902A 		vmov	r2, s15	@ int
+ 824 0082 9A81     		strh	r2, [r3, #12]	@ movhi
+ 291:Core/Src/GT9147.c ****     }
+ 825              		.loc 1 291 7 is_stmt 1 view .LVU231
+ 291:Core/Src/GT9147.c ****     }
+ 826              		.loc 1 291 29 is_stmt 0 view .LVU232
+ 827 0084 93ED0A7A 		vldr.32	s14, [r3, #40]
+ 291:Core/Src/GT9147.c ****     }
+ 828              		.loc 1 291 45 view .LVU233
+ 829 0088 DA8A     		ldrh	r2, [r3, #22]
+ 830 008a 07EE902A 		vmov	s15, r2	@ int
+ 291:Core/Src/GT9147.c ****     }
+ 831              		.loc 1 291 34 view .LVU234
+ 832 008e F8EEE77A 		vcvt.f32.s32	s15, s15
+ 833 0092 27EE877A 		vmul.f32	s14, s15, s14
+ 291:Core/Src/GT9147.c ****     }
+ 834              		.loc 1 291 57 view .LVU235
+ 835 0096 B3F92E20 		ldrsh	r2, [r3, #46]
+ 836 009a 07EE902A 		vmov	s15, r2	@ int
+ 291:Core/Src/GT9147.c ****     }
+ 837              		.loc 1 291 48 view .LVU236
+ 838 009e F8EEE77A 		vcvt.f32.s32	s15, s15
+ 839 00a2 77EE877A 		vadd.f32	s15, s15, s14
+ 291:Core/Src/GT9147.c ****     }
+ 840              		.loc 1 291 20 view .LVU237
+ 841 00a6 FCEEE77A 		vcvt.u32.f32	s15, s15
+ARM GAS  /tmp/ccUgw8VC.s 			page 24
+
+
+ 842 00aa 17EE902A 		vmov	r2, s15	@ int
+ 843 00ae DA82     		strh	r2, [r3, #22]	@ movhi
+ 844 00b0 B6E7     		b	.L54
+ 845              	.L52:
+ 301:Core/Src/GT9147.c ****     {
+ 846              		.loc 1 301 5 is_stmt 1 view .LVU238
+ 301:Core/Src/GT9147.c ****     {
+ 847              		.loc 1 301 16 is_stmt 0 view .LVU239
+ 848 00b2 0C4B     		ldr	r3, .L59+4
+ 849 00b4 93F82020 		ldrb	r2, [r3, #32]	@ zero_extendqisi2
+ 301:Core/Src/GT9147.c ****     {
+ 850              		.loc 1 301 8 view .LVU240
+ 851 00b8 93F92030 		ldrsb	r3, [r3, #32]
+ 301:Core/Src/GT9147.c ****     {
+ 852              		.loc 1 301 7 view .LVU241
+ 853 00bc 002B     		cmp	r3, #0
+ 854 00be 08DB     		blt	.L58
+ 306:Core/Src/GT9147.c ****       touchdev.y[4]=0;
+ 855              		.loc 1 306 7 is_stmt 1 view .LVU242
+ 306:Core/Src/GT9147.c ****       touchdev.y[4]=0;
+ 856              		.loc 1 306 20 is_stmt 0 view .LVU243
+ 857 00c0 084B     		ldr	r3, .L59+4
+ 858 00c2 0022     		movs	r2, #0
+ 859 00c4 9A82     		strh	r2, [r3, #20]	@ movhi
+ 307:Core/Src/GT9147.c ****       touchdev.x[0]=0xffff;
+ 860              		.loc 1 307 7 is_stmt 1 view .LVU244
+ 307:Core/Src/GT9147.c ****       touchdev.x[0]=0xffff;
+ 861              		.loc 1 307 20 is_stmt 0 view .LVU245
+ 862 00c6 DA83     		strh	r2, [r3, #30]	@ movhi
+ 308:Core/Src/GT9147.c ****       touchdev.y[0]=0xffff;
+ 863              		.loc 1 308 7 is_stmt 1 view .LVU246
+ 308:Core/Src/GT9147.c ****       touchdev.y[0]=0xffff;
+ 864              		.loc 1 308 20 is_stmt 0 view .LVU247
+ 865 00c8 4FF6FF72 		movw	r2, #65535
+ 866 00cc 9A81     		strh	r2, [r3, #12]	@ movhi
+ 309:Core/Src/GT9147.c ****     }
+ 867              		.loc 1 309 7 is_stmt 1 view .LVU248
+ 309:Core/Src/GT9147.c ****     }
+ 868              		.loc 1 309 20 is_stmt 0 view .LVU249
+ 869 00ce DA82     		strh	r2, [r3, #22]	@ movhi
+ 870 00d0 B3E7     		b	.L55
+ 871              	.L58:
+ 303:Core/Src/GT9147.c ****     }else//之前就没有被按下
+ 872              		.loc 1 303 7 is_stmt 1 view .LVU250
+ 303:Core/Src/GT9147.c ****     }else//之前就没有被按下
+ 873              		.loc 1 303 19 is_stmt 0 view .LVU251
+ 874 00d2 02F07F02 		and	r2, r2, #127
+ 875 00d6 034B     		ldr	r3, .L59+4
+ 876 00d8 83F82020 		strb	r2, [r3, #32]
+ 877 00dc ADE7     		b	.L55
+ 878              	.L60:
+ 879 00de 00BF     		.align	2
+ 880              	.L59:
+ 881 00e0 00140240 		.word	1073878016
+ 882 00e4 00000000 		.word	.LANCHOR2
+ 883              		.cfi_endproc
+ 884              	.LFE141:
+ARM GAS  /tmp/ccUgw8VC.s 			page 25
+
+
+ 886              		.section	.text.CT_Delay,"ax",%progbits
+ 887              		.align	1
+ 888              		.global	CT_Delay
+ 889              		.syntax unified
+ 890              		.thumb
+ 891              		.thumb_func
+ 893              	CT_Delay:
+ 894              	.LFB146:
+ 395:Core/Src/GT9147.c **** 
+ 396:Core/Src/GT9147.c **** 
+ 397:Core/Src/GT9147.c **** void CT_Delay(void)
+ 398:Core/Src/GT9147.c **** {
+ 895              		.loc 1 398 1 is_stmt 1 view -0
+ 896              		.cfi_startproc
+ 897              		@ args = 0, pretend = 0, frame = 0
+ 898              		@ frame_needed = 0, uses_anonymous_args = 0
+ 899 0000 08B5     		push	{r3, lr}
+ 900              	.LCFI11:
+ 901              		.cfi_def_cfa_offset 8
+ 902              		.cfi_offset 3, -8
+ 903              		.cfi_offset 14, -4
+ 399:Core/Src/GT9147.c ****   delay_us(5);
+ 904              		.loc 1 399 3 view .LVU253
+ 905 0002 0520     		movs	r0, #5
+ 906 0004 FFF7FEFF 		bl	delay_us
+ 907              	.LVL90:
+ 400:Core/Src/GT9147.c **** }
+ 908              		.loc 1 400 1 is_stmt 0 view .LVU254
+ 909 0008 08BD     		pop	{r3, pc}
+ 910              		.cfi_endproc
+ 911              	.LFE146:
+ 913              		.section	.text.CT_IIC_Init,"ax",%progbits
+ 914              		.align	1
+ 915              		.global	CT_IIC_Init
+ 916              		.syntax unified
+ 917              		.thumb
+ 918              		.thumb_func
+ 920              	CT_IIC_Init:
+ 921              	.LFB147:
+ 401:Core/Src/GT9147.c **** //电容触摸芯片IIC接口初始化
+ 402:Core/Src/GT9147.c **** void CT_IIC_Init(void)
+ 403:Core/Src/GT9147.c **** {
+ 922              		.loc 1 403 1 is_stmt 1 view -0
+ 923              		.cfi_startproc
+ 924              		@ args = 0, pretend = 0, frame = 32
+ 925              		@ frame_needed = 0, uses_anonymous_args = 0
+ 926 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 927              	.LCFI12:
+ 928              		.cfi_def_cfa_offset 20
+ 929              		.cfi_offset 4, -20
+ 930              		.cfi_offset 5, -16
+ 931              		.cfi_offset 6, -12
+ 932              		.cfi_offset 7, -8
+ 933              		.cfi_offset 14, -4
+ 934 0002 89B0     		sub	sp, sp, #36
+ 935              	.LCFI13:
+ 936              		.cfi_def_cfa_offset 56
+ARM GAS  /tmp/ccUgw8VC.s 			page 26
+
+
+ 404:Core/Src/GT9147.c ****   GPIO_InitTypeDef GPIO_Initure;
+ 937              		.loc 1 404 3 view .LVU256
+ 405:Core/Src/GT9147.c **** 
+ 406:Core/Src/GT9147.c ****   __HAL_RCC_GPIOB_CLK_ENABLE();           	//开启GPIOB时钟
+ 938              		.loc 1 406 3 view .LVU257
+ 939              	.LBB2:
+ 940              		.loc 1 406 3 view .LVU258
+ 941 0004 0022     		movs	r2, #0
+ 942 0006 0092     		str	r2, [sp]
+ 943              		.loc 1 406 3 view .LVU259
+ 944 0008 214B     		ldr	r3, .L65
+ 945 000a 196B     		ldr	r1, [r3, #48]
+ 946 000c 41F00201 		orr	r1, r1, #2
+ 947 0010 1963     		str	r1, [r3, #48]
+ 948              		.loc 1 406 3 view .LVU260
+ 949 0012 196B     		ldr	r1, [r3, #48]
+ 950 0014 01F00201 		and	r1, r1, #2
+ 951 0018 0091     		str	r1, [sp]
+ 952              		.loc 1 406 3 view .LVU261
+ 953 001a 0099     		ldr	r1, [sp]
+ 954              	.LBE2:
+ 955              		.loc 1 406 3 view .LVU262
+ 407:Core/Src/GT9147.c ****   __HAL_RCC_GPIOF_CLK_ENABLE();           	//开启GPIOF时钟
+ 956              		.loc 1 407 3 view .LVU263
+ 957              	.LBB3:
+ 958              		.loc 1 407 3 view .LVU264
+ 959 001c 0192     		str	r2, [sp, #4]
+ 960              		.loc 1 407 3 view .LVU265
+ 961 001e 196B     		ldr	r1, [r3, #48]
+ 962 0020 41F02001 		orr	r1, r1, #32
+ 963 0024 1963     		str	r1, [r3, #48]
+ 964              		.loc 1 407 3 view .LVU266
+ 965 0026 196B     		ldr	r1, [r3, #48]
+ 966 0028 01F02001 		and	r1, r1, #32
+ 967 002c 0191     		str	r1, [sp, #4]
+ 968              		.loc 1 407 3 view .LVU267
+ 969 002e 0199     		ldr	r1, [sp, #4]
+ 970              	.LBE3:
+ 971              		.loc 1 407 3 view .LVU268
+ 408:Core/Src/GT9147.c ****   __HAL_RCC_GPIOC_CLK_ENABLE();           	//开启GPIOF时钟
+ 972              		.loc 1 408 3 view .LVU269
+ 973              	.LBB4:
+ 974              		.loc 1 408 3 view .LVU270
+ 975 0030 0292     		str	r2, [sp, #8]
+ 976              		.loc 1 408 3 view .LVU271
+ 977 0032 1A6B     		ldr	r2, [r3, #48]
+ 978 0034 42F00402 		orr	r2, r2, #4
+ 979 0038 1A63     		str	r2, [r3, #48]
+ 980              		.loc 1 408 3 view .LVU272
+ 981 003a 1B6B     		ldr	r3, [r3, #48]
+ 982 003c 03F00403 		and	r3, r3, #4
+ 983 0040 0293     		str	r3, [sp, #8]
+ 984              		.loc 1 408 3 view .LVU273
+ 985 0042 029B     		ldr	r3, [sp, #8]
+ 986              	.LBE4:
+ 987              		.loc 1 408 3 view .LVU274
+ 409:Core/Src/GT9147.c **** 
+ARM GAS  /tmp/ccUgw8VC.s 			page 27
+
+
+ 410:Core/Src/GT9147.c ****   GPIO_Initure.Pin=GPIO_PIN_0; 				//PB0
+ 988              		.loc 1 410 3 view .LVU275
+ 989              		.loc 1 410 19 is_stmt 0 view .LVU276
+ 990 0044 0124     		movs	r4, #1
+ 991 0046 0394     		str	r4, [sp, #12]
+ 411:Core/Src/GT9147.c ****   GPIO_Initure.Mode=GPIO_MODE_OUTPUT_PP;  	//推挽输出
+ 992              		.loc 1 411 3 is_stmt 1 view .LVU277
+ 993              		.loc 1 411 20 is_stmt 0 view .LVU278
+ 994 0048 0494     		str	r4, [sp, #16]
+ 412:Core/Src/GT9147.c ****   GPIO_Initure.Pull=GPIO_PULLUP;          	//上拉
+ 995              		.loc 1 412 3 is_stmt 1 view .LVU279
+ 996              		.loc 1 412 20 is_stmt 0 view .LVU280
+ 997 004a 0594     		str	r4, [sp, #20]
+ 413:Core/Src/GT9147.c ****   GPIO_Initure.Speed=GPIO_SPEED_FREQ_HIGH;    //高速
+ 998              		.loc 1 413 3 is_stmt 1 view .LVU281
+ 999              		.loc 1 413 21 is_stmt 0 view .LVU282
+ 1000 004c 0223     		movs	r3, #2
+ 1001 004e 0693     		str	r3, [sp, #24]
+ 414:Core/Src/GT9147.c ****   HAL_GPIO_Init(GPIOB,&GPIO_Initure);
+ 1002              		.loc 1 414 3 is_stmt 1 view .LVU283
+ 1003 0050 104D     		ldr	r5, .L65+4
+ 1004 0052 03A9     		add	r1, sp, #12
+ 1005 0054 2846     		mov	r0, r5
+ 1006 0056 FFF7FEFF 		bl	HAL_GPIO_Init
+ 1007              	.LVL91:
+ 415:Core/Src/GT9147.c **** 
+ 416:Core/Src/GT9147.c ****   GPIO_Initure.Pin=GPIO_PIN_11; 				//PF11
+ 1008              		.loc 1 416 3 view .LVU284
+ 1009              		.loc 1 416 19 is_stmt 0 view .LVU285
+ 1010 005a 4FF40067 		mov	r7, #2048
+ 1011 005e 0397     		str	r7, [sp, #12]
+ 417:Core/Src/GT9147.c ****   HAL_GPIO_Init(GPIOF,&GPIO_Initure);
+ 1012              		.loc 1 417 3 is_stmt 1 view .LVU286
+ 1013 0060 0D4E     		ldr	r6, .L65+8
+ 1014 0062 03A9     		add	r1, sp, #12
+ 1015 0064 3046     		mov	r0, r6
+ 1016 0066 FFF7FEFF 		bl	HAL_GPIO_Init
+ 1017              	.LVL92:
+ 418:Core/Src/GT9147.c **** 
+ 419:Core/Src/GT9147.c ****   GPIO_Initure.Pin=GPIO_PIN_13; 				//PC13
+ 1018              		.loc 1 419 3 view .LVU287
+ 1019              		.loc 1 419 19 is_stmt 0 view .LVU288
+ 1020 006a 4FF40053 		mov	r3, #8192
+ 1021 006e 0393     		str	r3, [sp, #12]
+ 420:Core/Src/GT9147.c ****   HAL_GPIO_Init(GPIOC,&GPIO_Initure);
+ 1022              		.loc 1 420 3 is_stmt 1 view .LVU289
+ 1023 0070 03A9     		add	r1, sp, #12
+ 1024 0072 0A48     		ldr	r0, .L65+12
+ 1025 0074 FFF7FEFF 		bl	HAL_GPIO_Init
+ 1026              	.LVL93:
+ 421:Core/Src/GT9147.c ****   
+ 422:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,GPIO_PIN_SET);
+ 1027              		.loc 1 422 3 view .LVU290
+ 1028 0078 2246     		mov	r2, r4
+ 1029 007a 3946     		mov	r1, r7
+ 1030 007c 3046     		mov	r0, r6
+ 1031 007e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ARM GAS  /tmp/ccUgw8VC.s 			page 28
+
+
+ 1032              	.LVL94:
+ 423:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);
+ 1033              		.loc 1 423 3 view .LVU291
+ 1034 0082 2246     		mov	r2, r4
+ 1035 0084 2146     		mov	r1, r4
+ 1036 0086 2846     		mov	r0, r5
+ 1037 0088 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1038              	.LVL95:
+ 424:Core/Src/GT9147.c ****   
+ 425:Core/Src/GT9147.c **** }
+ 1039              		.loc 1 425 1 is_stmt 0 view .LVU292
+ 1040 008c 09B0     		add	sp, sp, #36
+ 1041              	.LCFI14:
+ 1042              		.cfi_def_cfa_offset 20
+ 1043              		@ sp needed
+ 1044 008e F0BD     		pop	{r4, r5, r6, r7, pc}
+ 1045              	.L66:
+ 1046              		.align	2
+ 1047              	.L65:
+ 1048 0090 00380240 		.word	1073887232
+ 1049 0094 00040240 		.word	1073873920
+ 1050 0098 00140240 		.word	1073878016
+ 1051 009c 00080240 		.word	1073874944
+ 1052              		.cfi_endproc
+ 1053              	.LFE147:
+ 1055              		.section	.text.CT_IIC_Start,"ax",%progbits
+ 1056              		.align	1
+ 1057              		.global	CT_IIC_Start
+ 1058              		.syntax unified
+ 1059              		.thumb
+ 1060              		.thumb_func
+ 1062              	CT_IIC_Start:
+ 1063              	.LFB148:
+ 426:Core/Src/GT9147.c **** //产生IIC起始信号
+ 427:Core/Src/GT9147.c **** void CT_IIC_Start(void)
+ 428:Core/Src/GT9147.c **** {
+ 1064              		.loc 1 428 1 is_stmt 1 view -0
+ 1065              		.cfi_startproc
+ 1066              		@ args = 0, pretend = 0, frame = 0
+ 1067              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1068 0000 38B5     		push	{r3, r4, r5, lr}
+ 1069              	.LCFI15:
+ 1070              		.cfi_def_cfa_offset 16
+ 1071              		.cfi_offset 3, -16
+ 1072              		.cfi_offset 4, -12
+ 1073              		.cfi_offset 5, -8
+ 1074              		.cfi_offset 14, -4
+ 429:Core/Src/GT9147.c ****   CT_SDA_OUT();     //sda线输出
+ 1075              		.loc 1 429 3 view .LVU294
+ 1076 0002 134C     		ldr	r4, .L69
+ 1077 0004 2368     		ldr	r3, [r4]
+ 1078 0006 23F44003 		bic	r3, r3, #12582912
+ 1079 000a 2360     		str	r3, [r4]
+ 1080              		.loc 1 429 3 view .LVU295
+ 1081 000c 2368     		ldr	r3, [r4]
+ 1082 000e 43F48003 		orr	r3, r3, #4194304
+ 1083 0012 2360     		str	r3, [r4]
+ARM GAS  /tmp/ccUgw8VC.s 			page 29
+
+
+ 1084              		.loc 1 429 15 view .LVU296
+ 430:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,GPIO_PIN_SET);
+ 1085              		.loc 1 430 3 view .LVU297
+ 1086 0014 0122     		movs	r2, #1
+ 1087 0016 4FF40061 		mov	r1, #2048
+ 1088 001a 2046     		mov	r0, r4
+ 1089 001c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1090              	.LVL96:
+ 431:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);
+ 1091              		.loc 1 431 3 view .LVU298
+ 1092 0020 0C4D     		ldr	r5, .L69+4
+ 1093 0022 0122     		movs	r2, #1
+ 1094 0024 1146     		mov	r1, r2
+ 1095 0026 2846     		mov	r0, r5
+ 1096 0028 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1097              	.LVL97:
+ 432:Core/Src/GT9147.c ****   delay_us(30);
+ 1098              		.loc 1 432 3 view .LVU299
+ 1099 002c 1E20     		movs	r0, #30
+ 1100 002e FFF7FEFF 		bl	delay_us
+ 1101              	.LVL98:
+ 433:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,GPIO_PIN_RESET);//START:when CLK is high,DATA change form hig
+ 1102              		.loc 1 433 3 view .LVU300
+ 1103 0032 0022     		movs	r2, #0
+ 1104 0034 4FF40061 		mov	r1, #2048
+ 1105 0038 2046     		mov	r0, r4
+ 1106 003a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1107              	.LVL99:
+ 434:Core/Src/GT9147.c ****   CT_Delay();
+ 1108              		.loc 1 434 3 view .LVU301
+ 1109 003e FFF7FEFF 		bl	CT_Delay
+ 1110              	.LVL100:
+ 435:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);//钳住I2C总线，准备发送或接收数�
+ 1111              		.loc 1 435 3 view .LVU302
+ 1112 0042 0022     		movs	r2, #0
+ 1113 0044 0121     		movs	r1, #1
+ 1114 0046 2846     		mov	r0, r5
+ 1115 0048 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1116              	.LVL101:
+ 436:Core/Src/GT9147.c **** }
+ 1117              		.loc 1 436 1 is_stmt 0 view .LVU303
+ 1118 004c 38BD     		pop	{r3, r4, r5, pc}
+ 1119              	.L70:
+ 1120 004e 00BF     		.align	2
+ 1121              	.L69:
+ 1122 0050 00140240 		.word	1073878016
+ 1123 0054 00040240 		.word	1073873920
+ 1124              		.cfi_endproc
+ 1125              	.LFE148:
+ 1127              		.section	.text.CT_IIC_Stop,"ax",%progbits
+ 1128              		.align	1
+ 1129              		.global	CT_IIC_Stop
+ 1130              		.syntax unified
+ 1131              		.thumb
+ 1132              		.thumb_func
+ 1134              	CT_IIC_Stop:
+ 1135              	.LFB149:
+ARM GAS  /tmp/ccUgw8VC.s 			page 30
+
+
+ 437:Core/Src/GT9147.c **** //产生IIC停止信号
+ 438:Core/Src/GT9147.c **** void CT_IIC_Stop(void)
+ 439:Core/Src/GT9147.c **** {
+ 1136              		.loc 1 439 1 is_stmt 1 view -0
+ 1137              		.cfi_startproc
+ 1138              		@ args = 0, pretend = 0, frame = 0
+ 1139              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1140 0000 10B5     		push	{r4, lr}
+ 1141              	.LCFI16:
+ 1142              		.cfi_def_cfa_offset 8
+ 1143              		.cfi_offset 4, -8
+ 1144              		.cfi_offset 14, -4
+ 440:Core/Src/GT9147.c ****   CT_SDA_OUT();//sda线输出
+ 1145              		.loc 1 440 3 view .LVU305
+ 1146 0002 104C     		ldr	r4, .L73
+ 1147 0004 2368     		ldr	r3, [r4]
+ 1148 0006 23F44003 		bic	r3, r3, #12582912
+ 1149 000a 2360     		str	r3, [r4]
+ 1150              		.loc 1 440 3 view .LVU306
+ 1151 000c 2368     		ldr	r3, [r4]
+ 1152 000e 43F48003 		orr	r3, r3, #4194304
+ 1153 0012 2360     		str	r3, [r4]
+ 1154              		.loc 1 440 15 view .LVU307
+ 441:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);
+ 1155              		.loc 1 441 3 view .LVU308
+ 1156 0014 0122     		movs	r2, #1
+ 1157 0016 1146     		mov	r1, r2
+ 1158 0018 0B48     		ldr	r0, .L73+4
+ 1159 001a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1160              	.LVL102:
+ 442:Core/Src/GT9147.c ****   delay_us(30);
+ 1161              		.loc 1 442 3 view .LVU309
+ 1162 001e 1E20     		movs	r0, #30
+ 1163 0020 FFF7FEFF 		bl	delay_us
+ 1164              	.LVL103:
+ 443:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,GPIO_PIN_RESET);//STOP:when CLK is high DATA change form low 
+ 1165              		.loc 1 443 3 view .LVU310
+ 1166 0024 0022     		movs	r2, #0
+ 1167 0026 4FF40061 		mov	r1, #2048
+ 1168 002a 2046     		mov	r0, r4
+ 1169 002c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1170              	.LVL104:
+ 444:Core/Src/GT9147.c ****   CT_Delay();
+ 1171              		.loc 1 444 3 view .LVU311
+ 1172 0030 FFF7FEFF 		bl	CT_Delay
+ 1173              	.LVL105:
+ 445:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,GPIO_PIN_SET);//发送I2C总线结束信号
+ 1174              		.loc 1 445 3 view .LVU312
+ 1175 0034 0122     		movs	r2, #1
+ 1176 0036 4FF40061 		mov	r1, #2048
+ 1177 003a 2046     		mov	r0, r4
+ 1178 003c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1179              	.LVL106:
+ 446:Core/Src/GT9147.c **** }
+ 1180              		.loc 1 446 1 is_stmt 0 view .LVU313
+ 1181 0040 10BD     		pop	{r4, pc}
+ 1182              	.L74:
+ARM GAS  /tmp/ccUgw8VC.s 			page 31
+
+
+ 1183 0042 00BF     		.align	2
+ 1184              	.L73:
+ 1185 0044 00140240 		.word	1073878016
+ 1186 0048 00040240 		.word	1073873920
+ 1187              		.cfi_endproc
+ 1188              	.LFE149:
+ 1190              		.section	.text.CT_IIC_Wait_Ack,"ax",%progbits
+ 1191              		.align	1
+ 1192              		.global	CT_IIC_Wait_Ack
+ 1193              		.syntax unified
+ 1194              		.thumb
+ 1195              		.thumb_func
+ 1197              	CT_IIC_Wait_Ack:
+ 1198              	.LFB150:
+ 447:Core/Src/GT9147.c **** //等待应答信号到来
+ 448:Core/Src/GT9147.c **** //返回值：1，接收应答失败
+ 449:Core/Src/GT9147.c **** //        0，接收应答成功
+ 450:Core/Src/GT9147.c **** uint8_t CT_IIC_Wait_Ack(void)
+ 451:Core/Src/GT9147.c **** {
+ 1199              		.loc 1 451 1 is_stmt 1 view -0
+ 1200              		.cfi_startproc
+ 1201              		@ args = 0, pretend = 0, frame = 0
+ 1202              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1203 0000 38B5     		push	{r3, r4, r5, lr}
+ 1204              	.LCFI17:
+ 1205              		.cfi_def_cfa_offset 16
+ 1206              		.cfi_offset 3, -16
+ 1207              		.cfi_offset 4, -12
+ 1208              		.cfi_offset 5, -8
+ 1209              		.cfi_offset 14, -4
+ 452:Core/Src/GT9147.c ****   uint8_t ucErrTime=0;
+ 1210              		.loc 1 452 3 view .LVU315
+ 1211              	.LVL107:
+ 453:Core/Src/GT9147.c ****   CT_SDA_IN();      //SDA设置为输入
+ 1212              		.loc 1 453 3 view .LVU316
+ 1213 0002 1748     		ldr	r0, .L83
+ 1214 0004 0368     		ldr	r3, [r0]
+ 1215 0006 23F44003 		bic	r3, r3, #12582912
+ 1216 000a 0360     		str	r3, [r0]
+ 1217              		.loc 1 453 3 view .LVU317
+ 1218 000c 0368     		ldr	r3, [r0]
+ 1219 000e 0360     		str	r3, [r0]
+ 1220              		.loc 1 453 14 view .LVU318
+ 454:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,GPIO_PIN_SET);
+ 1221              		.loc 1 454 3 view .LVU319
+ 1222 0010 0122     		movs	r2, #1
+ 1223 0012 4FF40061 		mov	r1, #2048
+ 1224 0016 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1225              	.LVL108:
+ 455:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);
+ 1226              		.loc 1 455 3 view .LVU320
+ 1227 001a 0122     		movs	r2, #1
+ 1228 001c 1146     		mov	r1, r2
+ 1229 001e 1148     		ldr	r0, .L83+4
+ 1230 0020 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1231              	.LVL109:
+ 456:Core/Src/GT9147.c ****   CT_Delay();
+ARM GAS  /tmp/ccUgw8VC.s 			page 32
+
+
+ 1232              		.loc 1 456 3 view .LVU321
+ 1233 0024 FFF7FEFF 		bl	CT_Delay
+ 1234              	.LVL110:
+ 457:Core/Src/GT9147.c ****   while(HAL_GPIO_ReadPin(GPIOF,GPIO_PIN_11)==GPIO_PIN_SET)
+ 1235              		.loc 1 457 3 view .LVU322
+ 452:Core/Src/GT9147.c ****   CT_SDA_IN();      //SDA设置为输入
+ 1236              		.loc 1 452 11 is_stmt 0 view .LVU323
+ 1237 0028 0024     		movs	r4, #0
+ 1238              	.LVL111:
+ 1239              	.L76:
+ 1240              		.loc 1 457 8 is_stmt 1 view .LVU324
+ 1241              		.loc 1 457 9 is_stmt 0 view .LVU325
+ 1242 002a 4FF40061 		mov	r1, #2048
+ 1243 002e 0C48     		ldr	r0, .L83
+ 1244 0030 FFF7FEFF 		bl	HAL_GPIO_ReadPin
+ 1245              	.LVL112:
+ 1246 0034 0546     		mov	r5, r0
+ 1247              		.loc 1 457 8 view .LVU326
+ 1248 0036 0128     		cmp	r0, #1
+ 1249 0038 09D1     		bne	.L81
+ 458:Core/Src/GT9147.c ****   {
+ 459:Core/Src/GT9147.c ****     ucErrTime++;
+ 1250              		.loc 1 459 5 is_stmt 1 view .LVU327
+ 1251              		.loc 1 459 14 is_stmt 0 view .LVU328
+ 1252 003a 0134     		adds	r4, r4, #1
+ 1253              	.LVL113:
+ 1254              		.loc 1 459 14 view .LVU329
+ 1255 003c E4B2     		uxtb	r4, r4
+ 1256              	.LVL114:
+ 460:Core/Src/GT9147.c ****     if(ucErrTime>250)
+ 1257              		.loc 1 460 5 is_stmt 1 view .LVU330
+ 1258              		.loc 1 460 7 is_stmt 0 view .LVU331
+ 1259 003e FA2C     		cmp	r4, #250
+ 1260 0040 02D8     		bhi	.L82
+ 461:Core/Src/GT9147.c ****     {
+ 462:Core/Src/GT9147.c ****       CT_IIC_Stop();
+ 463:Core/Src/GT9147.c ****       return 1;
+ 464:Core/Src/GT9147.c ****     }
+ 465:Core/Src/GT9147.c ****     CT_Delay();
+ 1261              		.loc 1 465 5 is_stmt 1 view .LVU332
+ 1262 0042 FFF7FEFF 		bl	CT_Delay
+ 1263              	.LVL115:
+ 1264 0046 F0E7     		b	.L76
+ 1265              	.L82:
+ 462:Core/Src/GT9147.c ****       return 1;
+ 1266              		.loc 1 462 7 view .LVU333
+ 1267 0048 FFF7FEFF 		bl	CT_IIC_Stop
+ 1268              	.LVL116:
+ 463:Core/Src/GT9147.c ****     }
+ 1269              		.loc 1 463 7 view .LVU334
+ 463:Core/Src/GT9147.c ****     }
+ 1270              		.loc 1 463 14 is_stmt 0 view .LVU335
+ 1271 004c 05E0     		b	.L78
+ 1272              	.L81:
+ 466:Core/Src/GT9147.c ****   }
+ 467:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);//时钟输出0
+ 1273              		.loc 1 467 3 is_stmt 1 view .LVU336
+ARM GAS  /tmp/ccUgw8VC.s 			page 33
+
+
+ 1274 004e 0022     		movs	r2, #0
+ 1275 0050 0121     		movs	r1, #1
+ 1276 0052 0448     		ldr	r0, .L83+4
+ 1277 0054 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1278              	.LVL117:
+ 468:Core/Src/GT9147.c ****   return 0;
+ 1279              		.loc 1 468 3 view .LVU337
+ 1280              		.loc 1 468 10 is_stmt 0 view .LVU338
+ 1281 0058 0025     		movs	r5, #0
+ 1282              	.L78:
+ 469:Core/Src/GT9147.c **** }
+ 1283              		.loc 1 469 1 view .LVU339
+ 1284 005a 2846     		mov	r0, r5
+ 1285 005c 38BD     		pop	{r3, r4, r5, pc}
+ 1286              	.LVL118:
+ 1287              	.L84:
+ 1288              		.loc 1 469 1 view .LVU340
+ 1289 005e 00BF     		.align	2
+ 1290              	.L83:
+ 1291 0060 00140240 		.word	1073878016
+ 1292 0064 00040240 		.word	1073873920
+ 1293              		.cfi_endproc
+ 1294              	.LFE150:
+ 1296              		.section	.text.CT_IIC_Ack,"ax",%progbits
+ 1297              		.align	1
+ 1298              		.global	CT_IIC_Ack
+ 1299              		.syntax unified
+ 1300              		.thumb
+ 1301              		.thumb_func
+ 1303              	CT_IIC_Ack:
+ 1304              	.LFB151:
+ 470:Core/Src/GT9147.c **** //产生ACK应答
+ 471:Core/Src/GT9147.c **** void CT_IIC_Ack(void)
+ 472:Core/Src/GT9147.c **** {
+ 1305              		.loc 1 472 1 is_stmt 1 view -0
+ 1306              		.cfi_startproc
+ 1307              		@ args = 0, pretend = 0, frame = 0
+ 1308              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1309 0000 38B5     		push	{r3, r4, r5, lr}
+ 1310              	.LCFI18:
+ 1311              		.cfi_def_cfa_offset 16
+ 1312              		.cfi_offset 3, -16
+ 1313              		.cfi_offset 4, -12
+ 1314              		.cfi_offset 5, -8
+ 1315              		.cfi_offset 14, -4
+ 473:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);
+ 1316              		.loc 1 473 3 view .LVU342
+ 1317 0002 134D     		ldr	r5, .L87
+ 1318 0004 0022     		movs	r2, #0
+ 1319 0006 0121     		movs	r1, #1
+ 1320 0008 2846     		mov	r0, r5
+ 1321 000a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1322              	.LVL119:
+ 474:Core/Src/GT9147.c ****   CT_SDA_OUT();
+ 1323              		.loc 1 474 3 view .LVU343
+ 1324 000e 114C     		ldr	r4, .L87+4
+ 1325 0010 2368     		ldr	r3, [r4]
+ARM GAS  /tmp/ccUgw8VC.s 			page 34
+
+
+ 1326 0012 23F44003 		bic	r3, r3, #12582912
+ 1327 0016 2360     		str	r3, [r4]
+ 1328              		.loc 1 474 3 view .LVU344
+ 1329 0018 2368     		ldr	r3, [r4]
+ 1330 001a 43F48003 		orr	r3, r3, #4194304
+ 1331 001e 2360     		str	r3, [r4]
+ 1332              		.loc 1 474 15 view .LVU345
+ 475:Core/Src/GT9147.c ****   CT_Delay();
+ 1333              		.loc 1 475 3 view .LVU346
+ 1334 0020 FFF7FEFF 		bl	CT_Delay
+ 1335              	.LVL120:
+ 476:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,GPIO_PIN_RESET);
+ 1336              		.loc 1 476 3 view .LVU347
+ 1337 0024 0022     		movs	r2, #0
+ 1338 0026 4FF40061 		mov	r1, #2048
+ 1339 002a 2046     		mov	r0, r4
+ 1340 002c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1341              	.LVL121:
+ 477:Core/Src/GT9147.c ****   CT_Delay();
+ 1342              		.loc 1 477 3 view .LVU348
+ 1343 0030 FFF7FEFF 		bl	CT_Delay
+ 1344              	.LVL122:
+ 478:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);
+ 1345              		.loc 1 478 3 view .LVU349
+ 1346 0034 0122     		movs	r2, #1
+ 1347 0036 1146     		mov	r1, r2
+ 1348 0038 2846     		mov	r0, r5
+ 1349 003a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1350              	.LVL123:
+ 479:Core/Src/GT9147.c ****   CT_Delay();
+ 1351              		.loc 1 479 3 view .LVU350
+ 1352 003e FFF7FEFF 		bl	CT_Delay
+ 1353              	.LVL124:
+ 480:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);
+ 1354              		.loc 1 480 3 view .LVU351
+ 1355 0042 0022     		movs	r2, #0
+ 1356 0044 0121     		movs	r1, #1
+ 1357 0046 2846     		mov	r0, r5
+ 1358 0048 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1359              	.LVL125:
+ 481:Core/Src/GT9147.c **** }
+ 1360              		.loc 1 481 1 is_stmt 0 view .LVU352
+ 1361 004c 38BD     		pop	{r3, r4, r5, pc}
+ 1362              	.L88:
+ 1363 004e 00BF     		.align	2
+ 1364              	.L87:
+ 1365 0050 00040240 		.word	1073873920
+ 1366 0054 00140240 		.word	1073878016
+ 1367              		.cfi_endproc
+ 1368              	.LFE151:
+ 1370              		.section	.text.CT_IIC_NAck,"ax",%progbits
+ 1371              		.align	1
+ 1372              		.global	CT_IIC_NAck
+ 1373              		.syntax unified
+ 1374              		.thumb
+ 1375              		.thumb_func
+ 1377              	CT_IIC_NAck:
+ARM GAS  /tmp/ccUgw8VC.s 			page 35
+
+
+ 1378              	.LFB152:
+ 482:Core/Src/GT9147.c **** //不产生ACK应答
+ 483:Core/Src/GT9147.c **** void CT_IIC_NAck(void)
+ 484:Core/Src/GT9147.c **** {
+ 1379              		.loc 1 484 1 is_stmt 1 view -0
+ 1380              		.cfi_startproc
+ 1381              		@ args = 0, pretend = 0, frame = 0
+ 1382              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1383 0000 38B5     		push	{r3, r4, r5, lr}
+ 1384              	.LCFI19:
+ 1385              		.cfi_def_cfa_offset 16
+ 1386              		.cfi_offset 3, -16
+ 1387              		.cfi_offset 4, -12
+ 1388              		.cfi_offset 5, -8
+ 1389              		.cfi_offset 14, -4
+ 485:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);
+ 1390              		.loc 1 485 3 view .LVU354
+ 1391 0002 134D     		ldr	r5, .L91
+ 1392 0004 0022     		movs	r2, #0
+ 1393 0006 0121     		movs	r1, #1
+ 1394 0008 2846     		mov	r0, r5
+ 1395 000a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1396              	.LVL126:
+ 486:Core/Src/GT9147.c ****   CT_SDA_OUT();
+ 1397              		.loc 1 486 3 view .LVU355
+ 1398 000e 114C     		ldr	r4, .L91+4
+ 1399 0010 2368     		ldr	r3, [r4]
+ 1400 0012 23F44003 		bic	r3, r3, #12582912
+ 1401 0016 2360     		str	r3, [r4]
+ 1402              		.loc 1 486 3 view .LVU356
+ 1403 0018 2368     		ldr	r3, [r4]
+ 1404 001a 43F48003 		orr	r3, r3, #4194304
+ 1405 001e 2360     		str	r3, [r4]
+ 1406              		.loc 1 486 15 view .LVU357
+ 487:Core/Src/GT9147.c ****   CT_Delay();
+ 1407              		.loc 1 487 3 view .LVU358
+ 1408 0020 FFF7FEFF 		bl	CT_Delay
+ 1409              	.LVL127:
+ 488:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,GPIO_PIN_SET);
+ 1410              		.loc 1 488 3 view .LVU359
+ 1411 0024 0122     		movs	r2, #1
+ 1412 0026 4FF40061 		mov	r1, #2048
+ 1413 002a 2046     		mov	r0, r4
+ 1414 002c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1415              	.LVL128:
+ 489:Core/Src/GT9147.c ****   CT_Delay();
+ 1416              		.loc 1 489 3 view .LVU360
+ 1417 0030 FFF7FEFF 		bl	CT_Delay
+ 1418              	.LVL129:
+ 490:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);
+ 1419              		.loc 1 490 3 view .LVU361
+ 1420 0034 0122     		movs	r2, #1
+ 1421 0036 1146     		mov	r1, r2
+ 1422 0038 2846     		mov	r0, r5
+ 1423 003a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1424              	.LVL130:
+ 491:Core/Src/GT9147.c ****   CT_Delay();
+ARM GAS  /tmp/ccUgw8VC.s 			page 36
+
+
+ 1425              		.loc 1 491 3 view .LVU362
+ 1426 003e FFF7FEFF 		bl	CT_Delay
+ 1427              	.LVL131:
+ 492:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);
+ 1428              		.loc 1 492 3 view .LVU363
+ 1429 0042 0022     		movs	r2, #0
+ 1430 0044 0121     		movs	r1, #1
+ 1431 0046 2846     		mov	r0, r5
+ 1432 0048 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1433              	.LVL132:
+ 493:Core/Src/GT9147.c **** }
+ 1434              		.loc 1 493 1 is_stmt 0 view .LVU364
+ 1435 004c 38BD     		pop	{r3, r4, r5, pc}
+ 1436              	.L92:
+ 1437 004e 00BF     		.align	2
+ 1438              	.L91:
+ 1439 0050 00040240 		.word	1073873920
+ 1440 0054 00140240 		.word	1073878016
+ 1441              		.cfi_endproc
+ 1442              	.LFE152:
+ 1444              		.section	.text.CT_IIC_Send_Byte,"ax",%progbits
+ 1445              		.align	1
+ 1446              		.global	CT_IIC_Send_Byte
+ 1447              		.syntax unified
+ 1448              		.thumb
+ 1449              		.thumb_func
+ 1451              	CT_IIC_Send_Byte:
+ 1452              	.LVL133:
+ 1453              	.LFB153:
+ 494:Core/Src/GT9147.c **** //IIC发送一个字节
+ 495:Core/Src/GT9147.c **** //返回从机有无应答
+ 496:Core/Src/GT9147.c **** //1，有应答
+ 497:Core/Src/GT9147.c **** //0，无应答
+ 498:Core/Src/GT9147.c **** void CT_IIC_Send_Byte(uint8_t txd)
+ 499:Core/Src/GT9147.c **** {
+ 1454              		.loc 1 499 1 is_stmt 1 view -0
+ 1455              		.cfi_startproc
+ 1456              		@ args = 0, pretend = 0, frame = 0
+ 1457              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1458              		.loc 1 499 1 is_stmt 0 view .LVU366
+ 1459 0000 70B5     		push	{r4, r5, r6, lr}
+ 1460              	.LCFI20:
+ 1461              		.cfi_def_cfa_offset 16
+ 1462              		.cfi_offset 4, -16
+ 1463              		.cfi_offset 5, -12
+ 1464              		.cfi_offset 6, -8
+ 1465              		.cfi_offset 14, -4
+ 1466 0002 0446     		mov	r4, r0
+ 500:Core/Src/GT9147.c ****   uint8_t t;
+ 1467              		.loc 1 500 3 is_stmt 1 view .LVU367
+ 501:Core/Src/GT9147.c ****   CT_SDA_OUT();
+ 1468              		.loc 1 501 3 view .LVU368
+ 1469 0004 164B     		ldr	r3, .L97
+ 1470 0006 1A68     		ldr	r2, [r3]
+ 1471 0008 22F44002 		bic	r2, r2, #12582912
+ 1472 000c 1A60     		str	r2, [r3]
+ 1473              		.loc 1 501 3 view .LVU369
+ARM GAS  /tmp/ccUgw8VC.s 			page 37
+
+
+ 1474 000e 1A68     		ldr	r2, [r3]
+ 1475 0010 42F48002 		orr	r2, r2, #4194304
+ 1476 0014 1A60     		str	r2, [r3]
+ 1477              		.loc 1 501 15 view .LVU370
+ 502:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);//拉低时钟开始数据传输
+ 1478              		.loc 1 502 3 view .LVU371
+ 1479 0016 0022     		movs	r2, #0
+ 1480 0018 0121     		movs	r1, #1
+ 1481 001a 1248     		ldr	r0, .L97+4
+ 1482              	.LVL134:
+ 1483              		.loc 1 502 3 is_stmt 0 view .LVU372
+ 1484 001c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1485              	.LVL135:
+ 503:Core/Src/GT9147.c ****   CT_Delay();
+ 1486              		.loc 1 503 3 is_stmt 1 view .LVU373
+ 1487 0020 FFF7FEFF 		bl	CT_Delay
+ 1488              	.LVL136:
+ 504:Core/Src/GT9147.c ****   for(t=0;t<8;t++)
+ 1489              		.loc 1 504 3 view .LVU374
+ 1490              		.loc 1 504 8 is_stmt 0 view .LVU375
+ 1491 0024 0025     		movs	r5, #0
+ 1492              		.loc 1 504 3 view .LVU376
+ 1493 0026 18E0     		b	.L94
+ 1494              	.LVL137:
+ 1495              	.L95:
+ 505:Core/Src/GT9147.c ****   {
+ 506:Core/Src/GT9147.c ****     HAL_GPIO_WritePin(GPIOF,GPIO_PIN_11,(txd&0x80)>>7);
+ 1496              		.loc 1 506 5 is_stmt 1 discriminator 3 view .LVU377
+ 1497 0028 E209     		lsrs	r2, r4, #7
+ 1498 002a 4FF40061 		mov	r1, #2048
+ 1499 002e 0C48     		ldr	r0, .L97
+ 1500 0030 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1501              	.LVL138:
+ 507:Core/Src/GT9147.c ****     txd<<=1;
+ 1502              		.loc 1 507 5 discriminator 3 view .LVU378
+ 1503              		.loc 1 507 8 is_stmt 0 discriminator 3 view .LVU379
+ 1504 0034 6400     		lsls	r4, r4, #1
+ 1505              	.LVL139:
+ 1506              		.loc 1 507 8 discriminator 3 view .LVU380
+ 1507 0036 E4B2     		uxtb	r4, r4
+ 1508              	.LVL140:
+ 508:Core/Src/GT9147.c ****     HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);
+ 1509              		.loc 1 508 5 is_stmt 1 discriminator 3 view .LVU381
+ 1510 0038 0A4E     		ldr	r6, .L97+4
+ 1511 003a 0122     		movs	r2, #1
+ 1512 003c 1146     		mov	r1, r2
+ 1513 003e 3046     		mov	r0, r6
+ 1514 0040 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1515              	.LVL141:
+ 509:Core/Src/GT9147.c ****     CT_Delay();
+ 1516              		.loc 1 509 5 discriminator 3 view .LVU382
+ 1517 0044 FFF7FEFF 		bl	CT_Delay
+ 1518              	.LVL142:
+ 510:Core/Src/GT9147.c ****     HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);
+ 1519              		.loc 1 510 5 discriminator 3 view .LVU383
+ 1520 0048 0022     		movs	r2, #0
+ 1521 004a 0121     		movs	r1, #1
+ARM GAS  /tmp/ccUgw8VC.s 			page 38
+
+
+ 1522 004c 3046     		mov	r0, r6
+ 1523 004e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1524              	.LVL143:
+ 511:Core/Src/GT9147.c ****     CT_Delay();
+ 1525              		.loc 1 511 5 discriminator 3 view .LVU384
+ 1526 0052 FFF7FEFF 		bl	CT_Delay
+ 1527              	.LVL144:
+ 504:Core/Src/GT9147.c ****   {
+ 1528              		.loc 1 504 15 discriminator 3 view .LVU385
+ 504:Core/Src/GT9147.c ****   {
+ 1529              		.loc 1 504 16 is_stmt 0 discriminator 3 view .LVU386
+ 1530 0056 0135     		adds	r5, r5, #1
+ 1531              	.LVL145:
+ 504:Core/Src/GT9147.c ****   {
+ 1532              		.loc 1 504 16 discriminator 3 view .LVU387
+ 1533 0058 EDB2     		uxtb	r5, r5
+ 1534              	.LVL146:
+ 1535              	.L94:
+ 504:Core/Src/GT9147.c ****   {
+ 1536              		.loc 1 504 11 is_stmt 1 discriminator 1 view .LVU388
+ 504:Core/Src/GT9147.c ****   {
+ 1537              		.loc 1 504 3 is_stmt 0 discriminator 1 view .LVU389
+ 1538 005a 072D     		cmp	r5, #7
+ 1539 005c E4D9     		bls	.L95
+ 512:Core/Src/GT9147.c ****   }
+ 513:Core/Src/GT9147.c **** }
+ 1540              		.loc 1 513 1 view .LVU390
+ 1541 005e 70BD     		pop	{r4, r5, r6, pc}
+ 1542              	.LVL147:
+ 1543              	.L98:
+ 1544              		.loc 1 513 1 view .LVU391
+ 1545              		.align	2
+ 1546              	.L97:
+ 1547 0060 00140240 		.word	1073878016
+ 1548 0064 00040240 		.word	1073873920
+ 1549              		.cfi_endproc
+ 1550              	.LFE153:
+ 1552              		.section	.text.GT9147_WR_Reg,"ax",%progbits
+ 1553              		.align	1
+ 1554              		.global	GT9147_WR_Reg
+ 1555              		.syntax unified
+ 1556              		.thumb
+ 1557              		.thumb_func
+ 1559              	GT9147_WR_Reg:
+ 1560              	.LVL148:
+ 1561              	.LFB135:
+ 126:Core/Src/GT9147.c ****   uint8_t i;
+ 1562              		.loc 1 126 1 is_stmt 1 view -0
+ 1563              		.cfi_startproc
+ 1564              		@ args = 0, pretend = 0, frame = 0
+ 1565              		@ frame_needed = 0, uses_anonymous_args = 0
+ 126:Core/Src/GT9147.c ****   uint8_t i;
+ 1566              		.loc 1 126 1 is_stmt 0 view .LVU393
+ 1567 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 1568              	.LCFI21:
+ 1569              		.cfi_def_cfa_offset 24
+ 1570              		.cfi_offset 3, -24
+ARM GAS  /tmp/ccUgw8VC.s 			page 39
+
+
+ 1571              		.cfi_offset 4, -20
+ 1572              		.cfi_offset 5, -16
+ 1573              		.cfi_offset 6, -12
+ 1574              		.cfi_offset 7, -8
+ 1575              		.cfi_offset 14, -4
+ 1576 0002 0446     		mov	r4, r0
+ 1577 0004 0F46     		mov	r7, r1
+ 1578 0006 1546     		mov	r5, r2
+ 127:Core/Src/GT9147.c ****   uint8_t ret=0;
+ 1579              		.loc 1 127 3 is_stmt 1 view .LVU394
+ 128:Core/Src/GT9147.c ****   CT_IIC_Start();
+ 1580              		.loc 1 128 3 view .LVU395
+ 1581              	.LVL149:
+ 129:Core/Src/GT9147.c ****   CT_IIC_Send_Byte(GT_CMD_WR);   	//发送写命令
+ 1582              		.loc 1 129 3 view .LVU396
+ 1583 0008 FFF7FEFF 		bl	CT_IIC_Start
+ 1584              	.LVL150:
+ 130:Core/Src/GT9147.c ****   CT_IIC_Wait_Ack();
+ 1585              		.loc 1 130 3 view .LVU397
+ 1586 000c 2820     		movs	r0, #40
+ 1587 000e FFF7FEFF 		bl	CT_IIC_Send_Byte
+ 1588              	.LVL151:
+ 131:Core/Src/GT9147.c ****   CT_IIC_Send_Byte(reg>>8);   	//发送高8位地址
+ 1589              		.loc 1 131 3 view .LVU398
+ 1590 0012 FFF7FEFF 		bl	CT_IIC_Wait_Ack
+ 1591              	.LVL152:
+ 132:Core/Src/GT9147.c ****   CT_IIC_Wait_Ack();
+ 1592              		.loc 1 132 3 view .LVU399
+ 1593 0016 200A     		lsrs	r0, r4, #8
+ 1594 0018 FFF7FEFF 		bl	CT_IIC_Send_Byte
+ 1595              	.LVL153:
+ 133:Core/Src/GT9147.c ****   CT_IIC_Send_Byte(reg&0XFF);   	//发送低8位地址
+ 1596              		.loc 1 133 3 view .LVU400
+ 1597 001c FFF7FEFF 		bl	CT_IIC_Wait_Ack
+ 1598              	.LVL154:
+ 134:Core/Src/GT9147.c ****   CT_IIC_Wait_Ack();
+ 1599              		.loc 1 134 3 view .LVU401
+ 1600 0020 E0B2     		uxtb	r0, r4
+ 1601 0022 FFF7FEFF 		bl	CT_IIC_Send_Byte
+ 1602              	.LVL155:
+ 135:Core/Src/GT9147.c ****   for(i=0;i<len;i++)
+ 1603              		.loc 1 135 3 view .LVU402
+ 1604 0026 FFF7FEFF 		bl	CT_IIC_Wait_Ack
+ 1605              	.LVL156:
+ 136:Core/Src/GT9147.c ****   {
+ 1606              		.loc 1 136 3 view .LVU403
+ 128:Core/Src/GT9147.c ****   CT_IIC_Start();
+ 1607              		.loc 1 128 11 is_stmt 0 view .LVU404
+ 1608 002a 0026     		movs	r6, #0
+ 136:Core/Src/GT9147.c ****   {
+ 1609              		.loc 1 136 8 view .LVU405
+ 1610 002c 3446     		mov	r4, r6
+ 136:Core/Src/GT9147.c ****   {
+ 1611              		.loc 1 136 3 view .LVU406
+ 1612 002e 01E0     		b	.L100
+ 1613              	.LVL157:
+ 1614              	.L104:
+ARM GAS  /tmp/ccUgw8VC.s 			page 40
+
+
+ 136:Core/Src/GT9147.c ****   {
+ 1615              		.loc 1 136 17 is_stmt 1 discriminator 2 view .LVU407
+ 136:Core/Src/GT9147.c ****   {
+ 1616              		.loc 1 136 18 is_stmt 0 discriminator 2 view .LVU408
+ 1617 0030 0134     		adds	r4, r4, #1
+ 1618              	.LVL158:
+ 136:Core/Src/GT9147.c ****   {
+ 1619              		.loc 1 136 18 discriminator 2 view .LVU409
+ 1620 0032 E4B2     		uxtb	r4, r4
+ 1621              	.LVL159:
+ 1622              	.L100:
+ 136:Core/Src/GT9147.c ****   {
+ 1623              		.loc 1 136 11 is_stmt 1 discriminator 1 view .LVU410
+ 136:Core/Src/GT9147.c ****   {
+ 1624              		.loc 1 136 3 is_stmt 0 discriminator 1 view .LVU411
+ 1625 0034 AC42     		cmp	r4, r5
+ 1626 0036 07D2     		bcs	.L101
+ 138:Core/Src/GT9147.c ****     ret=CT_IIC_Wait_Ack();
+ 1627              		.loc 1 138 5 is_stmt 1 view .LVU412
+ 1628 0038 385D     		ldrb	r0, [r7, r4]	@ zero_extendqisi2
+ 1629 003a FFF7FEFF 		bl	CT_IIC_Send_Byte
+ 1630              	.LVL160:
+ 139:Core/Src/GT9147.c ****     if(ret)break;
+ 1631              		.loc 1 139 5 view .LVU413
+ 139:Core/Src/GT9147.c ****     if(ret)break;
+ 1632              		.loc 1 139 9 is_stmt 0 view .LVU414
+ 1633 003e FFF7FEFF 		bl	CT_IIC_Wait_Ack
+ 1634              	.LVL161:
+ 140:Core/Src/GT9147.c ****   }
+ 1635              		.loc 1 140 5 is_stmt 1 view .LVU415
+ 140:Core/Src/GT9147.c ****   }
+ 1636              		.loc 1 140 7 is_stmt 0 view .LVU416
+ 1637 0042 0646     		mov	r6, r0
+ 1638 0044 0028     		cmp	r0, #0
+ 1639 0046 F3D0     		beq	.L104
+ 1640              	.LVL162:
+ 1641              	.L101:
+ 142:Core/Src/GT9147.c ****   return ret;
+ 1642              		.loc 1 142 3 is_stmt 1 view .LVU417
+ 1643 0048 FFF7FEFF 		bl	CT_IIC_Stop
+ 1644              	.LVL163:
+ 143:Core/Src/GT9147.c **** }
+ 1645              		.loc 1 143 3 view .LVU418
+ 144:Core/Src/GT9147.c **** void GT9147_RD_Reg(uint16_t reg,uint8_t *buf,uint8_t len)
+ 1646              		.loc 1 144 1 is_stmt 0 view .LVU419
+ 1647 004c 3046     		mov	r0, r6
+ 1648 004e F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 144:Core/Src/GT9147.c **** void GT9147_RD_Reg(uint16_t reg,uint8_t *buf,uint8_t len)
+ 1649              		.loc 1 144 1 view .LVU420
+ 1650              		.cfi_endproc
+ 1651              	.LFE135:
+ 1653              		.section	.text.GT9147_Send_Cfg,"ax",%progbits
+ 1654              		.align	1
+ 1655              		.global	GT9147_Send_Cfg
+ 1656              		.syntax unified
+ 1657              		.thumb
+ 1658              		.thumb_func
+ARM GAS  /tmp/ccUgw8VC.s 			page 41
+
+
+ 1660              	GT9147_Send_Cfg:
+ 1661              	.LVL164:
+ 1662              	.LFB137:
+ 166:Core/Src/GT9147.c ****   uint8_t buf[2];
+ 1663              		.loc 1 166 1 is_stmt 1 view -0
+ 1664              		.cfi_startproc
+ 1665              		@ args = 0, pretend = 0, frame = 8
+ 1666              		@ frame_needed = 0, uses_anonymous_args = 0
+ 166:Core/Src/GT9147.c ****   uint8_t buf[2];
+ 1667              		.loc 1 166 1 is_stmt 0 view .LVU422
+ 1668 0000 00B5     		push	{lr}
+ 1669              	.LCFI22:
+ 1670              		.cfi_def_cfa_offset 4
+ 1671              		.cfi_offset 14, -4
+ 1672 0002 83B0     		sub	sp, sp, #12
+ 1673              	.LCFI23:
+ 1674              		.cfi_def_cfa_offset 16
+ 167:Core/Src/GT9147.c ****   uint8_t i=0;
+ 1675              		.loc 1 167 3 is_stmt 1 view .LVU423
+ 168:Core/Src/GT9147.c ****   buf[0]=0;
+ 1676              		.loc 1 168 3 view .LVU424
+ 1677              	.LVL165:
+ 169:Core/Src/GT9147.c ****   buf[1]=mode;	//是否写入到GT9147 FLASH?  即是否掉电保存
+ 1678              		.loc 1 169 3 view .LVU425
+ 169:Core/Src/GT9147.c ****   buf[1]=mode;	//是否写入到GT9147 FLASH?  即是否掉电保存
+ 1679              		.loc 1 169 9 is_stmt 0 view .LVU426
+ 1680 0004 0023     		movs	r3, #0
+ 1681 0006 8DF80430 		strb	r3, [sp, #4]
+ 170:Core/Src/GT9147.c ****   for(i=0;i<sizeof(GT9147_CFG_TBL);i++)buf[0]+=GT9147_CFG_TBL[i];//计算校验和
+ 1682              		.loc 1 170 3 is_stmt 1 view .LVU427
+ 170:Core/Src/GT9147.c ****   for(i=0;i<sizeof(GT9147_CFG_TBL);i++)buf[0]+=GT9147_CFG_TBL[i];//计算校验和
+ 1683              		.loc 1 170 9 is_stmt 0 view .LVU428
+ 1684 000a 8DF80500 		strb	r0, [sp, #5]
+ 171:Core/Src/GT9147.c ****   buf[0]=(~buf[0])+1;
+ 1685              		.loc 1 171 3 is_stmt 1 view .LVU429
+ 171:Core/Src/GT9147.c ****   buf[0]=(~buf[0])+1;
+ 1686              		.loc 1 171 3 is_stmt 0 view .LVU430
+ 1687 000e 08E0     		b	.L106
+ 1688              	.LVL166:
+ 1689              	.L107:
+ 171:Core/Src/GT9147.c ****   buf[0]=(~buf[0])+1;
+ 1690              		.loc 1 171 40 is_stmt 1 discriminator 3 view .LVU431
+ 171:Core/Src/GT9147.c ****   buf[0]=(~buf[0])+1;
+ 1691              		.loc 1 171 62 is_stmt 0 discriminator 3 view .LVU432
+ 1692 0010 0F4A     		ldr	r2, .L109
+ 1693 0012 D25C     		ldrb	r2, [r2, r3]	@ zero_extendqisi2
+ 171:Core/Src/GT9147.c ****   buf[0]=(~buf[0])+1;
+ 1694              		.loc 1 171 46 discriminator 3 view .LVU433
+ 1695 0014 9DF80410 		ldrb	r1, [sp, #4]	@ zero_extendqisi2
+ 1696 0018 0A44     		add	r2, r2, r1
+ 1697 001a 8DF80420 		strb	r2, [sp, #4]
+ 171:Core/Src/GT9147.c ****   buf[0]=(~buf[0])+1;
+ 1698              		.loc 1 171 36 is_stmt 1 discriminator 3 view .LVU434
+ 171:Core/Src/GT9147.c ****   buf[0]=(~buf[0])+1;
+ 1699              		.loc 1 171 37 is_stmt 0 discriminator 3 view .LVU435
+ 1700 001e 0133     		adds	r3, r3, #1
+ 1701              	.LVL167:
+ARM GAS  /tmp/ccUgw8VC.s 			page 42
+
+
+ 171:Core/Src/GT9147.c ****   buf[0]=(~buf[0])+1;
+ 1702              		.loc 1 171 37 discriminator 3 view .LVU436
+ 1703 0020 DBB2     		uxtb	r3, r3
+ 1704              	.LVL168:
+ 1705              	.L106:
+ 171:Core/Src/GT9147.c ****   buf[0]=(~buf[0])+1;
+ 1706              		.loc 1 171 11 is_stmt 1 discriminator 1 view .LVU437
+ 171:Core/Src/GT9147.c ****   buf[0]=(~buf[0])+1;
+ 1707              		.loc 1 171 3 is_stmt 0 discriminator 1 view .LVU438
+ 1708 0022 B72B     		cmp	r3, #183
+ 1709 0024 F4D9     		bls	.L107
+ 172:Core/Src/GT9147.c ****   GT9147_WR_Reg(GT_CFGS_REG,(uint8_t*)GT9147_CFG_TBL,sizeof(GT9147_CFG_TBL));//发送寄存器配�
+ 1710              		.loc 1 172 3 is_stmt 1 view .LVU439
+ 172:Core/Src/GT9147.c ****   GT9147_WR_Reg(GT_CFGS_REG,(uint8_t*)GT9147_CFG_TBL,sizeof(GT9147_CFG_TBL));//发送寄存器配�
+ 1711              		.loc 1 172 15 is_stmt 0 view .LVU440
+ 1712 0026 9DF80430 		ldrb	r3, [sp, #4]	@ zero_extendqisi2
+ 1713              	.LVL169:
+ 172:Core/Src/GT9147.c ****   GT9147_WR_Reg(GT_CFGS_REG,(uint8_t*)GT9147_CFG_TBL,sizeof(GT9147_CFG_TBL));//发送寄存器配�
+ 1714              		.loc 1 172 9 view .LVU441
+ 1715 002a 5B42     		rsbs	r3, r3, #0
+ 1716 002c 8DF80430 		strb	r3, [sp, #4]
+ 173:Core/Src/GT9147.c ****   GT9147_WR_Reg(GT_CHECK_REG,buf,2);//写入校验和,和配置更新标记
+ 1717              		.loc 1 173 3 is_stmt 1 view .LVU442
+ 1718 0030 B822     		movs	r2, #184
+ 1719 0032 0749     		ldr	r1, .L109
+ 1720 0034 48F24700 		movw	r0, #32839
+ 1721              	.LVL170:
+ 173:Core/Src/GT9147.c ****   GT9147_WR_Reg(GT_CHECK_REG,buf,2);//写入校验和,和配置更新标记
+ 1722              		.loc 1 173 3 is_stmt 0 view .LVU443
+ 1723 0038 FFF7FEFF 		bl	GT9147_WR_Reg
+ 1724              	.LVL171:
+ 174:Core/Src/GT9147.c ****   return 0;
+ 1725              		.loc 1 174 3 is_stmt 1 view .LVU444
+ 1726 003c 0222     		movs	r2, #2
+ 1727 003e 01A9     		add	r1, sp, #4
+ 1728 0040 48F2FF00 		movw	r0, #33023
+ 1729 0044 FFF7FEFF 		bl	GT9147_WR_Reg
+ 1730              	.LVL172:
+ 175:Core/Src/GT9147.c **** }
+ 1731              		.loc 1 175 3 view .LVU445
+ 176:Core/Src/GT9147.c **** uint8_t GT9147_Scan(uint8_t mode)
+ 1732              		.loc 1 176 1 is_stmt 0 view .LVU446
+ 1733 0048 0020     		movs	r0, #0
+ 1734 004a 03B0     		add	sp, sp, #12
+ 1735              	.LCFI24:
+ 1736              		.cfi_def_cfa_offset 4
+ 1737              		@ sp needed
+ 1738 004c 5DF804FB 		ldr	pc, [sp], #4
+ 1739              	.L110:
+ 1740              		.align	2
+ 1741              	.L109:
+ 1742 0050 00000000 		.word	.LANCHOR3
+ 1743              		.cfi_endproc
+ 1744              	.LFE137:
+ 1746              		.section	.text.CT_IIC_Read_Byte,"ax",%progbits
+ 1747              		.align	1
+ 1748              		.global	CT_IIC_Read_Byte
+ARM GAS  /tmp/ccUgw8VC.s 			page 43
+
+
+ 1749              		.syntax unified
+ 1750              		.thumb
+ 1751              		.thumb_func
+ 1753              	CT_IIC_Read_Byte:
+ 1754              	.LVL173:
+ 1755              	.LFB154:
+ 514:Core/Src/GT9147.c **** //读1个字节，ack=1时，发送ACK，ack=0，发送nACK
+ 515:Core/Src/GT9147.c **** uint8_t CT_IIC_Read_Byte(unsigned char ack)
+ 516:Core/Src/GT9147.c **** {
+ 1756              		.loc 1 516 1 is_stmt 1 view -0
+ 1757              		.cfi_startproc
+ 1758              		@ args = 0, pretend = 0, frame = 0
+ 1759              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1760              		.loc 1 516 1 is_stmt 0 view .LVU448
+ 1761 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 1762              	.LCFI25:
+ 1763              		.cfi_def_cfa_offset 24
+ 1764              		.cfi_offset 3, -24
+ 1765              		.cfi_offset 4, -20
+ 1766              		.cfi_offset 5, -16
+ 1767              		.cfi_offset 6, -12
+ 1768              		.cfi_offset 7, -8
+ 1769              		.cfi_offset 14, -4
+ 1770 0002 0746     		mov	r7, r0
+ 517:Core/Src/GT9147.c ****   uint8_t i,receive=0;
+ 1771              		.loc 1 517 3 is_stmt 1 view .LVU449
+ 1772              	.LVL174:
+ 518:Core/Src/GT9147.c ****   CT_SDA_IN();//SDA设置为输入
+ 1773              		.loc 1 518 3 view .LVU450
+ 1774 0004 184B     		ldr	r3, .L119
+ 1775 0006 1A68     		ldr	r2, [r3]
+ 1776 0008 22F44002 		bic	r2, r2, #12582912
+ 1777 000c 1A60     		str	r2, [r3]
+ 1778              		.loc 1 518 3 view .LVU451
+ 1779 000e 1A68     		ldr	r2, [r3]
+ 1780 0010 1A60     		str	r2, [r3]
+ 1781              		.loc 1 518 14 view .LVU452
+ 519:Core/Src/GT9147.c ****   delay_us(30);
+ 1782              		.loc 1 519 3 view .LVU453
+ 1783 0012 1E20     		movs	r0, #30
+ 1784              	.LVL175:
+ 1785              		.loc 1 519 3 is_stmt 0 view .LVU454
+ 1786 0014 FFF7FEFF 		bl	delay_us
+ 1787              	.LVL176:
+ 520:Core/Src/GT9147.c ****   for(i=0;i<8;i++ )
+ 1788              		.loc 1 520 3 is_stmt 1 view .LVU455
+ 517:Core/Src/GT9147.c ****   CT_SDA_IN();//SDA设置为输入
+ 1789              		.loc 1 517 13 is_stmt 0 view .LVU456
+ 1790 0018 0024     		movs	r4, #0
+ 1791              		.loc 1 520 8 view .LVU457
+ 1792 001a 2546     		mov	r5, r4
+ 1793              		.loc 1 520 3 view .LVU458
+ 1794 001c 01E0     		b	.L112
+ 1795              	.LVL177:
+ 1796              	.L113:
+ 1797              		.loc 1 520 15 is_stmt 1 discriminator 2 view .LVU459
+ 1798              		.loc 1 520 16 is_stmt 0 discriminator 2 view .LVU460
+ARM GAS  /tmp/ccUgw8VC.s 			page 44
+
+
+ 1799 001e 0135     		adds	r5, r5, #1
+ 1800              	.LVL178:
+ 1801              		.loc 1 520 16 discriminator 2 view .LVU461
+ 1802 0020 EDB2     		uxtb	r5, r5
+ 1803              	.LVL179:
+ 1804              	.L112:
+ 1805              		.loc 1 520 11 is_stmt 1 discriminator 1 view .LVU462
+ 1806              		.loc 1 520 3 is_stmt 0 discriminator 1 view .LVU463
+ 1807 0022 072D     		cmp	r5, #7
+ 1808 0024 18D8     		bhi	.L118
+ 521:Core/Src/GT9147.c ****   {
+ 522:Core/Src/GT9147.c ****     HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_RESET);
+ 1809              		.loc 1 522 5 is_stmt 1 view .LVU464
+ 1810 0026 114E     		ldr	r6, .L119+4
+ 1811 0028 0022     		movs	r2, #0
+ 1812 002a 0121     		movs	r1, #1
+ 1813 002c 3046     		mov	r0, r6
+ 1814 002e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1815              	.LVL180:
+ 523:Core/Src/GT9147.c ****     CT_Delay();
+ 1816              		.loc 1 523 5 view .LVU465
+ 1817 0032 FFF7FEFF 		bl	CT_Delay
+ 1818              	.LVL181:
+ 524:Core/Src/GT9147.c ****     HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0,GPIO_PIN_SET);
+ 1819              		.loc 1 524 5 view .LVU466
+ 1820 0036 0122     		movs	r2, #1
+ 1821 0038 1146     		mov	r1, r2
+ 1822 003a 3046     		mov	r0, r6
+ 1823 003c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1824              	.LVL182:
+ 525:Core/Src/GT9147.c ****     receive<<=1;
+ 1825              		.loc 1 525 5 view .LVU467
+ 1826              		.loc 1 525 12 is_stmt 0 view .LVU468
+ 1827 0040 6400     		lsls	r4, r4, #1
+ 1828              	.LVL183:
+ 1829              		.loc 1 525 12 view .LVU469
+ 1830 0042 E4B2     		uxtb	r4, r4
+ 1831              	.LVL184:
+ 526:Core/Src/GT9147.c ****     if(HAL_GPIO_ReadPin(GPIOF,GPIO_PIN_11)==GPIO_PIN_SET)receive++;
+ 1832              		.loc 1 526 5 is_stmt 1 view .LVU470
+ 1833              		.loc 1 526 8 is_stmt 0 view .LVU471
+ 1834 0044 4FF40061 		mov	r1, #2048
+ 1835 0048 0748     		ldr	r0, .L119
+ 1836 004a FFF7FEFF 		bl	HAL_GPIO_ReadPin
+ 1837              	.LVL185:
+ 1838              		.loc 1 526 7 view .LVU472
+ 1839 004e 0128     		cmp	r0, #1
+ 1840 0050 E5D1     		bne	.L113
+ 1841              		.loc 1 526 58 is_stmt 1 discriminator 1 view .LVU473
+ 1842              		.loc 1 526 65 is_stmt 0 discriminator 1 view .LVU474
+ 1843 0052 0134     		adds	r4, r4, #1
+ 1844              	.LVL186:
+ 1845              		.loc 1 526 65 discriminator 1 view .LVU475
+ 1846 0054 E4B2     		uxtb	r4, r4
+ 1847              	.LVL187:
+ 1848              		.loc 1 526 65 discriminator 1 view .LVU476
+ 1849 0056 E2E7     		b	.L113
+ARM GAS  /tmp/ccUgw8VC.s 			page 45
+
+
+ 1850              	.L118:
+ 527:Core/Src/GT9147.c ****   }
+ 528:Core/Src/GT9147.c ****   if (!ack)CT_IIC_NAck();//发送nACK
+ 1851              		.loc 1 528 3 is_stmt 1 view .LVU477
+ 1852              		.loc 1 528 6 is_stmt 0 view .LVU478
+ 1853 0058 1FB9     		cbnz	r7, .L115
+ 1854              		.loc 1 528 12 is_stmt 1 discriminator 1 view .LVU479
+ 1855 005a FFF7FEFF 		bl	CT_IIC_NAck
+ 1856              	.LVL188:
+ 1857              	.L116:
+ 529:Core/Src/GT9147.c ****   else CT_IIC_Ack(); //发送ACK
+ 530:Core/Src/GT9147.c ****   return receive;
+ 1858              		.loc 1 530 3 view .LVU480
+ 531:Core/Src/GT9147.c **** }
+ 1859              		.loc 1 531 1 is_stmt 0 view .LVU481
+ 1860 005e 2046     		mov	r0, r4
+ 1861 0060 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 1862              	.LVL189:
+ 1863              	.L115:
+ 529:Core/Src/GT9147.c ****   else CT_IIC_Ack(); //发送ACK
+ 1864              		.loc 1 529 8 is_stmt 1 view .LVU482
+ 1865 0062 FFF7FEFF 		bl	CT_IIC_Ack
+ 1866              	.LVL190:
+ 1867 0066 FAE7     		b	.L116
+ 1868              	.L120:
+ 1869              		.align	2
+ 1870              	.L119:
+ 1871 0068 00140240 		.word	1073878016
+ 1872 006c 00040240 		.word	1073873920
+ 1873              		.cfi_endproc
+ 1874              	.LFE154:
+ 1876              		.section	.text.GT9147_RD_Reg,"ax",%progbits
+ 1877              		.align	1
+ 1878              		.global	GT9147_RD_Reg
+ 1879              		.syntax unified
+ 1880              		.thumb
+ 1881              		.thumb_func
+ 1883              	GT9147_RD_Reg:
+ 1884              	.LVL191:
+ 1885              	.LFB136:
+ 146:Core/Src/GT9147.c ****   uint8_t i;
+ 1886              		.loc 1 146 1 view -0
+ 1887              		.cfi_startproc
+ 1888              		@ args = 0, pretend = 0, frame = 0
+ 1889              		@ frame_needed = 0, uses_anonymous_args = 0
+ 146:Core/Src/GT9147.c ****   uint8_t i;
+ 1890              		.loc 1 146 1 is_stmt 0 view .LVU484
+ 1891 0000 70B5     		push	{r4, r5, r6, lr}
+ 1892              	.LCFI26:
+ 1893              		.cfi_def_cfa_offset 16
+ 1894              		.cfi_offset 4, -16
+ 1895              		.cfi_offset 5, -12
+ 1896              		.cfi_offset 6, -8
+ 1897              		.cfi_offset 14, -4
+ 1898 0002 0446     		mov	r4, r0
+ 1899 0004 0E46     		mov	r6, r1
+ 1900 0006 1546     		mov	r5, r2
+ARM GAS  /tmp/ccUgw8VC.s 			page 46
+
+
+ 147:Core/Src/GT9147.c ****   CT_IIC_Start();
+ 1901              		.loc 1 147 3 is_stmt 1 view .LVU485
+ 148:Core/Src/GT9147.c ****   CT_IIC_Send_Byte(GT_CMD_WR);   //发送写命令
+ 1902              		.loc 1 148 3 view .LVU486
+ 1903 0008 FFF7FEFF 		bl	CT_IIC_Start
+ 1904              	.LVL192:
+ 149:Core/Src/GT9147.c ****   CT_IIC_Wait_Ack();
+ 1905              		.loc 1 149 3 view .LVU487
+ 1906 000c 2820     		movs	r0, #40
+ 1907 000e FFF7FEFF 		bl	CT_IIC_Send_Byte
+ 1908              	.LVL193:
+ 150:Core/Src/GT9147.c ****   CT_IIC_Send_Byte(reg>>8);   	//发送高8位地址
+ 1909              		.loc 1 150 3 view .LVU488
+ 1910 0012 FFF7FEFF 		bl	CT_IIC_Wait_Ack
+ 1911              	.LVL194:
+ 151:Core/Src/GT9147.c ****   CT_IIC_Wait_Ack();
+ 1912              		.loc 1 151 3 view .LVU489
+ 1913 0016 200A     		lsrs	r0, r4, #8
+ 1914 0018 FFF7FEFF 		bl	CT_IIC_Send_Byte
+ 1915              	.LVL195:
+ 152:Core/Src/GT9147.c ****   CT_IIC_Send_Byte(reg&0XFF);   	//发送低8位地址
+ 1916              		.loc 1 152 3 view .LVU490
+ 1917 001c FFF7FEFF 		bl	CT_IIC_Wait_Ack
+ 1918              	.LVL196:
+ 153:Core/Src/GT9147.c ****   CT_IIC_Wait_Ack();
+ 1919              		.loc 1 153 3 view .LVU491
+ 1920 0020 E0B2     		uxtb	r0, r4
+ 1921 0022 FFF7FEFF 		bl	CT_IIC_Send_Byte
+ 1922              	.LVL197:
+ 154:Core/Src/GT9147.c ****   CT_IIC_Start();
+ 1923              		.loc 1 154 3 view .LVU492
+ 1924 0026 FFF7FEFF 		bl	CT_IIC_Wait_Ack
+ 1925              	.LVL198:
+ 155:Core/Src/GT9147.c ****   CT_IIC_Send_Byte(GT_CMD_RD);   //发送读命令
+ 1926              		.loc 1 155 3 view .LVU493
+ 1927 002a FFF7FEFF 		bl	CT_IIC_Start
+ 1928              	.LVL199:
+ 156:Core/Src/GT9147.c ****   CT_IIC_Wait_Ack();
+ 1929              		.loc 1 156 3 view .LVU494
+ 1930 002e 2920     		movs	r0, #41
+ 1931 0030 FFF7FEFF 		bl	CT_IIC_Send_Byte
+ 1932              	.LVL200:
+ 157:Core/Src/GT9147.c ****   for(i=0;i<len;i++)
+ 1933              		.loc 1 157 3 view .LVU495
+ 1934 0034 FFF7FEFF 		bl	CT_IIC_Wait_Ack
+ 1935              	.LVL201:
+ 158:Core/Src/GT9147.c ****   {
+ 1936              		.loc 1 158 3 view .LVU496
+ 158:Core/Src/GT9147.c ****   {
+ 1937              		.loc 1 158 8 is_stmt 0 view .LVU497
+ 1938 0038 0024     		movs	r4, #0
+ 158:Core/Src/GT9147.c ****   {
+ 1939              		.loc 1 158 3 view .LVU498
+ 1940 003a 08E0     		b	.L122
+ 1941              	.LVL202:
+ 1942              	.L123:
+ 160:Core/Src/GT9147.c ****     //printf("%d\r\n",buf[i]);
+ARM GAS  /tmp/ccUgw8VC.s 			page 47
+
+
+ 1943              		.loc 1 160 5 is_stmt 1 discriminator 3 view .LVU499
+ 160:Core/Src/GT9147.c ****     //printf("%d\r\n",buf[i]);
+ 1944              		.loc 1 160 36 is_stmt 0 discriminator 3 view .LVU500
+ 1945 003c 681E     		subs	r0, r5, #1
+ 160:Core/Src/GT9147.c ****     //printf("%d\r\n",buf[i]);
+ 1946              		.loc 1 160 12 discriminator 3 view .LVU501
+ 1947 003e 201A     		subs	r0, r4, r0
+ 1948 0040 18BF     		it	ne
+ 1949 0042 0120     		movne	r0, #1
+ 1950 0044 FFF7FEFF 		bl	CT_IIC_Read_Byte
+ 1951              	.LVL203:
+ 160:Core/Src/GT9147.c ****     //printf("%d\r\n",buf[i]);
+ 1952              		.loc 1 160 11 discriminator 3 view .LVU502
+ 1953 0048 3055     		strb	r0, [r6, r4]
+ 158:Core/Src/GT9147.c ****   {
+ 1954              		.loc 1 158 17 is_stmt 1 discriminator 3 view .LVU503
+ 158:Core/Src/GT9147.c ****   {
+ 1955              		.loc 1 158 18 is_stmt 0 discriminator 3 view .LVU504
+ 1956 004a 0134     		adds	r4, r4, #1
+ 1957              	.LVL204:
+ 158:Core/Src/GT9147.c ****   {
+ 1958              		.loc 1 158 18 discriminator 3 view .LVU505
+ 1959 004c E4B2     		uxtb	r4, r4
+ 1960              	.LVL205:
+ 1961              	.L122:
+ 158:Core/Src/GT9147.c ****   {
+ 1962              		.loc 1 158 11 is_stmt 1 discriminator 1 view .LVU506
+ 158:Core/Src/GT9147.c ****   {
+ 1963              		.loc 1 158 3 is_stmt 0 discriminator 1 view .LVU507
+ 1964 004e AC42     		cmp	r4, r5
+ 1965 0050 F4D3     		bcc	.L123
+ 163:Core/Src/GT9147.c **** }
+ 1966              		.loc 1 163 3 is_stmt 1 view .LVU508
+ 1967 0052 FFF7FEFF 		bl	CT_IIC_Stop
+ 1968              	.LVL206:
+ 164:Core/Src/GT9147.c **** uint8_t GT9147_Send_Cfg(uint8_t mode)
+ 1969              		.loc 1 164 1 is_stmt 0 view .LVU509
+ 1970 0056 70BD     		pop	{r4, r5, r6, pc}
+ 164:Core/Src/GT9147.c **** uint8_t GT9147_Send_Cfg(uint8_t mode)
+ 1971              		.loc 1 164 1 view .LVU510
+ 1972              		.cfi_endproc
+ 1973              	.LFE136:
+ 1975              		.section	.rodata.GT9147_Init.str1.4,"aMS",%progbits,1
+ 1976              		.align	2
+ 1977              	.LC0:
+ 1978 0000 43545020 		.ascii	"CTP ID:%s\015\012\000"
+ 1978      49443A25 
+ 1978      730D0A00 
+ 1979              		.align	2
+ 1980              	.LC1:
+ 1981 000c 39313437 		.ascii	"9147\000"
+ 1981      00
+ 1982 0011 000000   		.align	2
+ 1983              	.LC2:
+ 1984 0014 44656661 		.ascii	"Default Ver:%d\015\012\000"
+ 1984      756C7420 
+ 1984      5665723A 
+ARM GAS  /tmp/ccUgw8VC.s 			page 48
+
+
+ 1984      25640D0A 
+ 1984      00
+ 1985              		.section	.text.GT9147_Init,"ax",%progbits
+ 1986              		.align	1
+ 1987              		.global	GT9147_Init
+ 1988              		.syntax unified
+ 1989              		.thumb
+ 1990              		.thumb_func
+ 1992              	GT9147_Init:
+ 1993              	.LFB134:
+  71:Core/Src/GT9147.c **** 
+ 1994              		.loc 1 71 1 is_stmt 1 view -0
+ 1995              		.cfi_startproc
+ 1996              		@ args = 0, pretend = 0, frame = 40
+ 1997              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1998 0000 2DE9F047 		push	{r4, r5, r6, r7, r8, r9, r10, lr}
+ 1999              	.LCFI27:
+ 2000              		.cfi_def_cfa_offset 32
+ 2001              		.cfi_offset 4, -32
+ 2002              		.cfi_offset 5, -28
+ 2003              		.cfi_offset 6, -24
+ 2004              		.cfi_offset 7, -20
+ 2005              		.cfi_offset 8, -16
+ 2006              		.cfi_offset 9, -12
+ 2007              		.cfi_offset 10, -8
+ 2008              		.cfi_offset 14, -4
+ 2009 0004 8AB0     		sub	sp, sp, #40
+ 2010              	.LCFI28:
+ 2011              		.cfi_def_cfa_offset 72
+  73:Core/Src/GT9147.c **** 
+ 2012              		.loc 1 73 3 view .LVU512
+  75:Core/Src/GT9147.c **** 	
+ 2013              		.loc 1 75 3 view .LVU513
+  77:Core/Src/GT9147.c ****   __HAL_RCC_GPIOC_CLK_ENABLE();			//开启GPIOC时钟
+ 2014              		.loc 1 77 2 view .LVU514
+ 2015              	.LBB5:
+  77:Core/Src/GT9147.c ****   __HAL_RCC_GPIOC_CLK_ENABLE();			//开启GPIOC时钟
+ 2016              		.loc 1 77 2 view .LVU515
+ 2017 0006 0024     		movs	r4, #0
+ 2018 0008 0194     		str	r4, [sp, #4]
+  77:Core/Src/GT9147.c ****   __HAL_RCC_GPIOC_CLK_ENABLE();			//开启GPIOC时钟
+ 2019              		.loc 1 77 2 view .LVU516
+ 2020 000a 454B     		ldr	r3, .L131
+ 2021 000c 1A6B     		ldr	r2, [r3, #48]
+ 2022 000e 42F00202 		orr	r2, r2, #2
+ 2023 0012 1A63     		str	r2, [r3, #48]
+  77:Core/Src/GT9147.c ****   __HAL_RCC_GPIOC_CLK_ENABLE();			//开启GPIOC时钟
+ 2024              		.loc 1 77 2 view .LVU517
+ 2025 0014 1A6B     		ldr	r2, [r3, #48]
+ 2026 0016 02F00202 		and	r2, r2, #2
+ 2027 001a 0192     		str	r2, [sp, #4]
+  77:Core/Src/GT9147.c ****   __HAL_RCC_GPIOC_CLK_ENABLE();			//开启GPIOC时钟
+ 2028              		.loc 1 77 2 view .LVU518
+ 2029 001c 019A     		ldr	r2, [sp, #4]
+ 2030              	.LBE5:
+  77:Core/Src/GT9147.c ****   __HAL_RCC_GPIOC_CLK_ENABLE();			//开启GPIOC时钟
+ 2031              		.loc 1 77 2 view .LVU519
+ARM GAS  /tmp/ccUgw8VC.s 			page 49
+
+
+  78:Core/Src/GT9147.c **** 
+ 2032              		.loc 1 78 3 view .LVU520
+ 2033              	.LBB6:
+  78:Core/Src/GT9147.c **** 
+ 2034              		.loc 1 78 3 view .LVU521
+ 2035 001e 0294     		str	r4, [sp, #8]
+  78:Core/Src/GT9147.c **** 
+ 2036              		.loc 1 78 3 view .LVU522
+ 2037 0020 1A6B     		ldr	r2, [r3, #48]
+ 2038 0022 42F00402 		orr	r2, r2, #4
+ 2039 0026 1A63     		str	r2, [r3, #48]
+  78:Core/Src/GT9147.c **** 
+ 2040              		.loc 1 78 3 view .LVU523
+ 2041 0028 1B6B     		ldr	r3, [r3, #48]
+ 2042 002a 03F00403 		and	r3, r3, #4
+ 2043 002e 0293     		str	r3, [sp, #8]
+  78:Core/Src/GT9147.c **** 
+ 2044              		.loc 1 78 3 view .LVU524
+ 2045 0030 029B     		ldr	r3, [sp, #8]
+ 2046              	.LBE6:
+  78:Core/Src/GT9147.c **** 
+ 2047              		.loc 1 78 3 view .LVU525
+  81:Core/Src/GT9147.c ****   GPIO_Initure.Mode=GPIO_MODE_INPUT;      //输入
+ 2048              		.loc 1 81 3 view .LVU526
+  81:Core/Src/GT9147.c ****   GPIO_Initure.Mode=GPIO_MODE_INPUT;      //输入
+ 2049              		.loc 1 81 19 is_stmt 0 view .LVU527
+ 2050 0032 4FF0020A 		mov	r10, #2
+ 2051 0036 CDF80CA0 		str	r10, [sp, #12]
+  82:Core/Src/GT9147.c ****   GPIO_Initure.Pull=GPIO_PULLUP;          //上拉
+ 2052              		.loc 1 82 3 is_stmt 1 view .LVU528
+  82:Core/Src/GT9147.c ****   GPIO_Initure.Pull=GPIO_PULLUP;          //上拉
+ 2053              		.loc 1 82 20 is_stmt 0 view .LVU529
+ 2054 003a 0494     		str	r4, [sp, #16]
+  83:Core/Src/GT9147.c ****   GPIO_Initure.Speed=GPIO_SPEED_HIGH;     //高速
+ 2055              		.loc 1 83 3 is_stmt 1 view .LVU530
+  83:Core/Src/GT9147.c ****   GPIO_Initure.Speed=GPIO_SPEED_HIGH;     //高速
+ 2056              		.loc 1 83 20 is_stmt 0 view .LVU531
+ 2057 003c 0125     		movs	r5, #1
+ 2058 003e 0595     		str	r5, [sp, #20]
+  84:Core/Src/GT9147.c ****   HAL_GPIO_Init(GPIOB,&GPIO_Initure);     //初始化
+ 2059              		.loc 1 84 3 is_stmt 1 view .LVU532
+  84:Core/Src/GT9147.c ****   HAL_GPIO_Init(GPIOB,&GPIO_Initure);     //初始化
+ 2060              		.loc 1 84 21 is_stmt 0 view .LVU533
+ 2061 0040 4FF00309 		mov	r9, #3
+ 2062 0044 CDF81890 		str	r9, [sp, #24]
+  85:Core/Src/GT9147.c ****           
+ 2063              		.loc 1 85 3 is_stmt 1 view .LVU534
+ 2064 0048 DFF8E880 		ldr	r8, .L131+20
+ 2065 004c 03A9     		add	r1, sp, #12
+ 2066 004e 4046     		mov	r0, r8
+ 2067 0050 FFF7FEFF 		bl	HAL_GPIO_Init
+ 2068              	.LVL207:
+  88:Core/Src/GT9147.c ****   GPIO_Initure.Mode=GPIO_MODE_OUTPUT_PP;  //推挽输出
+ 2069              		.loc 1 88 3 view .LVU535
+  88:Core/Src/GT9147.c ****   GPIO_Initure.Mode=GPIO_MODE_OUTPUT_PP;  //推挽输出
+ 2070              		.loc 1 88 19 is_stmt 0 view .LVU536
+ 2071 0054 4FF40057 		mov	r7, #8192
+ARM GAS  /tmp/ccUgw8VC.s 			page 50
+
+
+ 2072 0058 0397     		str	r7, [sp, #12]
+  89:Core/Src/GT9147.c ****   HAL_GPIO_Init(GPIOC,&GPIO_Initure);     //初始化
+ 2073              		.loc 1 89 3 is_stmt 1 view .LVU537
+  89:Core/Src/GT9147.c ****   HAL_GPIO_Init(GPIOC,&GPIO_Initure);     //初始化
+ 2074              		.loc 1 89 20 is_stmt 0 view .LVU538
+ 2075 005a 0495     		str	r5, [sp, #16]
+  90:Core/Src/GT9147.c **** 
+ 2076              		.loc 1 90 3 is_stmt 1 view .LVU539
+ 2077 005c 314E     		ldr	r6, .L131+4
+ 2078 005e 03A9     		add	r1, sp, #12
+ 2079 0060 3046     		mov	r0, r6
+ 2080 0062 FFF7FEFF 		bl	HAL_GPIO_Init
+ 2081              	.LVL208:
+  92:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);  //复位C13
+ 2082              		.loc 1 92 3 view .LVU540
+ 2083 0066 FFF7FEFF 		bl	CT_IIC_Init
+ 2084              	.LVL209:
+  93:Core/Src/GT9147.c ****   HAL_Delay(10);
+ 2085              		.loc 1 93 3 view .LVU541
+ 2086 006a 2246     		mov	r2, r4
+ 2087 006c 3946     		mov	r1, r7
+ 2088 006e 3046     		mov	r0, r6
+ 2089 0070 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 2090              	.LVL210:
+  94:Core/Src/GT9147.c ****   HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);//释放复位
+ 2091              		.loc 1 94 3 view .LVU542
+ 2092 0074 0A20     		movs	r0, #10
+ 2093 0076 FFF7FEFF 		bl	HAL_Delay
+ 2094              	.LVL211:
+  95:Core/Src/GT9147.c ****   HAL_Delay(10);
+ 2095              		.loc 1 95 3 view .LVU543
+ 2096 007a 2A46     		mov	r2, r5
+ 2097 007c 3946     		mov	r1, r7
+ 2098 007e 3046     		mov	r0, r6
+ 2099 0080 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 2100              	.LVL212:
+  96:Core/Src/GT9147.c **** 
+ 2101              		.loc 1 96 3 view .LVU544
+ 2102 0084 0A20     		movs	r0, #10
+ 2103 0086 FFF7FEFF 		bl	HAL_Delay
+ 2104              	.LVL213:
+  98:Core/Src/GT9147.c ****   GPIO_Initure.Mode=GPIO_MODE_OUTPUT_PP;  //输出模式
+ 2105              		.loc 1 98 3 view .LVU545
+  98:Core/Src/GT9147.c ****   GPIO_Initure.Mode=GPIO_MODE_OUTPUT_PP;  //输出模式
+ 2106              		.loc 1 98 19 is_stmt 0 view .LVU546
+ 2107 008a CDF80CA0 		str	r10, [sp, #12]
+  99:Core/Src/GT9147.c ****   GPIO_Initure.Pull=GPIO_NOPULL;          //无上下拉
+ 2108              		.loc 1 99 3 is_stmt 1 view .LVU547
+  99:Core/Src/GT9147.c ****   GPIO_Initure.Pull=GPIO_NOPULL;          //无上下拉
+ 2109              		.loc 1 99 20 is_stmt 0 view .LVU548
+ 2110 008e 0495     		str	r5, [sp, #16]
+ 100:Core/Src/GT9147.c ****   GPIO_Initure.Speed=GPIO_SPEED_HIGH;     //高速
+ 2111              		.loc 1 100 3 is_stmt 1 view .LVU549
+ 100:Core/Src/GT9147.c ****   GPIO_Initure.Speed=GPIO_SPEED_HIGH;     //高速
+ 2112              		.loc 1 100 20 is_stmt 0 view .LVU550
+ 2113 0090 0594     		str	r4, [sp, #20]
+ 101:Core/Src/GT9147.c ****   HAL_GPIO_Init(GPIOB,&GPIO_Initure);     //初始化
+ARM GAS  /tmp/ccUgw8VC.s 			page 51
+
+
+ 2114              		.loc 1 101 3 is_stmt 1 view .LVU551
+ 101:Core/Src/GT9147.c ****   HAL_GPIO_Init(GPIOB,&GPIO_Initure);     //初始化
+ 2115              		.loc 1 101 21 is_stmt 0 view .LVU552
+ 2116 0092 CDF81890 		str	r9, [sp, #24]
+ 102:Core/Src/GT9147.c **** 
+ 2117              		.loc 1 102 3 is_stmt 1 view .LVU553
+ 2118 0096 03A9     		add	r1, sp, #12
+ 2119 0098 4046     		mov	r0, r8
+ 2120 009a FFF7FEFF 		bl	HAL_GPIO_Init
+ 2121              	.LVL214:
+ 104:Core/Src/GT9147.c ****   GT9147_RD_Reg(GT_PID_REG,temp,4);	//读取产品ID
+ 2122              		.loc 1 104 3 view .LVU554
+ 2123 009e 6420     		movs	r0, #100
+ 2124 00a0 FFF7FEFF 		bl	HAL_Delay
+ 2125              	.LVL215:
+ 105:Core/Src/GT9147.c ****   temp[4]=0;
+ 2126              		.loc 1 105 3 view .LVU555
+ 2127 00a4 0422     		movs	r2, #4
+ 2128 00a6 08A9     		add	r1, sp, #32
+ 2129 00a8 48F24010 		movw	r0, #33088
+ 2130 00ac FFF7FEFF 		bl	GT9147_RD_Reg
+ 2131              	.LVL216:
+ 106:Core/Src/GT9147.c ****   HAL_Delay(100);
+ 2132              		.loc 1 106 3 view .LVU556
+ 106:Core/Src/GT9147.c ****   HAL_Delay(100);
+ 2133              		.loc 1 106 10 is_stmt 0 view .LVU557
+ 2134 00b0 8DF82440 		strb	r4, [sp, #36]
+ 107:Core/Src/GT9147.c ****   printf("CTP ID:%s\r\n",temp);		//打印ID
+ 2135              		.loc 1 107 3 is_stmt 1 view .LVU558
+ 2136 00b4 6420     		movs	r0, #100
+ 2137 00b6 FFF7FEFF 		bl	HAL_Delay
+ 2138              	.LVL217:
+ 108:Core/Src/GT9147.c ****   if(strcmp((char*)temp,"9147")==0)	//ID==9147
+ 2139              		.loc 1 108 3 view .LVU559
+ 2140 00ba 08A9     		add	r1, sp, #32
+ 2141 00bc 1A48     		ldr	r0, .L131+8
+ 2142 00be FFF7FEFF 		bl	printf
+ 2143              	.LVL218:
+ 109:Core/Src/GT9147.c ****   {
+ 2144              		.loc 1 109 3 view .LVU560
+ 109:Core/Src/GT9147.c ****   {
+ 2145              		.loc 1 109 6 is_stmt 0 view .LVU561
+ 2146 00c2 1A49     		ldr	r1, .L131+12
+ 2147 00c4 08A8     		add	r0, sp, #32
+ 2148 00c6 FFF7FEFF 		bl	strcmp
+ 2149              	.LVL219:
+ 109:Core/Src/GT9147.c ****   {
+ 2150              		.loc 1 109 5 view .LVU562
+ 2151 00ca 18B1     		cbz	r0, .L129
+ 2152              	.L126:
+ 125:Core/Src/GT9147.c **** {
+ 2153              		.loc 1 125 1 view .LVU563
+ 2154 00cc 0020     		movs	r0, #0
+ 2155 00ce 0AB0     		add	sp, sp, #40
+ 2156              	.LCFI29:
+ 2157              		.cfi_remember_state
+ 2158              		.cfi_def_cfa_offset 32
+ARM GAS  /tmp/ccUgw8VC.s 			page 52
+
+
+ 2159              		@ sp needed
+ 2160 00d0 BDE8F087 		pop	{r4, r5, r6, r7, r8, r9, r10, pc}
+ 2161              	.L129:
+ 2162              	.LCFI30:
+ 2163              		.cfi_restore_state
+ 111:Core/Src/GT9147.c ****     GT9147_WR_Reg(GT_CTRL_REG,temp,1);//软复位GT9147
+ 2164              		.loc 1 111 5 is_stmt 1 view .LVU564
+ 111:Core/Src/GT9147.c ****     GT9147_WR_Reg(GT_CTRL_REG,temp,1);//软复位GT9147
+ 2165              		.loc 1 111 12 is_stmt 0 view .LVU565
+ 2166 00d4 8DF820A0 		strb	r10, [sp, #32]
+ 112:Core/Src/GT9147.c ****     GT9147_RD_Reg(GT_CFGS_REG,temp,1);//读取GT_CFGS_REG寄存器
+ 2167              		.loc 1 112 5 is_stmt 1 view .LVU566
+ 2168 00d8 2A46     		mov	r2, r5
+ 2169 00da 08A9     		add	r1, sp, #32
+ 2170 00dc 48F24000 		movw	r0, #32832
+ 2171 00e0 FFF7FEFF 		bl	GT9147_WR_Reg
+ 2172              	.LVL220:
+ 113:Core/Src/GT9147.c ****     if(temp[0]<0X60)//默认版本比较低,需要更新flash配置
+ 2173              		.loc 1 113 5 view .LVU567
+ 2174 00e4 2A46     		mov	r2, r5
+ 2175 00e6 08A9     		add	r1, sp, #32
+ 2176 00e8 48F24700 		movw	r0, #32839
+ 2177 00ec FFF7FEFF 		bl	GT9147_RD_Reg
+ 2178              	.LVL221:
+ 114:Core/Src/GT9147.c ****     {
+ 2179              		.loc 1 114 5 view .LVU568
+ 114:Core/Src/GT9147.c ****     {
+ 2180              		.loc 1 114 12 is_stmt 0 view .LVU569
+ 2181 00f0 9DF82010 		ldrb	r1, [sp, #32]	@ zero_extendqisi2
+ 114:Core/Src/GT9147.c ****     {
+ 2182              		.loc 1 114 7 view .LVU570
+ 2183 00f4 5F29     		cmp	r1, #95
+ 2184 00f6 0CD9     		bls	.L130
+ 2185              	.L127:
+ 119:Core/Src/GT9147.c ****     temp[0]=0X00;
+ 2186              		.loc 1 119 5 is_stmt 1 view .LVU571
+ 2187 00f8 0A20     		movs	r0, #10
+ 2188 00fa FFF7FEFF 		bl	HAL_Delay
+ 2189              	.LVL222:
+ 120:Core/Src/GT9147.c ****     GT9147_WR_Reg(GT_CTRL_REG,temp,1);	//结束复位
+ 2190              		.loc 1 120 5 view .LVU572
+ 120:Core/Src/GT9147.c ****     GT9147_WR_Reg(GT_CTRL_REG,temp,1);	//结束复位
+ 2191              		.loc 1 120 12 is_stmt 0 view .LVU573
+ 2192 00fe 0023     		movs	r3, #0
+ 2193 0100 8DF82030 		strb	r3, [sp, #32]
+ 121:Core/Src/GT9147.c ****     return 0;
+ 2194              		.loc 1 121 5 is_stmt 1 view .LVU574
+ 2195 0104 0122     		movs	r2, #1
+ 2196 0106 08A9     		add	r1, sp, #32
+ 2197 0108 48F24000 		movw	r0, #32832
+ 2198 010c FFF7FEFF 		bl	GT9147_WR_Reg
+ 2199              	.LVL223:
+ 122:Core/Src/GT9147.c ****   }
+ 2200              		.loc 1 122 5 view .LVU575
+ 122:Core/Src/GT9147.c ****   }
+ 2201              		.loc 1 122 12 is_stmt 0 view .LVU576
+ 2202 0110 DCE7     		b	.L126
+ARM GAS  /tmp/ccUgw8VC.s 			page 53
+
+
+ 2203              	.L130:
+ 116:Core/Src/GT9147.c ****       GT9147_Send_Cfg(1);//更新并保存配置
+ 2204              		.loc 1 116 7 is_stmt 1 view .LVU577
+ 2205 0112 0748     		ldr	r0, .L131+16
+ 2206 0114 FFF7FEFF 		bl	printf
+ 2207              	.LVL224:
+ 117:Core/Src/GT9147.c ****     }
+ 2208              		.loc 1 117 7 view .LVU578
+ 2209 0118 2846     		mov	r0, r5
+ 2210 011a FFF7FEFF 		bl	GT9147_Send_Cfg
+ 2211              	.LVL225:
+ 2212 011e EBE7     		b	.L127
+ 2213              	.L132:
+ 2214              		.align	2
+ 2215              	.L131:
+ 2216 0120 00380240 		.word	1073887232
+ 2217 0124 00080240 		.word	1073874944
+ 2218 0128 00000000 		.word	.LC0
+ 2219 012c 0C000000 		.word	.LC1
+ 2220 0130 14000000 		.word	.LC2
+ 2221 0134 00040240 		.word	1073873920
+ 2222              		.cfi_endproc
+ 2223              	.LFE134:
+ 2225              		.section	.rodata.TP_Init.str1.4,"aMS",%progbits,1
+ 2226              		.align	2
+ 2227              	.LC3:
+ 2228 0000 756E6B6F 		.ascii	"unkonw dev!\015\000"
+ 2228      6E772064 
+ 2228      6576210D 
+ 2228      00
+ 2229              		.section	.text.TP_Init,"ax",%progbits
+ 2230              		.align	1
+ 2231              		.global	TP_Init
+ 2232              		.syntax unified
+ 2233              		.thumb
+ 2234              		.thumb_func
+ 2236              	TP_Init:
+ 2237              	.LFB140:
+ 265:Core/Src/GT9147.c ****   if(lcddev.id==0X5510)				//4.3寸电容触摸屏
+ 2238              		.loc 1 265 1 view -0
+ 2239              		.cfi_startproc
+ 2240              		@ args = 0, pretend = 0, frame = 0
+ 2241              		@ frame_needed = 0, uses_anonymous_args = 0
+ 2242 0000 08B5     		push	{r3, lr}
+ 2243              	.LCFI31:
+ 2244              		.cfi_def_cfa_offset 8
+ 2245              		.cfi_offset 3, -8
+ 2246              		.cfi_offset 14, -4
+ 266:Core/Src/GT9147.c ****   {
+ 2247              		.loc 1 266 3 view .LVU580
+ 266:Core/Src/GT9147.c ****   {
+ 2248              		.loc 1 266 12 is_stmt 0 view .LVU581
+ 2249 0002 134B     		ldr	r3, .L140
+ 2250 0004 9A88     		ldrh	r2, [r3, #4]
+ 266:Core/Src/GT9147.c ****   {
+ 2251              		.loc 1 266 5 view .LVU582
+ 2252 0006 45F21053 		movw	r3, #21776
+ARM GAS  /tmp/ccUgw8VC.s 			page 54
+
+
+ 2253 000a 9A42     		cmp	r2, r3
+ 2254 000c 04D0     		beq	.L139
+ 280:Core/Src/GT9147.c ****     return 1;
+ 2255              		.loc 1 280 5 is_stmt 1 view .LVU583
+ 2256 000e 1148     		ldr	r0, .L140+4
+ 2257 0010 FFF7FEFF 		bl	puts
+ 2258              	.LVL226:
+ 281:Core/Src/GT9147.c ****   }
+ 2259              		.loc 1 281 5 view .LVU584
+ 281:Core/Src/GT9147.c ****   }
+ 2260              		.loc 1 281 12 is_stmt 0 view .LVU585
+ 2261 0014 0120     		movs	r0, #1
+ 2262              	.L137:
+ 283:Core/Src/GT9147.c **** uint8_t TP_Scan(uint8_t tp)
+ 2263              		.loc 1 283 1 view .LVU586
+ 2264 0016 08BD     		pop	{r3, pc}
+ 2265              	.L139:
+ 268:Core/Src/GT9147.c ****     {
+ 2266              		.loc 1 268 5 is_stmt 1 view .LVU587
+ 268:Core/Src/GT9147.c ****     {
+ 2267              		.loc 1 268 8 is_stmt 0 view .LVU588
+ 2268 0018 FFF7FEFF 		bl	GT9147_Init
+ 2269              	.LVL227:
+ 268:Core/Src/GT9147.c ****     {
+ 2270              		.loc 1 268 7 view .LVU589
+ 2271 001c 98B9     		cbnz	r0, .L135
+ 271:Core/Src/GT9147.c ****     }else
+ 2272              		.loc 1 271 7 is_stmt 1 view .LVU590
+ 271:Core/Src/GT9147.c ****     }else
+ 2273              		.loc 1 271 20 is_stmt 0 view .LVU591
+ 2274 001e 0E4B     		ldr	r3, .L140+8
+ 2275 0020 0E4A     		ldr	r2, .L140+12
+ 2276 0022 5A60     		str	r2, [r3, #4]
+ 2277              	.L136:
+ 276:Core/Src/GT9147.c ****     touchdev.touchtype|=lcddev.dir&0X01;//横屏还是竖屏
+ 2278              		.loc 1 276 5 is_stmt 1 view .LVU592
+ 276:Core/Src/GT9147.c ****     touchdev.touchtype|=lcddev.dir&0X01;//横屏还是竖屏
+ 2279              		.loc 1 276 23 is_stmt 0 view .LVU593
+ 2280 0024 0C49     		ldr	r1, .L140+8
+ 2281 0026 91F83030 		ldrb	r3, [r1, #48]	@ zero_extendqisi2
+ 2282 002a 43F08002 		orr	r2, r3, #128
+ 2283 002e 81F83020 		strb	r2, [r1, #48]
+ 277:Core/Src/GT9147.c ****     return 0;
+ 2284              		.loc 1 277 5 is_stmt 1 view .LVU594
+ 277:Core/Src/GT9147.c ****     return 0;
+ 2285              		.loc 1 277 31 is_stmt 0 view .LVU595
+ 2286 0032 074B     		ldr	r3, .L140
+ 2287 0034 93F90630 		ldrsb	r3, [r3, #6]
+ 277:Core/Src/GT9147.c ****     return 0;
+ 2288              		.loc 1 277 35 view .LVU596
+ 2289 0038 03F00103 		and	r3, r3, #1
+ 277:Core/Src/GT9147.c ****     return 0;
+ 2290              		.loc 1 277 23 view .LVU597
+ 2291 003c 1343     		orrs	r3, r3, r2
+ 2292 003e 81F83030 		strb	r3, [r1, #48]
+ 278:Core/Src/GT9147.c ****   }else {
+ 2293              		.loc 1 278 5 is_stmt 1 view .LVU598
+ARM GAS  /tmp/ccUgw8VC.s 			page 55
+
+
+ 278:Core/Src/GT9147.c ****   }else {
+ 2294              		.loc 1 278 12 is_stmt 0 view .LVU599
+ 2295 0042 0020     		movs	r0, #0
+ 2296 0044 E7E7     		b	.L137
+ 2297              	.L135:
+ 274:Core/Src/GT9147.c ****     }
+ 2298              		.loc 1 274 7 is_stmt 1 view .LVU600
+ 2299 0046 0348     		ldr	r0, .L140+4
+ 2300 0048 FFF7FEFF 		bl	puts
+ 2301              	.LVL228:
+ 2302 004c EAE7     		b	.L136
+ 2303              	.L141:
+ 2304 004e 00BF     		.align	2
+ 2305              	.L140:
+ 2306 0050 00000000 		.word	lcddev
+ 2307 0054 00000000 		.word	.LC3
+ 2308 0058 00000000 		.word	.LANCHOR2
+ 2309 005c 00000000 		.word	GT9147_Scan
+ 2310              		.cfi_endproc
+ 2311              	.LFE140:
+ 2313              		.section	.text.GT9147_Scan,"ax",%progbits
+ 2314              		.align	1
+ 2315              		.global	GT9147_Scan
+ 2316              		.syntax unified
+ 2317              		.thumb
+ 2318              		.thumb_func
+ 2320              	GT9147_Scan:
+ 2321              	.LVL229:
+ 2322              	.LFB138:
+ 178:Core/Src/GT9147.c ****   uint8_t buf[4];
+ 2323              		.loc 1 178 1 view -0
+ 2324              		.cfi_startproc
+ 2325              		@ args = 0, pretend = 0, frame = 16
+ 2326              		@ frame_needed = 0, uses_anonymous_args = 0
+ 178:Core/Src/GT9147.c ****   uint8_t buf[4];
+ 2327              		.loc 1 178 1 is_stmt 0 view .LVU602
+ 2328 0000 70B5     		push	{r4, r5, r6, lr}
+ 2329              	.LCFI32:
+ 2330              		.cfi_def_cfa_offset 16
+ 2331              		.cfi_offset 4, -16
+ 2332              		.cfi_offset 5, -12
+ 2333              		.cfi_offset 6, -8
+ 2334              		.cfi_offset 14, -4
+ 2335 0002 84B0     		sub	sp, sp, #16
+ 2336              	.LCFI33:
+ 2337              		.cfi_def_cfa_offset 32
+ 2338 0004 8DF80700 		strb	r0, [sp, #7]
+ 179:Core/Src/GT9147.c ****   uint8_t i=0;
+ 2339              		.loc 1 179 3 is_stmt 1 view .LVU603
+ 180:Core/Src/GT9147.c ****   uint8_t res=0;
+ 2340              		.loc 1 180 3 view .LVU604
+ 2341              	.LVL230:
+ 181:Core/Src/GT9147.c ****   uint8_t temp;
+ 2342              		.loc 1 181 3 view .LVU605
+ 182:Core/Src/GT9147.c ****   uint8_t tempsta;
+ 2343              		.loc 1 182 3 view .LVU606
+ 183:Core/Src/GT9147.c ****   static uint8_t t=0;//控制查询间隔,从而降低CPU占用率
+ARM GAS  /tmp/ccUgw8VC.s 			page 56
+
+
+ 2344              		.loc 1 183 3 view .LVU607
+ 184:Core/Src/GT9147.c ****   t++;
+ 2345              		.loc 1 184 3 view .LVU608
+ 185:Core/Src/GT9147.c ****   if((t%10)==0||t<10)//空闲时,每进入10次CTP_Scan函数才检测1次,从而节省CPU使用率
+ 2346              		.loc 1 185 3 view .LVU609
+ 185:Core/Src/GT9147.c ****   if((t%10)==0||t<10)//空闲时,每进入10次CTP_Scan函数才检测1次,从而节省CPU使用率
+ 2347              		.loc 1 185 4 is_stmt 0 view .LVU610
+ 2348 0008 724B     		ldr	r3, .L163
+ 2349 000a 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 2350 000c 0132     		adds	r2, r2, #1
+ 2351 000e D2B2     		uxtb	r2, r2
+ 2352 0010 1A70     		strb	r2, [r3]
+ 186:Core/Src/GT9147.c ****   {
+ 2353              		.loc 1 186 3 is_stmt 1 view .LVU611
+ 186:Core/Src/GT9147.c ****   {
+ 2354              		.loc 1 186 12 is_stmt 0 view .LVU612
+ 2355 0012 714B     		ldr	r3, .L163+4
+ 2356 0014 A3FB0213 		umull	r1, r3, r3, r2
+ 2357 0018 DB08     		lsrs	r3, r3, #3
+ 2358 001a 03EB8303 		add	r3, r3, r3, lsl #2
+ 2359 001e A2EB4303 		sub	r3, r2, r3, lsl #1
+ 186:Core/Src/GT9147.c ****   {
+ 2360              		.loc 1 186 5 view .LVU613
+ 2361 0022 13F0FF0F 		tst	r3, #255
+ 2362 0026 02D0     		beq	.L143
+ 186:Core/Src/GT9147.c ****   {
+ 2363              		.loc 1 186 15 discriminator 1 view .LVU614
+ 2364 0028 092A     		cmp	r2, #9
+ 2365 002a 00F2AD80 		bhi	.L156
+ 2366              	.L143:
+ 188:Core/Src/GT9147.c ****     if(mode&0X80&&((mode&0XF)<6))
+ 2367              		.loc 1 188 5 is_stmt 1 view .LVU615
+ 2368 002e 0122     		movs	r2, #1
+ 2369 0030 0DF10701 		add	r1, sp, #7
+ 2370 0034 48F24E10 		movw	r0, #33102
+ 2371              	.LVL231:
+ 188:Core/Src/GT9147.c ****     if(mode&0X80&&((mode&0XF)<6))
+ 2372              		.loc 1 188 5 is_stmt 0 view .LVU616
+ 2373 0038 FFF7FEFF 		bl	GT9147_RD_Reg
+ 2374              	.LVL232:
+ 189:Core/Src/GT9147.c ****     {
+ 2375              		.loc 1 189 5 is_stmt 1 view .LVU617
+ 189:Core/Src/GT9147.c ****     {
+ 2376              		.loc 1 189 8 is_stmt 0 view .LVU618
+ 2377 003c 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
+ 2378 0040 9DF90720 		ldrsb	r2, [sp, #7]
+ 189:Core/Src/GT9147.c ****     {
+ 2379              		.loc 1 189 7 view .LVU619
+ 2380 0044 002A     		cmp	r2, #0
+ 2381 0046 1CDB     		blt	.L159
+ 2382              	.L145:
+ 194:Core/Src/GT9147.c ****     {
+ 2383              		.loc 1 194 5 is_stmt 1 view .LVU620
+ 194:Core/Src/GT9147.c ****     {
+ 2384              		.loc 1 194 13 is_stmt 0 view .LVU621
+ 2385 0048 9DF80700 		ldrb	r0, [sp, #7]	@ zero_extendqisi2
+ 2386 004c 00F00F00 		and	r0, r0, #15
+ARM GAS  /tmp/ccUgw8VC.s 			page 57
+
+
+ 194:Core/Src/GT9147.c ****     {
+ 2387              		.loc 1 194 7 view .LVU622
+ 2388 0050 0028     		cmp	r0, #0
+ 2389 0052 00F09A80 		beq	.L144
+ 194:Core/Src/GT9147.c ****     {
+ 2390              		.loc 1 194 18 discriminator 1 view .LVU623
+ 2391 0056 0528     		cmp	r0, #5
+ 2392 0058 00F2A680 		bhi	.L157
+ 196:Core/Src/GT9147.c ****       tempsta=touchdev.sta;			//保存当前的touchdev.sta值
+ 2393              		.loc 1 196 7 is_stmt 1 view .LVU624
+ 196:Core/Src/GT9147.c ****       tempsta=touchdev.sta;			//保存当前的touchdev.sta值
+ 2394              		.loc 1 196 16 is_stmt 0 view .LVU625
+ 2395 005c FF23     		movs	r3, #255
+ 2396 005e 8340     		lsls	r3, r3, r0
+ 196:Core/Src/GT9147.c ****       tempsta=touchdev.sta;			//保存当前的touchdev.sta值
+ 2397              		.loc 1 196 11 view .LVU626
+ 2398 0060 DBB2     		uxtb	r3, r3
+ 2399 0062 8DF80B30 		strb	r3, [sp, #11]
+ 197:Core/Src/GT9147.c ****       touchdev.sta=(~temp)|TP_PRES_DOWN|TP_CATH_PRES;
+ 2400              		.loc 1 197 7 is_stmt 1 view .LVU627
+ 197:Core/Src/GT9147.c ****       touchdev.sta=(~temp)|TP_PRES_DOWN|TP_CATH_PRES;
+ 2401              		.loc 1 197 14 is_stmt 0 view .LVU628
+ 2402 0066 5D4A     		ldr	r2, .L163+8
+ 2403 0068 92F82050 		ldrb	r5, [r2, #32]	@ zero_extendqisi2
+ 2404              	.LVL233:
+ 198:Core/Src/GT9147.c ****       touchdev.x[4]=touchdev.x[0];	//保存触点0的数据
+ 2405              		.loc 1 198 7 is_stmt 1 view .LVU629
+ 198:Core/Src/GT9147.c ****       touchdev.x[4]=touchdev.x[0];	//保存触点0的数据
+ 2406              		.loc 1 198 40 is_stmt 0 view .LVU630
+ 2407 006c DB43     		mvns	r3, r3
+ 2408 006e 63F03F03 		orn	r3, r3, #63
+ 198:Core/Src/GT9147.c ****       touchdev.x[4]=touchdev.x[0];	//保存触点0的数据
+ 2409              		.loc 1 198 19 view .LVU631
+ 2410 0072 82F82030 		strb	r3, [r2, #32]
+ 199:Core/Src/GT9147.c ****       touchdev.y[4]=touchdev.y[0];
+ 2411              		.loc 1 199 7 is_stmt 1 view .LVU632
+ 199:Core/Src/GT9147.c ****       touchdev.y[4]=touchdev.y[0];
+ 2412              		.loc 1 199 31 is_stmt 0 view .LVU633
+ 2413 0076 9389     		ldrh	r3, [r2, #12]
+ 199:Core/Src/GT9147.c ****       touchdev.y[4]=touchdev.y[0];
+ 2414              		.loc 1 199 20 view .LVU634
+ 2415 0078 9382     		strh	r3, [r2, #20]	@ movhi
+ 200:Core/Src/GT9147.c ****       for(i=0;i<5;i++)
+ 2416              		.loc 1 200 7 is_stmt 1 view .LVU635
+ 200:Core/Src/GT9147.c ****       for(i=0;i<5;i++)
+ 2417              		.loc 1 200 31 is_stmt 0 view .LVU636
+ 2418 007a D38A     		ldrh	r3, [r2, #22]
+ 200:Core/Src/GT9147.c ****       for(i=0;i<5;i++)
+ 2419              		.loc 1 200 20 view .LVU637
+ 2420 007c D383     		strh	r3, [r2, #30]	@ movhi
+ 201:Core/Src/GT9147.c ****       {
+ 2421              		.loc 1 201 7 is_stmt 1 view .LVU638
+ 201:Core/Src/GT9147.c ****       {
+ 2422              		.loc 1 201 12 is_stmt 0 view .LVU639
+ 2423 007e 0024     		movs	r4, #0
+ 201:Core/Src/GT9147.c ****       {
+ 2424              		.loc 1 201 7 view .LVU640
+ARM GAS  /tmp/ccUgw8VC.s 			page 58
+
+
+ 2425 0080 26E0     		b	.L146
+ 2426              	.LVL234:
+ 2427              	.L159:
+ 189:Core/Src/GT9147.c ****     {
+ 2428              		.loc 1 189 17 discriminator 1 view .LVU641
+ 2429 0082 03F00F03 		and	r3, r3, #15
+ 2430 0086 052B     		cmp	r3, #5
+ 2431 0088 DED8     		bhi	.L145
+ 191:Core/Src/GT9147.c ****       GT9147_WR_Reg(GT_GSTID_REG,&temp,1);//清标志
+ 2432              		.loc 1 191 7 is_stmt 1 view .LVU642
+ 191:Core/Src/GT9147.c ****       GT9147_WR_Reg(GT_GSTID_REG,&temp,1);//清标志
+ 2433              		.loc 1 191 11 is_stmt 0 view .LVU643
+ 2434 008a 0023     		movs	r3, #0
+ 2435 008c 8DF80B30 		strb	r3, [sp, #11]
+ 192:Core/Src/GT9147.c ****     }
+ 2436              		.loc 1 192 7 is_stmt 1 view .LVU644
+ 2437 0090 0122     		movs	r2, #1
+ 2438 0092 0DF10B01 		add	r1, sp, #11
+ 2439 0096 48F24E10 		movw	r0, #33102
+ 2440 009a FFF7FEFF 		bl	GT9147_WR_Reg
+ 2441              	.LVL235:
+ 2442 009e D3E7     		b	.L145
+ 2443              	.LVL236:
+ 2444              	.L148:
+ 212:Core/Src/GT9147.c ****             touchdev.y[i]=((uint16_t)buf[3]<<8)+buf[2];
+ 2445              		.loc 1 212 13 view .LVU645
+ 212:Core/Src/GT9147.c ****             touchdev.y[i]=((uint16_t)buf[3]<<8)+buf[2];
+ 2446              		.loc 1 212 41 is_stmt 0 view .LVU646
+ 2447 00a0 9DF80D30 		ldrb	r3, [sp, #13]	@ zero_extendqisi2
+ 212:Core/Src/GT9147.c ****             touchdev.y[i]=((uint16_t)buf[3]<<8)+buf[2];
+ 2448              		.loc 1 212 52 view .LVU647
+ 2449 00a4 9DF80C10 		ldrb	r1, [sp, #12]	@ zero_extendqisi2
+ 212:Core/Src/GT9147.c ****             touchdev.y[i]=((uint16_t)buf[3]<<8)+buf[2];
+ 2450              		.loc 1 212 48 view .LVU648
+ 2451 00a8 01EB0321 		add	r1, r1, r3, lsl #8
+ 212:Core/Src/GT9147.c ****             touchdev.y[i]=((uint16_t)buf[3]<<8)+buf[2];
+ 2452              		.loc 1 212 26 view .LVU649
+ 2453 00ac 4B4A     		ldr	r2, .L163+8
+ 2454 00ae 231D     		adds	r3, r4, #4
+ 2455 00b0 02EB4303 		add	r3, r2, r3, lsl #1
+ 2456 00b4 9980     		strh	r1, [r3, #4]	@ movhi
+ 213:Core/Src/GT9147.c ****           }
+ 2457              		.loc 1 213 13 is_stmt 1 view .LVU650
+ 213:Core/Src/GT9147.c ****           }
+ 2458              		.loc 1 213 41 is_stmt 0 view .LVU651
+ 2459 00b6 9DF80F30 		ldrb	r3, [sp, #15]	@ zero_extendqisi2
+ 213:Core/Src/GT9147.c ****           }
+ 2460              		.loc 1 213 52 view .LVU652
+ 2461 00ba 9DF80E10 		ldrb	r1, [sp, #14]	@ zero_extendqisi2
+ 213:Core/Src/GT9147.c ****           }
+ 2462              		.loc 1 213 48 view .LVU653
+ 2463 00be 01EB0321 		add	r1, r1, r3, lsl #8
+ 213:Core/Src/GT9147.c ****           }
+ 2464              		.loc 1 213 26 view .LVU654
+ 2465 00c2 04F10803 		add	r3, r4, #8
+ 2466 00c6 02EB4303 		add	r3, r2, r3, lsl #1
+ 2467 00ca D980     		strh	r1, [r3, #6]	@ movhi
+ARM GAS  /tmp/ccUgw8VC.s 			page 59
+
+
+ 2468              	.L147:
+ 201:Core/Src/GT9147.c ****       {
+ 2469              		.loc 1 201 19 is_stmt 1 discriminator 2 view .LVU655
+ 201:Core/Src/GT9147.c ****       {
+ 2470              		.loc 1 201 20 is_stmt 0 discriminator 2 view .LVU656
+ 2471 00cc 0134     		adds	r4, r4, #1
+ 2472              	.LVL237:
+ 201:Core/Src/GT9147.c ****       {
+ 2473              		.loc 1 201 20 discriminator 2 view .LVU657
+ 2474 00ce E4B2     		uxtb	r4, r4
+ 2475              	.LVL238:
+ 2476              	.L146:
+ 201:Core/Src/GT9147.c ****       {
+ 2477              		.loc 1 201 15 is_stmt 1 discriminator 1 view .LVU658
+ 201:Core/Src/GT9147.c ****       {
+ 2478              		.loc 1 201 7 is_stmt 0 discriminator 1 view .LVU659
+ 2479 00d0 042C     		cmp	r4, #4
+ 2480 00d2 2DD8     		bhi	.L160
+ 203:Core/Src/GT9147.c ****         {
+ 2481              		.loc 1 203 9 is_stmt 1 view .LVU660
+ 203:Core/Src/GT9147.c ****         {
+ 2482              		.loc 1 203 20 is_stmt 0 view .LVU661
+ 2483 00d4 414B     		ldr	r3, .L163+8
+ 2484 00d6 93F82030 		ldrb	r3, [r3, #32]	@ zero_extendqisi2
+ 203:Core/Src/GT9147.c ****         {
+ 2485              		.loc 1 203 12 view .LVU662
+ 2486 00da 2341     		asrs	r3, r3, r4
+ 203:Core/Src/GT9147.c ****         {
+ 2487              		.loc 1 203 11 view .LVU663
+ 2488 00dc 13F0010F 		tst	r3, #1
+ 2489 00e0 F4D0     		beq	.L147
+ 205:Core/Src/GT9147.c ****           if(touchdev.touchtype&0X01)//横屏
+ 2490              		.loc 1 205 11 is_stmt 1 view .LVU664
+ 2491 00e2 0422     		movs	r2, #4
+ 2492 00e4 03A9     		add	r1, sp, #12
+ 2493 00e6 3E4B     		ldr	r3, .L163+12
+ 2494 00e8 33F81400 		ldrh	r0, [r3, r4, lsl #1]
+ 2495 00ec FFF7FEFF 		bl	GT9147_RD_Reg
+ 2496              	.LVL239:
+ 206:Core/Src/GT9147.c ****           {
+ 2497              		.loc 1 206 11 view .LVU665
+ 206:Core/Src/GT9147.c ****           {
+ 2498              		.loc 1 206 22 is_stmt 0 view .LVU666
+ 2499 00f0 3A4B     		ldr	r3, .L163+8
+ 2500 00f2 93F83030 		ldrb	r3, [r3, #48]	@ zero_extendqisi2
+ 206:Core/Src/GT9147.c ****           {
+ 2501              		.loc 1 206 13 view .LVU667
+ 2502 00f6 13F0010F 		tst	r3, #1
+ 2503 00fa D1D0     		beq	.L148
+ 208:Core/Src/GT9147.c ****             touchdev.x[i]=800-(((uint16_t)buf[3]<<8)+buf[2]);
+ 2504              		.loc 1 208 13 is_stmt 1 view .LVU668
+ 208:Core/Src/GT9147.c ****             touchdev.x[i]=800-(((uint16_t)buf[3]<<8)+buf[2]);
+ 2505              		.loc 1 208 41 is_stmt 0 view .LVU669
+ 2506 00fc 9DF80D30 		ldrb	r3, [sp, #13]	@ zero_extendqisi2
+ 208:Core/Src/GT9147.c ****             touchdev.x[i]=800-(((uint16_t)buf[3]<<8)+buf[2]);
+ 2507              		.loc 1 208 52 view .LVU670
+ 2508 0100 9DF80C20 		ldrb	r2, [sp, #12]	@ zero_extendqisi2
+ARM GAS  /tmp/ccUgw8VC.s 			page 60
+
+
+ 208:Core/Src/GT9147.c ****             touchdev.x[i]=800-(((uint16_t)buf[3]<<8)+buf[2]);
+ 2509              		.loc 1 208 48 view .LVU671
+ 2510 0104 02EB0322 		add	r2, r2, r3, lsl #8
+ 208:Core/Src/GT9147.c ****             touchdev.x[i]=800-(((uint16_t)buf[3]<<8)+buf[2]);
+ 2511              		.loc 1 208 26 view .LVU672
+ 2512 0108 3449     		ldr	r1, .L163+8
+ 2513 010a 04F10803 		add	r3, r4, #8
+ 2514 010e 01EB4303 		add	r3, r1, r3, lsl #1
+ 2515 0112 DA80     		strh	r2, [r3, #6]	@ movhi
+ 209:Core/Src/GT9147.c ****           }else
+ 2516              		.loc 1 209 13 is_stmt 1 view .LVU673
+ 209:Core/Src/GT9147.c ****           }else
+ 2517              		.loc 1 209 46 is_stmt 0 view .LVU674
+ 2518 0114 9DF80F30 		ldrb	r3, [sp, #15]	@ zero_extendqisi2
+ 209:Core/Src/GT9147.c ****           }else
+ 2519              		.loc 1 209 57 view .LVU675
+ 2520 0118 9DF80E20 		ldrb	r2, [sp, #14]	@ zero_extendqisi2
+ 209:Core/Src/GT9147.c ****           }else
+ 2521              		.loc 1 209 53 view .LVU676
+ 2522 011c 02EB0322 		add	r2, r2, r3, lsl #8
+ 2523 0120 92B2     		uxth	r2, r2
+ 209:Core/Src/GT9147.c ****           }else
+ 2524              		.loc 1 209 30 view .LVU677
+ 2525 0122 C2F54872 		rsb	r2, r2, #800
+ 209:Core/Src/GT9147.c ****           }else
+ 2526              		.loc 1 209 26 view .LVU678
+ 2527 0126 231D     		adds	r3, r4, #4
+ 2528 0128 01EB4301 		add	r1, r1, r3, lsl #1
+ 2529 012c 8A80     		strh	r2, [r1, #4]	@ movhi
+ 2530 012e CDE7     		b	.L147
+ 2531              	.L160:
+ 218:Core/Src/GT9147.c ****       if(touchdev.x[0]>lcddev.width||touchdev.y[0]>lcddev.height)//非法数据(坐标超出了)
+ 2532              		.loc 1 218 7 is_stmt 1 view .LVU679
+ 2533              	.LVL240:
+ 219:Core/Src/GT9147.c ****       {
+ 2534              		.loc 1 219 7 view .LVU680
+ 219:Core/Src/GT9147.c ****       {
+ 2535              		.loc 1 219 20 is_stmt 0 view .LVU681
+ 2536 0130 2A4B     		ldr	r3, .L163+8
+ 2537 0132 9A89     		ldrh	r2, [r3, #12]
+ 219:Core/Src/GT9147.c ****       {
+ 2538              		.loc 1 219 30 view .LVU682
+ 2539 0134 2B4B     		ldr	r3, .L163+16
+ 2540 0136 1B88     		ldrh	r3, [r3]
+ 219:Core/Src/GT9147.c ****       {
+ 2541              		.loc 1 219 9 view .LVU683
+ 2542 0138 9A42     		cmp	r2, r3
+ 2543 013a 05D8     		bhi	.L150
+ 219:Core/Src/GT9147.c ****       {
+ 2544              		.loc 1 219 48 discriminator 1 view .LVU684
+ 2545 013c 274B     		ldr	r3, .L163+8
+ 2546 013e DA8A     		ldrh	r2, [r3, #22]
+ 219:Core/Src/GT9147.c ****       {
+ 2547              		.loc 1 219 58 discriminator 1 view .LVU685
+ 2548 0140 284B     		ldr	r3, .L163+16
+ 2549 0142 5B88     		ldrh	r3, [r3, #2]
+ 219:Core/Src/GT9147.c ****       {
+ARM GAS  /tmp/ccUgw8VC.s 			page 61
+
+
+ 2550              		.loc 1 219 36 discriminator 1 view .LVU686
+ 2551 0144 9A42     		cmp	r2, r3
+ 2552 0146 1AD9     		bls	.L151
+ 2553              	.L150:
+ 221:Core/Src/GT9147.c ****         {
+ 2554              		.loc 1 221 9 is_stmt 1 view .LVU687
+ 221:Core/Src/GT9147.c ****         {
+ 2555              		.loc 1 221 22 is_stmt 0 view .LVU688
+ 2556 0148 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
+ 221:Core/Src/GT9147.c ****         {
+ 2557              		.loc 1 221 11 view .LVU689
+ 2558 014c 13F00E0F 		tst	r3, #14
+ 2559 0150 09D0     		beq	.L152
+ 223:Core/Src/GT9147.c ****           touchdev.y[0]=touchdev.y[1];
+ 2560              		.loc 1 223 11 is_stmt 1 view .LVU690
+ 223:Core/Src/GT9147.c ****           touchdev.y[0]=touchdev.y[1];
+ 2561              		.loc 1 223 35 is_stmt 0 view .LVU691
+ 2562 0152 224B     		ldr	r3, .L163+8
+ 2563 0154 DA89     		ldrh	r2, [r3, #14]
+ 223:Core/Src/GT9147.c ****           touchdev.y[0]=touchdev.y[1];
+ 2564              		.loc 1 223 24 view .LVU692
+ 2565 0156 9A81     		strh	r2, [r3, #12]	@ movhi
+ 224:Core/Src/GT9147.c ****           t=0;				//触发一次,则会最少连续监测10次,从而提高命中率
+ 2566              		.loc 1 224 11 is_stmt 1 view .LVU693
+ 224:Core/Src/GT9147.c ****           t=0;				//触发一次,则会最少连续监测10次,从而提高命中率
+ 2567              		.loc 1 224 35 is_stmt 0 view .LVU694
+ 2568 0158 1A8B     		ldrh	r2, [r3, #24]
+ 224:Core/Src/GT9147.c ****           t=0;				//触发一次,则会最少连续监测10次,从而提高命中率
+ 2569              		.loc 1 224 24 view .LVU695
+ 2570 015a DA82     		strh	r2, [r3, #22]	@ movhi
+ 225:Core/Src/GT9147.c ****         }else					//非法数据,则忽略此次数据(还原原来的)
+ 2571              		.loc 1 225 11 is_stmt 1 view .LVU696
+ 225:Core/Src/GT9147.c ****         }else					//非法数据,则忽略此次数据(还原原来的)
+ 2572              		.loc 1 225 12 is_stmt 0 view .LVU697
+ 2573 015c 1D4B     		ldr	r3, .L163
+ 2574 015e 0022     		movs	r2, #0
+ 2575 0160 1A70     		strb	r2, [r3]
+ 218:Core/Src/GT9147.c ****       if(touchdev.x[0]>lcddev.width||touchdev.y[0]>lcddev.height)//非法数据(坐标超出了)
+ 2576              		.loc 1 218 10 view .LVU698
+ 2577 0162 0120     		movs	r0, #1
+ 2578 0164 11E0     		b	.L144
+ 2579              	.L152:
+ 228:Core/Src/GT9147.c ****           touchdev.y[0]=touchdev.y[4];
+ 2580              		.loc 1 228 11 is_stmt 1 view .LVU699
+ 228:Core/Src/GT9147.c ****           touchdev.y[0]=touchdev.y[4];
+ 2581              		.loc 1 228 35 is_stmt 0 view .LVU700
+ 2582 0166 1D4B     		ldr	r3, .L163+8
+ 2583 0168 9A8A     		ldrh	r2, [r3, #20]
+ 228:Core/Src/GT9147.c ****           touchdev.y[0]=touchdev.y[4];
+ 2584              		.loc 1 228 24 view .LVU701
+ 2585 016a 9A81     		strh	r2, [r3, #12]	@ movhi
+ 229:Core/Src/GT9147.c ****           mode=0X80;
+ 2586              		.loc 1 229 11 is_stmt 1 view .LVU702
+ 229:Core/Src/GT9147.c ****           mode=0X80;
+ 2587              		.loc 1 229 35 is_stmt 0 view .LVU703
+ 2588 016c DA8B     		ldrh	r2, [r3, #30]
+ 229:Core/Src/GT9147.c ****           mode=0X80;
+ARM GAS  /tmp/ccUgw8VC.s 			page 62
+
+
+ 2589              		.loc 1 229 24 view .LVU704
+ 2590 016e DA82     		strh	r2, [r3, #22]	@ movhi
+ 230:Core/Src/GT9147.c ****           touchdev.sta=tempsta;	//恢复touchdev.sta
+ 2591              		.loc 1 230 11 is_stmt 1 view .LVU705
+ 230:Core/Src/GT9147.c ****           touchdev.sta=tempsta;	//恢复touchdev.sta
+ 2592              		.loc 1 230 15 is_stmt 0 view .LVU706
+ 2593 0170 8022     		movs	r2, #128
+ 2594 0172 8DF80720 		strb	r2, [sp, #7]
+ 231:Core/Src/GT9147.c ****         }
+ 2595              		.loc 1 231 11 is_stmt 1 view .LVU707
+ 231:Core/Src/GT9147.c ****         }
+ 2596              		.loc 1 231 23 is_stmt 0 view .LVU708
+ 2597 0176 83F82050 		strb	r5, [r3, #32]
+ 218:Core/Src/GT9147.c ****       if(touchdev.x[0]>lcddev.width||touchdev.y[0]>lcddev.height)//非法数据(坐标超出了)
+ 2598              		.loc 1 218 10 view .LVU709
+ 2599 017a 0120     		movs	r0, #1
+ 2600 017c 05E0     		b	.L144
+ 2601              	.L151:
+ 233:Core/Src/GT9147.c ****     }
+ 2602              		.loc 1 233 13 is_stmt 1 view .LVU710
+ 233:Core/Src/GT9147.c ****     }
+ 2603              		.loc 1 233 14 is_stmt 0 view .LVU711
+ 2604 017e 154B     		ldr	r3, .L163
+ 2605 0180 0022     		movs	r2, #0
+ 2606 0182 1A70     		strb	r2, [r3]
+ 218:Core/Src/GT9147.c ****       if(touchdev.x[0]>lcddev.width||touchdev.y[0]>lcddev.height)//非法数据(坐标超出了)
+ 2607              		.loc 1 218 10 view .LVU712
+ 2608 0184 0120     		movs	r0, #1
+ 2609 0186 00E0     		b	.L144
+ 2610              	.LVL241:
+ 2611              	.L156:
+ 181:Core/Src/GT9147.c ****   uint8_t temp;
+ 2612              		.loc 1 181 11 view .LVU713
+ 2613 0188 0020     		movs	r0, #0
+ 2614              	.LVL242:
+ 2615              	.L144:
+ 236:Core/Src/GT9147.c ****   {
+ 2616              		.loc 1 236 3 is_stmt 1 view .LVU714
+ 236:Core/Src/GT9147.c ****   {
+ 2617              		.loc 1 236 11 is_stmt 0 view .LVU715
+ 2618 018a 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
+ 236:Core/Src/GT9147.c ****   {
+ 2619              		.loc 1 236 5 view .LVU716
+ 2620 018e 03F08F03 		and	r3, r3, #143
+ 2621 0192 802B     		cmp	r3, #128
+ 2622 0194 0AD0     		beq	.L161
+ 2623              	.L153:
+ 247:Core/Src/GT9147.c **** 
+ 2624              		.loc 1 247 3 is_stmt 1 view .LVU717
+ 247:Core/Src/GT9147.c **** 
+ 2625              		.loc 1 247 7 is_stmt 0 view .LVU718
+ 2626 0196 0F4B     		ldr	r3, .L163
+ 2627 0198 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 247:Core/Src/GT9147.c **** 
+ 2628              		.loc 1 247 5 view .LVU719
+ 2629 019a F02B     		cmp	r3, #240
+ 2630 019c 02D9     		bls	.L155
+ARM GAS  /tmp/ccUgw8VC.s 			page 63
+
+
+ 247:Core/Src/GT9147.c **** 
+ 2631              		.loc 1 247 12 is_stmt 1 discriminator 1 view .LVU720
+ 247:Core/Src/GT9147.c **** 
+ 2632              		.loc 1 247 13 is_stmt 0 discriminator 1 view .LVU721
+ 2633 019e 0D4B     		ldr	r3, .L163
+ 2634 01a0 0A22     		movs	r2, #10
+ 2635 01a2 1A70     		strb	r2, [r3]
+ 2636              	.L155:
+ 249:Core/Src/GT9147.c **** }
+ 2637              		.loc 1 249 3 is_stmt 1 view .LVU722
+ 250:Core/Src/GT9147.c **** void TP_Write_Byte(uint8_t num)
+ 2638              		.loc 1 250 1 is_stmt 0 view .LVU723
+ 2639 01a4 04B0     		add	sp, sp, #16
+ 2640              	.LCFI34:
+ 2641              		.cfi_remember_state
+ 2642              		.cfi_def_cfa_offset 16
+ 2643              		@ sp needed
+ 2644 01a6 70BD     		pop	{r4, r5, r6, pc}
+ 2645              	.LVL243:
+ 2646              	.L157:
+ 2647              	.LCFI35:
+ 2648              		.cfi_restore_state
+ 181:Core/Src/GT9147.c ****   uint8_t temp;
+ 2649              		.loc 1 181 11 view .LVU724
+ 2650 01a8 0020     		movs	r0, #0
+ 2651 01aa EEE7     		b	.L144
+ 2652              	.LVL244:
+ 2653              	.L161:
+ 238:Core/Src/GT9147.c ****     {
+ 2654              		.loc 1 238 5 is_stmt 1 view .LVU725
+ 238:Core/Src/GT9147.c ****     {
+ 2655              		.loc 1 238 16 is_stmt 0 view .LVU726
+ 2656 01ac 0B4B     		ldr	r3, .L163+8
+ 2657 01ae 93F82020 		ldrb	r2, [r3, #32]	@ zero_extendqisi2
+ 238:Core/Src/GT9147.c ****     {
+ 2658              		.loc 1 238 8 view .LVU727
+ 2659 01b2 93F92030 		ldrsb	r3, [r3, #32]
+ 238:Core/Src/GT9147.c ****     {
+ 2660              		.loc 1 238 7 view .LVU728
+ 2661 01b6 002B     		cmp	r3, #0
+ 2662 01b8 05DB     		blt	.L162
+ 243:Core/Src/GT9147.c ****       touchdev.y[0]=0xffff;
+ 2663              		.loc 1 243 7 is_stmt 1 view .LVU729
+ 243:Core/Src/GT9147.c ****       touchdev.y[0]=0xffff;
+ 2664              		.loc 1 243 20 is_stmt 0 view .LVU730
+ 2665 01ba 084B     		ldr	r3, .L163+8
+ 2666 01bc 4FF6FF72 		movw	r2, #65535
+ 2667 01c0 9A81     		strh	r2, [r3, #12]	@ movhi
+ 244:Core/Src/GT9147.c ****     }
+ 2668              		.loc 1 244 7 is_stmt 1 view .LVU731
+ 244:Core/Src/GT9147.c ****     }
+ 2669              		.loc 1 244 20 is_stmt 0 view .LVU732
+ 2670 01c2 DA82     		strh	r2, [r3, #22]	@ movhi
+ 2671 01c4 E7E7     		b	.L153
+ 2672              	.L162:
+ 240:Core/Src/GT9147.c ****     }else						//之前就没有被按下
+ 2673              		.loc 1 240 7 is_stmt 1 view .LVU733
+ARM GAS  /tmp/ccUgw8VC.s 			page 64
+
+
+ 240:Core/Src/GT9147.c ****     }else						//之前就没有被按下
+ 2674              		.loc 1 240 19 is_stmt 0 view .LVU734
+ 2675 01c6 02F07F02 		and	r2, r2, #127
+ 2676 01ca 044B     		ldr	r3, .L163+8
+ 2677 01cc 83F82020 		strb	r2, [r3, #32]
+ 2678 01d0 E1E7     		b	.L153
+ 2679              	.L164:
+ 2680 01d2 00BF     		.align	2
+ 2681              	.L163:
+ 2682 01d4 00000000 		.word	.LANCHOR4
+ 2683 01d8 CDCCCCCC 		.word	-858993459
+ 2684 01dc 00000000 		.word	.LANCHOR2
+ 2685 01e0 00000000 		.word	.LANCHOR5
+ 2686 01e4 00000000 		.word	lcddev
+ 2687              		.cfi_endproc
+ 2688              	.LFE138:
+ 2690              		.global	GT9147_TPX_TBL
+ 2691              		.global	GT9147_CFG_TBL
+ 2692              		.global	CMD_RDY
+ 2693              		.global	CMD_RDX
+ 2694              		.global	touchdev
+ 2695              		.section	.bss.t.0,"aw",%nobits
+ 2696              		.set	.LANCHOR4,. + 0
+ 2699              	t.0:
+ 2700 0000 00       		.space	1
+ 2701              		.section	.data.CMD_RDX,"aw"
+ 2702              		.set	.LANCHOR0,. + 0
+ 2705              	CMD_RDX:
+ 2706 0000 D0       		.byte	-48
+ 2707              		.section	.data.CMD_RDY,"aw"
+ 2708              		.set	.LANCHOR1,. + 0
+ 2711              	CMD_RDY:
+ 2712 0000 90       		.byte	-112
+ 2713              		.section	.data.touchdev,"aw"
+ 2714              		.align	2
+ 2715              		.set	.LANCHOR2,. + 0
+ 2718              	touchdev:
+ 2719 0000 00000000 		.word	TP_Init
+ 2720 0004 00000000 		.word	TP_Scan
+ 2721 0008 00000000 		.word	0
+ 2722 000c 0000     		.short	0
+ 2723 000e 0000     		.short	0
+ 2724 0010 0000     		.short	0
+ 2725 0012 0000     		.short	0
+ 2726 0014 0000     		.short	0
+ 2727 0016 0000     		.short	0
+ 2728 0018 0000     		.short	0
+ 2729 001a 0000     		.short	0
+ 2730 001c 0000     		.short	0
+ 2731 001e 0000     		.short	0
+ 2732 0020 00000000 		.space	24
+ 2732      00000000 
+ 2732      00000000 
+ 2732      00000000 
+ 2732      00000000 
+ 2733              		.section	.rodata.GT9147_CFG_TBL,"a"
+ 2734              		.align	2
+ARM GAS  /tmp/ccUgw8VC.s 			page 65
+
+
+ 2735              		.set	.LANCHOR3,. + 0
+ 2738              	GT9147_CFG_TBL:
+ 2739 0000 60E00120 		.ascii	"`\340\001 \003\0055\000\002\010\036\010P<\017\005\000"
+ 2739      03053500 
+ 2739      02081E08 
+ 2739      503C0F05 
+ 2739      00
+ 2740 0011 00FF6750 		.ascii	"\000\377gP\000\000\030\032\036\024\211(\0120.\273\012"
+ 2740      0000181A 
+ 2740      1E148928 
+ 2740      0A302EBB 
+ 2740      0A
+ 2741 0022 03000002 		.ascii	"\003\000\000\0023\035\000\000\000\000\000\000\0002\000"
+ 2741      331D0000 
+ 2741      00000000 
+ 2741      003200
+ 2742 0031 002A1C5A 		.ascii	"\000*\034Z\224\305\002\007\000\000\000\265\037\000\220"
+ 2742      94C50207 
+ 2742      000000B5 
+ 2742      1F0090
+ 2743 0040 28007732 		.ascii	"(\000w2\000b?\000RP\000R\000\000\000\000\000\000\000"
+ 2743      00623F00 
+ 2743      52500052 
+ 2743      00000000 
+ 2743      000000
+ 2744 0053 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 2744      00000000 
+ 2744      00000000 
+ 2744      00
+ 2745 0060 0000000F 		.ascii	"\000\000\000\017\017\003\006\020B\370\017\024\000\000"
+ 2745      0F030610 
+ 2745      42F80F14 
+ 2745      0000
+ 2746 006e 00001A18 		.ascii	"\000\000\032\030\026\024\022\020\016\014\012\010\000"
+ 2746      16141210 
+ 2746      0E0C0A08 
+ 2746      00
+ 2747 007b 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 2747      00000000 
+ 2747      00000000 
+ 2747      00
+ 2748 0088 00000000 		.ascii	"\000\000\000\000\000\000)($\" \037\036\035\016\014\012"
+ 2748      00002928 
+ 2748      2422201F 
+ 2748      1E1D0E0C 
+ 2748      0A
+ 2749 0099 08060504 		.ascii	"\010\006\005\004\002\000\377\000\000\000\000\000\000"
+ 2749      0200FF00 
+ 2749      00000000 
+ 2749      00
+ 2750 00a6 00000000 		.ascii	"\000\000\000\000\000\377\377\377\377\377\377\377\377"
+ 2750      00FFFFFF 
+ 2750      FFFFFFFF 
+ 2750      FF
+ 2751 00b3 FFFFFFFF 		.ascii	"\377\377\377\377\377"
+ 2751      FF
+ 2752              		.section	.rodata.GT9147_TPX_TBL,"a"
+ARM GAS  /tmp/ccUgw8VC.s 			page 66
+
+
+ 2753              		.align	2
+ 2754              		.set	.LANCHOR5,. + 0
+ 2757              	GT9147_TPX_TBL:
+ 2758 0000 5081     		.short	-32432
+ 2759 0002 5881     		.short	-32424
+ 2760 0004 6081     		.short	-32416
+ 2761 0006 6881     		.short	-32408
+ 2762 0008 7081     		.short	-32400
+ 2763              		.text
+ 2764              	.Letext0:
+ 2765              		.file 2 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/machine/_default_types.h"
+ 2766              		.file 3 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/sys/_stdint.h"
+ 2767              		.file 4 "Drivers/CMSIS/Include/core_cm4.h"
+ 2768              		.file 5 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h"
+ 2769              		.file 6 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h"
+ 2770              		.file 7 "Core/Inc/fsmc.h"
+ 2771              		.file 8 "Core/Inc/GT9147.h"
+ 2772              		.file 9 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ 2773              		.file 10 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/stdio.h"
+ 2774              		.file 11 "/home/akinya/gcc-arm-none-eabi/arm-none-eabi/include/string.h"
+ 2775              		.file 12 "<built-in>"
+ARM GAS  /tmp/ccUgw8VC.s 			page 67
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 GT9147.c
+     /tmp/ccUgw8VC.s:20     .text.delay_us:0000000000000000 $t
+     /tmp/ccUgw8VC.s:26     .text.delay_us:0000000000000000 delay_us
+     /tmp/ccUgw8VC.s:64     .text.TP_Write_Byte:0000000000000000 $t
+     /tmp/ccUgw8VC.s:70     .text.TP_Write_Byte:0000000000000000 TP_Write_Byte
+     /tmp/ccUgw8VC.s:157    .text.TP_Write_Byte:0000000000000054 $d
+     /tmp/ccUgw8VC.s:163    .text.TP_Read_AD:0000000000000000 $t
+     /tmp/ccUgw8VC.s:169    .text.TP_Read_AD:0000000000000000 TP_Read_AD
+     /tmp/ccUgw8VC.s:326    .text.TP_Read_AD:00000000000000b0 $d
+     /tmp/ccUgw8VC.s:333    .text.TP_Read_XOY:0000000000000000 $t
+     /tmp/ccUgw8VC.s:339    .text.TP_Read_XOY:0000000000000000 TP_Read_XOY
+     /tmp/ccUgw8VC.s:503    .text.TP_Read_XOY:0000000000000094 $d
+     /tmp/ccUgw8VC.s:508    .text.TP_Read_XY:0000000000000000 $t
+     /tmp/ccUgw8VC.s:514    .text.TP_Read_XY:0000000000000000 TP_Read_XY
+     /tmp/ccUgw8VC.s:566    .text.TP_Read_XY:0000000000000020 $d
+     /tmp/ccUgw8VC.s:572    .text.TP_Read_XY2:0000000000000000 $t
+     /tmp/ccUgw8VC.s:578    .text.TP_Read_XY2:0000000000000000 TP_Read_XY2
+     /tmp/ccUgw8VC.s:723    .text.TP_Scan:0000000000000000 $t
+     /tmp/ccUgw8VC.s:729    .text.TP_Scan:0000000000000000 TP_Scan
+     /tmp/ccUgw8VC.s:881    .text.TP_Scan:00000000000000e0 $d
+     /tmp/ccUgw8VC.s:887    .text.CT_Delay:0000000000000000 $t
+     /tmp/ccUgw8VC.s:893    .text.CT_Delay:0000000000000000 CT_Delay
+     /tmp/ccUgw8VC.s:914    .text.CT_IIC_Init:0000000000000000 $t
+     /tmp/ccUgw8VC.s:920    .text.CT_IIC_Init:0000000000000000 CT_IIC_Init
+     /tmp/ccUgw8VC.s:1048   .text.CT_IIC_Init:0000000000000090 $d
+     /tmp/ccUgw8VC.s:1056   .text.CT_IIC_Start:0000000000000000 $t
+     /tmp/ccUgw8VC.s:1062   .text.CT_IIC_Start:0000000000000000 CT_IIC_Start
+     /tmp/ccUgw8VC.s:1122   .text.CT_IIC_Start:0000000000000050 $d
+     /tmp/ccUgw8VC.s:1128   .text.CT_IIC_Stop:0000000000000000 $t
+     /tmp/ccUgw8VC.s:1134   .text.CT_IIC_Stop:0000000000000000 CT_IIC_Stop
+     /tmp/ccUgw8VC.s:1185   .text.CT_IIC_Stop:0000000000000044 $d
+     /tmp/ccUgw8VC.s:1191   .text.CT_IIC_Wait_Ack:0000000000000000 $t
+     /tmp/ccUgw8VC.s:1197   .text.CT_IIC_Wait_Ack:0000000000000000 CT_IIC_Wait_Ack
+     /tmp/ccUgw8VC.s:1291   .text.CT_IIC_Wait_Ack:0000000000000060 $d
+     /tmp/ccUgw8VC.s:1297   .text.CT_IIC_Ack:0000000000000000 $t
+     /tmp/ccUgw8VC.s:1303   .text.CT_IIC_Ack:0000000000000000 CT_IIC_Ack
+     /tmp/ccUgw8VC.s:1365   .text.CT_IIC_Ack:0000000000000050 $d
+     /tmp/ccUgw8VC.s:1371   .text.CT_IIC_NAck:0000000000000000 $t
+     /tmp/ccUgw8VC.s:1377   .text.CT_IIC_NAck:0000000000000000 CT_IIC_NAck
+     /tmp/ccUgw8VC.s:1439   .text.CT_IIC_NAck:0000000000000050 $d
+     /tmp/ccUgw8VC.s:1445   .text.CT_IIC_Send_Byte:0000000000000000 $t
+     /tmp/ccUgw8VC.s:1451   .text.CT_IIC_Send_Byte:0000000000000000 CT_IIC_Send_Byte
+     /tmp/ccUgw8VC.s:1547   .text.CT_IIC_Send_Byte:0000000000000060 $d
+     /tmp/ccUgw8VC.s:1553   .text.GT9147_WR_Reg:0000000000000000 $t
+     /tmp/ccUgw8VC.s:1559   .text.GT9147_WR_Reg:0000000000000000 GT9147_WR_Reg
+     /tmp/ccUgw8VC.s:1654   .text.GT9147_Send_Cfg:0000000000000000 $t
+     /tmp/ccUgw8VC.s:1660   .text.GT9147_Send_Cfg:0000000000000000 GT9147_Send_Cfg
+     /tmp/ccUgw8VC.s:1742   .text.GT9147_Send_Cfg:0000000000000050 $d
+     /tmp/ccUgw8VC.s:1747   .text.CT_IIC_Read_Byte:0000000000000000 $t
+     /tmp/ccUgw8VC.s:1753   .text.CT_IIC_Read_Byte:0000000000000000 CT_IIC_Read_Byte
+     /tmp/ccUgw8VC.s:1871   .text.CT_IIC_Read_Byte:0000000000000068 $d
+     /tmp/ccUgw8VC.s:1877   .text.GT9147_RD_Reg:0000000000000000 $t
+     /tmp/ccUgw8VC.s:1883   .text.GT9147_RD_Reg:0000000000000000 GT9147_RD_Reg
+     /tmp/ccUgw8VC.s:1976   .rodata.GT9147_Init.str1.4:0000000000000000 $d
+     /tmp/ccUgw8VC.s:1986   .text.GT9147_Init:0000000000000000 $t
+     /tmp/ccUgw8VC.s:1992   .text.GT9147_Init:0000000000000000 GT9147_Init
+ARM GAS  /tmp/ccUgw8VC.s 			page 68
+
+
+     /tmp/ccUgw8VC.s:2216   .text.GT9147_Init:0000000000000120 $d
+     /tmp/ccUgw8VC.s:2226   .rodata.TP_Init.str1.4:0000000000000000 $d
+     /tmp/ccUgw8VC.s:2230   .text.TP_Init:0000000000000000 $t
+     /tmp/ccUgw8VC.s:2236   .text.TP_Init:0000000000000000 TP_Init
+     /tmp/ccUgw8VC.s:2306   .text.TP_Init:0000000000000050 $d
+     /tmp/ccUgw8VC.s:2320   .text.GT9147_Scan:0000000000000000 GT9147_Scan
+     /tmp/ccUgw8VC.s:2314   .text.GT9147_Scan:0000000000000000 $t
+     /tmp/ccUgw8VC.s:2682   .text.GT9147_Scan:00000000000001d4 $d
+     /tmp/ccUgw8VC.s:2757   .rodata.GT9147_TPX_TBL:0000000000000000 GT9147_TPX_TBL
+     /tmp/ccUgw8VC.s:2738   .rodata.GT9147_CFG_TBL:0000000000000000 GT9147_CFG_TBL
+     /tmp/ccUgw8VC.s:2711   .data.CMD_RDY:0000000000000000 CMD_RDY
+     /tmp/ccUgw8VC.s:2705   .data.CMD_RDX:0000000000000000 CMD_RDX
+     /tmp/ccUgw8VC.s:2718   .data.touchdev:0000000000000000 touchdev
+     /tmp/ccUgw8VC.s:2699   .bss.t.0:0000000000000000 t.0
+     /tmp/ccUgw8VC.s:2700   .bss.t.0:0000000000000000 $d
+     /tmp/ccUgw8VC.s:2714   .data.touchdev:0000000000000000 $d
+     /tmp/ccUgw8VC.s:2734   .rodata.GT9147_CFG_TBL:0000000000000000 $d
+     /tmp/ccUgw8VC.s:2753   .rodata.GT9147_TPX_TBL:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+HAL_GPIO_WritePin
+HAL_GPIO_ReadPin
+HAL_GPIO_Init
+HAL_Delay
+printf
+strcmp
+puts
+lcddev

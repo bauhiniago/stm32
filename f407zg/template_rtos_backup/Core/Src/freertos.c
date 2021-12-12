@@ -26,17 +26,29 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "adc.h"
-#include "dac.h"
 #include "lvgl.h"
 #include "lvgl_app.h"
+#include "spi.h"
 #include <stdio.h>
 #include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+#define CS_Disable()   HAL_GPIO_WritePin(CS_GPIO_Port,CS_Pin,GPIO_PIN_SET)
+#define CS_Enable()    HAL_GPIO_WritePin(CS_GPIO_Port,CS_Pin,GPIO_PIN_RESET)
 
+
+/* 向RC522写入指定地址的数据 */
+void WriteLED(uint8_t ucAddress, uint8_t ucValue)
+{ 
+	uint8_t sentData[2];
+	sentData[0] = ucAddress;
+  sentData[1] = ucValue;
+	CS_Enable();
+	HAL_SPI_Transmit(&hspi2,(uint8_t*)sentData,2,0xFFFF);
+	CS_Disable();	
+}
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -51,28 +63,33 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-osThreadId BlinkTaskHandle;
 osThreadId lvglTaskHandle;
-osThreadId ADCTaskHandle;
-osThreadId WaveModeTaskHandle;
-extern uint8_t adc1CpltFlg;
+osThreadId LEDTaskHandle;
 extern lv_obj_t * wave_chart;
-extern uint8_t waveStopFlg;
 extern lv_chart_series_t * wave_ser;
-extern ADC_HandleTypeDef hadc1;
-extern DAC_HandleTypeDef hdac;
-extern uint16_t wave[wave_num];
-extern uint16_t wave_auto_points[wave_num];
-extern uint16_t AD1[AD_num];
-extern uint8_t waveAutoFlg;
-extern uint16_t wave_auto_num;
-extern uint8_t distortion_mode;
-extern float fft_outputbuf[FFT_LENGTH];
+
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
+void LEDMAT(void){
+
+  WriteLED(0x00, 0xFF);
+  WriteLED(0x09, 0x00);
+  WriteLED(0x0F, 0x00);
+  WriteLED(0x0B, 0x07);
+  WriteLED(0x0A, 0x04);
+  WriteLED(0x0C, 0x01);
+  
+  for (;;)
+  {
+    WriteLED(0x01, 0x0F);
+    osDelay(1);
+  }
+}
+
+
 void lvgl_init(void){
   /* lvgl init */
   lv_init();
@@ -91,80 +108,7 @@ void lvgl_init(void){
     lv_task_handler();
   }
 }
-void LED_Blinks(void){
-  for(;;)
-  {
-    HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
-    //printf("hello world\r\n");
-    osDelay(500);
-  }
-}
-void ADC_Task(void){
-  HAL_ADC_Start_DMA(&hadc1,(uint16_t *)AD1,AD_num);
-  for (;;)
-  {
-    
-    if (adc1CpltFlg==1)
-    {
-      osDelay(20);
-      if(waveStopFlg==0){
-        FFT();
-        lv_chart_set_point_count(wave_chart, FFT_LENGTH/2);
-        lv_chart_set_ext_y_array(wave_chart, wave_ser, (lv_coord_t *)wave);
-        // Wave_Data_Init();
-        // if(waveAutoFlg){
-        //   Wave_Auto();
-        //   lv_chart_set_point_count(wave_chart, wave_auto_num);
-        //   lv_chart_set_ext_y_array(wave_chart, wave_ser, (lv_coord_t *)wave_auto_points); 
-        // }else{
-        //   lv_chart_set_point_count(wave_chart, wave_num);
-        //   lv_chart_set_ext_y_array(wave_chart, wave_ser, (lv_coord_t *)wave); 
-        // }
-      }
-      adc1CpltFlg=0;
-      HAL_ADC_Start_DMA(&hadc1,(uint16_t *)AD1,AD_num);
-    }
-  }
-}
-void Wave_Mode(void){
-  HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
-  HAL_GPIO_WritePin(TwoWay_GPIO_Port,TwoWay_Pin,GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(Cross1_GPIO_Port,Cross1_Pin,GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(Cross2_GPIO_Port,Cross2_Pin,GPIO_PIN_RESET);
-  HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)(2.4/3.4*4095));
-  for (;;)
-  {
-    if(distortion_mode==0){
-      HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)(2.4/3.4*4095));
-      HAL_GPIO_WritePin(TwoWay_GPIO_Port,TwoWay_Pin,GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(Cross1_GPIO_Port,Cross1_Pin,GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(Cross2_GPIO_Port,Cross2_Pin,GPIO_PIN_RESET);
-    }else if(distortion_mode==1){
-      HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)(2.0/3.4*4095));
-      HAL_GPIO_WritePin(TwoWay_GPIO_Port,TwoWay_Pin,GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(Cross1_GPIO_Port,Cross1_Pin,GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(Cross2_GPIO_Port,Cross2_Pin,GPIO_PIN_RESET);
-    }else if(distortion_mode==2){
-      HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)(2.7/3.4*4095));
-      HAL_GPIO_WritePin(TwoWay_GPIO_Port,TwoWay_Pin,GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(Cross1_GPIO_Port,Cross1_Pin,GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(Cross2_GPIO_Port,Cross2_Pin,GPIO_PIN_RESET);
-    }else if(distortion_mode==3){
-      HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)(1.0/3.4*4095));
-      HAL_GPIO_WritePin(TwoWay_GPIO_Port,TwoWay_Pin,GPIO_PIN_SET);
-      HAL_GPIO_WritePin(Cross1_GPIO_Port,Cross1_Pin,GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(Cross2_GPIO_Port,Cross2_Pin,GPIO_PIN_RESET);
-    }else if(distortion_mode==4){
-      HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)(2.4/3.4*4095));
-      HAL_GPIO_WritePin(TwoWay_GPIO_Port,TwoWay_Pin,GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(Cross1_GPIO_Port,Cross1_Pin,GPIO_PIN_SET);
-      HAL_GPIO_WritePin(Cross2_GPIO_Port,Cross2_Pin,GPIO_PIN_SET);
-    }
-    osDelay(250);
-  }
-  
 
-}
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void const * argument);
@@ -234,20 +178,13 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
+
   /* add threads, ... */
-  osThreadDef(lvgl, lvgl_init, osPriorityRealtime , 0, 512);
-  lvglTaskHandle = osThreadCreate(osThread(lvgl), NULL);
-  osThreadDef(adctask, ADC_Task, osPriorityNormal, 0, 1024);
-  ADCTaskHandle = osThreadCreate(osThread(adctask), NULL);
-  osThreadDef(wavemode, Wave_Mode, osPriorityNormal , 0, 128);
-  WaveModeTaskHandle = osThreadCreate(osThread(wavemode), NULL);
-  // osThreadDef(blink, LED_Blinks, osPriorityNormal, 0, 128);
-  // BlinkTaskHandle = osThreadCreate(osThread(blink), NULL);
-/*   osThreadDef(hello, Helloworld, osPriorityNormal, 0, 128);
-  HelloTaskHandle = osThreadCreate(osThread(hello), NULL); */
+  // osThreadDef(lvgl, lvgl_init, osPriorityRealtime , 0, 512);
+  // lvglTaskHandle = osThreadCreate(osThread(lvgl), NULL);
+  osThreadDef(LED, LEDMAT, osPriorityNormal , 0, 512);
+  LEDTaskHandle = osThreadCreate(osThread(LED), NULL);
 
-
-  
   /* USER CODE END RTOS_THREADS */
 
 }
@@ -266,12 +203,18 @@ void StartDefaultTask(void const * argument)
   for(;;)
   {
     //printf("1\r\n");
-    osDelay(1000);
+    osDelay(1);
   }
   /* USER CODE END StartDefaultTask */
 }
 
 /* Private application code --------------------------------------------------*/
+/* USER CODE BEGIN Application */
+
+/* USER CODE END Application */
+
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
